@@ -50,6 +50,19 @@ This allows the crystal to be both:
 - deterministic
 - semantically tied to different kinds of receipt evidence
 
+## Canonical hash -> seed material
+
+A future receipt-aware flow can use:
+- `canonical_receipt_hash(receipt)` as the deterministic digest of the canonicalized evidence object
+- `derive_seed_material(canonical_hash)` as the next derivation step
+
+In that model:
+- `master_seed` is the root deterministic seed
+- named sub-seeds keep visual axes independent
+- canonical hashing and seed derivation are still **not** verification
+
+This is only preparation for stable mapping from receipt fields into visual traits.
+
 ## Visual mapping
 
 ### Receipt identity -> core geometry
