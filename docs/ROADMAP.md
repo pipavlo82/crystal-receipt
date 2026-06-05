@@ -49,6 +49,24 @@ A later v0.2 may add:
 python generate.py --receipt path/to/receipt.json --out examples/receipt-demo
 ```
 
+## Next small planning steps
+
+### v0.2a
+- add a receipt fixture and schema notes
+- document receipt-derived input planning without changing the generator
+
+### v0.2b
+- add `--receipt path/to/receipt.json` mode later
+- canonicalize receipt evidence before seed derivation
+
+### v0.3
+- map receipt fields into visual traits and crystal structure
+- keep deterministic output for the same receipt evidence bundle
+
+### Future optional layers
+- NFT metadata export
+- no minting by default
+
 ## Next possible steps
 
 ### Better visuals
@@ -75,10 +93,6 @@ python generate.py --receipt path/to/receipt.json --out examples/receipt-demo
 - optional embedding into receipt viewers
 - side-by-side receipt + crystal display
 - receipt gallery / explorer concepts
-
-### Optional future layers
-- NFT metadata export
-- optional mint pipeline
 
 ## Explicit non-goals for now
 

@@ -1,0 +1,34 @@
+{
+  "session_id": "sess_demo_2026_06_04_001",
+  "receiptHash": "rcpt_demo_7a3c9f2a8b41e6dd",
+  "diffHash": "diff_demo_41ac7b9982f0d145",
+  "eventRoot": "event_root_demo_e91f4d3b66a20c77",
+  "agent_id": "agent.stealth.local.demo",
+  "scope": {
+    "permission": "workspace-write",
+    "network": "disabled",
+    "notes": "Local demo scope only"
+  },
+  "authority": {
+    "mode": "captured-evidence",
+    "operator": "local-user",
+    "boundary": "workspace-only"
+  },
+  "changed_files": [
+    "src/demo_module.py",
+    "README.md"
+  ],
+  "timestamp": "2026-06-04T20:00:00Z",
+  "verifier_result": {
+    "status": "OK",
+    "reason_code": "OK",
+    "details": "Fake local fixture for planning only"
+  },
+  "signature_trust_block": {
+    "algorithm": "demo-hmac",
+    "key_id": "demo-key-001",
+    "signer_id": "agent.stealth.local.demo",
+    "trust_mode": "signature_extension",
+    "signature": "demo_signature_placeholder"
+  }
+}
