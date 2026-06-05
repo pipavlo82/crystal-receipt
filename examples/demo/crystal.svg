@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 1200 1200">
+
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="45%" r="70%">
+      <stop offset="0%" stop-color="#10131a" />
+      <stop offset="100%" stop-color="#030507" />
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#bg)" />
+  <g filter="url(#glow)">
+  <polygon points="833.33,925.07 484.67,965.15 203.57,791.33 154.69,505.43 366.67,274.93 715.33,234.85 996.43,408.67 1045.31,694.57" fill="#ffadad" fill-opacity="0.65" stroke="#ffffff" stroke-opacity="0.18" stroke-width="1.5" />
+  <polygon points="637.04,816.66 439.36,774.68 335.78,630.37 386.98,468.28 562.96,383.34 760.64,425.32 864.22,569.63 813.02,731.72" fill="#02060a" fill-opacity="0.293" stroke="#ffadad" stroke-opacity="0.35" stroke-width="1" />
+  <line x1="833.33" y1="925.07" x2="439.36" y2="774.68" stroke="#ffadad" stroke-opacity="0.35" stroke-width="1.2" />
+  <polygon points="762.7,908.6 448.94,912.55 223.66,733.41 218.84,476.13 437.3,291.4 751.06,287.45 976.34,466.59 981.16,723.87" fill="#ffd6a5" fill-opacity="0.594" stroke="#ffffff" stroke-opacity="0.18" stroke-width="2.0" />
+  <polygon points="603.65,794.97 434.45,739.98 362.23,602.99 429.29,464.25 596.35,405.03 765.55,460.02 837.77,597.01 770.71,735.75" fill="#02060a" fill-opacity="0.267" stroke="#ffd6a5" stroke-opacity="0.35" stroke-width="1" />
+  <line x1="448.94" y1="912.55" x2="362.23" y2="602.99" stroke="#ffd6a5" stroke-opacity="0.35" stroke-width="1.2" />
+  <polygon points="664.93,890.36 395.52,842.96 245.9,653.24 303.71,432.33 535.07,309.64 804.48,357.04 954.1,546.76 896.29,767.67" fill="#fdffb6" fill-opacity="0.538" stroke="#ffffff" stroke-opacity="0.18" stroke-width="2.5" />
+  <polygon points="556.2,767.41 424.67,692.98 395.85,564.08 486.62,456.23 643.8,432.59 775.33,507.02 804.15,635.92 713.38,743.77" fill="#02060a" fill-opacity="0.242" stroke="#fdffb6" stroke-opacity="0.35" stroke-width="1" />
+  <line x1="245.9" y1="653.24" x2="486.62" y2="456.23" stroke="#fdffb6" stroke-opacity="0.35" stroke-width="1.2" />
+  <polygon points="608.22,854.11 386.69,784.45 290.11,606.74 375.06,425.08 591.78,345.89 813.31,415.55 909.89,593.26 824.94,774.92" fill="#caffbf" fill-opacity="0.481" stroke="#ffffff" stroke-opacity="0.18" stroke-width="1.5" />
+  <polygon points="535.62,737.66 435.77,660.01 432.12,547.21 526.81,465.33 664.38,462.34 764.23,539.99 767.88,652.79 673.19,734.67" fill="#02060a" fill-opacity="0.216" stroke="#caffbf" stroke-opacity="0.35" stroke-width="1" />
+  <line x1="375.06" y1="425.08" x2="664.38" y2="462.34" stroke="#caffbf" stroke-opacity="0.35" stroke-width="1.2" />
+  <polygon points="582.5,812.72 404.19,740.26 340.59,585.65 428.95,439.44 617.5,387.28 795.81,459.74 859.41,614.35 771.05,760.56" fill="#9bf6ff" fill-opacity="0.425" stroke="#ffffff" stroke-opacity="0.18" stroke-width="2.0" />
+  <polygon points="533.04,710.8 457.11,639.52 464.88,545.1 551.8,482.83 666.96,489.2 742.89,560.48 735.12,654.9 648.2,717.17" fill="#02060a" fill-opacity="0.191" stroke="#9bf6ff" stroke-opacity="0.35" stroke-width="1" />
+  <line x1="617.5" y1="387.28" x2="742.89" y2="560.48" stroke="#9bf6ff" stroke-opacity="0.35" stroke-width="1.2" />
+  <polygon points="589.16,771.97 444.04,715.31 390.28,591.11 459.37,472.11 610.84,428.03 755.96,484.69 809.72,608.89 740.63,727.89" fill="#ffadad" fill-opacity="0.369" stroke="#ffffff" stroke-opacity="0.18" stroke-width="2.5" />
+  <polygon points="547.64,690.18 485.21,633.41 490.03,557.07 559.26,505.88 652.36,509.82 714.79,566.59 709.97,642.93 640.74,694.12" fill="#02060a" fill-opacity="0.166" stroke="#ffadad" stroke-opacity="0.35" stroke-width="1" />
+  <line x1="755.96" y1="484.69" x2="709.97" y2="642.93" stroke="#ffadad" stroke-opacity="0.35" stroke-width="1.2" />
+  <polygon points="621.27,730.04 502.91,704.28 441.42,617.44 472.83,520.39 578.73,469.96 697.09,495.72 758.58,582.56 727.17,679.61" fill="#ffd6a5" fill-opacity="0.312" stroke="#ffffff" stroke-opacity="0.18" stroke-width="1.5" />
+  <polygon points="576.2,673.55 519.75,638.21 510.3,580.48 553.4,534.19 623.8,526.45 680.25,561.79 689.7,619.52 646.6,665.81" fill="#02060a" fill-opacity="0.14" stroke="#ffd6a5" stroke-opacity="0.35" stroke-width="1" />
+  <line x1="758.58" y1="582.56" x2="646.6" y2="665.81" stroke="#ffd6a5" stroke-opacity="0.35" stroke-width="1.2" />
+  <polygon points="570.14,686.81 504.03,644.07 494.13,575.52 546.25,521.3 629.86,513.19 695.97,555.93 705.87,624.48 653.75,678.7" fill="#fdffb6" fill-opacity="0.256" stroke="#ffffff" stroke-opacity="0.18" stroke-width="2.0" />
+  <polygon points="560.5,641.08 536.64,606.15 549.9,567.61 592.5,548.05 639.5,558.92 663.36,593.85 650.1,632.39 607.5,651.95" fill="#02060a" fill-opacity="0.115" stroke="#fdffb6" stroke-opacity="0.35" stroke-width="1" />
+  </g>
+  <text x="600.0" y="1140" text-anchor="middle" fill="#b7c0cc" font-family="monospace" font-size="20">seed:18115086751987621388</text>
+</svg>
