@@ -1,17 +1,36 @@
 # crystal-receipt
 
-A tiny proof-of-concept for turning a receipt hash into a deterministic crystal-like visual fingerprint.
+A tiny proof-of-concept for turning receipt evidence into a deterministic crystal-like visual artifact.
 
-## Idea
+## Framing
 
-- `receipt hash -> deterministic seed`
-- the **same hash** always produces the **same visual crystal**
-- a **different hash** produces a **different visual crystal**
-- this is a **visual receipt fingerprint**, **not** a security verifier
+Crystal Receipt is not meant to be "just hash-based generative art." The stronger long-term direction is:
 
-## What it does
+```text
+Receipt -> Evidence -> Hash/EventRoot -> Crystal -> NFT metadata -> optional mint
+```
 
-Given a `receiptHash` string, the generator:
+The current MVP stays intentionally simple:
+- `receiptHash -> deterministic seed -> crystal`
+
+But the project is framed as a **visual artifact for execution receipts**, not a standalone artwork generator.
+
+## Core ideas
+
+- the **same receipt evidence** should produce the **same crystal**
+- **different receipt evidence** should produce a **different crystal**
+- over time, receipt-derived fields should influence:
+  - shape
+  - color
+  - symmetry
+  - growth layers
+  - traits
+- the crystal is a **visual fingerprint**, **not** the security verifier itself
+- NFT / minting is an **optional future layer**, not the core product
+
+## MVP behavior today
+
+Given a `receiptHash` string, the current generator:
 
 1. hashes it with SHA-256
 2. derives a deterministic numeric seed
@@ -19,6 +38,8 @@ Given a `receiptHash` string, the generator:
 4. writes:
    - `crystal.svg`
    - `crystal.metadata.json`
+
+This keeps the first version local, deterministic, and easy to test.
 
 ## CLI
 
@@ -35,10 +56,10 @@ python generate.py --hash demo-receipt-hash-001 --out examples/demo
 ## Output
 
 ### `crystal.svg`
-A deterministic crystal-like visual.
+A deterministic crystal-like visual artifact.
 
 ### `crystal.metadata.json`
-Contains:
+The current MVP metadata contains:
 - original `receiptHash`
 - `sha256`
 - numeric `seed`
@@ -46,10 +67,25 @@ Contains:
 - palette
 - crystal parameter summary
 
+A future v0.2 can evolve this into receipt-derived metadata while keeping deterministic generation.
+
+## v0.2 direction
+
+Planned next-step architecture/docs direction:
+- receipt-derived input fields
+- composed seeds (`master_seed`, `shape_seed`, `palette_seed`, etc.)
+- visual traits mapped from receipt evidence
+- optional NFT metadata preview layer
+
+See:
+- `docs/RECEIPT_DERIVATION.md`
+- `docs/METADATA_SCHEMA_V0_2.md`
+- `docs/ROADMAP.md`
+
 ## Notes
 
-- No blockchain
-- No NFT logic
+- No blockchain yet
+- No NFT minting code yet
 - No Stealth integration yet
 - No external paid APIs
 - Minimal dependencies: Python standard library only
