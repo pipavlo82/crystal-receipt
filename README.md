@@ -1,86 +1,241 @@
 # crystal-receipt
 
-A tiny proof-of-concept for turning receipt evidence into a deterministic crystal-like visual artifact.
+Crystal Receipt turns verifiable execution receipts into deterministic bismuth-inspired visual artifacts.
 
-## Framing
+**Stronger framing:** Crystal Receipt is a deterministic visual fingerprint layer for execution receipts: receipt evidence becomes a reproducible crystal artifact, with optional NFT export later.
 
-Crystal Receipt is not meant to be "just hash-based generative art." The stronger long-term direction is:
+## What this is
+
+Crystal Receipt is an experiment in turning execution receipts into deterministic visual artifacts.
+
+Every meaningful execution receipt contains evidence of a specific action: what session it belonged to, what changed, what hash was produced, what event root was recorded, what agent performed the action, what authority/scope existed, what verifier result was produced, and what signature/trust data was attached.
+
+Crystal Receipt takes that receipt evidence and turns it into a unique visual fingerprint inspired by bismuth crystal growth.
+
+The goal is **not** to replace cryptographic verification.
+The goal is to make receipt evidence visible, recognizable, portable, and human-readable as a visual artifact.
+
+## Core flow
 
 ```text
-Receipt -> Evidence -> Hash/EventRoot -> Crystal -> NFT metadata -> optional mint
+Receipt
+-> Evidence
+-> Verifier
+-> Canonical Hash / EventRoot
+-> Derived Seeds
+-> Crystal Artifact
+-> Metadata
+-> Optional NFT Export
 ```
 
-The current MVP stays intentionally simple:
-- `receiptHash -> deterministic seed -> crystal`
+The crystal is the visible artifact.
+The verifier remains the source of truth.
 
-But the project is framed as a **visual artifact for execution receipts**, not a standalone artwork generator.
+## How it works
 
-## Core ideas
+A receipt contains structured evidence, for example:
 
-- the **same receipt evidence** should produce the **same crystal**
-- **different receipt evidence** should produce a **different crystal**
-- over time, receipt-derived fields should influence:
-  - shape
-  - color
-  - symmetry
-  - growth layers
-  - traits
-- the crystal is a **visual fingerprint**, **not** the security verifier itself
-- NFT / minting is an **optional future layer**, not the core product
+- `session_id`
+- `receiptHash`
+- `diffHash`
+- `eventRoot`
+- `agent_id`
+- `scope / authority`
+- `changed files`
+- `timestamp`
+- `verifier result`
+- `signature / trust block`
 
-## MVP behavior today
+This data is first canonicalized into a deterministic JSON representation.
+From that canonical receipt object, Crystal Receipt derives a canonical receipt hash.
+Then it derives named deterministic seeds:
 
-Given a `receiptHash` string, the current generator:
+- `master_seed`
+- `shape_seed`
+- `palette_seed`
+- `symmetry_seed`
+- `layer_seed`
+- `oxide_seed`
+- `trait_seed`
 
-1. hashes it with SHA-256
-2. derives a deterministic numeric seed
-3. generates a crystal-inspired 2D SVG composition
-4. writes:
-   - `crystal.svg`
-   - `crystal.metadata.json`
+Those seeds control the crystal generation.
 
-This keeps the first version local, deterministic, and easy to test.
+The same receipt evidence always produces the same crystal.
+Different receipt evidence produces a different crystal: different shape, colors, layers, symmetry, oxide effect, fracture pattern, shard count, and traits.
 
-## CLI
+## Why bismuth crystals?
+
+Bismuth crystals are a good metaphor because they are structured but unique.
+They do not grow as pure random noise. They grow according to physical rules, but small differences in the environment produce different final forms.
+
+Crystal Receipt uses the same idea digitally:
+
+```text
+same rules
++ deterministic receipt evidence
+= unique reproducible visual form
+```
+
+So the crystal is not just generative art.
+It is a visual receipt fingerprint.
+
+## What the crystal represents
+
+The crystal represents the identity and structure of a specific execution receipt.
+
+For example:
+
+- receipt identity can influence core geometry
+- authority/scope can influence the outer shell or boundary
+- verifier/trust data can influence clarity, glow, or seal-like accents
+- changed files can influence shard count or growth steps
+- diffHash/eventRoot can influence fracture and growth patterns
+- timestamp/session data can influence layer ordering or symmetry
+
+This makes the artifact not only unique, but semantically connected to the receipt.
+
+## Important security boundary
+
+The crystal is not the security verifier.
+It does not replace:
+
+- signature verification
+- hash checks
+- replay protection
+- eventRoot validation
+- policy checks
+- scope/authority checks
+- trust-chain verification
+
+The crystal is a visual artifact derived from receipt evidence.
+The actual truth of the receipt must still be checked by an independent verifier.
+
+**Correct statement:**
+
+> The crystal does not prove the work by itself.  
+> The crystal represents receipt evidence that can be independently verified.
+
+## NFT boundary
+
+If the crystal is later exported as an NFT, the NFT is also not the verifier by itself.
+
+The NFT layer is useful for:
+- portability
+- public display
+- provenance
+- ownership
+- discovery
+- artifact history
+- certificate-like presentation
+
+The NFT can store or reference:
+
+- `receiptHash`
+- `eventRoot`
+- `diffHash`
+- `verifier result`
+- `verifier version`
+- `crystal image hash`
+- `crystal metadata hash`
+- `provenance fields`
+- optional receipt reference
+
+But the NFT itself does not automatically prove the work.
+
+**Correct statement:**
+
+> The NFT does not prove the work by itself.  
+> The NFT represents a receipt whose evidence can be independently verified.
+
+## What this is not
+
+Crystal Receipt is not:
+
+- a blockchain verifier
+- an NFT marketplace
+- a replacement for ReceiptOS verification
+- a replacement for Stealth receipt checks
+- a trust oracle
+- a security proof by image
+- "AI art with metadata"
+
+It is a deterministic visual grammar for receipt evidence.
+
+## MVP scope
+
+The current MVP stays intentionally small:
+
+- local Python repo
+- no blockchain
+- no NFT minting
+- no Stealth integration
+- no paid APIs
+- deterministic SVG generation
+- metadata output
+- tests for reproducibility
+
+Current MVP:
+
+```text
+receiptHash / hash
+-> deterministic seed
+-> crystal.svg
+-> crystal.metadata.json
+```
+
+Current CLI remains:
 
 ```bash
 python generate.py --hash <receiptHash> --out examples/demo
 ```
 
-Example:
+## Future direction
 
-```bash
-python generate.py --hash demo-receipt-hash-001 --out examples/demo
+Future v0.2 direction:
+
+```text
+receipt.json
+-> canonicalized receipt evidence
+-> canonical_receipt_hash
+-> derived seeds
+-> visual traits
+-> crystal.svg
+-> crystal.metadata.json
 ```
 
-## Output
+Future optional layer:
 
-### `crystal.svg`
-A deterministic crystal-like visual artifact.
+```text
+crystal artifact
+-> NFT metadata export
+-> optional minting later
+```
 
-### `crystal.metadata.json`
-The current MVP metadata contains:
-- original `receiptHash`
-- `sha256`
-- numeric `seed`
-- canvas size
-- palette
-- crystal parameter summary
+## Product meaning
 
-A future v0.2 can evolve this into receipt-derived metadata while keeping deterministic generation.
+Crystal Receipt turns invisible execution evidence into a visible artifact.
 
-## v0.2 direction
+For agentic systems, this matters because future agents will perform actions, call tools, change files, spend money, deploy code, trade, sign messages, or make decisions.
+Those actions need receipts.
+But raw receipts are hard for humans to understand.
 
-Planned next-step architecture/docs direction:
-- receipt-derived input fields
-- composed seeds (`master_seed`, `shape_seed`, `palette_seed`, etc.)
-- visual traits mapped from receipt evidence
-- optional NFT metadata preview layer
+Crystal Receipt gives each receipt a visual form.
 
-See:
-- `docs/RECEIPT_DERIVATION.md`
-- `docs/METADATA_SCHEMA_V0_2.md`
-- `docs/ROADMAP.md`
+A human can see:
+- "This action produced this crystal."
+
+A system can verify:
+- "This crystal came from this receipt evidence."
+
+A verifier can check:
+- "This receipt evidence is valid or invalid."
+
+That separation is the key:
+
+- verifier checks truth
+- receipt stores evidence
+- crystal makes it visible
+- optional NFT makes it portable
 
 ## Notes
 
@@ -89,6 +244,12 @@ See:
 - No Stealth integration yet
 - No external paid APIs
 - Minimal dependencies: Python standard library only
+
+## Related docs
+
+- `docs/RECEIPT_DERIVATION.md`
+- `docs/METADATA_SCHEMA_V0_2.md`
+- `docs/ROADMAP.md`
 
 ## Tests
 
