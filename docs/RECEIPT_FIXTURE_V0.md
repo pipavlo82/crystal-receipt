@@ -54,6 +54,15 @@ The fixture includes realistic but fake/local fields such as:
 - `verifier_result`
 - `signature_trust_block`
 
+## Canonicalization note
+
+Canonicalization is a preparation step for future `--receipt` mode.
+
+A helper like `canonical_receipt_hash(receipt)` is **not** a verifier result.
+It is only a deterministic digest of the local receipt fixture / evidence object.
+
+Its purpose is to support a stable derivation flow from receipt evidence into seeds and traits.
+
 ## Why this exists
 
 The long-term goal is to make crystal generation come from receipt evidence rather than from a single abstract hash.
