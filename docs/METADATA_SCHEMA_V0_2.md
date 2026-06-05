@@ -49,14 +49,13 @@ It does **not** change the current MVP generator yet.
     "trait_seed": "..."
   },
   "visual_traits": {
-    "core_geometry": "prismatic-stepped",
-    "palette_family": "iridescent-violet",
-    "symmetry": "hexagonal",
+    "geometry_style": "stepped",
+    "palette_name": "oxide_rainbow",
+    "symmetry": "high",
     "layer_count": 11,
-    "oxide_effect": "high",
-    "boundary_shell": "scoped",
-    "clarity": "verified-clear",
-    "growth_pattern": "fractured-radial",
+    "shard_count": 28,
+    "oxide_intensity": 0.7421,
+    "edge_bias": 0.3815,
     "rarity": "uncommon"
   },
   "provenance": {
@@ -70,9 +69,10 @@ It does **not** change the current MVP generator yet.
     "name": "Crystal Receipt #sess_123",
     "description": "A deterministic visual artifact derived from execution receipt evidence.",
     "attributes": [
-      { "trait_type": "Symmetry", "value": "hexagonal" },
+      { "trait_type": "Geometry Style", "value": "stepped" },
+      { "trait_type": "Palette", "value": "oxide_rainbow" },
       { "trait_type": "Layer Count", "value": 11 },
-      { "trait_type": "Clarity", "value": "verified-clear" }
+      { "trait_type": "Rarity", "value": "uncommon" }
     ]
   }
 }
@@ -90,7 +90,8 @@ This keeps generation structured and extensible.
 
 ### `visual_traits`
 Human-readable traits extracted from deterministic derivation.
-Useful for UI, galleries, and optional export.
+These traits should be deterministic, reproducible, and suitable for future SVG shaping.
+They are not verifier conclusions.
 
 ### `provenance`
 Clarifies generator version, mode, and the fact that the crystal is not a verifier.

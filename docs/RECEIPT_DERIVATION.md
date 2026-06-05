@@ -63,6 +63,18 @@ In that model:
 
 This is only preparation for stable mapping from receipt fields into visual traits.
 
+## Seed material -> visual traits
+
+A future generator can map seed material into reproducible visual traits.
+
+That means:
+- the same seed material always yields the same `visual_traits`
+- different seed material will usually change at least some trait values
+- visual traits remain deterministic and reproducible
+- visual traits are still **not** verifier conclusions
+
+This is the layer that can later shape SVG output in a stable, explainable way.
+
 ## Visual mapping
 
 ### Receipt identity -> core geometry
