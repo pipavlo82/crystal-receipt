@@ -1,0 +1,44 @@
+{
+  "mode": "receipt",
+  "generator_version": "0.2",
+  "ruleset": "receipt-derived-v0.2",
+  "source_receipt": {
+    "path": "examples/receipt-demo/receipt_changed.json",
+    "session_id": "sess_demo_changed_002",
+    "agent_id": "agent.crystal.demo.changed",
+    "receiptHash": "rcpt_demo_changed_91b4d8ef44a0c322",
+    "diffHash": "diff_demo_changed_2f7ab01cc993de54",
+    "eventRoot": "event_root_demo_changed_77c3b9241de8af10",
+    "timestamp": "2026-06-05T10:30:00Z",
+    "changed_files": [
+      "src/visual_rules.py",
+      "docs/CHANGELOG.md",
+      "README.md"
+    ]
+  },
+  "canonical_receipt_hash": "826b5c68c64992f89a73d4d681c0d8273ff13c143926bab4c57845e905fa7e0a",
+  "derived_seeds": {
+    "canonical_hash": "826b5c68c64992f89a73d4d681c0d8273ff13c143926bab4c57845e905fa7e0a",
+    "master_seed": "dbbd74bae3a2df37d33b7137b6618d8b7053b83e46406404f0185a8424047e0a",
+    "shape_seed": "83549b6cf49a4c6bf604677f0ae5d1300808ee6a1aed4aca9908272a6b8edc8c",
+    "palette_seed": "66e10a6a30629883bb5fd8328fc4bd8e880456b700d8f9db860ec4ebb6e2b74f",
+    "symmetry_seed": "b1c0a2dae33dd533ad6085aa6533020fa338c9a732e7353c6f3e59f7ad1ce5f1",
+    "layer_seed": "7ef2675f3db2554c073250c4ace04fd0271e49397c2fd7e4419ca412a29b99c3",
+    "oxide_seed": "6e4422d0f81fff61579417e49a0afa5c909cdffa60b4883ed7770cd463e7e6c1",
+    "trait_seed": "1ceb57067d933aa8164d8198f021f09fadc9d246ba4e3a700e068decee411476"
+  },
+  "visual_traits": {
+    "geometry_style": "hopper",
+    "palette_name": "silver_rose",
+    "symmetry": "high",
+    "layer_count": 6,
+    "shard_count": 28,
+    "oxide_intensity": 0.4307,
+    "edge_bias": 0.4905,
+    "rarity": "common"
+  },
+  "artifact_file": "crystal.svg",
+  "boundary": "The crystal is a visual artifact derived from receipt evidence. It is not the security verifier.",
+  "width": 1200,
+  "height": 1200
+}

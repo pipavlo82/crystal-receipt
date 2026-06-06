@@ -1,77 +1,99 @@
 {
-  "receiptHash": "demo-receipt-hash-001",
-  "sha256": "fb65b76c4f9b5e0c160e1f42d02e8eda42f65ff60aa2da28ba225d1583e5b70a",
-  "seed": 18115086751987621388,
+  "mode": "hash",
+  "receiptHash": "demo-receipt-hash",
+  "sha256": "cd3c7f3b182ac1e8ad7ef439d4a005d18d2ba4da4b9e55cfd3ddb77510cd51ea",
+  "seed": 14788835168163119592,
   "width": 1200,
   "height": 1200,
   "palette": [
-    "#ffadad",
-    "#ffd6a5",
-    "#fdffb6",
-    "#caffbf",
-    "#9bf6ff"
+    "#9d4edd",
+    "#7b2cbf",
+    "#5a189a",
+    "#3c096c",
+    "#240046"
   ],
-  "sides": 8,
-  "layers": 8,
-  "rotation": 66,
-  "y_scale": 0.82,
-  "inner_cut": 0.58,
+  "sides": 6,
+  "layers": 11,
+  "rotation": 57,
+  "y_scale": 0.86,
+  "inner_cut": 0.52,
   "layer_specs": [
     {
       "radius": 460.0,
-      "rotation": 59.52,
+      "rotation": 62.7,
       "opacity": 0.65,
       "stroke_width": 1.5,
-      "color": "#ffadad"
+      "color": "#9d4edd"
     },
     {
-      "radius": 410.0,
-      "rotation": 66.62,
-      "opacity": 0.594,
+      "radius": 425.0,
+      "rotation": 57.63,
+      "opacity": 0.609,
       "stroke_width": 2.0,
-      "color": "#ffd6a5"
+      "color": "#7b2cbf"
     },
     {
-      "radius": 360.0,
-      "rotation": 79.61,
-      "opacity": 0.538,
+      "radius": 390.0,
+      "rotation": 69.37,
+      "opacity": 0.568,
       "stroke_width": 2.5,
-      "color": "#fdffb6"
+      "color": "#5a189a"
     },
     {
-      "radius": 310.0,
-      "rotation": 88.48,
-      "opacity": 0.481,
+      "radius": 355.0,
+      "rotation": 78.76,
+      "opacity": 0.527,
       "stroke_width": 1.5,
-      "color": "#caffbf"
+      "color": "#3c096c"
     },
     {
-      "radius": 260.0,
-      "rotation": 93.86,
-      "opacity": 0.425,
+      "radius": 320.0,
+      "rotation": 94.84,
+      "opacity": 0.486,
       "stroke_width": 2.0,
-      "color": "#9bf6ff"
+      "color": "#240046"
     },
     {
-      "radius": 210.0,
-      "rotation": 92.96,
-      "opacity": 0.369,
+      "radius": 285.0,
+      "rotation": 96.71,
+      "opacity": 0.445,
       "stroke_width": 2.5,
-      "color": "#ffadad"
+      "color": "#9d4edd"
     },
     {
-      "radius": 160.0,
-      "rotation": 82.36,
-      "opacity": 0.312,
+      "radius": 250.0,
+      "rotation": 122.17,
+      "opacity": 0.405,
       "stroke_width": 1.5,
-      "color": "#ffd6a5"
+      "color": "#7b2cbf"
+    },
+    {
+      "radius": 215.0,
+      "rotation": 121.0,
+      "opacity": 0.364,
+      "stroke_width": 2.0,
+      "color": "#5a189a"
+    },
+    {
+      "radius": 180.0,
+      "rotation": 126.1,
+      "opacity": 0.323,
+      "stroke_width": 2.5,
+      "color": "#3c096c"
+    },
+    {
+      "radius": 145.0,
+      "rotation": 142.98,
+      "opacity": 0.282,
+      "stroke_width": 1.5,
+      "color": "#240046"
     },
     {
       "radius": 110.0,
-      "rotation": 105.75,
-      "opacity": 0.256,
+      "rotation": 129.14,
+      "opacity": 0.241,
       "stroke_width": 2.0,
-      "color": "#fdffb6"
+      "color": "#9d4edd"
     }
   ]
 }

@@ -1,0 +1,43 @@
+{
+  "mode": "receipt",
+  "generator_version": "0.2",
+  "ruleset": "receipt-derived-v0.2",
+  "source_receipt": {
+    "path": "examples/receipt-demo/receipt.json",
+    "session_id": "sess_demo_2026_06_04_001",
+    "agent_id": "agent.stealth.local.demo",
+    "receiptHash": "rcpt_demo_7a3c9f2a8b41e6dd",
+    "diffHash": "diff_demo_41ac7b9982f0d145",
+    "eventRoot": "event_root_demo_e91f4d3b66a20c77",
+    "timestamp": "2026-06-04T20:00:00Z",
+    "changed_files": [
+      "src/demo_module.py",
+      "README.md"
+    ]
+  },
+  "canonical_receipt_hash": "ed7400a760e1b79b0422c0b2383fa3298810c72f60aa26d0c571b6d0929c7815",
+  "derived_seeds": {
+    "canonical_hash": "ed7400a760e1b79b0422c0b2383fa3298810c72f60aa26d0c571b6d0929c7815",
+    "master_seed": "f5a465086f55fd9f360bc94ab50612a516cc13eaf6755af8a0f50967ca49e400",
+    "shape_seed": "d1b5408036d88860aff1731b23ed8165a70cbb5c8374ede7887a8e4804ba65f8",
+    "palette_seed": "6468caf142f12c2af880de0a5abe5ed54a687ae7b7d4e57119a73b1521e71182",
+    "symmetry_seed": "fc7c95bbb913db54bced7451b0bfd1219f888144ca1343464ce3705512c9e672",
+    "layer_seed": "7a874e93897f6db2a8e3514fc8cca232c7df27bf061a5924eff3e07ecdb5cc0a",
+    "oxide_seed": "4405e72c53eddf15d2c8cfdd5997185b8d8e8a4a048c779b8c0ed81a6e6dff46",
+    "trait_seed": "a53c3f403c61eefade310e6e611fb8cc8c0e492c6935d0dfd453673e000be6e0"
+  },
+  "visual_traits": {
+    "geometry_style": "hopper",
+    "palette_name": "violet_green",
+    "symmetry": "medium",
+    "layer_count": 15,
+    "shard_count": 12,
+    "oxide_intensity": 0.2657,
+    "edge_bias": 0.2359,
+    "rarity": "common"
+  },
+  "artifact_file": "crystal.svg",
+  "boundary": "The crystal is a visual artifact derived from receipt evidence. It is not the security verifier.",
+  "width": 1200,
+  "height": 1200
+}
