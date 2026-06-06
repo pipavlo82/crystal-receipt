@@ -182,54 +182,81 @@ def _receipt_summary(receipt: Dict) -> Dict:
     }
 
 
-def _rect(x: float, y: float, w: float, h: float) -> str:
-    return f"M {x:.2f} {y:.2f} H {x+w:.2f} V {y+h:.2f} H {x:.2f} Z"
+def _hopper_rectangles(layer_count: int, shard_count: int, symmetry: str, edge_bias: float, geometry_style: str) -> Tuple[List[Dict[str, float]], List[Dict[str, float]]]:
+    terraces: List[Dict[str, float]] = []
+    shards: List[Dict[str, float]] = []
 
+    symmetry_factor = {"low": 0.76, "medium": 0.88, "high": 1.0}[symmetry]
+    geometry_scale = {
+        "hopper": 1.0,
+        "radial": 0.9,
+        "stepped": 0.96,
+        "fractured": 0.86,
+    }[geometry_style]
 
-def _hopper_paths(layer_count: int, shard_count: int, symmetry: str, edge_bias: float) -> List[Dict[str, float]]:
-    paths = []
-    steps = max(layer_count, 1)
-    symmetry_factor = {"low": 0.72, "medium": 0.86, "high": 1.0}[symmetry]
     cx = CENTER_X
-    cy = CENTER_Y - 10
-    base_w = 620 * symmetry_factor
-    base_h = 620 * symmetry_factor
-    inset_w = (base_w * 0.58) / max(steps, 1)
-    inset_h = (base_h * 0.58) / max(steps, 1)
+    cy = CENTER_Y - 14
+    base_w = 640 * symmetry_factor * geometry_scale
+    base_h = 640 * symmetry_factor * geometry_scale
+    terrace_step = max(12.0, (42.0 - edge_bias * 10.0) * geometry_scale)
+    notch_step = max(8.0, terrace_step * 0.6)
 
-    for i in range(steps):
-        w = base_w - i * inset_w
-        h = base_h - i * inset_h
+    for idx in range(layer_count):
+        inset = idx * terrace_step
+        w = max(120.0, base_w - inset * 2)
+        h = max(120.0, base_h - inset * 2)
         x = cx - w / 2
         y = cy - h / 2
-        paths.append({"x": x, "y": y, "w": w, "h": h})
+        terraces.append(
+            {
+                "x": x,
+                "y": y,
+                "w": w,
+                "h": h,
+                "notch": max(6.0, notch_step + (idx % 3) * 2.5),
+            }
+        )
 
-    shard_cols = max(2, round(math.sqrt(shard_count) * 0.9))
+    inner = terraces[min(max(layer_count // 3, 0), len(terraces) - 1)] if terraces else {"x": cx - 120, "y": cy - 120, "w": 240, "h": 240}
+    shard_cols = max(2, round(math.sqrt(shard_count) * 0.72))
     shard_rows = max(2, math.ceil(shard_count / shard_cols))
-    grid_w = base_w * 0.82
-    grid_h = base_h * 0.82
-    cell_w = grid_w / shard_cols
-    cell_h = grid_h / shard_rows
-    start_x = cx - grid_w / 2
-    start_y = cy - grid_h / 2
-    offset_scale = edge_bias * 10
+    cell_w = inner["w"] / shard_cols
+    cell_h = inner["h"] / shard_rows
+    offset_push = edge_bias * 8.0
 
     for idx in range(shard_count):
         col = idx % shard_cols
         row = idx // shard_cols
         if row >= shard_rows:
             break
-        bias_x = (col - shard_cols / 2) * offset_scale * 0.15
-        bias_y = (row - shard_rows / 2) * offset_scale * 0.15
-        paths.append(
-            {
-                "x": start_x + col * cell_w + 6 + bias_x,
-                "y": start_y + row * cell_h + 6 + bias_y,
-                "w": max(10, cell_w - 12 - edge_bias * 6),
-                "h": max(10, cell_h - 12 - edge_bias * 6),
-            }
-        )
-    return paths
+        if geometry_style == "radial":
+            skip = (row + col) % 3 == 2
+        elif geometry_style == "fractured":
+            skip = (row * 2 + col) % 4 == 1
+        elif geometry_style == "stepped":
+            skip = col % 4 == 3 and row % 2 == 1
+        else:
+            skip = False
+        if skip:
+            continue
+
+        step_offset = ((row - col) if geometry_style == "fractured" else (col - row)) * offset_push * 0.18
+        x = inner["x"] + col * cell_w + 6 + max(0, step_offset)
+        y = inner["y"] + row * cell_h + 6 + max(0, -step_offset)
+        w = max(10.0, cell_w - 12 - edge_bias * 7)
+        h = max(10.0, cell_h - 12 - edge_bias * 7)
+        if geometry_style == "radial":
+            x += abs(col - shard_cols / 2) * 2.5
+            y += abs(row - shard_rows / 2) * 1.8
+        elif geometry_style == "stepped":
+            y += (row % 3) * 2.0
+        elif geometry_style == "fractured":
+            x += (idx % 3) * 3.0
+            h = max(10.0, h - (idx % 2) * 4.0)
+
+        shards.append({"x": x, "y": y, "w": w, "h": h})
+
+    return terraces, shards
 
 
 def render_receipt_mode_svg(metadata: Dict) -> str:

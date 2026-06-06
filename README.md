@@ -92,6 +92,9 @@ same rules
 So the crystal is not just generative art.
 It is a visual receipt fingerprint.
 
+The renderer is bismuth-inspired, not a physical simulation.
+Its visual identity remains deterministic and reproducible from the same receipt evidence.
+
 ## What the crystal represents
 
 The crystal represents the identity and structure of a specific execution receipt.

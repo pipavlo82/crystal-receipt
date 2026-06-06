@@ -181,6 +181,7 @@ Crystal Receipt uses the same principle digitally:
 - same resulting crystal
 
 Different receipt evidence yields a different but still reproducible crystal.
+The renderer is bismuth-inspired, not a physical simulation, and the crystal remains a visual artifact rather than a verifier.
 
 ## Important security boundary
 
