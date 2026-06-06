@@ -36,6 +36,73 @@
     "edge_bias": 0.2359,
     "rarity": "common"
   },
+  "action_growth_map": {
+    "session_id": {
+      "source": "sess_demo_2026_06_04_001",
+      "visual_effect": "base_orientation"
+    },
+    "agent_id": {
+      "source": "agent.stealth.local.demo",
+      "visual_effect": "core_geometry_bias"
+    },
+    "receiptHash": {
+      "source": "rcpt_demo_7a3c9f2a8b41e6dd",
+      "visual_effect": "primary_crystal_identity"
+    },
+    "eventRoot": {
+      "source": "event_root_demo_e91f4d3b66a20c77",
+      "visual_effect": "global_growth_structure"
+    },
+    "diffHash": {
+      "source": "diff_demo_41ac7b9982f0d145",
+      "visual_effect": "fracture_step_pattern"
+    },
+    "changed_files": {
+      "source": [
+        "src/demo_module.py",
+        "README.md"
+      ],
+      "visual_effect": "terrace_branch_count"
+    },
+    "scope": {
+      "source": {
+        "permission": "workspace-write",
+        "network": "disabled",
+        "notes": "Local demo scope only"
+      },
+      "visual_effect": "outer_boundary"
+    },
+    "authority": {
+      "source": {
+        "mode": "captured-evidence",
+        "operator": "local-user",
+        "boundary": "workspace-only"
+      },
+      "visual_effect": "boundary_strength"
+    },
+    "verifier_result": {
+      "source": {
+        "status": "OK",
+        "reason_code": "OK",
+        "details": "Fake local fixture for planning only"
+      },
+      "visual_effect": "seal_clarity_glow"
+    },
+    "signature_trust_block": {
+      "source": {
+        "algorithm": "demo-hmac",
+        "key_id": "demo-key-001",
+        "signer_id": "agent.stealth.local.demo",
+        "trust_mode": "signature_extension",
+        "signature": "demo_signature_placeholder"
+      },
+      "visual_effect": "trust_ring_edge_accent"
+    },
+    "timestamp": {
+      "source": "2026-06-04T20:00:00Z",
+      "visual_effect": "layer_rhythm"
+    }
+  },
   "artifact_file": "crystal.svg",
   "boundary": "The crystal is a visual artifact derived from receipt evidence. It is not the security verifier.",
   "width": 1200,

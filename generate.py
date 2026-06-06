@@ -182,6 +182,60 @@ def _receipt_summary(receipt: Dict) -> Dict:
     }
 
 
+def _action_growth_map(receipt: Dict) -> Dict:
+    scope = receipt.get("scope")
+    authority = receipt.get("authority")
+    verifier_result = receipt.get("verifier_result")
+    signature_trust_block = receipt.get("signature_trust_block")
+
+    return {
+        "session_id": {
+            "source": receipt.get("session_id"),
+            "visual_effect": "base_orientation",
+        },
+        "agent_id": {
+            "source": receipt.get("agent_id"),
+            "visual_effect": "core_geometry_bias",
+        },
+        "receiptHash": {
+            "source": receipt.get("receiptHash"),
+            "visual_effect": "primary_crystal_identity",
+        },
+        "eventRoot": {
+            "source": receipt.get("eventRoot"),
+            "visual_effect": "global_growth_structure",
+        },
+        "diffHash": {
+            "source": receipt.get("diffHash"),
+            "visual_effect": "fracture_step_pattern",
+        },
+        "changed_files": {
+            "source": receipt.get("changed_files", []),
+            "visual_effect": "terrace_branch_count",
+        },
+        "scope": {
+            "source": scope,
+            "visual_effect": "outer_boundary",
+        },
+        "authority": {
+            "source": authority,
+            "visual_effect": "boundary_strength",
+        },
+        "verifier_result": {
+            "source": verifier_result,
+            "visual_effect": "seal_clarity_glow",
+        },
+        "signature_trust_block": {
+            "source": signature_trust_block,
+            "visual_effect": "trust_ring_edge_accent",
+        },
+        "timestamp": {
+            "source": receipt.get("timestamp"),
+            "visual_effect": "layer_rhythm",
+        },
+    }
+
+
 def _hopper_rectangles(layer_count: int, shard_count: int, symmetry: str, edge_bias: float, geometry_style: str) -> Tuple[List[Dict[str, float]], List[Dict[str, float]]]:
     terraces: List[Dict[str, float]] = []
     shards: List[Dict[str, float]] = []
@@ -367,6 +421,7 @@ def generate_receipt_mode_metadata(receipt_path: Path) -> Dict:
         "canonical_receipt_hash": canonical_hash,
         "derived_seeds": seed_material,
         "visual_traits": visual_traits,
+        "action_growth_map": _action_growth_map(receipt),
         "artifact_file": "crystal.svg",
         "boundary": "The crystal is a visual artifact derived from receipt evidence. It is not the security verifier.",
         "width": WIDTH,
