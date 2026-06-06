@@ -211,6 +211,9 @@ crystal artifact
 -> optional minting later
 ```
 
+Crystal Receipts may later be shared and scanned like receipt cards, but the image or QR is only a pointer/artifact layer.
+Verification remains separate and must still come from receipt evidence, hashes, signatures, `eventRoot`, and verifier logic.
+
 ## Product meaning
 
 Crystal Receipt turns invisible execution evidence into a visible artifact.

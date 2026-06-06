@@ -74,6 +74,15 @@ python generate.py --receipt path/to/receipt.json --out examples/receipt-demo
 - NFT metadata export
 - no minting by default
 
+### v0.4
+- shareable receipt card
+
+### v0.5
+- QR/deep-link export
+
+### v0.6
+- scan-to-verify flow
+
 ## Next possible steps
 
 ### Better visuals
