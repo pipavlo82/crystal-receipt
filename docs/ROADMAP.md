@@ -37,13 +37,13 @@ Current scope remains deliberately simple:
 - emit richer metadata with provenance and optional NFT-preview fields
 
 ### Planned CLI evolution
-Current CLI stays unchanged:
+Hash mode remains supported:
 
 ```bash
 python generate.py --hash <receiptHash> --out examples/demo
 ```
 
-A later v0.2 may add:
+Receipt mode is now implemented:
 
 ```bash
 python generate.py --receipt path/to/receipt.json --out examples/receipt-demo
@@ -58,6 +58,7 @@ python generate.py --receipt path/to/receipt.json --out examples/receipt-demo
 ### v0.2b
 - add `--receipt path/to/receipt.json` mode later
 - canonicalize receipt evidence before seed derivation
+- **implemented**
 
 ### v0.2c
 - add deterministic visual identity tests

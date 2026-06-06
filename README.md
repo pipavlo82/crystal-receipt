@@ -63,6 +63,19 @@ Those seeds control the crystal generation.
 The same receipt evidence always produces the same crystal.
 Different receipt evidence produces a different crystal: different shape, colors, layers, symmetry, oxide effect, fracture pattern, shard count, and traits.
 
+## Deterministic visual identity rule
+
+```text
+same receipt.json -> same crystal
+changed receipt.json -> different crystal
+```
+
+That means:
+- the same receipt evidence always reproduces the same crystal
+- changed receipt evidence should change the resulting crystal identity
+- uniqueness comes from receipt evidence, not random generation
+- the crystal can be regenerated on another machine from the same receipt evidence and ruleset
+
 ## Why bismuth crystals?
 
 Bismuth crystals are a good metaphor because they are structured but unique.
@@ -161,47 +174,31 @@ Crystal Receipt is not:
 
 It is a deterministic visual grammar for receipt evidence.
 
-## MVP scope
+## Current CLI modes
 
-The current MVP stays intentionally small:
+### Hash mode
 
-- local Python repo
-- no blockchain
-- no NFT minting
-- no Stealth integration
-- no paid APIs
-- deterministic SVG generation
-- metadata output
-- tests for reproducibility
-
-Current MVP:
-
-```text
-receiptHash / hash
--> deterministic seed
--> crystal.svg
--> crystal.metadata.json
-```
-
-Current CLI remains:
+The original MVP remains available:
 
 ```bash
 python generate.py --hash <receiptHash> --out examples/demo
 ```
 
-## Future direction
+This produces a deterministic crystal from a single hash input.
 
-Future v0.2 direction:
+### Receipt mode
 
-```text
-receipt.json
--> canonicalized receipt evidence
--> canonical_receipt_hash
--> derived seeds
--> visual traits
--> crystal.svg
--> crystal.metadata.json
+Receipt-derived generation is now available:
+
+```bash
+python generate.py --receipt examples/receipt-demo/receipt.json --out examples/receipt-demo
 ```
+
+This loads receipt JSON, canonicalizes it, derives seeds and visual traits, and writes:
+- `crystal.svg`
+- `crystal.metadata.json`
+
+## Future direction
 
 Future optional layer:
 
