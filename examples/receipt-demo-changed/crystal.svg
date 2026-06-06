@@ -21,46 +21,47 @@
   </defs>
   <rect width="100%" height="100%" fill="url(#bg)" />
   <g filter="url(#softGlow)">
-  <path d="M 290.00 280.00 H 910.00 V 900.00 H 290.00 Z" fill="none" stroke="#f8f9fa" stroke-width="2.48" stroke-opacity="0.6361" />
-  <path d="M 308.00 298.00 H 892.00 V 882.00 H 308.00 Z" fill="rgba(0,0,0,0)" stroke="#ced4da" stroke-width="1.1" stroke-opacity="0.5561" />
-  <path d="M 319.97 309.97 H 880.03 V 870.03 H 319.97 Z" fill="none" stroke="#ced4da" stroke-width="3.08" stroke-opacity="0.5635" />
-  <path d="M 336.97 326.97 H 863.03 V 853.03 H 336.97 Z" fill="rgba(0,0,0,0)" stroke="#adb5bd" stroke-width="1.1" stroke-opacity="0.4835" />
-  <path d="M 349.93 339.93 H 850.07 V 840.07 H 349.93 Z" fill="none" stroke="#adb5bd" stroke-width="2.48" stroke-opacity="0.4908" />
-  <path d="M 365.93 355.93 H 834.07 V 824.07 H 365.93 Z" fill="rgba(0,0,0,0)" stroke="#ffcad4" stroke-width="1.1" stroke-opacity="0.4108" />
-  <path d="M 379.90 369.90 H 820.10 V 810.10 H 379.90 Z" fill="none" stroke="#ffcad4" stroke-width="3.08" stroke-opacity="0.4181" />
-  <path d="M 394.90 384.90 H 805.10 V 795.10 H 394.90 Z" fill="rgba(0,0,0,0)" stroke="#f4acb7" stroke-width="1.1" stroke-opacity="0.3381" />
-  <path d="M 409.87 399.87 H 790.13 V 780.13 H 409.87 Z" fill="none" stroke="#f4acb7" stroke-width="2.48" stroke-opacity="0.3454" />
-  <path d="M 423.87 413.87 H 776.13 V 766.13 H 423.87 Z" fill="rgba(0,0,0,0)" stroke="#f8f9fa" stroke-width="1.1" stroke-opacity="0.2654" />
-  <path d="M 439.83 429.83 H 760.17 V 750.17 H 439.83 Z" fill="none" stroke="#f8f9fa" stroke-width="3.08" stroke-opacity="0.2727" />
-  <path d="M 452.83 442.83 H 747.17 V 737.17 H 452.83 Z" fill="rgba(0,0,0,0)" stroke="#ced4da" stroke-width="1.1" stroke-opacity="0.1927" />
-  <path d="M 349.96 339.59 H 436.70 V 409.38 H 349.96 Z" fill="#adb5bd" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <path d="M 452.38 339.59 H 539.11 V 409.38 H 452.38 Z" fill="#ffcad4" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <path d="M 554.79 339.59 H 641.53 V 409.38 H 554.79 Z" fill="#f4acb7" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <path d="M 657.21 339.59 H 743.94 V 409.38 H 657.21 Z" fill="#f8f9fa" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <path d="M 759.62 339.59 H 846.36 V 409.38 H 759.62 Z" fill="#ced4da" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <path d="M 349.96 425.06 H 436.70 V 494.85 H 349.96 Z" fill="#adb5bd" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <path d="M 452.38 425.06 H 539.11 V 494.85 H 452.38 Z" fill="#ffcad4" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <path d="M 554.79 425.06 H 641.53 V 494.85 H 554.79 Z" fill="#f4acb7" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <path d="M 657.21 425.06 H 743.94 V 494.85 H 657.21 Z" fill="#f8f9fa" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <path d="M 759.62 425.06 H 846.36 V 494.85 H 759.62 Z" fill="#ced4da" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <path d="M 349.96 510.53 H 436.70 V 580.32 H 349.96 Z" fill="#adb5bd" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <path d="M 452.38 510.53 H 539.11 V 580.32 H 452.38 Z" fill="#ffcad4" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <path d="M 554.79 510.53 H 641.53 V 580.32 H 554.79 Z" fill="#f4acb7" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <path d="M 657.21 510.53 H 743.94 V 580.32 H 657.21 Z" fill="#f8f9fa" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <path d="M 759.62 510.53 H 846.36 V 580.32 H 759.62 Z" fill="#ced4da" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <path d="M 349.96 596.00 H 436.70 V 665.79 H 349.96 Z" fill="#adb5bd" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <path d="M 452.38 596.00 H 539.11 V 665.79 H 452.38 Z" fill="#ffcad4" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <path d="M 554.79 596.00 H 641.53 V 665.79 H 554.79 Z" fill="#f4acb7" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <path d="M 657.21 596.00 H 743.94 V 665.79 H 657.21 Z" fill="#f8f9fa" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <path d="M 759.62 596.00 H 846.36 V 665.79 H 759.62 Z" fill="#ced4da" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <path d="M 349.96 681.47 H 436.70 V 751.26 H 349.96 Z" fill="#adb5bd" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <path d="M 452.38 681.47 H 539.11 V 751.26 H 452.38 Z" fill="#ffcad4" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <path d="M 554.79 681.47 H 641.53 V 751.26 H 554.79 Z" fill="#f4acb7" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <path d="M 657.21 681.47 H 743.94 V 751.26 H 657.21 Z" fill="#f8f9fa" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <path d="M 759.62 681.47 H 846.36 V 751.26 H 759.62 Z" fill="#ced4da" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <path d="M 349.96 766.94 H 436.70 V 836.73 H 349.96 Z" fill="#adb5bd" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <path d="M 452.38 766.94 H 539.11 V 836.73 H 452.38 Z" fill="#ffcad4" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <path d="M 554.79 766.94 H 641.53 V 836.73 H 554.79 Z" fill="#f4acb7" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
+  <rect x="280.00" y="266.00" width="640.00" height="640.00" fill="url(#oxide)" fill-opacity="0.2375" stroke="none" />
+  <rect x="280.00" y="266.00" width="640.00" height="640.00" fill="none" stroke="#f8f9fa" stroke-width="2.48" stroke-opacity="0.6361" />
+  <rect x="298.00" y="284.00" width="604.00" height="604.00" fill="none" stroke="#ced4da" stroke-width="1.10" stroke-opacity="0.5561" />
+  <rect x="317.10" y="303.10" width="565.81" height="565.81" fill="none" stroke="#ced4da" stroke-width="3.08" stroke-opacity="0.5635" />
+  <rect x="334.10" y="320.10" width="531.81" height="531.81" fill="none" stroke="#adb5bd" stroke-width="1.10" stroke-opacity="0.4835" />
+  <rect x="354.19" y="340.19" width="491.62" height="491.62" fill="none" stroke="#adb5bd" stroke-width="2.48" stroke-opacity="0.4908" />
+  <rect x="370.19" y="356.19" width="459.62" height="459.62" fill="none" stroke="#ffcad4" stroke-width="1.10" stroke-opacity="0.4108" />
+  <rect x="391.28" y="377.28" width="417.43" height="417.43" fill="none" stroke="#ffcad4" stroke-width="3.08" stroke-opacity="0.4181" />
+  <rect x="406.28" y="392.28" width="387.43" height="387.43" fill="none" stroke="#f4acb7" stroke-width="1.10" stroke-opacity="0.3381" />
+  <rect x="428.38" y="414.38" width="343.24" height="343.24" fill="none" stroke="#f4acb7" stroke-width="2.48" stroke-opacity="0.3454" />
+  <rect x="442.38" y="428.38" width="315.24" height="315.24" fill="none" stroke="#f8f9fa" stroke-width="1.10" stroke-opacity="0.2654" />
+  <rect x="465.48" y="451.48" width="269.05" height="269.05" fill="none" stroke="#f8f9fa" stroke-width="3.08" stroke-opacity="0.2727" />
+  <rect x="478.48" y="464.48" width="243.05" height="243.05" fill="none" stroke="#ced4da" stroke-width="1.10" stroke-opacity="0.1927" />
+  <rect x="360.19" y="346.19" width="107.47" height="54.80" fill="#adb5bd" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
+  <rect x="483.80" y="346.19" width="107.47" height="54.80" fill="#ffcad4" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
+  <rect x="607.41" y="346.19" width="107.47" height="54.80" fill="#f4acb7" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
+  <rect x="731.02" y="346.19" width="107.47" height="54.80" fill="#f8f9fa" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
+  <rect x="360.19" y="417.13" width="107.47" height="54.80" fill="#ced4da" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
+  <rect x="483.10" y="416.42" width="107.47" height="54.80" fill="#adb5bd" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
+  <rect x="606.71" y="416.42" width="107.47" height="54.80" fill="#ffcad4" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
+  <rect x="730.32" y="416.42" width="107.47" height="54.80" fill="#f4acb7" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
+  <rect x="360.19" y="488.07" width="107.47" height="54.80" fill="#f8f9fa" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
+  <rect x="483.10" y="487.36" width="107.47" height="54.80" fill="#ced4da" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
+  <rect x="606.00" y="486.65" width="107.47" height="54.80" fill="#adb5bd" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
+  <rect x="729.61" y="486.65" width="107.47" height="54.80" fill="#ffcad4" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
+  <rect x="360.19" y="559.00" width="107.47" height="54.80" fill="#f4acb7" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
+  <rect x="483.10" y="558.30" width="107.47" height="54.80" fill="#f8f9fa" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
+  <rect x="606.00" y="557.59" width="107.47" height="54.80" fill="#ced4da" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
+  <rect x="728.90" y="556.88" width="107.47" height="54.80" fill="#adb5bd" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
+  <rect x="360.19" y="629.94" width="107.47" height="54.80" fill="#ffcad4" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
+  <rect x="483.10" y="629.23" width="107.47" height="54.80" fill="#f4acb7" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
+  <rect x="606.00" y="628.53" width="107.47" height="54.80" fill="#f8f9fa" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
+  <rect x="728.90" y="627.82" width="107.47" height="54.80" fill="#ced4da" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
+  <rect x="360.19" y="700.88" width="107.47" height="54.80" fill="#adb5bd" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
+  <rect x="483.10" y="700.17" width="107.47" height="54.80" fill="#ffcad4" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
+  <rect x="606.00" y="699.47" width="107.47" height="54.80" fill="#f4acb7" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
+  <rect x="728.90" y="698.76" width="107.47" height="54.80" fill="#f8f9fa" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
+  <rect x="360.19" y="771.82" width="107.47" height="54.80" fill="#ced4da" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
+  <rect x="483.10" y="771.11" width="107.47" height="54.80" fill="#adb5bd" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
+  <rect x="606.00" y="770.40" width="107.47" height="54.80" fill="#ffcad4" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
+  <rect x="728.90" y="769.70" width="107.47" height="54.80" fill="#f4acb7" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
   </g>
   <text x="600.0" y="1134" text-anchor="middle" fill="#c7d0dc" font-family="monospace" font-size="18">826b5c68c64992f89a73d4…</text>
   <text x="600.0" y="1162" text-anchor="middle" fill="#7d8896" font-family="monospace" font-size="14">hopper / silver_rose / common</text>

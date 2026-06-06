@@ -261,7 +261,6 @@ def _hopper_rectangles(layer_count: int, shard_count: int, symmetry: str, edge_b
 
 def render_receipt_mode_svg(metadata: Dict) -> str:
     traits = metadata["visual_traits"]
-    derived_seeds = metadata["derived_seeds"]
     palette = PALETTES[traits["palette_name"]]
     defs = f"""
   <defs>
@@ -287,31 +286,42 @@ def render_receipt_mode_svg(metadata: Dict) -> str:
     body = [f'<rect width="100%" height="100%" fill="url(#bg)" />']
     body.append('<g filter="url(#softGlow)">')
 
-    hopper = _hopper_paths(traits["layer_count"], traits["shard_count"], traits["symmetry"], traits["edge_bias"])
-    layer_paths = hopper[: traits["layer_count"]]
-    shard_paths = hopper[traits["layer_count"] :]
+    terraces, shards = _hopper_rectangles(
+        traits["layer_count"],
+        traits["shard_count"],
+        traits["symmetry"],
+        traits["edge_bias"],
+        traits["geometry_style"],
+    )
+
+    if terraces:
+        outer = terraces[0]
+        body.append(
+            f'<rect x="{outer["x"]:.2f}" y="{outer["y"]:.2f}" width="{outer["w"]:.2f}" height="{outer["h"]:.2f}" '
+            f'fill="url(#oxide)" fill-opacity="{0.16 + traits["oxide_intensity"] * 0.18:.4f}" stroke="none" />'
+        )
 
     stroke_base = 1.4 + traits["edge_bias"] * 2.2
-    for idx, rect in enumerate(layer_paths):
+    for idx, rect in enumerate(terraces):
         color = palette[idx % len(palette)]
         opacity = round(0.2 + ((traits["layer_count"] - idx) / max(traits["layer_count"], 1)) * (0.35 + traits["oxide_intensity"] * 0.2), 4)
         body.append(
-            f'<path d="{_rect(rect["x"], rect["y"], rect["w"], rect["h"])}" fill="none" '
+            f'<rect x="{rect["x"]:.2f}" y="{rect["y"]:.2f}" width="{rect["w"]:.2f}" height="{rect["h"]:.2f}" fill="none" '
             f'stroke="{color}" stroke-width="{stroke_base + (idx % 2) * 0.6:.2f}" stroke-opacity="{opacity}" />'
         )
-        inset = max(8, 18 - idx)
-        inner_w = max(24, rect["w"] - inset * 2)
-        inner_h = max(24, rect["h"] - inset * 2)
+        inset = max(8.0, min(rect["notch"], 18.0 - min(idx, 8)))
+        inner_w = max(24.0, rect["w"] - inset * 2)
+        inner_h = max(24.0, rect["h"] - inset * 2)
         body.append(
-            f'<path d="{_rect(rect["x"] + inset, rect["y"] + inset, inner_w, inner_h)}" fill="rgba(0,0,0,0)" '
-            f'stroke="{palette[(idx + 1) % len(palette)]}" stroke-width="1.1" stroke-opacity="{max(0.15, opacity - 0.08):.4f}" />'
+            f'<rect x="{rect["x"] + inset:.2f}" y="{rect["y"] + inset:.2f}" width="{inner_w:.2f}" height="{inner_h:.2f}" fill="none" '
+            f'stroke="{palette[(idx + 1) % len(palette)]}" stroke-width="1.10" stroke-opacity="{max(0.15, opacity - 0.08):.4f}" />'
         )
 
-    for idx, rect in enumerate(shard_paths):
+    for idx, rect in enumerate(shards):
         color = palette[(idx + 2) % len(palette)]
         fill_opacity = round(0.08 + traits["oxide_intensity"] * 0.25, 4)
         body.append(
-            f'<path d="{_rect(rect["x"], rect["y"], rect["w"], rect["h"])}" fill="{color}" fill-opacity="{fill_opacity}" '
+            f'<rect x="{rect["x"]:.2f}" y="{rect["y"]:.2f}" width="{rect["w"]:.2f}" height="{rect["h"]:.2f}" fill="{color}" fill-opacity="{fill_opacity}" '
             f'stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />'
         )
 
@@ -371,6 +381,10 @@ def write_hash_outputs(receipt_hash: str, out_dir: Path) -> Dict:
     (out_dir / "crystal.svg").write_text(svg, encoding="utf-8")
     (out_dir / "crystal.metadata.json").write_text(json.dumps(spec, indent=2) + "\n", encoding="utf-8")
     return spec
+
+
+def write_outputs(receipt_hash: str, out_dir: Path) -> Dict:
+    return write_hash_outputs(receipt_hash, out_dir)
 
 
 def write_receipt_outputs(receipt_path: Path, out_dir: Path) -> Dict:
