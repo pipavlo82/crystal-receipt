@@ -59,6 +59,12 @@ python generate.py --receipt path/to/receipt.json --out examples/receipt-demo
 - add `--receipt path/to/receipt.json` mode later
 - canonicalize receipt evidence before seed derivation
 
+### v0.2c
+- add deterministic visual identity tests
+- prove same receipt-derived input gives the same seeds/traits
+- prove modified receipt-derived input gives different seeds/traits
+- require future `--receipt` generation to preserve same/different visual identity behavior
+
 ### v0.3
 - map receipt fields into visual traits and crystal structure
 - keep deterministic output for the same receipt evidence bundle
@@ -93,6 +99,10 @@ python generate.py --receipt path/to/receipt.json --out examples/receipt-demo
 - optional embedding into receipt viewers
 - side-by-side receipt + crystal display
 - receipt gallery / explorer concepts
+
+### Optional future layers
+- NFT metadata export
+- optional mint pipeline
 
 ## Explicit non-goals for now
 

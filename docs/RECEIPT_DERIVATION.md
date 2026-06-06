@@ -52,6 +52,41 @@ From that canonical receipt object, the system can derive:
 - deterministic visual traits
 - eventually, crystal geometry and metadata
 
+## Deterministic visual identity rule
+
+Crystal Receipt must preserve a strict visual identity rule:
+
+```text
+same receipt.json -> same crystal
+changed receipt.json -> different crystal
+```
+
+That means:
+- the same receipt evidence must always produce the same crystal
+- different receipt evidence must produce a different visual crystal identity
+- uniqueness comes from receipt evidence, not from random generation
+- generation must be deterministic and reproducible across machines
+- the same `receipt.json` tomorrow must regenerate the same SVG and metadata
+
+If fields such as:
+- `receiptHash`
+- `diffHash`
+- `eventRoot`
+- `agent_id`
+- `scope`
+- `changed_files`
+- `timestamp`
+- `verifier_result`
+- `signature_trust_block`
+
+change, then:
+- `canonical_receipt_hash` should change
+- derived seed material should change
+- visual traits should change
+- and the future crystal output should change
+
+This rule is the core identity guarantee for receipt-derived generation.
+
 ## Canonical hash -> seed material
 
 A future receipt-aware flow can use:

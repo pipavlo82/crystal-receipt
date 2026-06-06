@@ -1,0 +1,36 @@
+{
+  "schema": "crystal-receipt.fixture.v0",
+  "session_id": "sess_demo_changed_002",
+  "receiptHash": "rcpt_demo_changed_91b4d8ef44a0c322",
+  "diffHash": "diff_demo_changed_2f7ab01cc993de54",
+  "eventRoot": "event_root_demo_changed_77c3b9241de8af10",
+  "agent_id": "agent.crystal.demo.changed",
+  "scope": {
+    "permission": "workspace-write",
+    "network": "disabled",
+    "notes": "Changed local demo scope"
+  },
+  "authority": {
+    "mode": "captured-evidence",
+    "operator": "local-user-2",
+    "boundary": "workspace-only"
+  },
+  "changed_files": [
+    "src/visual_rules.py",
+    "docs/CHANGELOG.md",
+    "README.md"
+  ],
+  "timestamp": "2026-06-05T10:30:00Z",
+  "verifier_result": {
+    "status": "OK",
+    "reason_code": "OK",
+    "details": "Changed fake local fixture for identity testing"
+  },
+  "signature_trust_block": {
+    "algorithm": "demo-hmac",
+    "key_id": "demo-key-002",
+    "signer_id": "agent.crystal.demo.changed",
+    "trust_mode": "signature_extension",
+    "signature": "demo_signature_changed_placeholder"
+  }
+}

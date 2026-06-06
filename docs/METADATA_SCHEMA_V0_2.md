@@ -11,11 +11,28 @@ It does **not** change the current MVP generator yet.
 - support a future optional NFT metadata export layer
 - avoid pretending that the crystal itself is the verifier
 
+## Reproducibility requirement
+
+Metadata should include enough provenance to let another machine reproduce the same crystal from the same receipt evidence.
+
+That means the metadata should include or reference:
+- `canonical_receipt_hash`
+- `derived_seeds`
+- `visual_traits`
+- `generator_version`
+- `ruleset`
+- `source_receipt` fields or a stable source receipt reference
+- an artifact hash once SVG generation is connected to receipt mode
+
+This reproducibility metadata is still **not** the verifier itself.
+It is the deterministic provenance needed to recreate the same visual artifact from the same receipt evidence.
+
 ## Proposed shape
 
 ```json
 {
   "version": "0.2",
+  "canonical_receipt_hash": "...",
   "source_receipt": {
     "session_id": "sess_123",
     "receiptHash": "...",
@@ -61,9 +78,11 @@ It does **not** change the current MVP generator yet.
   "provenance": {
     "generator": "crystal-receipt",
     "generator_version": "0.2-draft",
+    "ruleset": "receipt-derived-v0.2",
     "derivation_mode": "receipt-derived",
     "visual_role": "receipt-fingerprint",
-    "security_note": "Visual artifact only; not the verifier itself."
+    "security_note": "Visual artifact only; not the verifier itself.",
+    "artifact_hash": "..."
   },
   "nft_metadata_preview": {
     "name": "Crystal Receipt #sess_123",
@@ -80,6 +99,10 @@ It does **not** change the current MVP generator yet.
 
 ## Field groups
 
+### `canonical_receipt_hash`
+The stable deterministic digest of the canonicalized receipt evidence.
+This is the root provenance value for reproducibility.
+
 ### `source_receipt`
 The receipt/evidence identity layer.
 This anchors the crystal back to real execution evidence.
@@ -94,7 +117,7 @@ These traits should be deterministic, reproducible, and suitable for future SVG 
 They are not verifier conclusions.
 
 ### `provenance`
-Clarifies generator version, mode, and the fact that the crystal is not a verifier.
+Clarifies generator version, ruleset, derivation mode, artifact hash, and the fact that the crystal is not a verifier.
 
 ### `nft_metadata_preview`
 Optional future-facing shape only.
