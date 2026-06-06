@@ -75,6 +75,19 @@ It is the deterministic provenance needed to recreate the same visual artifact f
     "edge_bias": 0.3815,
     "rarity": "uncommon"
   },
+  "action_growth_map": {
+    "session_id": "base orientation / initial growth origin",
+    "agent_id": "core geometry bias",
+    "receiptHash": "primary crystal identity",
+    "eventRoot": "global growth structure",
+    "diffHash": "fracture / step pattern",
+    "changed_files": "terrace count / branch count / growth bands",
+    "scope": "outer shell / boundary size",
+    "authority": "boundary strength / edge thickness",
+    "verifier_result": "clarity / seal / glow state",
+    "signature_trust_block": "trust ring / edge accent",
+    "timestamp": "layer rhythm / growth order"
+  },
   "provenance": {
     "generator": "crystal-receipt",
     "generator_version": "0.2-draft",
@@ -115,6 +128,11 @@ This keeps generation structured and extensible.
 Human-readable traits extracted from deterministic derivation.
 These traits should be deterministic, reproducible, and suitable for future SVG shaping.
 They are not verifier conclusions.
+
+### `action_growth_map`
+A proposed future field describing how receipt evidence maps to visible crystal mutations.
+This is example documentation only for now.
+It does not imply current generator support.
 
 ### `provenance`
 Clarifies generator version, ruleset, derivation mode, artifact hash, and the fact that the crystal is not a verifier.

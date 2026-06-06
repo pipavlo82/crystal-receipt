@@ -118,6 +118,8 @@ This is the layer that can later shape SVG output in a stable, explainable way.
 ## What the crystal can represent
 
 The crystal should not be arbitrary decoration. It should be semantically tied to receipt structure.
+Visual traits are not purely decorative.
+They should be traceable back to receipt evidence.
 
 For example:
 
@@ -168,6 +170,27 @@ Fields like timestamps or other session-structure signals can influence:
 - offset patterns
 - symmetry class
 - growth cadence
+
+## Action-to-growth mapping
+
+Future renderer improvements should make receipt changes visible through deterministic growth changes.
+That means visual traits should be explainable as evidence-driven outcomes rather than decorative noise.
+
+In other words:
+
+- visual traits are not purely decorative
+- visual traits should be traceable back to receipt evidence
+- future renderer improvements should make receipt changes visible through deterministic growth changes
+- the crystal is still not the verifier
+
+A useful shorthand for the intended grammar is:
+
+```text
+receipt action -> crystal growth mutation
+```
+
+This does not mean every single receipt field must map one-to-one to a single visible primitive immediately.
+It means the renderer should evolve toward deterministic, explainable growth where evidence changes have visible consequences.
 
 ## Why this is useful
 
