@@ -248,6 +248,13 @@ That separation is the key:
 - No external paid APIs
 - Minimal dependencies: Python standard library only
 
+## Architecture overview
+
+Crystal Receipt takes receipt evidence, canonicalizes it, derives deterministic seeds and visual traits, builds an action-to-growth explanation layer, and writes both a crystal artifact and machine-readable metadata. The image is the human-facing fingerprint; verification still remains separate.
+
+- `docs/ARCHITECTURE_OVERVIEW.md`
+- `docs/crystal_receipt_architecture.svg`
+
 ## Related docs
 
 - `docs/RECEIPT_DERIVATION.md`

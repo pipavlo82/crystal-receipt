@@ -1,0 +1,152 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1120" viewBox="0 0 1600 1120" role="img" aria-labelledby="title desc">
+  <title id="title">Crystal Receipt Architecture</title>
+  <desc id="desc">A dark themed architecture diagram showing the Crystal Receipt pipeline from receipt evidence through canonicalization, seed derivation, visual traits, action growth mapping, and final crystal artifacts.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070a10"/>
+      <stop offset="55%" stop-color="#101525"/>
+      <stop offset="100%" stop-color="#16111f"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#131a2c"/>
+      <stop offset="100%" stop-color="#1a1227"/>
+    </linearGradient>
+    <linearGradient id="panel2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#101b26"/>
+      <stop offset="100%" stop-color="#161022"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#4cc9f0"/>
+      <stop offset="35%" stop-color="#4361ee"/>
+      <stop offset="68%" stop-color="#9d4edd"/>
+      <stop offset="100%" stop-color="#f72585"/>
+    </linearGradient>
+    <linearGradient id="oxide" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#80ed99"/>
+      <stop offset="30%" stop-color="#4cc9f0"/>
+      <stop offset="55%" stop-color="#4361ee"/>
+      <stop offset="80%" stop-color="#9d4edd"/>
+      <stop offset="100%" stop-color="#f72585"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 z" fill="#8bd3ff"/>
+    </marker>
+    <style>
+      .title { font: 700 42px Inter, Segoe UI, Arial, sans-serif; fill: #eef4ff; }
+      .subtitle { font: 500 18px Inter, Segoe UI, Arial, sans-serif; fill: #b8c6dd; }
+      .boxTitle { font: 700 24px Inter, Segoe UI, Arial, sans-serif; fill: #f4f8ff; }
+      .mono { font: 600 15px ui-monospace, SFMono-Regular, Consolas, monospace; fill: #d9e6ff; }
+      .body { font: 500 17px Inter, Segoe UI, Arial, sans-serif; fill: #d9e3f4; }
+      .small { font: 500 15px Inter, Segoe UI, Arial, sans-serif; fill: #b8c6dd; }
+      .tiny { font: 500 14px Inter, Segoe UI, Arial, sans-serif; fill: #aab9cf; }
+      .chip { font: 700 14px Inter, Segoe UI, Arial, sans-serif; fill: #081018; }
+      .note { font: 700 16px Inter, Segoe UI, Arial, sans-serif; fill: #ffe69a; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="1120" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1600" height="8" fill="url(#accent)"/>
+
+  <text x="70" y="82" class="title">Crystal Receipt Architecture</text>
+  <text x="70" y="118" class="subtitle">receipt.json → canonical_receipt_hash → derived_seeds → visual_traits → action_growth_map → crystal.svg + crystal.metadata.json</text>
+
+  <rect x="70" y="160" rx="24" ry="24" width="270" height="760" fill="url(#panel)" stroke="#355c88" stroke-width="2"/>
+  <text x="100" y="210" class="boxTitle">Receipt Evidence</text>
+  <text x="100" y="246" class="small">Structured action evidence fields</text>
+  <text x="100" y="296" class="mono">session_id</text>
+  <text x="100" y="332" class="mono">receiptHash</text>
+  <text x="100" y="368" class="mono">diffHash</text>
+  <text x="100" y="404" class="mono">eventRoot</text>
+  <text x="100" y="440" class="mono">agent_id</text>
+  <text x="100" y="476" class="mono">scope / authority</text>
+  <text x="100" y="512" class="mono">changed_files</text>
+  <text x="100" y="548" class="mono">timestamp</text>
+  <text x="100" y="584" class="mono">verifier_result</text>
+  <text x="100" y="620" class="mono">signature_trust_block</text>
+  <text x="100" y="694" class="body">Every important action gets a receipt.</text>
+  <text x="100" y="724" class="small">This is the source evidence layer.</text>
+
+  <rect x="410" y="160" rx="24" ry="24" width="280" height="250" fill="url(#panel2)" stroke="#355c88" stroke-width="2"/>
+  <text x="440" y="210" class="boxTitle">Canonicalization</text>
+  <text x="440" y="250" class="mono">sorted keys</text>
+  <text x="440" y="286" class="mono">compact JSON</text>
+  <text x="440" y="322" class="mono">deterministic SHA-256</text>
+  <rect x="440" y="345" rx="12" ry="12" width="220" height="38" fill="#0f2738" stroke="#4cc9f0"/>
+  <text x="455" y="370" class="chip">canonical_receipt_hash</text>
+
+  <rect x="760" y="160" rx="24" ry="24" width="310" height="330" fill="url(#panel)" stroke="#355c88" stroke-width="2"/>
+  <text x="790" y="210" class="boxTitle">Seed Derivation</text>
+  <text x="790" y="250" class="small">Deterministic seed material</text>
+  <text x="790" y="296" class="mono">master_seed</text>
+  <text x="790" y="330" class="mono">shape_seed</text>
+  <text x="790" y="364" class="mono">palette_seed</text>
+  <text x="790" y="398" class="mono">symmetry_seed</text>
+  <text x="790" y="432" class="mono">layer_seed</text>
+  <text x="790" y="466" class="mono">oxide_seed</text>
+  <text x="790" y="500" class="mono">trait_seed</text>
+
+  <rect x="1140" y="160" rx="24" ry="24" width="320" height="330" fill="url(#panel2)" stroke="#355c88" stroke-width="2"/>
+  <text x="1170" y="210" class="boxTitle">Visual Traits</text>
+  <text x="1170" y="250" class="small">Human-readable deterministic traits</text>
+  <text x="1170" y="296" class="mono">geometry_style</text>
+  <text x="1170" y="330" class="mono">palette_name</text>
+  <text x="1170" y="364" class="mono">symmetry</text>
+  <text x="1170" y="398" class="mono">layer_count</text>
+  <text x="1170" y="432" class="mono">shard_count</text>
+  <text x="1170" y="466" class="mono">oxide_intensity</text>
+  <text x="1170" y="500" class="mono">edge_bias</text>
+  <text x="1170" y="534" class="mono">rarity</text>
+
+  <rect x="410" y="540" rx="24" ry="24" width="520" height="300" fill="url(#panel)" stroke="#355c88" stroke-width="2"/>
+  <text x="440" y="590" class="boxTitle">Action Growth Map</text>
+  <text x="440" y="625" class="body">receipt action → crystal growth mutation</text>
+  <text x="440" y="670" class="mono">changed_files → terraces</text>
+  <text x="440" y="705" class="mono">verifier_result → seal / glow</text>
+  <text x="440" y="740" class="mono">scope / authority → boundary</text>
+  <text x="440" y="775" class="mono">diff / eventRoot → fracture / growth pattern</text>
+  <text x="440" y="815" class="small">Semantic bridge between evidence and visible structure</text>
+
+  <rect x="1010" y="540" rx="24" ry="24" width="450" height="400" fill="url(#panel2)" stroke="#355c88" stroke-width="2"/>
+  <text x="1040" y="590" class="boxTitle">Crystal Artifact</text>
+  <text x="1040" y="628" class="mono">crystal.svg</text>
+  <text x="1040" y="660" class="mono">crystal.metadata.json</text>
+  <text x="1040" y="715" class="body">Bismuth / hopper-style visual receipt artifact</text>
+
+  <g transform="translate(1235 760)" filter="url(#glow)">
+    <rect x="-120" y="-120" width="240" height="240" fill="none" stroke="#80ed99" stroke-width="4" opacity="0.55"/>
+    <rect x="-92" y="-92" width="184" height="184" fill="none" stroke="#4cc9f0" stroke-width="3" opacity="0.6"/>
+    <rect x="-68" y="-68" width="136" height="136" fill="none" stroke="#4361ee" stroke-width="3" opacity="0.68"/>
+    <rect x="-44" y="-44" width="88" height="88" fill="none" stroke="#9d4edd" stroke-width="3" opacity="0.75"/>
+    <rect x="-22" y="-22" width="44" height="44" fill="url(#oxide)" fill-opacity="0.35" stroke="#f72585" stroke-width="2" opacity="0.9"/>
+    <rect x="-96" y="-18" width="50" height="24" fill="#4cc9f0" fill-opacity="0.18" stroke="#d6f5ff" stroke-opacity="0.25"/>
+    <rect x="48" y="-18" width="50" height="24" fill="#9d4edd" fill-opacity="0.18" stroke="#d6f5ff" stroke-opacity="0.25"/>
+    <rect x="-18" y="48" width="36" height="48" fill="#80ed99" fill-opacity="0.18" stroke="#d6f5ff" stroke-opacity="0.25"/>
+    <rect x="-18" y="-96" width="36" height="48" fill="#f72585" fill-opacity="0.18" stroke="#d6f5ff" stroke-opacity="0.25"/>
+  </g>
+
+  <rect x="1110" y="886" rx="14" ry="14" width="250" height="36" fill="#2a2130" stroke="#f1fa8c" stroke-opacity="0.45"/>
+  <text x="1132" y="910" class="note">Visual artifact, not verifier.</text>
+
+  <line x1="340" y1="285" x2="410" y2="285" stroke="#8bd3ff" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="690" y1="285" x2="760" y2="285" stroke="#8bd3ff" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="1070" y1="325" x2="1140" y2="325" stroke="#8bd3ff" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="1300" y1="490" x2="1300" y2="540" stroke="#8bd3ff" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="915" y1="490" x2="915" y2="580" stroke="#8bd3ff" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="930" y1="690" x2="1010" y2="690" stroke="#8bd3ff" stroke-width="4" marker-end="url(#arrow)"/>
+
+  <text x="410" y="980" class="body">Deterministic rule:</text>
+  <text x="410" y="1018" class="mono">same receipt evidence → same crystal</text>
+  <text x="410" y="1052" class="mono">changed receipt evidence → different crystal</text>
+
+  <text x="1010" y="980" class="body">Security boundary:</text>
+  <text x="1010" y="1018" class="small">Crystal is not the verifier.</text>
+  <text x="1010" y="1052" class="small">Metadata is not the verifier.</text>
+  <text x="1010" y="1086" class="small">QR / NFT / card layers are not the verifier.</text>
+</svg>
