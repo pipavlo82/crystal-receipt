@@ -1,5 +1,7 @@
 # crystal-receipt
 
+![Crystal Receipt architecture hero](docs/crystal_receipt_architecture_bw.svg)
+
 Crystal Receipt turns verifiable execution receipts into deterministic bismuth-inspired visual artifacts.
 
 **Stronger framing:** Crystal Receipt is a deterministic visual fingerprint layer for execution receipts: receipt evidence becomes a reproducible crystal artifact, with optional NFT export later.
@@ -253,7 +255,8 @@ That separation is the key:
 Crystal Receipt takes receipt evidence, canonicalizes it, derives deterministic seeds and visual traits, builds an action-to-growth explanation layer, and writes both a crystal artifact and machine-readable metadata. The image is the human-facing fingerprint; verification still remains separate.
 
 - `docs/ARCHITECTURE_OVERVIEW.md`
-- `docs/crystal_receipt_architecture.svg`
+- `docs/crystal_receipt_architecture_bw.svg` — black-and-white README hero diagram
+- `docs/crystal_receipt_architecture.svg` — detailed architecture draft
 
 ## Related docs
 

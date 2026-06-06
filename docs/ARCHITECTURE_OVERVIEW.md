@@ -252,10 +252,11 @@ This separation is the whole point:
 
 ## Visual diagram
 
-The architecture diagram lives here:
+The architecture diagrams live here:
 
-- [SVG architecture diagram](./crystal_receipt_architecture.svg)
+- [Black-and-white scientific diagram](./crystal_receipt_architecture_bw.svg)
+- [Detailed architecture draft](./crystal_receipt_architecture.svg)
 
-If your Markdown viewer supports inline SVG rendering, you can also view it below:
+If your Markdown viewer supports inline SVG rendering, you can also view the detailed draft below:
 
 ![Crystal Receipt architecture diagram](./crystal_receipt_architecture.svg)
