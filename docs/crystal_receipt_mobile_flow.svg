@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="2920" viewBox="0 0 900 2920" role="img" aria-labelledby="title desc">
+  <title id="title">Crystal Receipt Mobile Flow Diagram</title>
+  <desc id="desc">A vertical black and white scientific style diagram showing the Crystal Receipt pipeline from receipt evidence to canonicalization, seed derivation, visual traits, action growth map, and crystal artifact.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 z" fill="#111111"/>
+    </marker>
+    <style>
+      .bg { fill: #ffffff; }
+      .box { fill: #ffffff; stroke: #111111; stroke-width: 3; }
+      .boxThin { fill: #ffffff; stroke: #111111; stroke-width: 2; }
+      .arrow { stroke: #111111; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .title { font: 700 34px Inter, Segoe UI, Arial, sans-serif; fill: #111111; }
+      .subtitle { font: 500 22px Inter, Segoe UI, Arial, sans-serif; fill: #333333; }
+      .section { font: 700 30px Inter, Segoe UI, Arial, sans-serif; fill: #111111; }
+      .body { font: 500 24px Inter, Segoe UI, Arial, sans-serif; fill: #222222; }
+      .mono { font: 600 21px ui-monospace, SFMono-Regular, Consolas, monospace; fill: #111111; }
+      .note { font: 700 23px Inter, Segoe UI, Arial, sans-serif; fill: #111111; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="900" height="2500"/>
+
+  <text x="450" y="72" text-anchor="middle" class="title">CRYSTAL RECEIPT</text>
+  <text x="450" y="112" text-anchor="middle" class="subtitle">Deterministic visual artifacts for execution receipts</text>
+
+  <rect x="90" y="160" width="720" height="420" rx="22" ry="22" class="box"/>
+  <text x="130" y="215" class="section">1. Receipt Evidence</text>
+  <text x="130" y="270" class="mono">session_id</text>
+  <text x="130" y="310" class="mono">receiptHash</text>
+  <text x="130" y="350" class="mono">diffHash</text>
+  <text x="130" y="390" class="mono">eventRoot</text>
+  <text x="130" y="430" class="mono">agent_id</text>
+  <text x="130" y="470" class="mono">scope / authority</text>
+  <text x="130" y="510" class="mono">changed_files</text>
+  <text x="470" y="270" class="mono">timestamp</text>
+  <text x="470" y="310" class="mono">verifier_result</text>
+  <text x="470" y="350" class="mono">signature_trust_block</text>
+
+  <path d="M450 580 V650" class="arrow"/>
+
+  <rect x="120" y="670" width="660" height="260" rx="22" ry="22" class="box"/>
+  <text x="160" y="725" class="section">2. Canonicalization</text>
+  <text x="160" y="785" class="mono">sorted keys</text>
+  <text x="160" y="825" class="mono">compact JSON</text>
+  <text x="160" y="865" class="mono">SHA-256</text>
+  <rect x="150" y="885" width="360" height="32" rx="8" ry="8" class="boxThin"/>
+  <text x="170" y="907" class="mono">canonical_receipt_hash</text>
+
+  <path d="M450 930 V1000" class="arrow"/>
+
+  <rect x="120" y="1020" width="660" height="330" rx="22" ry="22" class="box"/>
+  <text x="160" y="1075" class="section">3. Seed Derivation</text>
+  <text x="160" y="1135" class="mono">master_seed</text>
+  <text x="160" y="1175" class="mono">shape_seed</text>
+  <text x="160" y="1215" class="mono">palette_seed</text>
+  <text x="160" y="1255" class="mono">symmetry_seed</text>
+  <text x="160" y="1295" class="mono">layer_seed</text>
+  <text x="470" y="1135" class="mono">oxide_seed</text>
+  <text x="470" y="1175" class="mono">trait_seed</text>
+
+  <path d="M450 1350 V1420" class="arrow"/>
+
+  <rect x="120" y="1440" width="660" height="330" rx="22" ry="22" class="box"/>
+  <text x="160" y="1495" class="section">4. Visual Traits</text>
+  <text x="160" y="1555" class="mono">geometry_style</text>
+  <text x="160" y="1595" class="mono">palette_name</text>
+  <text x="160" y="1635" class="mono">symmetry</text>
+  <text x="160" y="1675" class="mono">layer_count</text>
+  <text x="470" y="1555" class="mono">shard_count</text>
+  <text x="470" y="1595" class="mono">oxide_intensity</text>
+  <text x="470" y="1635" class="mono">edge_bias</text>
+  <text x="470" y="1675" class="mono">rarity</text>
+
+  <path d="M450 1770 V1840" class="arrow"/>
+
+  <rect x="90" y="1860" width="720" height="300" rx="22" ry="22" class="box"/>
+  <text x="130" y="1915" class="section">5. Action Growth Map</text>
+  <text x="130" y="1975" class="body">receipt action -&gt; crystal growth mutation</text>
+  <text x="130" y="2025" class="mono">changed_files -&gt; terraces</text>
+  <text x="130" y="2065" class="mono">verifier_result -&gt; seal / glow</text>
+  <text x="130" y="2105" class="mono">scope / authority -&gt; boundary</text>
+  <text x="130" y="2145" class="mono">diffHash / eventRoot -&gt; fracture / growth pattern</text>
+
+  <path d="M450 2160 V2230" class="arrow"/>
+
+  <rect x="90" y="2250" width="720" height="420" rx="22" ry="22" class="box"/>
+  <text x="130" y="2305" class="section">6. Crystal Artifact</text>
+  <text x="130" y="2365" class="mono">crystal.svg</text>
+  <text x="130" y="2405" class="mono">crystal.metadata.json</text>
+  <text x="130" y="2465" class="body">bismuth / hopper-style receipt artifact</text>
+
+  <g transform="translate(620 2425)">
+    <rect x="-90" y="-90" width="180" height="180" fill="#ffffff" stroke="#111111" stroke-width="3"/>
+    <rect x="-62" y="-62" width="124" height="124" fill="#ffffff" stroke="#111111" stroke-width="2.5"/>
+    <rect x="-38" y="-38" width="76" height="76" fill="#ffffff" stroke="#111111" stroke-width="2.2"/>
+    <rect x="-18" y="-18" width="36" height="36" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+    <rect x="-78" y="-10" width="34" height="22" fill="#ffffff" stroke="#111111" stroke-width="1.8"/>
+    <rect x="44" y="-10" width="34" height="22" fill="#ffffff" stroke="#111111" stroke-width="1.8"/>
+    <rect x="-10" y="44" width="22" height="34" fill="#ffffff" stroke="#111111" stroke-width="1.8"/>
+    <rect x="-10" y="-78" width="22" height="34" fill="#ffffff" stroke="#111111" stroke-width="1.8"/>
+  </g>
+
+  <rect x="90" y="2700" width="720" height="190" rx="22" ry="22" class="box"/>
+  <text x="130" y="2760" class="note">- same receipt evidence -&gt; same crystal</text>
+  <text x="130" y="2810" class="note">- changed receipt evidence -&gt; different crystal</text>
+  <text x="130" y="2860" class="note">- Visual artifact, not verifier.</text>
+</svg>
