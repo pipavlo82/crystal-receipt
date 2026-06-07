@@ -469,19 +469,19 @@ def draw_recursive_terrace(x: float, y: float, z: float, w: float, d: float, h: 
 
 def draw_growth_branch(anchor_x: float, anchor_y: float, anchor_z: float, direction: str, blocks: int, recursion_depth: int, traits: Dict, colors: Dict[str, str], depth_x: float, depth_y: float, stroke_width: float, offsets: List[float]) -> str:
     axis = {
-        "east": (1, -0.35),
-        "west": (-1, 0.35),
-        "north": (0.45, -1),
-        "south": (-0.45, 1),
+        "east": (0.72, -0.24),
+        "west": (-0.72, 0.24),
+        "north": (0.22, -0.78),
+        "south": (-0.22, 0.78),
     }[direction]
     parts: List[str] = [f'<g class="growth-branch side-growth side-growth-{direction}">']
     for idx in range(blocks):
-        w = max(18.0, 44.0 - idx * 4.0 + traits["edge_bias"] * 8.0)
-        d = max(0.7, 1.6 - idx * 0.08)
-        h = max(10.0, 28.0 - idx * 2.6)
-        x = anchor_x + axis[0] * (idx + 1) * (32 + traits["edge_bias"] * 12) + offsets[idx % len(offsets)] * 0.5
-        y = anchor_y + axis[1] * (idx + 1) * (18 + traits["oxide_intensity"] * 9) + offsets[(idx + blocks) % len(offsets)] * 0.22
-        z = anchor_z + idx * 0.08
+        w = max(16.0, 38.0 - idx * 3.6 + traits["edge_bias"] * 6.0)
+        d = max(0.65, 1.35 - idx * 0.07)
+        h = max(10.0, 26.0 - idx * 2.2)
+        x = anchor_x + axis[0] * (idx + 1) * (18 + traits["edge_bias"] * 6) + offsets[idx % len(offsets)] * 0.24
+        y = anchor_y + axis[1] * (idx + 1) * (14 + traits["oxide_intensity"] * 5) + offsets[(idx + blocks) % len(offsets)] * 0.12
+        z = anchor_z + idx * 0.06
         block_colors = {
             "top": _mix_hex(colors["top"], colors["accent"], min(0.55, 0.12 + idx * 0.08)),
             "left": _mix_hex(colors["left"], "#08101b", 0.12),
@@ -507,17 +507,17 @@ def draw_bismuth_growth(cx: float, base_y: float, traits: Dict, seed_material: D
     depth_x = (20 + edge_bias * 14) * scale
     depth_y = (11 + edge_bias * 7) * scale
     stroke_width = 1.35 + edge_bias * 1.45
-    levels = max(5, min(10, layer_count // 2 + 2))
-    base_w = (92 + shard_count * 2.8 + (10 if geometry_style == "fractured" else 0)) * scale
-    base_d = 2.5 + (0.25 if symmetry == "high" else 0.15 if symmetry == "medium" else 0.05)
-    level_h = (22 + oxide_intensity * 8) * scale
-    taper_step = (6.5 + (0.8 if geometry_style == "stepped" else 0.0)) * scale
-    recess_step = (8 + oxide_intensity * 10) * scale
+    levels = max(6, min(11, layer_count // 2 + 3))
+    base_w = (84 + min(shard_count, 14) * 1.4 + (6 if geometry_style == "fractured" else 0)) * scale
+    base_d = 2.7 + (0.20 if symmetry == "high" else 0.12 if symmetry == "medium" else 0.04)
+    level_h = (25 + oxide_intensity * 10 + layer_count * 0.45) * scale
+    taper_step = (5.2 + (0.6 if geometry_style == "stepped" else 0.0)) * scale
+    recess_step = (10 + oxide_intensity * 12) * scale
 
     top_color = _mix_hex(palette[0], "#f4f8ff", 0.40)
     left_color = _mix_hex(palette[1], "#08101c", 0.40)
     right_color = _mix_hex(palette[2], "#060c15", 0.34)
-    accent = _mix_hex(palette[3], "#fef08a", 0.26)
+    accent = _mix_hex(palette[3], "#fef08a", 0.34)
     stroke = _mix_hex("#d8e7ff", palette[-1], 0.14)
     colors = {
         "top": top_color,
@@ -528,9 +528,9 @@ def draw_bismuth_growth(cx: float, base_y: float, traits: Dict, seed_material: D
         "accent_opacity": f'{0.32 + oxide_intensity * 0.42:.3f}',
     }
 
-    tower_offsets = deterministic_offsets_from_seed(seed_material["shape_seed"], levels, 12 * scale)
-    side_offsets = deterministic_offsets_from_seed(seed_material["layer_seed"], 24, 14 * scale)
-    corner_offsets = deterministic_offsets_from_seed(seed_material["symmetry_seed"], 16, 10 * scale)
+    tower_offsets = deterministic_offsets_from_seed(seed_material["shape_seed"], levels, 8 * scale)
+    side_offsets = deterministic_offsets_from_seed(seed_material["layer_seed"], 24, 9 * scale)
+    corner_offsets = deterministic_offsets_from_seed(seed_material["symmetry_seed"], 16, 6 * scale)
 
     base_x = cx - base_w / 2
     base_z = 0.0
@@ -547,16 +547,17 @@ def draw_bismuth_growth(cx: float, base_y: float, traits: Dict, seed_material: D
 
     parts.append(draw_hopper_tower(base_x, base_y, base_z, levels, base_w, base_d, level_h, recess_step, taper_step, tower_offsets, colors, depth_x, depth_y, stroke_width))
 
-    side_blocks = max(2, min(5, shard_count // 5 + 1))
-    recursion_depth = max(1, min(3, layer_count // 4 + (1 if shard_count > 10 else 0)))
-    parts.append(draw_growth_branch(cx + base_w * 0.46, base_y - level_h * 0.7, base_z + 0.2, "east", side_blocks, recursion_depth, traits, colors, depth_x, depth_y, stroke_width, side_offsets[: max(8, side_blocks * 2)]))
-    parts.append(draw_growth_branch(cx - base_w * 0.46, base_y - level_h * 0.62, base_z + 0.2, "west", side_blocks, recursion_depth, traits, colors, depth_x, depth_y, stroke_width, side_offsets[side_blocks * 2 : side_blocks * 4 + 4]))
+    side_blocks = max(2, min(4, shard_count // 6 + 1))
+    recursion_depth = max(1, min(3, layer_count // 4 + (1 if shard_count > 12 else 0)))
+    core_span = base_w * 0.26
+    parts.append(draw_growth_branch(cx + core_span, base_y - level_h * 0.95, base_z + 0.18, "east", side_blocks, recursion_depth, traits, colors, depth_x, depth_y, stroke_width, side_offsets[: max(8, side_blocks * 2)]))
+    parts.append(draw_growth_branch(cx - core_span, base_y - level_h * 0.88, base_z + 0.18, "west", side_blocks, recursion_depth, traits, colors, depth_x, depth_y, stroke_width, side_offsets[side_blocks * 2 : side_blocks * 4 + 4]))
     north_blocks = max(2, side_blocks - (0 if symmetry == "high" else 1))
     south_blocks = max(2, side_blocks - (1 if geometry_style == "hopper" else 0))
-    parts.append(draw_growth_branch(cx - 12 * scale, base_y - level_h * 1.2, base_z + 0.28, "north", north_blocks, max(1, recursion_depth - 1), traits, colors, depth_x, depth_y, stroke_width, side_offsets[8: 16]))
-    parts.append(draw_growth_branch(cx + 8 * scale, base_y - level_h * 0.28, base_z + 0.12, "south", south_blocks, recursion_depth, traits, colors, depth_x, depth_y, stroke_width, side_offsets[12: 20]))
+    parts.append(draw_growth_branch(cx - 8 * scale, base_y - level_h * 1.35, base_z + 0.26, "north", north_blocks, max(1, recursion_depth - 1), traits, colors, depth_x, depth_y, stroke_width, side_offsets[8: 16]))
+    parts.append(draw_growth_branch(cx + 6 * scale, base_y - level_h * 0.42, base_z + 0.10, "south", south_blocks, recursion_depth, traits, colors, depth_x, depth_y, stroke_width, side_offsets[12: 20]))
 
-    corner_count = max(3, min(8, round(shard_count * 0.35 + edge_bias * 3)))
+    corner_count = max(4, min(8, round(shard_count * 0.28 + edge_bias * 4)))
     corner_dirs = [(-1, -1), (1, -1), (-1, 1), (1, 1)]
     parts.append('<g class="corner-growth">')
     for idx in range(corner_count):
@@ -564,8 +565,8 @@ def draw_bismuth_growth(cx: float, base_y: float, traits: Dict, seed_material: D
         w = max(14 * scale, (30 - (idx % 3) * 3) * scale)
         d = max(0.6, 1.15 - (idx % 2) * 0.08)
         h = max(10 * scale, (22 - (idx % 4) * 2) * scale)
-        x = cx + dx * (base_w * 0.42 + 26 * scale + (idx // 4) * 16 * scale) - w / 2 + corner_offsets[idx] * 0.45
-        y = base_y + dy * (18 * scale + (idx // 4) * 8 * scale) - (idx % 3) * 6 * scale
+        x = cx + dx * (base_w * 0.30 + 12 * scale + (idx // 4) * 8 * scale) - w / 2 + corner_offsets[idx] * 0.22
+        y = base_y + dy * (10 * scale + (idx // 4) * 5 * scale) - (idx % 3) * 4 * scale
         z = 0.12 + (idx % 4) * 0.04
         corner_colors = {
             "top": _mix_hex(colors["top"], colors["accent"], 0.22 + (idx % 3) * 0.08),
