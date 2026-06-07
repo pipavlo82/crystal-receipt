@@ -334,42 +334,8 @@ def render_receipt_mode_svg(metadata: Dict) -> str:
     body = [f'<rect width="100%" height="100%" fill="url(#bg)" />']
     body.append('<g filter="url(#softGlow)">')
 
-    growth = build_bismuth_growth_plan(traits, metadata["derived_seeds"], CENTER_X, CENTER_Y - 10, scale=1.0)
-    terraces = growth["terraces"]
-    branches = growth["branches"]
-
-    if terraces:
-        outer = terraces[0]
-        body.append(
-            f'<rect x="{outer["x"]:.2f}" y="{outer["y"]:.2f}" width="{outer["w"]:.2f}" height="{outer["h"]:.2f}" '
-            f'fill="url(#oxide)" fill-opacity="{0.12 + traits["oxide_intensity"] * 0.16:.4f}" stroke="none" />'
-        )
-
-    stroke_base = 1.4 + traits["edge_bias"] * 2.2
-    body.append('<g id="bismuth-growth" class="bismuth-growth">')
-    for idx, rect in enumerate(terraces):
-        color = palette[idx % len(palette)]
-        opacity = round(0.22 + ((len(terraces) - idx) / max(len(terraces), 1)) * (0.30 + traits["oxide_intensity"] * 0.18), 4)
-        body.append(
-            f'<rect class="growth-terrace" x="{rect["x"]:.2f}" y="{rect["y"]:.2f}" width="{rect["w"]:.2f}" height="{rect["h"]:.2f}" fill="none" '
-            f'stroke="{color}" stroke-width="{stroke_base + (idx % 2) * 0.55:.2f}" stroke-opacity="{opacity}" />'
-        )
-        inset = rect["hollow"]
-        inner_w = max(24.0, rect["w"] - inset * 2)
-        inner_h = max(18.0, rect["h"] - inset * 1.45)
-        body.append(
-            f'<rect class="hopper-step" x="{rect["x"] + inset:.2f}" y="{rect["y"] + inset * 0.75:.2f}" width="{inner_w:.2f}" height="{inner_h:.2f}" fill="none" '
-            f'stroke="{palette[(idx + 1) % len(palette)]}" stroke-width="1.15" stroke-opacity="{max(0.18, opacity - 0.08):.4f}" />'
-        )
-
-    for idx, rect in enumerate(branches):
-        color = palette[(idx + 2) % len(palette)]
-        fill_opacity = round(0.08 + traits["oxide_intensity"] * 0.22, 4)
-        body.append(
-            f'<rect class="growth-terrace branch-terrace" x="{rect["x"]:.2f}" y="{rect["y"]:.2f}" width="{rect["w"]:.2f}" height="{rect["h"]:.2f}" fill="{color}" fill-opacity="{fill_opacity}" '
-            f'stroke="#f8f9fa" stroke-opacity="0.12" stroke-width="0.85" />'
-        )
-    body.append('</g>')
+    growth_svg = draw_bismuth_growth(CENTER_X, 820, traits, metadata["derived_seeds"], palette, scale=1.0, include_id=True)
+    body.append(growth_svg)
 
     if traits["rarity"] in {"rare", "mythic"}:
         radius = 260 if traits["rarity"] == "rare" else 320
@@ -413,98 +379,178 @@ def _mix_hex(color_a: str, color_b: str, weight: float) -> str:
     return _rgb_to_hex(mixed)
 
 
-def _iso_points(x: float, y: float, w: float, h: float, depth_x: float, depth_y: float) -> Dict[str, List[Tuple[float, float]]]:
-    top = [(x, y), (x + w, y), (x + w + depth_x, y - depth_y), (x + depth_x, y - depth_y)]
-    left = [(x, y), (x + depth_x, y - depth_y), (x + depth_x, y - depth_y + h), (x, y + h)]
-    right = [(x + w, y), (x + w + depth_x, y - depth_y), (x + w + depth_x, y - depth_y + h), (x + w, y + h)]
-    return {"top": top, "left": left, "right": right}
+def iso_project(x: float, y: float, z: float, depth_x: float, depth_y: float) -> Tuple[float, float]:
+    return x + z * depth_x, y - z * depth_y
 
 
 def _svg_poly(points: List[Tuple[float, float]]) -> str:
     return " ".join(f"{px:.2f},{py:.2f}" for px, py in points)
 
 
-def draw_isometric_block(x: float, y: float, w: float, h: float, depth_x: float, depth_y: float, top_color: str, left_color: str, right_color: str, stroke: str, stroke_width: float, opacity: float = 1.0, class_name: str = "isometric-block") -> str:
-    faces = _iso_points(x, y, w, h, depth_x, depth_y)
+def draw_iso_cuboid(x: float, y: float, z: float, w: float, d: float, h: float, colors: Dict[str, str], class_name: str = "iso-cuboid", depth_x: float = 18.0, depth_y: float = 10.0, stroke_width: float = 1.6, opacity: float = 1.0) -> str:
+    x0, y0 = iso_project(x, y, z, depth_x, depth_y)
+    top = [(x0, y0 - h), (x0 + w, y0 - h), (x0 + w + d * depth_x, y0 - h - d * depth_y), (x0 + d * depth_x, y0 - h - d * depth_y)]
+    left = [(x0, y0), (x0 + d * depth_x, y0 - d * depth_y), (x0 + d * depth_x, y0 - h - d * depth_y), (x0, y0 - h)]
+    right = [(x0 + w, y0), (x0 + w + d * depth_x, y0 - d * depth_y), (x0 + w + d * depth_x, y0 - h - d * depth_y), (x0 + w, y0 - h)]
+    inset_margin = max(4.0, min(w, h) * 0.16)
+    inset_top = [
+        (top[0][0] + inset_margin, top[0][1] + inset_margin * 0.15),
+        (top[1][0] - inset_margin, top[1][1] + inset_margin * 0.15),
+        (top[2][0] - inset_margin * 0.7, top[2][1] + inset_margin * 0.05),
+        (top[3][0] + inset_margin * 0.7, top[3][1] + inset_margin * 0.05),
+    ]
     return (
         f'<g class="{class_name}" opacity="{opacity:.3f}">'
-        f'<polygon points="{_svg_poly(faces["left"])}" fill="{left_color}" stroke="{stroke}" stroke-width="{stroke_width:.2f}" />'
-        f'<polygon points="{_svg_poly(faces["right"])}" fill="{right_color}" stroke="{stroke}" stroke-width="{stroke_width:.2f}" />'
-        f'<polygon points="{_svg_poly(faces["top"])}" fill="{top_color}" stroke="{stroke}" stroke-width="{stroke_width:.2f}" />'
+        f'<polygon class="left-face" points="{_svg_poly(left)}" fill="{colors["left"]}" stroke="{colors["stroke"]}" stroke-width="{stroke_width:.2f}" />'
+        f'<polygon class="right-face" points="{_svg_poly(right)}" fill="{colors["right"]}" stroke="{colors["stroke"]}" stroke-width="{stroke_width:.2f}" />'
+        f'<polygon class="top-face" points="{_svg_poly(top)}" fill="{colors["top"]}" stroke="{colors["stroke"]}" stroke-width="{stroke_width:.2f}" />'
+        f'<polygon class="oxide-band" points="{_svg_poly(inset_top)}" fill="none" stroke="{colors["accent"]}" stroke-width="{max(1.0, stroke_width - 0.35):.2f}" stroke-opacity="{colors.get("accent_opacity", "0.45")}" />'
         f'</g>'
     )
 
 
-def draw_stepped_hopper_crystal(cx: float, base_y: float, traits: Dict, palette: List[str], scale: float = 1.0, include_id: bool = True) -> str:
+def draw_hollow_terrace(x: float, y: float, z: float, outer_w: float, outer_d: float, h: float, recess: float, colors: Dict[str, str], depth_x: float, depth_y: float, stroke_width: float) -> str:
+    inner_w = max(12.0, outer_w - recess * 2)
+    inner_d = max(0.55, outer_d - recess / max(outer_w, 1.0) * 1.8)
+    inner_x = x + recess
+    inner_y = y - recess * 0.55
+    outer = draw_iso_cuboid(x, y, z, outer_w, outer_d, h, colors, class_name="iso-cuboid growth-terrace", depth_x=depth_x, depth_y=depth_y, stroke_width=stroke_width)
+    inner_top_color = _mix_hex(colors["top"], "#0b1020", 0.72)
+    recess_colors = {
+        "top": inner_top_color,
+        "left": _mix_hex(colors["left"], "#07101a", 0.28),
+        "right": _mix_hex(colors["right"], "#050b12", 0.34),
+        "stroke": colors["stroke"],
+        "accent": colors["accent"],
+        "accent_opacity": colors.get("accent_opacity", "0.45"),
+    }
+    inner = draw_iso_cuboid(inner_x, inner_y, z + 0.22, inner_w, inner_d, h * 0.48, recess_colors, class_name="iso-cuboid hopper-recess", depth_x=depth_x, depth_y=depth_y, stroke_width=max(1.0, stroke_width - 0.25), opacity=0.98)
+    return f'<g class="hopper-step">{outer}{inner}</g>'
+
+
+def draw_hopper_tower(base_x: float, base_y: float, base_z: float, levels: int, base_w: float, base_d: float, level_h: float, recess_step: float, taper_step: float, offsets: List[float], colors: Dict[str, str], depth_x: float, depth_y: float, stroke_width: float) -> str:
+    parts: List[str] = ['<g class="hopper-tower">']
+    for idx in range(levels):
+        w = max(22.0, base_w - idx * taper_step * 2.0)
+        d = max(0.9, base_d - idx * 0.055)
+        x = base_x + idx * taper_step + offsets[idx] * 0.42
+        y = base_y - idx * (level_h * 0.72) + offsets[idx] * 0.18
+        z = base_z + idx * 0.16
+        recess = min(w * 0.24, recess_step + idx * 1.2)
+        parts.append(draw_hollow_terrace(x, y, z, w, d, level_h, recess, colors, depth_x, depth_y, stroke_width))
+    parts.append('</g>')
+    return "".join(parts)
+
+
+def draw_side_growth(anchor_x: float, anchor_y: float, anchor_z: float, direction: str, blocks: int, traits: Dict, colors: Dict[str, str], depth_x: float, depth_y: float, stroke_width: float, offsets: List[float]) -> str:
+    axis = {
+        "east": (1, -0.35),
+        "west": (-1, 0.35),
+        "north": (0.45, -1),
+        "south": (-0.45, 1),
+    }[direction]
+    parts: List[str] = [f'<g class="side-growth side-growth-{direction}">']
+    for idx in range(blocks):
+        w = max(18.0, 44.0 - idx * 4.0 + traits["edge_bias"] * 8.0)
+        d = max(0.7, 1.6 - idx * 0.08)
+        h = max(10.0, 28.0 - idx * 2.6)
+        x = anchor_x + axis[0] * (idx + 1) * (32 + traits["edge_bias"] * 12) + offsets[idx] * 0.5
+        y = anchor_y + axis[1] * (idx + 1) * (18 + traits["oxide_intensity"] * 9) + offsets[idx + blocks] * 0.22
+        z = anchor_z + idx * 0.08
+        block_colors = {
+            "top": _mix_hex(colors["top"], colors["accent"], min(0.55, 0.12 + idx * 0.08)),
+            "left": _mix_hex(colors["left"], "#08101b", 0.12),
+            "right": _mix_hex(colors["right"], "#08101b", 0.18),
+            "stroke": colors["stroke"],
+            "accent": colors["accent"],
+            "accent_opacity": colors.get("accent_opacity", "0.45"),
+        }
+        parts.append(draw_iso_cuboid(x, y, z, w, d, h, block_colors, class_name="iso-cuboid side-growth", depth_x=depth_x, depth_y=depth_y, stroke_width=max(1.0, stroke_width - 0.2), opacity=0.96))
+    parts.append('</g>')
+    return "".join(parts)
+
+
+def draw_bismuth_growth(cx: float, base_y: float, traits: Dict, seed_material: Dict, palette: List[str], scale: float = 1.0, include_id: bool = True) -> str:
     layer_count = traits["layer_count"]
     shard_count = traits["shard_count"]
     oxide_intensity = traits["oxide_intensity"]
     edge_bias = traits["edge_bias"]
     symmetry = traits["symmetry"]
     rarity = traits["rarity"]
+    geometry_style = traits["geometry_style"]
 
-    tower_levels = max(4, min(9, layer_count // 2 + 1))
-    depth_x = (22 + edge_bias * 18) * scale
-    depth_y = (14 + edge_bias * 9) * scale
-    base_w = (120 + shard_count * 2.2) * scale
-    base_h = (70 + layer_count * 2.4) * scale
-    inset_step = (12 + oxide_intensity * 10) * scale
-    rise_step = (18 + oxide_intensity * 12) * scale
-    side_offset = (28 + (0 if symmetry == "high" else 14 if symmetry == "medium" else 24)) * scale
-    stroke_width = 1.4 + edge_bias * 1.8
+    depth_x = (20 + edge_bias * 14) * scale
+    depth_y = (11 + edge_bias * 7) * scale
+    stroke_width = 1.35 + edge_bias * 1.45
+    levels = max(5, min(10, layer_count // 2 + 2))
+    base_w = (92 + shard_count * 2.8 + (10 if geometry_style == "fractured" else 0)) * scale
+    base_d = 2.5 + (0.25 if symmetry == "high" else 0.15 if symmetry == "medium" else 0.05)
+    level_h = (22 + oxide_intensity * 8) * scale
+    taper_step = (6.5 + (0.8 if geometry_style == "stepped" else 0.0)) * scale
+    recess_step = (8 + oxide_intensity * 10) * scale
 
-    top_base = _mix_hex(palette[0], "#f8fbff", 0.42)
-    left_base = _mix_hex(palette[1], "#0a1020", 0.36)
-    right_base = _mix_hex(palette[2], "#09111d", 0.28)
-    glow_line = _mix_hex(palette[3], "#fef08a", 0.28)
-    stroke = _mix_hex("#d8e7ff", palette[-1], 0.18)
+    top_color = _mix_hex(palette[0], "#f4f8ff", 0.40)
+    left_color = _mix_hex(palette[1], "#08101c", 0.40)
+    right_color = _mix_hex(palette[2], "#060c15", 0.34)
+    accent = _mix_hex(palette[3], "#fef08a", 0.26)
+    stroke = _mix_hex("#d8e7ff", palette[-1], 0.14)
+    colors = {
+        "top": top_color,
+        "left": left_color,
+        "right": right_color,
+        "stroke": stroke,
+        "accent": accent,
+        "accent_opacity": f'{0.32 + oxide_intensity * 0.42:.3f}',
+    }
 
+    tower_offsets = deterministic_offsets_from_seed(seed_material["shape_seed"], levels, 12 * scale)
+    side_offsets = deterministic_offsets_from_seed(seed_material["layer_seed"], 24, 14 * scale)
+    corner_offsets = deterministic_offsets_from_seed(seed_material["symmetry_seed"], 16, 10 * scale)
+
+    base_x = cx - base_w / 2
+    base_z = 0.0
     parts: List[str] = []
-    group_open = '<g id="bismuth-crystal" class="hopper-crystal">' if include_id else '<g class="hopper-crystal">'
-    parts.append(group_open)
+    parts.append('<g id="bismuth-crystal" class="bismuth-crystal hopper-crystal bismuth-growth">' if include_id else '<g class="bismuth-crystal hopper-crystal bismuth-growth">')
 
     if rarity in {"rare", "mythic"}:
-        ring_w = base_w + depth_x * 2 + 90 * scale
-        ring_h = base_h + tower_levels * rise_step + 70 * scale
+        ring_w = base_w + 180 * scale
+        ring_h = level_h * levels + 140 * scale
         parts.append(
-            f'<rect x="{cx - ring_w / 2:.2f}" y="{base_y - ring_h + 26 * scale:.2f}" width="{ring_w:.2f}" height="{ring_h:.2f}" '
-            f'fill="none" stroke="{glow_line}" stroke-opacity="0.35" stroke-width="{stroke_width + 0.6:.2f}" rx="18" ry="18" />'
+            f'<rect x="{cx - ring_w / 2:.2f}" y="{base_y - ring_h - 30 * scale:.2f}" width="{ring_w:.2f}" height="{ring_h:.2f}" '
+            f'fill="none" stroke="{accent}" stroke-opacity="0.26" stroke-width="{stroke_width + 0.6:.2f}" rx="18" ry="18" />'
         )
 
-    for idx in range(tower_levels):
-        level_w = max(46 * scale, base_w - idx * inset_step * 2)
-        level_h = max(26 * scale, base_h - idx * inset_step * 1.2)
-        x = cx - level_w / 2
-        y = base_y - idx * rise_step
-        top_color = _mix_hex(top_base, palette[idx % len(palette)], min(0.58, 0.16 + idx * 0.07))
-        left_color = _mix_hex(left_base, palette[(idx + 1) % len(palette)], min(0.42, 0.10 + idx * 0.05))
-        right_color = _mix_hex(right_base, palette[(idx + 2) % len(palette)], min(0.50, 0.12 + idx * 0.05))
-        parts.append(draw_isometric_block(x, y, level_w, level_h, depth_x, depth_y, top_color, left_color, right_color, stroke, stroke_width, class_name="isometric-block tower-block"))
+    parts.append(draw_hopper_tower(base_x, base_y, base_z, levels, base_w, base_d, level_h, recess_step, taper_step, tower_offsets, colors, depth_x, depth_y, stroke_width))
 
-        inner_margin = max(8 * scale, level_w * 0.12)
-        inner_w = max(18 * scale, level_w - inner_margin * 2)
-        inner_h = max(12 * scale, level_h - inner_margin * 0.9)
-        inner_x = cx - inner_w / 2
-        inner_y = y + inner_margin * 0.4
-        inner_faces = _iso_points(inner_x, inner_y, inner_w, inner_h, depth_x * 0.58, depth_y * 0.58)
-        parts.append(
-            f'<polygon class="hopper-band" points="{_svg_poly(inner_faces["top"])}" fill="none" stroke="{glow_line}" '
-            f'stroke-opacity="{0.35 + oxide_intensity * 0.35:.3f}" stroke-width="{max(1.0, stroke_width - 0.3):.2f}" />'
-        )
+    side_blocks = max(2, min(5, shard_count // 5 + 1))
+    parts.append(draw_side_growth(cx + base_w * 0.46, base_y - level_h * 0.7, base_z + 0.2, "east", side_blocks, traits, colors, depth_x, depth_y, stroke_width, side_offsets[: side_blocks * 2]))
+    parts.append(draw_side_growth(cx - base_w * 0.46, base_y - level_h * 0.62, base_z + 0.2, "west", side_blocks, traits, colors, depth_x, depth_y, stroke_width, side_offsets[side_blocks * 2 : side_blocks * 4]))
+    north_blocks = max(2, side_blocks - (0 if symmetry == "high" else 1))
+    south_blocks = max(2, side_blocks - (1 if geometry_style == "hopper" else 0))
+    parts.append(draw_side_growth(cx - 12 * scale, base_y - level_h * 1.2, base_z + 0.28, "north", north_blocks, traits, colors, depth_x, depth_y, stroke_width, side_offsets[8: 8 + north_blocks * 2]))
+    parts.append(draw_side_growth(cx + 8 * scale, base_y - level_h * 0.28, base_z + 0.12, "south", south_blocks, traits, colors, depth_x, depth_y, stroke_width, side_offsets[12: 12 + south_blocks * 2]))
 
-    wing_blocks = max(2, min(6, shard_count // 6 + 1))
-    for side in (-1, 1):
-        for idx in range(wing_blocks):
-            wing_w = max(30 * scale, (56 - idx * 5) * scale)
-            wing_h = max(18 * scale, (34 - idx * 3) * scale)
-            offset_x = side * (base_w / 2 + side_offset + idx * 16 * scale)
-            x = cx + offset_x - (wing_w / 2 if side > 0 else wing_w / 2)
-            y = base_y - (idx + 1) * (rise_step * 0.72)
-            top_color = _mix_hex(palette[(idx + (0 if side < 0 else 2)) % len(palette)], "#eef6ff", 0.34)
-            left_color = _mix_hex(top_color, "#0d1524", 0.38)
-            right_color = _mix_hex(top_color, "#0a101b", 0.48)
-            parts.append(draw_isometric_block(x, y, wing_w, wing_h, depth_x * 0.82, depth_y * 0.82, top_color, left_color, right_color, stroke, max(1.0, stroke_width - 0.25), opacity=0.94, class_name="isometric-block side-block"))
-
+    corner_count = max(3, min(8, round(shard_count * 0.35 + edge_bias * 3)))
+    corner_dirs = [(-1, -1), (1, -1), (-1, 1), (1, 1)]
+    parts.append('<g class="corner-growth">')
+    for idx in range(corner_count):
+        dx, dy = corner_dirs[idx % len(corner_dirs)]
+        w = max(14 * scale, (30 - (idx % 3) * 3) * scale)
+        d = max(0.6, 1.15 - (idx % 2) * 0.08)
+        h = max(10 * scale, (22 - (idx % 4) * 2) * scale)
+        x = cx + dx * (base_w * 0.42 + 26 * scale + (idx // 4) * 16 * scale) - w / 2 + corner_offsets[idx] * 0.45
+        y = base_y + dy * (18 * scale + (idx // 4) * 8 * scale) - (idx % 3) * 6 * scale
+        z = 0.12 + (idx % 4) * 0.04
+        corner_colors = {
+            "top": _mix_hex(colors["top"], colors["accent"], 0.22 + (idx % 3) * 0.08),
+            "left": colors["left"],
+            "right": colors["right"],
+            "stroke": colors["stroke"],
+            "accent": colors["accent"],
+            "accent_opacity": colors["accent_opacity"],
+        }
+        parts.append(draw_iso_cuboid(x, y, z, w, d, h, corner_colors, class_name="iso-cuboid edge-growth", depth_x=depth_x, depth_y=depth_y, stroke_width=max(1.0, stroke_width - 0.25), opacity=0.95))
+    parts.append('</g>')
     parts.append('</g>')
     return "".join(parts)
 
@@ -536,8 +582,8 @@ def render_receipt_card_svg(metadata: Dict, crystal_svg_hash: str) -> str:
     visual_summary = f'{traits["geometry_style"]} / {traits["palette_name"]} / {traits["rarity"]}'
     action_summary = "changed_files->terraces | verifier_result->seal/glow | scope/authority->boundary | diff/eventRoot->growth pattern"
     palette = PALETTES[traits["palette_name"]]
-    crystal_mark_small = draw_stepped_hopper_crystal(800, 300, traits, palette, scale=0.46, include_id=False)
-    crystal_mark_large = draw_stepped_hopper_crystal(1210, 680, traits, palette, scale=0.82, include_id=True)
+    crystal_mark_small = draw_bismuth_growth(800, 348, traits, metadata["derived_seeds"], palette, scale=0.46, include_id=False)
+    crystal_mark_large = draw_bismuth_growth(1210, 790, traits, metadata["derived_seeds"], palette, scale=0.82, include_id=True)
 
     return f'''<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
   <rect width="100%" height="100%" fill="#090b14" />
