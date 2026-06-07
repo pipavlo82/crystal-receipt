@@ -41,6 +41,12 @@ def short_hash(value: str, length: int = 12) -> str:
     return value[:length]
 
 
+def ellipsize_hash(value: str, head: int = 10, tail: int = 6) -> str:
+    if len(value) <= head + tail:
+        return value
+    return f"{value[:head]}...{value[-tail:]}"
+
+
 # -----------------------------
 # Existing hash-mode generator
 # -----------------------------
@@ -411,51 +417,123 @@ def render_receipt_mode_svg(metadata: Dict) -> str:
 
 def render_receipt_card_svg(metadata: Dict, crystal_svg_hash: str) -> str:
     source = metadata["source_receipt"]
-    verifier_result = metadata["action_growth_map"]["verifier_result"]["source"] or {}
+    traits = metadata["visual_traits"]
+    action_growth_map = metadata["action_growth_map"]
+    verifier_result = action_growth_map["verifier_result"]["source"] or {}
+    signature_block = action_growth_map["signature_trust_block"]["source"] or {}
     status = verifier_result.get("status", "UNKNOWN") if isinstance(verifier_result, dict) else str(verifier_result)
     session_label = source.get("session_id") or source.get("receiptHash") or "unknown-receipt"
-    canonical_short = short_hash(metadata["canonical_receipt_hash"], 16)
-    artifact_short = short_hash(crystal_svg_hash, 16)
-    ruleset_label = f'{metadata["ruleset"]} / {metadata["generator_version"]}'
+    canonical_short = ellipsize_hash(metadata["canonical_receipt_hash"], 10, 6)
+    artifact_short = ellipsize_hash(crystal_svg_hash, 10, 6)
+    receipt_hash_short = ellipsize_hash(source.get("receiptHash") or "", 10, 6)
+    diff_hash_short = ellipsize_hash(source.get("diffHash") or "", 10, 6)
+    event_root_short = ellipsize_hash(source.get("eventRoot") or "", 10, 6)
+    agent_label = source.get("agent_id") or "unknown-agent"
+    changed_files = source.get("changed_files", [])
+    changed_summary = ", ".join(changed_files[:2]) if changed_files else "none"
+    if len(changed_files) > 2:
+        changed_summary += f" +{len(changed_files) - 2} more"
+    scope_label = action_growth_map["scope"]["source"] or {}
+    authority_label = action_growth_map["authority"]["source"] or {}
+    scope_summary = scope_label.get("permission", "unknown") if isinstance(scope_label, dict) else str(scope_label)
+    authority_summary = authority_label.get("mode", "unknown") if isinstance(authority_label, dict) else str(authority_label)
+    timestamp_label = source.get("timestamp") or "unknown"
+    signature_summary = signature_block.get("algorithm", "unknown") if isinstance(signature_block, dict) else str(signature_block)
+    visual_summary = f'{traits["geometry_style"]} / {traits["palette_name"]} / {traits["rarity"]}'
+    action_summary = "changed_files→terraces · verifier_result→seal/glow · scope/authority→boundary · diff/eventRoot→growth pattern"
 
-    crystal_mark = """
-  <g transform="translate(650 265)">
-    <rect x="-74" y="-74" width="148" height="148" fill="none" stroke="#151515" stroke-width="4" />
-    <rect x="-50" y="-50" width="100" height="100" fill="none" stroke="#151515" stroke-width="3" />
-    <rect x="-30" y="-30" width="60" height="60" fill="none" stroke="#151515" stroke-width="2.6" />
-    <rect x="-14" y="-14" width="28" height="28" fill="#ffffff" stroke="#151515" stroke-width="2.2" />
-    <rect x="-64" y="-8" width="26" height="16" fill="#ffffff" stroke="#151515" stroke-width="1.8" />
-    <rect x="38" y="-8" width="26" height="16" fill="#ffffff" stroke="#151515" stroke-width="1.8" />
-    <rect x="-8" y="38" width="16" height="26" fill="#ffffff" stroke="#151515" stroke-width="1.8" />
-    <rect x="-8" y="-64" width="16" height="26" fill="#ffffff" stroke="#151515" stroke-width="1.8" />
+    crystal_mark_small = """
+  <g transform="translate(800 250)">
+    <rect x="-78" y="-78" width="156" height="156" fill="none" stroke="#67e8f9" stroke-width="4" opacity="0.9" />
+    <rect x="-56" y="-56" width="112" height="112" fill="none" stroke="#a78bfa" stroke-width="3.2" opacity="0.95" />
+    <rect x="-34" y="-34" width="68" height="68" fill="none" stroke="#f472b6" stroke-width="2.6" opacity="0.95" />
+    <rect x="-16" y="-16" width="32" height="32" fill="#f8fafc" fill-opacity="0.15" stroke="#fef08a" stroke-width="2.2" />
+    <rect x="-70" y="-8" width="26" height="18" fill="#67e8f9" fill-opacity="0.10" stroke="#67e8f9" stroke-width="1.6" />
+    <rect x="44" y="-8" width="26" height="18" fill="#a78bfa" fill-opacity="0.10" stroke="#a78bfa" stroke-width="1.6" />
+    <rect x="-8" y="44" width="18" height="26" fill="#86efac" fill-opacity="0.10" stroke="#86efac" stroke-width="1.6" />
+    <rect x="-8" y="-70" width="18" height="26" fill="#f472b6" fill-opacity="0.10" stroke="#f472b6" stroke-width="1.6" />
   </g>
 """
 
-    return f'''<svg xmlns="http://www.w3.org/2000/svg" width="860" height="540" viewBox="0 0 860 540">
-  <rect width="100%" height="100%" fill="#ffffff" />
-  <rect x="24" y="24" width="812" height="492" rx="22" ry="22" fill="#ffffff" stroke="#151515" stroke-width="3" />
-  <text x="54" y="84" fill="#111111" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700">Crystal Receipt</text>
-  <text x="54" y="118" fill="#404040" font-family="Segoe UI, Arial, sans-serif" font-size="20">Visual artifact for execution receipt</text>
-  <line x1="54" y1="142" x2="806" y2="142" stroke="#151515" stroke-width="2" />
+    crystal_mark_large = """
+  <g transform="translate(1175 590)">
+    <rect x="-142" y="-142" width="284" height="284" fill="none" stroke="#67e8f9" stroke-width="5" opacity="0.95" />
+    <rect x="-104" y="-104" width="208" height="208" fill="none" stroke="#a78bfa" stroke-width="4" opacity="0.95" />
+    <rect x="-68" y="-68" width="136" height="136" fill="none" stroke="#f472b6" stroke-width="3.2" opacity="0.95" />
+    <rect x="-30" y="-30" width="60" height="60" fill="#f8fafc" fill-opacity="0.12" stroke="#fef08a" stroke-width="2.6" />
+    <rect x="-122" y="-12" width="46" height="26" fill="#67e8f9" fill-opacity="0.10" stroke="#67e8f9" stroke-width="2" />
+    <rect x="76" y="-12" width="46" height="26" fill="#a78bfa" fill-opacity="0.10" stroke="#a78bfa" stroke-width="2" />
+    <rect x="-12" y="76" width="26" height="46" fill="#86efac" fill-opacity="0.10" stroke="#86efac" stroke-width="2" />
+    <rect x="-12" y="-122" width="26" height="46" fill="#f472b6" fill-opacity="0.10" stroke="#f472b6" stroke-width="2" />
+  </g>
+"""
 
-  <text x="54" y="190" fill="#111111" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">Receipt ID</text>
-  <text x="54" y="218" fill="#202020" font-family="Consolas, monospace" font-size="21">{session_label}</text>
+    return f'''<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <rect width="100%" height="100%" fill="#090b14" />
+  <rect x="20" y="20" width="1560" height="960" rx="28" ry="28" fill="#0f1724" stroke="#24364f" stroke-width="3" />
+  <rect x="20" y="20" width="1560" height="8" fill="#67e8f9" rx="6" ry="6" />
 
-  <text x="54" y="274" fill="#111111" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">Verifier Result</text>
-  <text x="54" y="302" fill="#202020" font-family="Consolas, monospace" font-size="22">{status}</text>
+  <text x="60" y="88" fill="#f8fbff" font-family="Segoe UI, Arial, sans-serif" font-size="44" font-weight="700">CRYSTAL RECEIPT</text>
+  <text x="60" y="124" fill="#b7c4d8" font-family="Segoe UI, Arial, sans-serif" font-size="22">RECEIPT EVIDENCE -&gt; DETERMINISTIC CRYSTAL -&gt; VISUAL ARTIFACT</text>
+{crystal_mark_small}
 
-  <text x="54" y="358" fill="#111111" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">Canonical Receipt Hash</text>
-  <text x="54" y="386" fill="#202020" font-family="Consolas, monospace" font-size="20">{canonical_short}…</text>
+  <rect x="50" y="160" width="460" height="700" rx="24" ry="24" fill="#121c2b" stroke="#2b3d59" stroke-width="2.5" />
+  <text x="78" y="208" fill="#67e8f9" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700">INPUT: RECEIPT EVIDENCE</text>
+  <text x="78" y="252" fill="#f8fbff" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">SESSION_ID</text>
+  <text x="78" y="278" fill="#d7e3f4" font-family="Consolas, monospace" font-size="18">{session_label}</text>
+  <text x="78" y="324" fill="#f8fbff" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">RECEIPT_HASH</text>
+  <text x="78" y="350" fill="#d7e3f4" font-family="Consolas, monospace" font-size="18">{receipt_hash_short}</text>
+  <text x="78" y="396" fill="#f8fbff" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">DIFF_HASH</text>
+  <text x="78" y="422" fill="#d7e3f4" font-family="Consolas, monospace" font-size="18">{diff_hash_short}</text>
+  <text x="78" y="468" fill="#f8fbff" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">EVENT_ROOT</text>
+  <text x="78" y="494" fill="#d7e3f4" font-family="Consolas, monospace" font-size="18">{event_root_short}</text>
+  <text x="78" y="540" fill="#f8fbff" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">AGENT_ID</text>
+  <text x="78" y="566" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">{agent_label}</text>
+  <text x="78" y="612" fill="#f8fbff" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">SCOPE / AUTHORITY</text>
+  <text x="78" y="638" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">{scope_summary} / {authority_summary}</text>
+  <text x="78" y="684" fill="#f8fbff" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">CHANGED_FILES</text>
+  <text x="78" y="710" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">{changed_summary}</text>
+  <text x="78" y="756" fill="#f8fbff" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">TIMESTAMP</text>
+  <text x="78" y="782" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">{timestamp_label}</text>
+  <text x="78" y="828" fill="#f8fbff" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">VERIFIER_RESULT</text>
+  <text x="78" y="854" fill="#d7e3f4" font-family="Consolas, monospace" font-size="18">{status}</text>
+  <text x="78" y="900" fill="#f8fbff" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">SIGNATURE_BLOCK</text>
+  <text x="78" y="926" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">{signature_summary}</text>
 
-  <text x="54" y="442" fill="#111111" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">Artifact Hash</text>
-  <text x="54" y="470" fill="#202020" font-family="Consolas, monospace" font-size="20">{artifact_short}…</text>
+  <rect x="540" y="160" width="500" height="700" rx="24" ry="24" fill="#101826" stroke="#2b3d59" stroke-width="2.5" />
+  <text x="568" y="208" fill="#a78bfa" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700">PROCESS: DETERMINISTIC CRYSTAL GENERATION</text>
+  <text x="568" y="258" fill="#f8fbff" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">CANONICALIZATION</text>
+  <text x="568" y="284" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">sorted keys → compact JSON → SHA-256</text>
+  <text x="568" y="330" fill="#f8fbff" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">CANONICAL_RECEIPT_HASH</text>
+  <text x="568" y="356" fill="#d7e3f4" font-family="Consolas, monospace" font-size="18">{canonical_short}</text>
+  <text x="568" y="402" fill="#f8fbff" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">SEED DERIVATION</text>
+  <text x="568" y="428" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">MASTER_SEED · SHAPE_SEED · PALETTE_SEED</text>
+  <text x="568" y="454" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">SYMMETRY_SEED · LAYER_SEED · OXIDE_SEED · TRAIT_SEED</text>
+  <text x="568" y="500" fill="#f8fbff" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">VISUAL TRAIT DERIVATION</text>
+  <text x="568" y="526" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">geometry_style={traits["geometry_style"]}</text>
+  <text x="568" y="552" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">palette_name={traits["palette_name"]}</text>
+  <text x="568" y="578" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">symmetry={traits["symmetry"]} · layer_count={traits["layer_count"]}</text>
+  <text x="568" y="604" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">shard_count={traits["shard_count"]} · rarity={traits["rarity"]}</text>
+  <line x1="790" y1="620" x2="790" y2="760" stroke="#35507c" stroke-width="2" stroke-dasharray="8 8" />
+  <text x="568" y="792" fill="#b7c4d8" font-family="Segoe UI, Arial, sans-serif" font-size="18">receipt evidence is transformed into a reproducible bismuth / hopper crystal grammar</text>
 
-  <text x="470" y="358" fill="#111111" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">Ruleset / Generator</text>
-  <text x="470" y="386" fill="#202020" font-family="Consolas, monospace" font-size="18">{ruleset_label}</text>
+  <rect x="1070" y="160" width="480" height="700" rx="24" ry="24" fill="#121c2b" stroke="#2b3d59" stroke-width="2.5" />
+  <text x="1098" y="208" fill="#f472b6" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700">OUTPUT: CRYSTAL ARTIFACT &amp; METADATA</text>
+{crystal_mark_large}
+  <text x="1098" y="270" fill="#f8fbff" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">METADATA SUMMARY</text>
+  <text x="1098" y="300" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">canonical_receipt_hash: {canonical_short}</text>
+  <text x="1098" y="330" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">visual_traits: {visual_summary}</text>
+  <text x="1098" y="360" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">ACTION_GROWTH_MAP: semantic evidence → mutation map</text>
+  <text x="1098" y="390" fill="#d7e3f4" font-family="Consolas, monospace" font-size="16">{action_summary}</text>
+  <text x="1098" y="420" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">receipt_card file: receipt-card.svg</text>
+  <text x="1098" y="450" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">provenance: deterministic / reproducible / shareable</text>
+  <text x="1098" y="760" fill="#f8fbff" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">CRYSTAL PREVIEW</text>
+  <text x="1098" y="790" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">crystal.svg · crystal.metadata.json · receipt-card.svg</text>
+  <text x="1098" y="820" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">artifact hash: {artifact_short}</text>
 
-  <rect x="470" y="420" width="290" height="38" rx="10" ry="10" fill="#ffffff" stroke="#151515" stroke-width="2" />
-  <text x="488" y="445" fill="#111111" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">Visual artifact, not verifier</text>
-{crystal_mark}
+  <rect x="50" y="890" width="1500" height="70" rx="18" ry="18" fill="#121212" stroke="#334155" stroke-width="2.5" />
+  <text x="78" y="922" fill="#fef08a" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700">IMPORTANT BOUNDARY:</text>
+  <text x="78" y="948" fill="#f8fbff" font-family="Segoe UI, Arial, sans-serif" font-size="20">Visual artifact, not verifier. The crystal is not the security verifier. Verification must be performed by an independent verifier.</text>
 </svg>
 '''
 
@@ -480,7 +558,7 @@ def generate_receipt_mode_metadata(receipt_path: Path) -> Dict:
         "artifact_file": "crystal.svg",
         "receipt_card": {
             "file": "receipt-card.svg",
-            "purpose": "shareable visual receipt card",
+            "purpose": "shareable Crystal Receipt proof card",
             "boundary": "Visual artifact, not verifier",
         },
         "boundary": "The crystal is a visual artifact derived from receipt evidence. It is not the security verifier.",

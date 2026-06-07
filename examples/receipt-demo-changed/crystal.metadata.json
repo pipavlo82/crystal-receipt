@@ -108,7 +108,7 @@
   "artifact_file": "crystal.svg",
   "receipt_card": {
     "file": "receipt-card.svg",
-    "purpose": "shareable visual receipt card",
+    "purpose": "shareable Crystal Receipt proof card",
     "boundary": "Visual artifact, not verifier"
   },
   "boundary": "The crystal is a visual artifact derived from receipt evidence. It is not the security verifier.",

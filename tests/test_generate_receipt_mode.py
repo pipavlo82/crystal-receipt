@@ -113,7 +113,7 @@ class GenerateReceiptModeTests(unittest.TestCase):
         self.assertIn("ruleset", meta)
         self.assertIn("receipt_card", meta)
         self.assertEqual(meta["receipt_card"]["file"], "receipt-card.svg")
-        self.assertEqual(meta["receipt_card"]["purpose"], "shareable visual receipt card")
+        self.assertEqual(meta["receipt_card"]["purpose"], "shareable Crystal Receipt proof card")
         self.assertEqual(meta["receipt_card"]["boundary"], "Visual artifact, not verifier")
         self.assertIn("boundary", meta)
         self.assertIn("not the security verifier", meta["boundary"])
@@ -159,8 +159,16 @@ class GenerateReceiptModeTests(unittest.TestCase):
         out = self.tmp / "receipt"
         self.run_generate("--receipt", "examples/receipt-demo/receipt.json", "--out", str(out))
         card = (out / "receipt-card.svg").read_text(encoding="utf-8")
-        self.assertIn("Crystal Receipt", card)
+        self.assertIn("CRYSTAL RECEIPT", card)
         self.assertIn("Visual artifact, not verifier", card)
+        self.assertIn("INPUT: RECEIPT EVIDENCE", card)
+        self.assertIn("PROCESS: DETERMINISTIC CRYSTAL GENERATION", card)
+        self.assertIn("OUTPUT: CRYSTAL ARTIFACT", card)
+        self.assertIn("SESSION_ID", card)
+        self.assertIn("VERIFIER_RESULT", card)
+        self.assertTrue("ACTION_GROWTH_MAP" in card or "Action Growth Map" in card)
+        self.assertIn("IMPORTANT BOUNDARY", card)
+        self.assertIn("The crystal is not the security verifier", card)
 
     def test_receipt_svg_contains_bismuth_style_rectangular_structure(self):
         out = self.tmp / "receipt"
