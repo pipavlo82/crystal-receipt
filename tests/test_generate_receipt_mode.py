@@ -169,7 +169,7 @@ class GenerateReceiptModeTests(unittest.TestCase):
         self.assertTrue("ACTION_GROWTH_MAP" in card or "Action Growth Map" in card)
         self.assertIn("IMPORTANT BOUNDARY", card)
         self.assertIn("The crystal is not the security verifier", card)
-        self.assertTrue(any(token in card for token in ["bismuth-growth", "iso-cuboid", "hopper-tower", "hopper-recess", "side-growth", "top-face", "left-face", "right-face"]))
+        self.assertTrue(any(token in card for token in ["fractal-hopper", "recursive-terrace", "hopper-recess", "growth-branch", "edge-growth", "self-similar", "bismuth-growth"]))
 
     def test_receipt_svg_contains_bismuth_style_rectangular_structure(self):
         out = self.tmp / "receipt"
@@ -177,7 +177,7 @@ class GenerateReceiptModeTests(unittest.TestCase):
         svg = (out / "crystal.svg").read_text(encoding="utf-8")
         self.assertTrue(svg.count("<polygon ") >= 12 or svg.count("<rect ") >= 8)
         self.assertTrue(any(token in svg for token in ["oxide-band", "linearGradient id=\"oxide\"", "url(#oxide)"]))
-        self.assertTrue(any(token in svg for token in ["bismuth-growth", "iso-cuboid", "hopper-tower", "hopper-recess", "side-growth", "top-face", "left-face", "right-face"]))
+        self.assertTrue(any(token in svg for token in ["fractal-hopper", "recursive-terrace", "hopper-recess", "growth-branch", "edge-growth", "self-similar", "bismuth-growth"]))
         self.assertIn("/", svg)
 
 

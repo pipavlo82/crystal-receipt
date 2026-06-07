@@ -442,20 +442,45 @@ def draw_hopper_tower(base_x: float, base_y: float, base_z: float, levels: int, 
     return "".join(parts)
 
 
-def draw_side_growth(anchor_x: float, anchor_y: float, anchor_z: float, direction: str, blocks: int, traits: Dict, colors: Dict[str, str], depth_x: float, depth_y: float, stroke_width: float, offsets: List[float]) -> str:
+def draw_recursive_terrace(x: float, y: float, z: float, w: float, d: float, h: float, depth: int, axis: Tuple[float, float], traits: Dict, colors: Dict[str, str], depth_x: float, depth_y: float, stroke_width: float, offsets: List[float], index_offset: int = 0) -> str:
+    parts: List[str] = ['<g class="recursive-terrace self-similar">']
+    recess = max(4.0, min(w * 0.22, 7.0 + traits["oxide_intensity"] * 6.0 + depth))
+    parts.append(draw_hollow_terrace(x, y, z, w, d, h, recess, colors, depth_x, depth_y, stroke_width))
+    if depth > 0 and w > 18 and h > 10:
+        child_w = max(12.0, w * (0.62 - depth * 0.04))
+        child_d = max(0.45, d * 0.82)
+        child_h = max(7.0, h * 0.68)
+        offset = offsets[index_offset % len(offsets)] if offsets else 0.0
+        child_x = x + w * 0.22 + axis[0] * (8.0 + depth * 3.0) + offset * 0.22
+        child_y = y - h * 0.28 + axis[1] * (6.0 + depth * 2.0) + offset * 0.10
+        child_z = z + 0.12
+        child_colors = {
+            "top": _mix_hex(colors["top"], colors["accent"], min(0.58, 0.16 + depth * 0.08)),
+            "left": _mix_hex(colors["left"], "#08101b", 0.10),
+            "right": _mix_hex(colors["right"], "#07111c", 0.14),
+            "stroke": colors["stroke"],
+            "accent": colors["accent"],
+            "accent_opacity": colors.get("accent_opacity", "0.45"),
+        }
+        parts.append(draw_recursive_terrace(child_x, child_y, child_z, child_w, child_d, child_h, depth - 1, axis, traits, child_colors, depth_x, depth_y, max(1.0, stroke_width - 0.18), offsets, index_offset + 1))
+    parts.append('</g>')
+    return "".join(parts)
+
+
+def draw_growth_branch(anchor_x: float, anchor_y: float, anchor_z: float, direction: str, blocks: int, recursion_depth: int, traits: Dict, colors: Dict[str, str], depth_x: float, depth_y: float, stroke_width: float, offsets: List[float]) -> str:
     axis = {
         "east": (1, -0.35),
         "west": (-1, 0.35),
         "north": (0.45, -1),
         "south": (-0.45, 1),
     }[direction]
-    parts: List[str] = [f'<g class="side-growth side-growth-{direction}">']
+    parts: List[str] = [f'<g class="growth-branch side-growth side-growth-{direction}">']
     for idx in range(blocks):
         w = max(18.0, 44.0 - idx * 4.0 + traits["edge_bias"] * 8.0)
         d = max(0.7, 1.6 - idx * 0.08)
         h = max(10.0, 28.0 - idx * 2.6)
-        x = anchor_x + axis[0] * (idx + 1) * (32 + traits["edge_bias"] * 12) + offsets[idx] * 0.5
-        y = anchor_y + axis[1] * (idx + 1) * (18 + traits["oxide_intensity"] * 9) + offsets[idx + blocks] * 0.22
+        x = anchor_x + axis[0] * (idx + 1) * (32 + traits["edge_bias"] * 12) + offsets[idx % len(offsets)] * 0.5
+        y = anchor_y + axis[1] * (idx + 1) * (18 + traits["oxide_intensity"] * 9) + offsets[(idx + blocks) % len(offsets)] * 0.22
         z = anchor_z + idx * 0.08
         block_colors = {
             "top": _mix_hex(colors["top"], colors["accent"], min(0.55, 0.12 + idx * 0.08)),
@@ -465,7 +490,7 @@ def draw_side_growth(anchor_x: float, anchor_y: float, anchor_z: float, directio
             "accent": colors["accent"],
             "accent_opacity": colors.get("accent_opacity", "0.45"),
         }
-        parts.append(draw_iso_cuboid(x, y, z, w, d, h, block_colors, class_name="iso-cuboid side-growth", depth_x=depth_x, depth_y=depth_y, stroke_width=max(1.0, stroke_width - 0.2), opacity=0.96))
+        parts.append(draw_recursive_terrace(x, y, z, w, d, h, recursion_depth, axis, traits, block_colors, depth_x, depth_y, max(1.0, stroke_width - 0.2), offsets, idx * 2))
     parts.append('</g>')
     return "".join(parts)
 
@@ -510,7 +535,7 @@ def draw_bismuth_growth(cx: float, base_y: float, traits: Dict, seed_material: D
     base_x = cx - base_w / 2
     base_z = 0.0
     parts: List[str] = []
-    parts.append('<g id="bismuth-crystal" class="bismuth-crystal hopper-crystal bismuth-growth">' if include_id else '<g class="bismuth-crystal hopper-crystal bismuth-growth">')
+    parts.append('<g id="bismuth-crystal" class="bismuth-crystal hopper-crystal bismuth-growth fractal-hopper">' if include_id else '<g class="bismuth-crystal hopper-crystal bismuth-growth fractal-hopper">')
 
     if rarity in {"rare", "mythic"}:
         ring_w = base_w + 180 * scale
@@ -523,12 +548,13 @@ def draw_bismuth_growth(cx: float, base_y: float, traits: Dict, seed_material: D
     parts.append(draw_hopper_tower(base_x, base_y, base_z, levels, base_w, base_d, level_h, recess_step, taper_step, tower_offsets, colors, depth_x, depth_y, stroke_width))
 
     side_blocks = max(2, min(5, shard_count // 5 + 1))
-    parts.append(draw_side_growth(cx + base_w * 0.46, base_y - level_h * 0.7, base_z + 0.2, "east", side_blocks, traits, colors, depth_x, depth_y, stroke_width, side_offsets[: side_blocks * 2]))
-    parts.append(draw_side_growth(cx - base_w * 0.46, base_y - level_h * 0.62, base_z + 0.2, "west", side_blocks, traits, colors, depth_x, depth_y, stroke_width, side_offsets[side_blocks * 2 : side_blocks * 4]))
+    recursion_depth = max(1, min(3, layer_count // 4 + (1 if shard_count > 10 else 0)))
+    parts.append(draw_growth_branch(cx + base_w * 0.46, base_y - level_h * 0.7, base_z + 0.2, "east", side_blocks, recursion_depth, traits, colors, depth_x, depth_y, stroke_width, side_offsets[: max(8, side_blocks * 2)]))
+    parts.append(draw_growth_branch(cx - base_w * 0.46, base_y - level_h * 0.62, base_z + 0.2, "west", side_blocks, recursion_depth, traits, colors, depth_x, depth_y, stroke_width, side_offsets[side_blocks * 2 : side_blocks * 4 + 4]))
     north_blocks = max(2, side_blocks - (0 if symmetry == "high" else 1))
     south_blocks = max(2, side_blocks - (1 if geometry_style == "hopper" else 0))
-    parts.append(draw_side_growth(cx - 12 * scale, base_y - level_h * 1.2, base_z + 0.28, "north", north_blocks, traits, colors, depth_x, depth_y, stroke_width, side_offsets[8: 8 + north_blocks * 2]))
-    parts.append(draw_side_growth(cx + 8 * scale, base_y - level_h * 0.28, base_z + 0.12, "south", south_blocks, traits, colors, depth_x, depth_y, stroke_width, side_offsets[12: 12 + south_blocks * 2]))
+    parts.append(draw_growth_branch(cx - 12 * scale, base_y - level_h * 1.2, base_z + 0.28, "north", north_blocks, max(1, recursion_depth - 1), traits, colors, depth_x, depth_y, stroke_width, side_offsets[8: 16]))
+    parts.append(draw_growth_branch(cx + 8 * scale, base_y - level_h * 0.28, base_z + 0.12, "south", south_blocks, recursion_depth, traits, colors, depth_x, depth_y, stroke_width, side_offsets[12: 20]))
 
     corner_count = max(3, min(8, round(shard_count * 0.35 + edge_bias * 3)))
     corner_dirs = [(-1, -1), (1, -1), (-1, 1), (1, 1)]
