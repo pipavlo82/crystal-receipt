@@ -428,158 +428,231 @@ def draw_hollow_terrace(x: float, y: float, z: float, outer_w: float, outer_d: f
     return f'<g class="hopper-step">{outer}{inner}</g>'
 
 
-def draw_hopper_tower(base_x: float, base_y: float, base_z: float, levels: int, base_w: float, base_d: float, level_h: float, recess_step: float, taper_step: float, offsets: List[float], colors: Dict[str, str], depth_x: float, depth_y: float, stroke_width: float) -> str:
-    parts: List[str] = ['<g class="hopper-tower">']
-    for idx in range(levels):
-        w = max(22.0, base_w - idx * taper_step * 2.0)
-        d = max(0.9, base_d - idx * 0.055)
-        x = base_x + idx * taper_step + offsets[idx] * 0.42
-        y = base_y - idx * (level_h * 0.72) + offsets[idx] * 0.18
-        z = base_z + idx * 0.16
-        recess = min(w * 0.24, recess_step + idx * 1.2)
-        parts.append(draw_hollow_terrace(x, y, z, w, d, level_h, recess, colors, depth_x, depth_y, stroke_width))
-    parts.append('</g>')
-    return "".join(parts)
+def deterministic_float(seed_hex: str, index: int) -> float:
+    if not seed_hex:
+        return 0.0
+    start = (index * 8) % max(8, len(seed_hex) - 8)
+    chunk = seed_hex[start : start + 8]
+    if len(chunk) < 8:
+        chunk = (chunk + seed_hex)[:8]
+    return int(chunk, 16) / 0xFFFFFFFF
 
 
-def draw_recursive_terrace(x: float, y: float, z: float, w: float, d: float, h: float, depth: int, axis: Tuple[float, float], traits: Dict, colors: Dict[str, str], depth_x: float, depth_y: float, stroke_width: float, offsets: List[float], index_offset: int = 0) -> str:
+def deterministic_int(seed_hex: str, index: int, min_value: int, max_value: int) -> int:
+    if max_value <= min_value:
+        return min_value
+    value = deterministic_float(seed_hex, index)
+    span = max_value - min_value + 1
+    return min_value + int(value * span) % span
+
+
+def crystal_corners(radius: float, height: float, origin: Tuple[float, float], orientation: float) -> List[Tuple[float, float, float]]:
+    ox, oy = origin
+    pts: List[Tuple[float, float, float]] = []
+    for i in range(4):
+        angle = orientation + i * (math.pi / 2)
+        dx = math.cos(angle) * radius
+        dy = math.sin(angle) * radius * 0.62
+        pts.append((ox + dx, oy + dy, height))
+    return pts
+
+
+def add_hopper_ring(origin: Tuple[float, float], radius: float, inner_radius: float, height: float, level_z: float, orientation: float, colors: Dict[str, str], depth_x: float, depth_y: float, stroke_width: float) -> str:
+    cx, cy = origin
+    outer_w = radius * 2
+    outer_d = 1.2 + radius / 110.0
+    outer_x = cx - outer_w / 2
+    outer_y = cy - radius * 0.38
+    recess = max(8.0, radius - inner_radius)
+    return draw_hollow_terrace(outer_x, outer_y, level_z, outer_w, outer_d, height, recess, colors, depth_x, depth_y, stroke_width)
+
+
+def draw_hopper_ledge_face(origin: Tuple[float, float], radius: float, inner_radius: float, height: float, level_z: float, orientation: float, colors: Dict[str, str], depth_x: float, depth_y: float, stroke_width: float) -> str:
+    return f'<g class="hopper-ledge">{add_hopper_ring(origin, radius, inner_radius, height, level_z, orientation, colors, depth_x, depth_y, stroke_width)}</g>'
+
+
+def draw_hopper_wall_face(origin: Tuple[float, float], radius: float, inner_radius: float, height: float, level_z: float, orientation: float, colors: Dict[str, str], depth_x: float, depth_y: float, stroke_width: float) -> str:
+    wall_color = {
+        "top": _mix_hex(colors["top"], colors["accent"], 0.10),
+        "left": _mix_hex(colors["left"], "#060b14", 0.10),
+        "right": _mix_hex(colors["right"], "#040811", 0.14),
+        "stroke": colors["stroke"],
+        "accent": colors["accent"],
+        "accent_opacity": colors.get("accent_opacity", "0.45"),
+    }
+    inset_radius = max(inner_radius * 0.92, inner_radius - 4)
+    return f'<g class="hopper-wall">{add_hopper_ring(origin, inner_radius + 8, inset_radius, height * 0.52, level_z + 0.1, orientation, wall_color, depth_x, depth_y, max(1.0, stroke_width - 0.18))}</g>'
+
+
+def draw_recursive_terrace(origin: Tuple[float, float], radius: float, height: float, level_z: float, orientation: float, recursion_depth: int, axis: Tuple[float, float], traits: Dict, colors: Dict[str, str], depth_x: float, depth_y: float, stroke_width: float, seed_hex: str, seed_index: int) -> str:
+    inner_radius = max(radius * 0.42, radius - (8 + traits["oxide_intensity"] * 10 + recursion_depth * 2))
     parts: List[str] = ['<g class="recursive-terrace self-similar">']
-    recess = max(4.0, min(w * 0.22, 7.0 + traits["oxide_intensity"] * 6.0 + depth))
-    parts.append(draw_hollow_terrace(x, y, z, w, d, h, recess, colors, depth_x, depth_y, stroke_width))
-    if depth > 0 and w > 18 and h > 10:
-        child_w = max(12.0, w * (0.62 - depth * 0.04))
-        child_d = max(0.45, d * 0.82)
-        child_h = max(7.0, h * 0.68)
-        offset = offsets[index_offset % len(offsets)] if offsets else 0.0
-        child_x = x + w * 0.22 + axis[0] * (8.0 + depth * 3.0) + offset * 0.22
-        child_y = y - h * 0.28 + axis[1] * (6.0 + depth * 2.0) + offset * 0.10
-        child_z = z + 0.12
+    parts.append(draw_hopper_ledge_face(origin, radius, inner_radius, height, level_z, orientation, colors, depth_x, depth_y, stroke_width))
+    parts.append(draw_hopper_wall_face(origin, radius, inner_radius, height, level_z, orientation, colors, depth_x, depth_y, stroke_width))
+    if recursion_depth > 0 and radius > 14:
+        child_radius = max(12.0, radius * (0.48 + deterministic_float(seed_hex, seed_index) * 0.12))
+        child_height = max(8.0, height * 0.72)
+        step = radius * (0.34 + deterministic_float(seed_hex, seed_index + 1) * 0.10)
+        child_origin = (
+            origin[0] + axis[0] * step + (deterministic_float(seed_hex, seed_index + 2) - 0.5) * 6,
+            origin[1] + axis[1] * step + (deterministic_float(seed_hex, seed_index + 3) - 0.5) * 4,
+        )
         child_colors = {
-            "top": _mix_hex(colors["top"], colors["accent"], min(0.58, 0.16 + depth * 0.08)),
-            "left": _mix_hex(colors["left"], "#08101b", 0.10),
-            "right": _mix_hex(colors["right"], "#07111c", 0.14),
+            "top": _mix_hex(colors["top"], colors["accent"], min(0.56, 0.18 + recursion_depth * 0.08)),
+            "left": _mix_hex(colors["left"], "#08101b", 0.08),
+            "right": _mix_hex(colors["right"], "#07101a", 0.10),
             "stroke": colors["stroke"],
             "accent": colors["accent"],
             "accent_opacity": colors.get("accent_opacity", "0.45"),
         }
-        parts.append(draw_recursive_terrace(child_x, child_y, child_z, child_w, child_d, child_h, depth - 1, axis, traits, child_colors, depth_x, depth_y, max(1.0, stroke_width - 0.18), offsets, index_offset + 1))
+        parts.append(draw_recursive_terrace(child_origin, child_radius, child_height, level_z + 0.10, orientation, recursion_depth - 1, axis, traits, child_colors, depth_x, depth_y, max(1.0, stroke_width - 0.14), seed_hex, seed_index + 4))
     parts.append('</g>')
     return "".join(parts)
 
 
-def draw_growth_branch(anchor_x: float, anchor_y: float, anchor_z: float, direction: str, blocks: int, recursion_depth: int, traits: Dict, colors: Dict[str, str], depth_x: float, depth_y: float, stroke_width: float, offsets: List[float]) -> str:
-    axis = {
-        "east": (0.72, -0.24),
-        "west": (-0.72, 0.24),
-        "north": (0.22, -0.78),
-        "south": (-0.22, 0.78),
-    }[direction]
-    parts: List[str] = [f'<g class="growth-branch side-growth side-growth-{direction}">']
-    for idx in range(blocks):
-        w = max(16.0, 38.0 - idx * 3.6 + traits["edge_bias"] * 6.0)
-        d = max(0.65, 1.35 - idx * 0.07)
-        h = max(10.0, 26.0 - idx * 2.2)
-        x = anchor_x + axis[0] * (idx + 1) * (18 + traits["edge_bias"] * 6) + offsets[idx % len(offsets)] * 0.24
-        y = anchor_y + axis[1] * (idx + 1) * (14 + traits["oxide_intensity"] * 5) + offsets[(idx + blocks) % len(offsets)] * 0.12
-        z = anchor_z + idx * 0.06
-        block_colors = {
-            "top": _mix_hex(colors["top"], colors["accent"], min(0.55, 0.12 + idx * 0.08)),
-            "left": _mix_hex(colors["left"], "#08101b", 0.12),
-            "right": _mix_hex(colors["right"], "#08101b", 0.18),
-            "stroke": colors["stroke"],
-            "accent": colors["accent"],
-            "accent_opacity": colors.get("accent_opacity", "0.45"),
-        }
-        parts.append(draw_recursive_terrace(x, y, z, w, d, h, recursion_depth, axis, traits, block_colors, depth_x, depth_y, max(1.0, stroke_width - 0.2), offsets, idx * 2))
+def build_hopper_crystal(origin: Tuple[float, float], max_radius: float, orientation: float, seed_hex: str, depth: int, traits: Dict) -> Dict:
+    ring_count = max(4, min(10, traits["layer_count"] // 2 + 2 - depth))
+    height_base = 18 + traits["layer_count"] * 0.7 - depth * 2.5
+    taper = max_radius * (0.07 + deterministic_float(seed_hex, depth + 1) * 0.05)
+    rings = []
+    for idx in range(ring_count):
+        radius = max(16.0, max_radius - idx * taper)
+        inner_radius = max(radius * 0.38, radius - (8 + traits["oxide_intensity"] * 12 + idx * 1.6))
+        height = max(9.0, height_base - idx * (1.2 + deterministic_float(seed_hex, idx + 6) * 1.1))
+        level_z = idx * 0.18
+        rings.append({
+            "radius": radius,
+            "inner_radius": inner_radius,
+            "height": height,
+            "level_z": level_z,
+            "color_index": idx,
+        })
+
+    child_crystals = []
+    max_child_depth = min(2, max(0, traits["layer_count"] // 5 - depth))
+    if depth < max_child_depth:
+        child_count = min(4, max(1, traits["shard_count"] // 6))
+        distribution = 4 if traits["symmetry"] == "high" else 3 if traits["symmetry"] == "medium" else 2
+        for idx in range(child_count):
+            angle_step = (math.pi * 2) / distribution
+            angle = orientation + angle_step * idx + (deterministic_float(seed_hex, idx + 30) - 0.5) * 0.45
+            dist = max_radius * (0.38 + deterministic_float(seed_hex, idx + 40) * 0.16)
+            child_origin = (
+                origin[0] + math.cos(angle) * dist,
+                origin[1] + math.sin(angle) * dist * 0.58,
+            )
+            child_radius = max_radius * (0.18 + deterministic_float(seed_hex, idx + 50) * 0.22)
+            child_orientation = orientation + (deterministic_float(seed_hex, idx + 60) - 0.5) * 0.6
+            child_seed = seed_hex[idx * 6 :] + seed_hex[: idx * 6] if seed_hex else seed_hex
+            child_crystals.append(build_hopper_crystal(child_origin, child_radius, child_orientation, child_seed, depth + 1, traits))
+
+    return {
+        "origin": origin,
+        "max_radius": max_radius,
+        "orientation": orientation,
+        "seed": seed_hex,
+        "depth": depth,
+        "rings": rings,
+        "children": child_crystals,
+    }
+
+
+def draw_growth_branch(crystal: Dict, traits: Dict, colors: Dict[str, str], depth_x: float, depth_y: float, stroke_width: float) -> str:
+    parts = [f'<g class="growth-branch child-crystal depth-{crystal["depth"]}">']
+    for idx, ring in enumerate(crystal["rings"]):
+        axis_angle = crystal["orientation"] + (idx % 4) * (math.pi / 2)
+        axis = (math.cos(axis_angle), math.sin(axis_angle) * 0.62)
+        recursion_depth = max(0, min(2, deterministic_int(crystal["seed"], idx + 80, 0, 2)))
+        parts.append(
+            draw_recursive_terrace(
+                crystal["origin"],
+                ring["radius"],
+                ring["height"],
+                ring["level_z"],
+                crystal["orientation"],
+                recursion_depth,
+                axis,
+                traits,
+                colors,
+                depth_x,
+                depth_y,
+                stroke_width,
+                crystal["seed"],
+                idx + crystal["depth"] * 20,
+            )
+        )
+    for child in crystal["children"]:
+        parts.append(draw_growth_branch(child, traits, colors, depth_x, depth_y, max(1.0, stroke_width - 0.16)))
+    parts.append('</g>')
+    return "".join(parts)
+
+
+def spawn_child_crystals(root_crystal: Dict, traits: Dict, colors: Dict[str, str], depth_x: float, depth_y: float, stroke_width: float) -> str:
+    parts = ['<g class="recursive-growth">']
+    for child in root_crystal["children"]:
+        parts.append(draw_growth_branch(child, traits, colors, depth_x, depth_y, max(1.0, stroke_width - 0.12)))
+    parts.append('</g>')
+    return "".join(parts)
+
+
+def draw_bismuth_crystal_svg(root_crystal: Dict, traits: Dict, palette: List[str], scale: float = 1.0, include_id: bool = True) -> str:
+    oxide_intensity = traits["oxide_intensity"]
+    edge_bias = traits["edge_bias"]
+    rarity = traits["rarity"]
+    depth_x = (18 + edge_bias * 10) * scale
+    depth_y = (10 + edge_bias * 5) * scale
+    stroke_width = 1.45 + edge_bias * 1.25
+
+    colors = {
+        "top": _mix_hex(palette[0], "#f4f8ff", 0.42),
+        "left": _mix_hex(palette[1], "#08101c", 0.42),
+        "right": _mix_hex(palette[2], "#050b14", 0.36),
+        "stroke": _mix_hex("#d8e7ff", palette[-1], 0.12),
+        "accent": _mix_hex(palette[3], "#fef08a", 0.36),
+        "accent_opacity": f'{0.36 + oxide_intensity * 0.42:.3f}',
+    }
+
+    parts: List[str] = []
+    parts.append('<g id="bismuth-crystal" class="bismuth-growth fractal-hopper recursive-growth">' if include_id else '<g class="bismuth-growth fractal-hopper recursive-growth">')
+
+    if rarity in {"rare", "mythic"}:
+        ring_size = root_crystal["max_radius"] * 3.0
+        parts.append(
+            f'<rect x="{root_crystal["origin"][0] - ring_size / 2:.2f}" y="{root_crystal["origin"][1] - ring_size * 1.15:.2f}" width="{ring_size:.2f}" height="{ring_size * 1.32:.2f}" '
+            f'fill="none" stroke="{colors["accent"]}" stroke-opacity="0.25" stroke-width="{stroke_width + 0.45:.2f}" rx="18" ry="18" />'
+        )
+
+    parts.append('<g class="hopper-tower">')
+    for idx, ring in enumerate(root_crystal["rings"]):
+        parts.append(draw_hopper_ledge_face(root_crystal["origin"], ring["radius"], ring["inner_radius"], ring["height"], ring["level_z"], root_crystal["orientation"], colors, depth_x, depth_y, stroke_width))
+        parts.append(draw_hopper_wall_face(root_crystal["origin"], ring["radius"], ring["inner_radius"], ring["height"], ring["level_z"], root_crystal["orientation"], colors, depth_x, depth_y, stroke_width))
+    parts.append('</g>')
+
+    parts.append(spawn_child_crystals(root_crystal, traits, colors, depth_x, depth_y, stroke_width))
+
+    corner_count = max(4, min(8, round(traits["shard_count"] * 0.22 + traits["edge_bias"] * 4)))
+    parts.append('<g class="edge-growth self-similar">')
+    for idx in range(corner_count):
+        ang = root_crystal["orientation"] + (idx % 4) * (math.pi / 2) + math.pi / 4
+        dist = root_crystal["max_radius"] * (0.70 + (idx // 4) * 0.08)
+        x = root_crystal["origin"][0] + math.cos(ang) * dist - 10 * scale
+        y = root_crystal["origin"][1] + math.sin(ang) * dist * 0.60
+        w = max(10 * scale, (24 - (idx % 3) * 2) * scale)
+        d = max(0.55, 0.95 - (idx % 2) * 0.06)
+        h = max(8 * scale, (16 - (idx % 4) * 1.5) * scale)
+        parts.append(draw_iso_cuboid(x, y, 0.1 + (idx % 3) * 0.04, w, d, h, colors, class_name="iso-cuboid edge-growth", depth_x=depth_x, depth_y=depth_y, stroke_width=max(1.0, stroke_width - 0.22), opacity=0.95))
+    parts.append('</g>')
+
     parts.append('</g>')
     return "".join(parts)
 
 
 def draw_bismuth_growth(cx: float, base_y: float, traits: Dict, seed_material: Dict, palette: List[str], scale: float = 1.0, include_id: bool = True) -> str:
-    layer_count = traits["layer_count"]
-    shard_count = traits["shard_count"]
-    oxide_intensity = traits["oxide_intensity"]
-    edge_bias = traits["edge_bias"]
-    symmetry = traits["symmetry"]
-    rarity = traits["rarity"]
-    geometry_style = traits["geometry_style"]
-
-    depth_x = (20 + edge_bias * 14) * scale
-    depth_y = (11 + edge_bias * 7) * scale
-    stroke_width = 1.35 + edge_bias * 1.45
-    levels = max(6, min(11, layer_count // 2 + 3))
-    base_w = (84 + min(shard_count, 14) * 1.4 + (6 if geometry_style == "fractured" else 0)) * scale
-    base_d = 2.7 + (0.20 if symmetry == "high" else 0.12 if symmetry == "medium" else 0.04)
-    level_h = (25 + oxide_intensity * 10 + layer_count * 0.45) * scale
-    taper_step = (5.2 + (0.6 if geometry_style == "stepped" else 0.0)) * scale
-    recess_step = (10 + oxide_intensity * 12) * scale
-
-    top_color = _mix_hex(palette[0], "#f4f8ff", 0.40)
-    left_color = _mix_hex(palette[1], "#08101c", 0.40)
-    right_color = _mix_hex(palette[2], "#060c15", 0.34)
-    accent = _mix_hex(palette[3], "#fef08a", 0.34)
-    stroke = _mix_hex("#d8e7ff", palette[-1], 0.14)
-    colors = {
-        "top": top_color,
-        "left": left_color,
-        "right": right_color,
-        "stroke": stroke,
-        "accent": accent,
-        "accent_opacity": f'{0.32 + oxide_intensity * 0.42:.3f}',
-    }
-
-    tower_offsets = deterministic_offsets_from_seed(seed_material["shape_seed"], levels, 8 * scale)
-    side_offsets = deterministic_offsets_from_seed(seed_material["layer_seed"], 24, 9 * scale)
-    corner_offsets = deterministic_offsets_from_seed(seed_material["symmetry_seed"], 16, 6 * scale)
-
-    base_x = cx - base_w / 2
-    base_z = 0.0
-    parts: List[str] = []
-    parts.append('<g id="bismuth-crystal" class="bismuth-crystal hopper-crystal bismuth-growth fractal-hopper">' if include_id else '<g class="bismuth-crystal hopper-crystal bismuth-growth fractal-hopper">')
-
-    if rarity in {"rare", "mythic"}:
-        ring_w = base_w + 180 * scale
-        ring_h = level_h * levels + 140 * scale
-        parts.append(
-            f'<rect x="{cx - ring_w / 2:.2f}" y="{base_y - ring_h - 30 * scale:.2f}" width="{ring_w:.2f}" height="{ring_h:.2f}" '
-            f'fill="none" stroke="{accent}" stroke-opacity="0.26" stroke-width="{stroke_width + 0.6:.2f}" rx="18" ry="18" />'
-        )
-
-    parts.append(draw_hopper_tower(base_x, base_y, base_z, levels, base_w, base_d, level_h, recess_step, taper_step, tower_offsets, colors, depth_x, depth_y, stroke_width))
-
-    side_blocks = max(2, min(4, shard_count // 6 + 1))
-    recursion_depth = max(1, min(3, layer_count // 4 + (1 if shard_count > 12 else 0)))
-    core_span = base_w * 0.26
-    parts.append(draw_growth_branch(cx + core_span, base_y - level_h * 0.95, base_z + 0.18, "east", side_blocks, recursion_depth, traits, colors, depth_x, depth_y, stroke_width, side_offsets[: max(8, side_blocks * 2)]))
-    parts.append(draw_growth_branch(cx - core_span, base_y - level_h * 0.88, base_z + 0.18, "west", side_blocks, recursion_depth, traits, colors, depth_x, depth_y, stroke_width, side_offsets[side_blocks * 2 : side_blocks * 4 + 4]))
-    north_blocks = max(2, side_blocks - (0 if symmetry == "high" else 1))
-    south_blocks = max(2, side_blocks - (1 if geometry_style == "hopper" else 0))
-    parts.append(draw_growth_branch(cx - 8 * scale, base_y - level_h * 1.35, base_z + 0.26, "north", north_blocks, max(1, recursion_depth - 1), traits, colors, depth_x, depth_y, stroke_width, side_offsets[8: 16]))
-    parts.append(draw_growth_branch(cx + 6 * scale, base_y - level_h * 0.42, base_z + 0.10, "south", south_blocks, recursion_depth, traits, colors, depth_x, depth_y, stroke_width, side_offsets[12: 20]))
-
-    corner_count = max(4, min(8, round(shard_count * 0.28 + edge_bias * 4)))
-    corner_dirs = [(-1, -1), (1, -1), (-1, 1), (1, 1)]
-    parts.append('<g class="corner-growth">')
-    for idx in range(corner_count):
-        dx, dy = corner_dirs[idx % len(corner_dirs)]
-        w = max(14 * scale, (30 - (idx % 3) * 3) * scale)
-        d = max(0.6, 1.15 - (idx % 2) * 0.08)
-        h = max(10 * scale, (22 - (idx % 4) * 2) * scale)
-        x = cx + dx * (base_w * 0.30 + 12 * scale + (idx // 4) * 8 * scale) - w / 2 + corner_offsets[idx] * 0.22
-        y = base_y + dy * (10 * scale + (idx // 4) * 5 * scale) - (idx % 3) * 4 * scale
-        z = 0.12 + (idx % 4) * 0.04
-        corner_colors = {
-            "top": _mix_hex(colors["top"], colors["accent"], 0.22 + (idx % 3) * 0.08),
-            "left": colors["left"],
-            "right": colors["right"],
-            "stroke": colors["stroke"],
-            "accent": colors["accent"],
-            "accent_opacity": colors["accent_opacity"],
-        }
-        parts.append(draw_iso_cuboid(x, y, z, w, d, h, corner_colors, class_name="iso-cuboid edge-growth", depth_x=depth_x, depth_y=depth_y, stroke_width=max(1.0, stroke_width - 0.25), opacity=0.95))
-    parts.append('</g>')
-    parts.append('</g>')
-    return "".join(parts)
+    orientation = deterministic_float(seed_material["symmetry_seed"], 1) * (math.pi / 5) - (math.pi / 10)
+    max_radius = (62 + traits["layer_count"] * 4.0 + min(traits["shard_count"], 14) * 1.6) * scale
+    root_origin = (cx, base_y - max_radius * 0.34)
+    root_crystal = build_hopper_crystal(root_origin, max_radius, orientation, seed_material["master_seed"], 0, traits)
+    return draw_bismuth_crystal_svg(root_crystal, traits, palette, scale=scale, include_id=include_id)
 
 
 def render_receipt_card_svg(metadata: Dict, crystal_svg_hash: str) -> str:
