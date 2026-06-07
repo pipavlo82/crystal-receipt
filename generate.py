@@ -37,6 +37,10 @@ def sha256_hex(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
+def short_hash(value: str, length: int = 12) -> str:
+    return value[:length]
+
+
 # -----------------------------
 # Existing hash-mode generator
 # -----------------------------
@@ -405,6 +409,57 @@ def render_receipt_mode_svg(metadata: Dict) -> str:
     )
 
 
+def render_receipt_card_svg(metadata: Dict, crystal_svg_hash: str) -> str:
+    source = metadata["source_receipt"]
+    verifier_result = metadata["action_growth_map"]["verifier_result"]["source"] or {}
+    status = verifier_result.get("status", "UNKNOWN") if isinstance(verifier_result, dict) else str(verifier_result)
+    session_label = source.get("session_id") or source.get("receiptHash") or "unknown-receipt"
+    canonical_short = short_hash(metadata["canonical_receipt_hash"], 16)
+    artifact_short = short_hash(crystal_svg_hash, 16)
+    ruleset_label = f'{metadata["ruleset"]} / {metadata["generator_version"]}'
+
+    crystal_mark = """
+  <g transform="translate(650 265)">
+    <rect x="-74" y="-74" width="148" height="148" fill="none" stroke="#151515" stroke-width="4" />
+    <rect x="-50" y="-50" width="100" height="100" fill="none" stroke="#151515" stroke-width="3" />
+    <rect x="-30" y="-30" width="60" height="60" fill="none" stroke="#151515" stroke-width="2.6" />
+    <rect x="-14" y="-14" width="28" height="28" fill="#ffffff" stroke="#151515" stroke-width="2.2" />
+    <rect x="-64" y="-8" width="26" height="16" fill="#ffffff" stroke="#151515" stroke-width="1.8" />
+    <rect x="38" y="-8" width="26" height="16" fill="#ffffff" stroke="#151515" stroke-width="1.8" />
+    <rect x="-8" y="38" width="16" height="26" fill="#ffffff" stroke="#151515" stroke-width="1.8" />
+    <rect x="-8" y="-64" width="16" height="26" fill="#ffffff" stroke="#151515" stroke-width="1.8" />
+  </g>
+"""
+
+    return f'''<svg xmlns="http://www.w3.org/2000/svg" width="860" height="540" viewBox="0 0 860 540">
+  <rect width="100%" height="100%" fill="#ffffff" />
+  <rect x="24" y="24" width="812" height="492" rx="22" ry="22" fill="#ffffff" stroke="#151515" stroke-width="3" />
+  <text x="54" y="84" fill="#111111" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700">Crystal Receipt</text>
+  <text x="54" y="118" fill="#404040" font-family="Segoe UI, Arial, sans-serif" font-size="20">Visual artifact for execution receipt</text>
+  <line x1="54" y1="142" x2="806" y2="142" stroke="#151515" stroke-width="2" />
+
+  <text x="54" y="190" fill="#111111" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">Receipt ID</text>
+  <text x="54" y="218" fill="#202020" font-family="Consolas, monospace" font-size="21">{session_label}</text>
+
+  <text x="54" y="274" fill="#111111" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">Verifier Result</text>
+  <text x="54" y="302" fill="#202020" font-family="Consolas, monospace" font-size="22">{status}</text>
+
+  <text x="54" y="358" fill="#111111" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">Canonical Receipt Hash</text>
+  <text x="54" y="386" fill="#202020" font-family="Consolas, monospace" font-size="20">{canonical_short}…</text>
+
+  <text x="54" y="442" fill="#111111" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">Artifact Hash</text>
+  <text x="54" y="470" fill="#202020" font-family="Consolas, monospace" font-size="20">{artifact_short}…</text>
+
+  <text x="470" y="358" fill="#111111" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">Ruleset / Generator</text>
+  <text x="470" y="386" fill="#202020" font-family="Consolas, monospace" font-size="18">{ruleset_label}</text>
+
+  <rect x="470" y="420" width="290" height="38" rx="10" ry="10" fill="#ffffff" stroke="#151515" stroke-width="2" />
+  <text x="488" y="445" fill="#111111" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">Visual artifact, not verifier</text>
+{crystal_mark}
+</svg>
+'''
+
+
 def generate_receipt_mode_metadata(receipt_path: Path) -> Dict:
     receipt = load_receipt(str(receipt_path))
     canonical_hash = canonical_receipt_hash(receipt)
@@ -423,6 +478,11 @@ def generate_receipt_mode_metadata(receipt_path: Path) -> Dict:
         "visual_traits": visual_traits,
         "action_growth_map": _action_growth_map(receipt),
         "artifact_file": "crystal.svg",
+        "receipt_card": {
+            "file": "receipt-card.svg",
+            "purpose": "shareable visual receipt card",
+            "boundary": "Visual artifact, not verifier",
+        },
         "boundary": "The crystal is a visual artifact derived from receipt evidence. It is not the security verifier.",
         "width": WIDTH,
         "height": HEIGHT,
@@ -445,8 +505,11 @@ def write_outputs(receipt_hash: str, out_dir: Path) -> Dict:
 def write_receipt_outputs(receipt_path: Path, out_dir: Path) -> Dict:
     metadata = generate_receipt_mode_metadata(receipt_path)
     svg = render_receipt_mode_svg(metadata)
+    crystal_svg_hash = sha256_hex(svg)
+    receipt_card_svg = render_receipt_card_svg(metadata, crystal_svg_hash)
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "crystal.svg").write_text(svg, encoding="utf-8")
+    (out_dir / "receipt-card.svg").write_text(receipt_card_svg, encoding="utf-8")
     (out_dir / "crystal.metadata.json").write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
     return metadata
 

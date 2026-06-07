@@ -43,6 +43,7 @@ class GenerateReceiptModeTests(unittest.TestCase):
         out = self.tmp / "hash"
         self.run_generate("--hash", "demo-receipt-hash-001", "--out", str(out))
         self.assertTrue((out / "crystal.svg").exists())
+        self.assertFalse((out / "receipt-card.svg").exists())
         meta = json.loads((out / "crystal.metadata.json").read_text(encoding="utf-8"))
         self.assertEqual(meta["mode"], "hash")
 
@@ -51,6 +52,7 @@ class GenerateReceiptModeTests(unittest.TestCase):
         self.run_generate("--receipt", "examples/receipt-demo/receipt.json", "--out", str(out))
         self.assertTrue((out / "crystal.svg").exists())
         self.assertTrue((out / "crystal.metadata.json").exists())
+        self.assertTrue((out / "receipt-card.svg").exists())
 
     def test_same_receipt_twice_produces_identical_metadata(self):
         out1 = self.tmp / "r1"
@@ -80,6 +82,24 @@ class GenerateReceiptModeTests(unittest.TestCase):
         svg2 = (out2 / "crystal.svg").read_text(encoding="utf-8")
         self.assertNotEqual(svg1, svg2)
 
+    def test_same_receipt_twice_produces_identical_receipt_card(self):
+        out1 = self.tmp / "r1"
+        out2 = self.tmp / "r2"
+        self.run_generate("--receipt", "examples/receipt-demo/receipt.json", "--out", str(out1))
+        self.run_generate("--receipt", "examples/receipt-demo/receipt.json", "--out", str(out2))
+        card1 = (out1 / "receipt-card.svg").read_text(encoding="utf-8")
+        card2 = (out2 / "receipt-card.svg").read_text(encoding="utf-8")
+        self.assertEqual(card1, card2)
+
+    def test_changed_receipt_produces_different_receipt_card(self):
+        out1 = self.tmp / "r1"
+        out2 = self.tmp / "r2"
+        self.run_generate("--receipt", "examples/receipt-demo/receipt.json", "--out", str(out1))
+        self.run_generate("--receipt", "examples/receipt-demo/receipt_changed.json", "--out", str(out2))
+        card1 = (out1 / "receipt-card.svg").read_text(encoding="utf-8")
+        card2 = (out2 / "receipt-card.svg").read_text(encoding="utf-8")
+        self.assertNotEqual(card1, card2)
+
     def test_receipt_metadata_contains_provenance_and_boundary(self):
         out = self.tmp / "receipt"
         self.run_generate("--receipt", "examples/receipt-demo/receipt.json", "--out", str(out))
@@ -91,6 +111,10 @@ class GenerateReceiptModeTests(unittest.TestCase):
         self.assertIn("action_growth_map", meta)
         self.assertIn("generator_version", meta)
         self.assertIn("ruleset", meta)
+        self.assertIn("receipt_card", meta)
+        self.assertEqual(meta["receipt_card"]["file"], "receipt-card.svg")
+        self.assertEqual(meta["receipt_card"]["purpose"], "shareable visual receipt card")
+        self.assertEqual(meta["receipt_card"]["boundary"], "Visual artifact, not verifier")
         self.assertIn("boundary", meta)
         self.assertIn("not the security verifier", meta["boundary"])
 
@@ -130,6 +154,13 @@ class GenerateReceiptModeTests(unittest.TestCase):
         ]
         for key in changed_keys:
             self.assertNotEqual(map1[key]["source"], map2[key]["source"], key)
+
+    def test_receipt_card_contains_expected_text(self):
+        out = self.tmp / "receipt"
+        self.run_generate("--receipt", "examples/receipt-demo/receipt.json", "--out", str(out))
+        card = (out / "receipt-card.svg").read_text(encoding="utf-8")
+        self.assertIn("Crystal Receipt", card)
+        self.assertIn("Visual artifact, not verifier", card)
 
     def test_receipt_svg_contains_bismuth_style_rectangular_structure(self):
         out = self.tmp / "receipt"
