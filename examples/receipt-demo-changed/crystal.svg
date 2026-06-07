@@ -21,47 +21,35 @@
   </defs>
   <rect width="100%" height="100%" fill="url(#bg)" />
   <g filter="url(#softGlow)">
-  <rect x="280.00" y="266.00" width="640.00" height="640.00" fill="url(#oxide)" fill-opacity="0.2375" stroke="none" />
-  <rect x="280.00" y="266.00" width="640.00" height="640.00" fill="none" stroke="#f8f9fa" stroke-width="2.48" stroke-opacity="0.6361" />
-  <rect x="298.00" y="284.00" width="604.00" height="604.00" fill="none" stroke="#ced4da" stroke-width="1.10" stroke-opacity="0.5561" />
-  <rect x="317.10" y="303.10" width="565.81" height="565.81" fill="none" stroke="#ced4da" stroke-width="3.08" stroke-opacity="0.5635" />
-  <rect x="334.10" y="320.10" width="531.81" height="531.81" fill="none" stroke="#adb5bd" stroke-width="1.10" stroke-opacity="0.4835" />
-  <rect x="354.19" y="340.19" width="491.62" height="491.62" fill="none" stroke="#adb5bd" stroke-width="2.48" stroke-opacity="0.4908" />
-  <rect x="370.19" y="356.19" width="459.62" height="459.62" fill="none" stroke="#ffcad4" stroke-width="1.10" stroke-opacity="0.4108" />
-  <rect x="391.28" y="377.28" width="417.43" height="417.43" fill="none" stroke="#ffcad4" stroke-width="3.08" stroke-opacity="0.4181" />
-  <rect x="406.28" y="392.28" width="387.43" height="387.43" fill="none" stroke="#f4acb7" stroke-width="1.10" stroke-opacity="0.3381" />
-  <rect x="428.38" y="414.38" width="343.24" height="343.24" fill="none" stroke="#f4acb7" stroke-width="2.48" stroke-opacity="0.3454" />
-  <rect x="442.38" y="428.38" width="315.24" height="315.24" fill="none" stroke="#f8f9fa" stroke-width="1.10" stroke-opacity="0.2654" />
-  <rect x="465.48" y="451.48" width="269.05" height="269.05" fill="none" stroke="#f8f9fa" stroke-width="3.08" stroke-opacity="0.2727" />
-  <rect x="478.48" y="464.48" width="243.05" height="243.05" fill="none" stroke="#ced4da" stroke-width="1.10" stroke-opacity="0.1927" />
-  <rect x="360.19" y="346.19" width="107.47" height="54.80" fill="#adb5bd" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="483.80" y="346.19" width="107.47" height="54.80" fill="#ffcad4" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="607.41" y="346.19" width="107.47" height="54.80" fill="#f4acb7" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="731.02" y="346.19" width="107.47" height="54.80" fill="#f8f9fa" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="360.19" y="417.13" width="107.47" height="54.80" fill="#ced4da" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="483.10" y="416.42" width="107.47" height="54.80" fill="#adb5bd" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="606.71" y="416.42" width="107.47" height="54.80" fill="#ffcad4" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="730.32" y="416.42" width="107.47" height="54.80" fill="#f4acb7" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="360.19" y="488.07" width="107.47" height="54.80" fill="#f8f9fa" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="483.10" y="487.36" width="107.47" height="54.80" fill="#ced4da" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="606.00" y="486.65" width="107.47" height="54.80" fill="#adb5bd" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="729.61" y="486.65" width="107.47" height="54.80" fill="#ffcad4" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="360.19" y="559.00" width="107.47" height="54.80" fill="#f4acb7" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="483.10" y="558.30" width="107.47" height="54.80" fill="#f8f9fa" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="606.00" y="557.59" width="107.47" height="54.80" fill="#ced4da" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="728.90" y="556.88" width="107.47" height="54.80" fill="#adb5bd" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="360.19" y="629.94" width="107.47" height="54.80" fill="#ffcad4" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="483.10" y="629.23" width="107.47" height="54.80" fill="#f4acb7" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="606.00" y="628.53" width="107.47" height="54.80" fill="#f8f9fa" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="728.90" y="627.82" width="107.47" height="54.80" fill="#ced4da" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="360.19" y="700.88" width="107.47" height="54.80" fill="#adb5bd" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="483.10" y="700.17" width="107.47" height="54.80" fill="#ffcad4" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="606.00" y="699.47" width="107.47" height="54.80" fill="#f4acb7" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="728.90" y="698.76" width="107.47" height="54.80" fill="#f8f9fa" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="360.19" y="771.82" width="107.47" height="54.80" fill="#ced4da" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="483.10" y="771.11" width="107.47" height="54.80" fill="#adb5bd" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="606.00" y="770.40" width="107.47" height="54.80" fill="#ffcad4" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="728.90" y="769.70" width="107.47" height="54.80" fill="#f4acb7" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
+  <rect x="320.16" y="429.89" width="560.00" height="328.00" fill="url(#oxide)" fill-opacity="0.1889" stroke="none" />
+  <g id="bismuth-growth" class="bismuth-growth">
+  <rect class="growth-terrace" x="320.16" y="429.89" width="560.00" height="328.00" fill="none" stroke="#f8f9fa" stroke-width="2.48" stroke-opacity="0.5975" />
+  <rect class="hopper-step" x="335.33" y="441.26" width="529.66" height="306.01" fill="none" stroke="#ced4da" stroke-width="1.15" stroke-opacity="0.5175" />
+  <rect class="growth-terrace" x="342.44" y="418.06" width="517.81" height="299.52" fill="none" stroke="#ced4da" stroke-width="3.03" stroke-opacity="0.5346" />
+  <rect class="hopper-step" x="360.11" y="431.31" width="482.47" height="273.90" fill="none" stroke="#adb5bd" stroke-width="1.15" stroke-opacity="0.4546" />
+  <rect class="growth-terrace" x="367.93" y="412.42" width="475.62" height="271.04" fill="none" stroke="#adb5bd" stroke-width="2.48" stroke-opacity="0.4717" />
+  <rect class="hopper-step" x="388.10" y="427.55" width="435.28" height="241.80" fill="none" stroke="#ffcad4" stroke-width="1.15" stroke-opacity="0.3917" />
+  <rect class="growth-terrace" x="380.75" y="400.66" width="433.43" height="242.57" fill="none" stroke="#ffcad4" stroke-width="3.03" stroke-opacity="0.4088" />
+  <rect class="hopper-step" x="403.41" y="417.66" width="388.09" height="209.70" fill="none" stroke="#f4acb7" stroke-width="1.15" stroke-opacity="0.3288" />
+  <rect class="growth-terrace" x="410.19" y="386.88" width="391.24" height="214.09" fill="none" stroke="#f4acb7" stroke-width="2.48" stroke-opacity="0.3458" />
+  <rect class="hopper-step" x="435.36" y="405.76" width="340.90" height="177.59" fill="none" stroke="#f8f9fa" stroke-width="1.15" stroke-opacity="0.2658" />
+  <rect class="growth-terrace" x="424.27" y="373.11" width="349.05" height="185.61" fill="none" stroke="#f8f9fa" stroke-width="3.03" stroke-opacity="0.2829" />
+  <rect class="hopper-step" x="451.94" y="393.86" width="293.71" height="145.49" fill="none" stroke="#ced4da" stroke-width="1.15" stroke-opacity="0.2029" />
+  <rect class="growth-terrace branch-terrace" x="-331.94" y="497.11" width="72.00" height="40.00" fill="#adb5bd" fill-opacity="0.1748" stroke="#f8f9fa" stroke-opacity="0.12" stroke-width="0.85" />
+  <rect class="growth-terrace branch-terrace" x="877.72" y="477.91" width="64.00" height="35.00" fill="#ffcad4" fill-opacity="0.1748" stroke="#f8f9fa" stroke-opacity="0.12" stroke-width="0.85" />
+  <rect class="growth-terrace branch-terrace" x="-190.53" y="465.48" width="56.00" height="30.00" fill="#f4acb7" fill-opacity="0.1748" stroke="#f8f9fa" stroke-opacity="0.12" stroke-width="0.85" />
+  <rect class="growth-terrace branch-terrace" x="829.77" y="446.06" width="48.00" height="40.00" fill="#f8f9fa" fill-opacity="0.1748" stroke="#f8f9fa" stroke-opacity="0.12" stroke-width="0.85" />
+  <rect class="growth-terrace branch-terrace" x="-85.51" y="427.70" width="72.00" height="35.00" fill="#ced4da" fill-opacity="0.1748" stroke="#f8f9fa" stroke-opacity="0.12" stroke-width="0.85" />
+  <rect class="growth-terrace branch-terrace" x="788.45" y="404.57" width="64.00" height="30.00" fill="#adb5bd" fill-opacity="0.1748" stroke="#f8f9fa" stroke-opacity="0.12" stroke-width="0.85" />
+  <rect class="growth-terrace branch-terrace" x="-311.21" y="493.27" width="56.00" height="40.00" fill="#ffcad4" fill-opacity="0.1748" stroke="#f8f9fa" stroke-opacity="0.12" stroke-width="0.85" />
+  <rect class="growth-terrace branch-terrace" x="875.29" y="480.07" width="48.00" height="35.00" fill="#f4acb7" fill-opacity="0.1748" stroke="#f8f9fa" stroke-opacity="0.12" stroke-width="0.85" />
+  <rect class="growth-terrace branch-terrace" x="-208.86" y="464.37" width="72.00" height="30.00" fill="#f8f9fa" fill-opacity="0.1748" stroke="#f8f9fa" stroke-opacity="0.12" stroke-width="0.85" />
+  <rect class="growth-terrace branch-terrace" x="828.53" y="445.01" width="64.00" height="40.00" fill="#ced4da" fill-opacity="0.1748" stroke="#f8f9fa" stroke-opacity="0.12" stroke-width="0.85" />
+  <rect class="growth-terrace branch-terrace" x="-57.44" y="427.13" width="56.00" height="35.00" fill="#adb5bd" fill-opacity="0.1748" stroke="#f8f9fa" stroke-opacity="0.12" stroke-width="0.85" />
+  <rect class="growth-terrace branch-terrace" x="802.38" y="410.06" width="48.00" height="30.00" fill="#ffcad4" fill-opacity="0.1748" stroke="#f8f9fa" stroke-opacity="0.12" stroke-width="0.85" />
+  <rect class="growth-terrace branch-terrace" x="-338.27" y="499.61" width="72.00" height="40.00" fill="#f4acb7" fill-opacity="0.1748" stroke="#f8f9fa" stroke-opacity="0.12" stroke-width="0.85" />
+  <rect class="growth-terrace branch-terrace" x="883.97" y="475.04" width="64.00" height="35.00" fill="#f8f9fa" fill-opacity="0.1748" stroke="#f8f9fa" stroke-opacity="0.12" stroke-width="0.85" />
+  </g>
   </g>
   <text x="600.0" y="1134" text-anchor="middle" fill="#c7d0dc" font-family="monospace" font-size="18">826b5c68c64992f89a73d4…</text>
   <text x="600.0" y="1162" text-anchor="middle" fill="#7d8896" font-family="monospace" font-size="14">hopper / silver_rose / common</text>

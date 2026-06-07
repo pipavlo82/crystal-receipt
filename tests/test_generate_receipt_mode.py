@@ -169,6 +169,7 @@ class GenerateReceiptModeTests(unittest.TestCase):
         self.assertTrue("ACTION_GROWTH_MAP" in card or "Action Growth Map" in card)
         self.assertIn("IMPORTANT BOUNDARY", card)
         self.assertIn("The crystal is not the security verifier", card)
+        self.assertTrue(any(token in card for token in ["bismuth-crystal", "isometric-block", "hopper-crystal"]))
 
     def test_receipt_svg_contains_bismuth_style_rectangular_structure(self):
         out = self.tmp / "receipt"
@@ -176,6 +177,7 @@ class GenerateReceiptModeTests(unittest.TestCase):
         svg = (out / "crystal.svg").read_text(encoding="utf-8")
         self.assertGreaterEqual(svg.count("<rect "), 8)
         self.assertIn("fill=\"url(#oxide)\"", svg)
+        self.assertTrue(any(token in svg for token in ["bismuth-growth", "hopper-step", "growth-terrace"]))
         self.assertIn("/", svg)
 
 

@@ -246,81 +246,65 @@ def _action_growth_map(receipt: Dict) -> Dict:
     }
 
 
-def _hopper_rectangles(layer_count: int, shard_count: int, symmetry: str, edge_bias: float, geometry_style: str) -> Tuple[List[Dict[str, float]], List[Dict[str, float]]]:
-    terraces: List[Dict[str, float]] = []
-    shards: List[Dict[str, float]] = []
+def deterministic_offsets_from_seed(seed_hex: str, count: int, span: float) -> List[float]:
+    offsets: List[float] = []
+    for idx in range(count):
+        start = (idx * 4) % max(4, len(seed_hex) - 4)
+        chunk = seed_hex[start : start + 4]
+        if len(chunk) < 4:
+            chunk = (chunk + seed_hex)[:4]
+        value = int(chunk, 16) / 0xFFFF
+        offsets.append((value - 0.5) * 2 * span)
+    return offsets
+
+
+def build_bismuth_growth_plan(traits: Dict, seed_material: Dict, center_x: float, center_y: float, scale: float = 1.0) -> Dict:
+    layer_count = traits["layer_count"]
+    shard_count = traits["shard_count"]
+    symmetry = traits["symmetry"]
+    edge_bias = traits["edge_bias"]
+    geometry_style = traits["geometry_style"]
 
     symmetry_factor = {"low": 0.76, "medium": 0.88, "high": 1.0}[symmetry]
-    geometry_scale = {
-        "hopper": 1.0,
-        "radial": 0.9,
-        "stepped": 0.96,
-        "fractured": 0.86,
-    }[geometry_style]
+    geometry_scale = {"hopper": 1.0, "radial": 0.9, "stepped": 0.97, "fractured": 0.86}[geometry_style]
+    levels = max(5, min(11, layer_count // 2 + 3))
+    base_w = (420 + shard_count * 5.0) * symmetry_factor * geometry_scale * scale
+    base_h = (280 + layer_count * 8.0) * symmetry_factor * geometry_scale * scale
+    rise_step = (20 + edge_bias * 10 + (3 if geometry_style == "stepped" else 0)) * scale
+    inset_step = (16 + (1 - edge_bias) * 10) * geometry_scale * scale
+    hollow_step = (10 + traits["oxide_intensity"] * 12) * scale
 
-    cx = CENTER_X
-    cy = CENTER_Y - 14
-    base_w = 640 * symmetry_factor * geometry_scale
-    base_h = 640 * symmetry_factor * geometry_scale
-    terrace_step = max(12.0, (42.0 - edge_bias * 10.0) * geometry_scale)
-    notch_step = max(8.0, terrace_step * 0.6)
+    x_offsets = deterministic_offsets_from_seed(seed_material["shape_seed"], levels, 18 * scale)
+    y_offsets = deterministic_offsets_from_seed(seed_material["symmetry_seed"], levels, 10 * scale)
 
-    for idx in range(layer_count):
-        inset = idx * terrace_step
-        w = max(120.0, base_w - inset * 2)
-        h = max(120.0, base_h - inset * 2)
-        x = cx - w / 2
-        y = cy - h / 2
-        terraces.append(
-            {
-                "x": x,
-                "y": y,
-                "w": w,
-                "h": h,
-                "notch": max(6.0, notch_step + (idx % 3) * 2.5),
-            }
-        )
+    terraces: List[Dict[str, float]] = []
+    for idx in range(levels):
+        width = max(90 * scale, base_w - idx * inset_step * 2)
+        height = max(56 * scale, base_h - idx * inset_step * 1.35)
+        x = center_x - width / 2 + x_offsets[idx] * (0.35 if symmetry == "high" else 0.65)
+        y = center_y - height / 2 - idx * rise_step + y_offsets[idx]
+        hollow = max(12 * scale, min(width * 0.22, hollow_step + idx * 2.5 * scale))
+        terraces.append({"x": x, "y": y, "w": width, "h": height, "hollow": hollow})
 
-    inner = terraces[min(max(layer_count // 3, 0), len(terraces) - 1)] if terraces else {"x": cx - 120, "y": cy - 120, "w": 240, "h": 240}
-    shard_cols = max(2, round(math.sqrt(shard_count) * 0.72))
-    shard_rows = max(2, math.ceil(shard_count / shard_cols))
-    cell_w = inner["w"] / shard_cols
-    cell_h = inner["h"] / shard_rows
-    offset_push = edge_bias * 8.0
+    branches: List[Dict[str, float]] = []
+    branch_count = max(4, min(14, shard_count // 2 + (2 if traits["rarity"] in {"rare", "mythic"} else 0)))
+    branch_offsets = deterministic_offsets_from_seed(seed_material["layer_seed"], branch_count * 2, 24 * scale)
+    mirror_mode = symmetry != "low"
 
-    for idx in range(shard_count):
-        col = idx % shard_cols
-        row = idx // shard_cols
-        if row >= shard_rows:
-            break
-        if geometry_style == "radial":
-            skip = (row + col) % 3 == 2
-        elif geometry_style == "fractured":
-            skip = (row * 2 + col) % 4 == 1
-        elif geometry_style == "stepped":
-            skip = col % 4 == 3 and row % 2 == 1
-        else:
-            skip = False
-        if skip:
-            continue
+    for idx in range(branch_count):
+        side = -1 if idx % 2 == 0 else 1
+        if not mirror_mode and idx % 3 == 0:
+            side = -1
+        level_index = min(levels - 1, max(0, idx % levels))
+        anchor = terraces[level_index]
+        branch_w = max(34 * scale, (72 - (idx % 4) * 8) * scale)
+        branch_h = max(18 * scale, (40 - (idx % 3) * 5) * scale)
+        branch_x = anchor["x"] + (anchor["w"] + 20 * scale) * (1 if side > 0 else -1) - (branch_w if side < 0 else 0)
+        branch_x += branch_offsets[idx] * 0.55
+        branch_y = anchor["y"] + anchor["h"] * 0.2 + branch_offsets[idx + branch_count] * 0.25
+        branches.append({"x": branch_x, "y": branch_y, "w": branch_w, "h": branch_h, "side": side})
 
-        step_offset = ((row - col) if geometry_style == "fractured" else (col - row)) * offset_push * 0.18
-        x = inner["x"] + col * cell_w + 6 + max(0, step_offset)
-        y = inner["y"] + row * cell_h + 6 + max(0, -step_offset)
-        w = max(10.0, cell_w - 12 - edge_bias * 7)
-        h = max(10.0, cell_h - 12 - edge_bias * 7)
-        if geometry_style == "radial":
-            x += abs(col - shard_cols / 2) * 2.5
-            y += abs(row - shard_rows / 2) * 1.8
-        elif geometry_style == "stepped":
-            y += (row % 3) * 2.0
-        elif geometry_style == "fractured":
-            x += (idx % 3) * 3.0
-            h = max(10.0, h - (idx % 2) * 4.0)
-
-        shards.append({"x": x, "y": y, "w": w, "h": h})
-
-    return terraces, shards
+    return {"terraces": terraces, "branches": branches, "levels": levels}
 
 
 def render_receipt_mode_svg(metadata: Dict) -> str:
@@ -350,44 +334,42 @@ def render_receipt_mode_svg(metadata: Dict) -> str:
     body = [f'<rect width="100%" height="100%" fill="url(#bg)" />']
     body.append('<g filter="url(#softGlow)">')
 
-    terraces, shards = _hopper_rectangles(
-        traits["layer_count"],
-        traits["shard_count"],
-        traits["symmetry"],
-        traits["edge_bias"],
-        traits["geometry_style"],
-    )
+    growth = build_bismuth_growth_plan(traits, metadata["derived_seeds"], CENTER_X, CENTER_Y - 10, scale=1.0)
+    terraces = growth["terraces"]
+    branches = growth["branches"]
 
     if terraces:
         outer = terraces[0]
         body.append(
             f'<rect x="{outer["x"]:.2f}" y="{outer["y"]:.2f}" width="{outer["w"]:.2f}" height="{outer["h"]:.2f}" '
-            f'fill="url(#oxide)" fill-opacity="{0.16 + traits["oxide_intensity"] * 0.18:.4f}" stroke="none" />'
+            f'fill="url(#oxide)" fill-opacity="{0.12 + traits["oxide_intensity"] * 0.16:.4f}" stroke="none" />'
         )
 
     stroke_base = 1.4 + traits["edge_bias"] * 2.2
+    body.append('<g id="bismuth-growth" class="bismuth-growth">')
     for idx, rect in enumerate(terraces):
         color = palette[idx % len(palette)]
-        opacity = round(0.2 + ((traits["layer_count"] - idx) / max(traits["layer_count"], 1)) * (0.35 + traits["oxide_intensity"] * 0.2), 4)
+        opacity = round(0.22 + ((len(terraces) - idx) / max(len(terraces), 1)) * (0.30 + traits["oxide_intensity"] * 0.18), 4)
         body.append(
-            f'<rect x="{rect["x"]:.2f}" y="{rect["y"]:.2f}" width="{rect["w"]:.2f}" height="{rect["h"]:.2f}" fill="none" '
-            f'stroke="{color}" stroke-width="{stroke_base + (idx % 2) * 0.6:.2f}" stroke-opacity="{opacity}" />'
+            f'<rect class="growth-terrace" x="{rect["x"]:.2f}" y="{rect["y"]:.2f}" width="{rect["w"]:.2f}" height="{rect["h"]:.2f}" fill="none" '
+            f'stroke="{color}" stroke-width="{stroke_base + (idx % 2) * 0.55:.2f}" stroke-opacity="{opacity}" />'
         )
-        inset = max(8.0, min(rect["notch"], 18.0 - min(idx, 8)))
+        inset = rect["hollow"]
         inner_w = max(24.0, rect["w"] - inset * 2)
-        inner_h = max(24.0, rect["h"] - inset * 2)
+        inner_h = max(18.0, rect["h"] - inset * 1.45)
         body.append(
-            f'<rect x="{rect["x"] + inset:.2f}" y="{rect["y"] + inset:.2f}" width="{inner_w:.2f}" height="{inner_h:.2f}" fill="none" '
-            f'stroke="{palette[(idx + 1) % len(palette)]}" stroke-width="1.10" stroke-opacity="{max(0.15, opacity - 0.08):.4f}" />'
+            f'<rect class="hopper-step" x="{rect["x"] + inset:.2f}" y="{rect["y"] + inset * 0.75:.2f}" width="{inner_w:.2f}" height="{inner_h:.2f}" fill="none" '
+            f'stroke="{palette[(idx + 1) % len(palette)]}" stroke-width="1.15" stroke-opacity="{max(0.18, opacity - 0.08):.4f}" />'
         )
 
-    for idx, rect in enumerate(shards):
+    for idx, rect in enumerate(branches):
         color = palette[(idx + 2) % len(palette)]
-        fill_opacity = round(0.08 + traits["oxide_intensity"] * 0.25, 4)
+        fill_opacity = round(0.08 + traits["oxide_intensity"] * 0.22, 4)
         body.append(
-            f'<rect x="{rect["x"]:.2f}" y="{rect["y"]:.2f}" width="{rect["w"]:.2f}" height="{rect["h"]:.2f}" fill="{color}" fill-opacity="{fill_opacity}" '
-            f'stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />'
+            f'<rect class="growth-terrace branch-terrace" x="{rect["x"]:.2f}" y="{rect["y"]:.2f}" width="{rect["w"]:.2f}" height="{rect["h"]:.2f}" fill="{color}" fill-opacity="{fill_opacity}" '
+            f'stroke="#f8f9fa" stroke-opacity="0.12" stroke-width="0.85" />'
         )
+    body.append('</g>')
 
     if traits["rarity"] in {"rare", "mythic"}:
         radius = 260 if traits["rarity"] == "rare" else 320
@@ -415,6 +397,118 @@ def render_receipt_mode_svg(metadata: Dict) -> str:
     )
 
 
+def _hex_to_rgb(color: str) -> Tuple[int, int, int]:
+    color = color.lstrip("#")
+    return int(color[0:2], 16), int(color[2:4], 16), int(color[4:6], 16)
+
+
+def _rgb_to_hex(rgb: Tuple[int, int, int]) -> str:
+    return "#%02x%02x%02x" % rgb
+
+
+def _mix_hex(color_a: str, color_b: str, weight: float) -> str:
+    a = _hex_to_rgb(color_a)
+    b = _hex_to_rgb(color_b)
+    mixed = tuple(max(0, min(255, round(a[i] * (1 - weight) + b[i] * weight))) for i in range(3))
+    return _rgb_to_hex(mixed)
+
+
+def _iso_points(x: float, y: float, w: float, h: float, depth_x: float, depth_y: float) -> Dict[str, List[Tuple[float, float]]]:
+    top = [(x, y), (x + w, y), (x + w + depth_x, y - depth_y), (x + depth_x, y - depth_y)]
+    left = [(x, y), (x + depth_x, y - depth_y), (x + depth_x, y - depth_y + h), (x, y + h)]
+    right = [(x + w, y), (x + w + depth_x, y - depth_y), (x + w + depth_x, y - depth_y + h), (x + w, y + h)]
+    return {"top": top, "left": left, "right": right}
+
+
+def _svg_poly(points: List[Tuple[float, float]]) -> str:
+    return " ".join(f"{px:.2f},{py:.2f}" for px, py in points)
+
+
+def draw_isometric_block(x: float, y: float, w: float, h: float, depth_x: float, depth_y: float, top_color: str, left_color: str, right_color: str, stroke: str, stroke_width: float, opacity: float = 1.0, class_name: str = "isometric-block") -> str:
+    faces = _iso_points(x, y, w, h, depth_x, depth_y)
+    return (
+        f'<g class="{class_name}" opacity="{opacity:.3f}">'
+        f'<polygon points="{_svg_poly(faces["left"])}" fill="{left_color}" stroke="{stroke}" stroke-width="{stroke_width:.2f}" />'
+        f'<polygon points="{_svg_poly(faces["right"])}" fill="{right_color}" stroke="{stroke}" stroke-width="{stroke_width:.2f}" />'
+        f'<polygon points="{_svg_poly(faces["top"])}" fill="{top_color}" stroke="{stroke}" stroke-width="{stroke_width:.2f}" />'
+        f'</g>'
+    )
+
+
+def draw_stepped_hopper_crystal(cx: float, base_y: float, traits: Dict, palette: List[str], scale: float = 1.0, include_id: bool = True) -> str:
+    layer_count = traits["layer_count"]
+    shard_count = traits["shard_count"]
+    oxide_intensity = traits["oxide_intensity"]
+    edge_bias = traits["edge_bias"]
+    symmetry = traits["symmetry"]
+    rarity = traits["rarity"]
+
+    tower_levels = max(4, min(9, layer_count // 2 + 1))
+    depth_x = (22 + edge_bias * 18) * scale
+    depth_y = (14 + edge_bias * 9) * scale
+    base_w = (120 + shard_count * 2.2) * scale
+    base_h = (70 + layer_count * 2.4) * scale
+    inset_step = (12 + oxide_intensity * 10) * scale
+    rise_step = (18 + oxide_intensity * 12) * scale
+    side_offset = (28 + (0 if symmetry == "high" else 14 if symmetry == "medium" else 24)) * scale
+    stroke_width = 1.4 + edge_bias * 1.8
+
+    top_base = _mix_hex(palette[0], "#f8fbff", 0.42)
+    left_base = _mix_hex(palette[1], "#0a1020", 0.36)
+    right_base = _mix_hex(palette[2], "#09111d", 0.28)
+    glow_line = _mix_hex(palette[3], "#fef08a", 0.28)
+    stroke = _mix_hex("#d8e7ff", palette[-1], 0.18)
+
+    parts: List[str] = []
+    group_open = '<g id="bismuth-crystal" class="hopper-crystal">' if include_id else '<g class="hopper-crystal">'
+    parts.append(group_open)
+
+    if rarity in {"rare", "mythic"}:
+        ring_w = base_w + depth_x * 2 + 90 * scale
+        ring_h = base_h + tower_levels * rise_step + 70 * scale
+        parts.append(
+            f'<rect x="{cx - ring_w / 2:.2f}" y="{base_y - ring_h + 26 * scale:.2f}" width="{ring_w:.2f}" height="{ring_h:.2f}" '
+            f'fill="none" stroke="{glow_line}" stroke-opacity="0.35" stroke-width="{stroke_width + 0.6:.2f}" rx="18" ry="18" />'
+        )
+
+    for idx in range(tower_levels):
+        level_w = max(46 * scale, base_w - idx * inset_step * 2)
+        level_h = max(26 * scale, base_h - idx * inset_step * 1.2)
+        x = cx - level_w / 2
+        y = base_y - idx * rise_step
+        top_color = _mix_hex(top_base, palette[idx % len(palette)], min(0.58, 0.16 + idx * 0.07))
+        left_color = _mix_hex(left_base, palette[(idx + 1) % len(palette)], min(0.42, 0.10 + idx * 0.05))
+        right_color = _mix_hex(right_base, palette[(idx + 2) % len(palette)], min(0.50, 0.12 + idx * 0.05))
+        parts.append(draw_isometric_block(x, y, level_w, level_h, depth_x, depth_y, top_color, left_color, right_color, stroke, stroke_width, class_name="isometric-block tower-block"))
+
+        inner_margin = max(8 * scale, level_w * 0.12)
+        inner_w = max(18 * scale, level_w - inner_margin * 2)
+        inner_h = max(12 * scale, level_h - inner_margin * 0.9)
+        inner_x = cx - inner_w / 2
+        inner_y = y + inner_margin * 0.4
+        inner_faces = _iso_points(inner_x, inner_y, inner_w, inner_h, depth_x * 0.58, depth_y * 0.58)
+        parts.append(
+            f'<polygon class="hopper-band" points="{_svg_poly(inner_faces["top"])}" fill="none" stroke="{glow_line}" '
+            f'stroke-opacity="{0.35 + oxide_intensity * 0.35:.3f}" stroke-width="{max(1.0, stroke_width - 0.3):.2f}" />'
+        )
+
+    wing_blocks = max(2, min(6, shard_count // 6 + 1))
+    for side in (-1, 1):
+        for idx in range(wing_blocks):
+            wing_w = max(30 * scale, (56 - idx * 5) * scale)
+            wing_h = max(18 * scale, (34 - idx * 3) * scale)
+            offset_x = side * (base_w / 2 + side_offset + idx * 16 * scale)
+            x = cx + offset_x - (wing_w / 2 if side > 0 else wing_w / 2)
+            y = base_y - (idx + 1) * (rise_step * 0.72)
+            top_color = _mix_hex(palette[(idx + (0 if side < 0 else 2)) % len(palette)], "#eef6ff", 0.34)
+            left_color = _mix_hex(top_color, "#0d1524", 0.38)
+            right_color = _mix_hex(top_color, "#0a101b", 0.48)
+            parts.append(draw_isometric_block(x, y, wing_w, wing_h, depth_x * 0.82, depth_y * 0.82, top_color, left_color, right_color, stroke, max(1.0, stroke_width - 0.25), opacity=0.94, class_name="isometric-block side-block"))
+
+    parts.append('</g>')
+    return "".join(parts)
+
+
 def render_receipt_card_svg(metadata: Dict, crystal_svg_hash: str) -> str:
     source = metadata["source_receipt"]
     traits = metadata["visual_traits"]
@@ -440,33 +534,10 @@ def render_receipt_card_svg(metadata: Dict, crystal_svg_hash: str) -> str:
     timestamp_label = source.get("timestamp") or "unknown"
     signature_summary = signature_block.get("algorithm", "unknown") if isinstance(signature_block, dict) else str(signature_block)
     visual_summary = f'{traits["geometry_style"]} / {traits["palette_name"]} / {traits["rarity"]}'
-    action_summary = "changed_files→terraces · verifier_result→seal/glow · scope/authority→boundary · diff/eventRoot→growth pattern"
-
-    crystal_mark_small = """
-  <g transform="translate(800 250)">
-    <rect x="-78" y="-78" width="156" height="156" fill="none" stroke="#67e8f9" stroke-width="4" opacity="0.9" />
-    <rect x="-56" y="-56" width="112" height="112" fill="none" stroke="#a78bfa" stroke-width="3.2" opacity="0.95" />
-    <rect x="-34" y="-34" width="68" height="68" fill="none" stroke="#f472b6" stroke-width="2.6" opacity="0.95" />
-    <rect x="-16" y="-16" width="32" height="32" fill="#f8fafc" fill-opacity="0.15" stroke="#fef08a" stroke-width="2.2" />
-    <rect x="-70" y="-8" width="26" height="18" fill="#67e8f9" fill-opacity="0.10" stroke="#67e8f9" stroke-width="1.6" />
-    <rect x="44" y="-8" width="26" height="18" fill="#a78bfa" fill-opacity="0.10" stroke="#a78bfa" stroke-width="1.6" />
-    <rect x="-8" y="44" width="18" height="26" fill="#86efac" fill-opacity="0.10" stroke="#86efac" stroke-width="1.6" />
-    <rect x="-8" y="-70" width="18" height="26" fill="#f472b6" fill-opacity="0.10" stroke="#f472b6" stroke-width="1.6" />
-  </g>
-"""
-
-    crystal_mark_large = """
-  <g transform="translate(1175 590)">
-    <rect x="-142" y="-142" width="284" height="284" fill="none" stroke="#67e8f9" stroke-width="5" opacity="0.95" />
-    <rect x="-104" y="-104" width="208" height="208" fill="none" stroke="#a78bfa" stroke-width="4" opacity="0.95" />
-    <rect x="-68" y="-68" width="136" height="136" fill="none" stroke="#f472b6" stroke-width="3.2" opacity="0.95" />
-    <rect x="-30" y="-30" width="60" height="60" fill="#f8fafc" fill-opacity="0.12" stroke="#fef08a" stroke-width="2.6" />
-    <rect x="-122" y="-12" width="46" height="26" fill="#67e8f9" fill-opacity="0.10" stroke="#67e8f9" stroke-width="2" />
-    <rect x="76" y="-12" width="46" height="26" fill="#a78bfa" fill-opacity="0.10" stroke="#a78bfa" stroke-width="2" />
-    <rect x="-12" y="76" width="26" height="46" fill="#86efac" fill-opacity="0.10" stroke="#86efac" stroke-width="2" />
-    <rect x="-12" y="-122" width="26" height="46" fill="#f472b6" fill-opacity="0.10" stroke="#f472b6" stroke-width="2" />
-  </g>
-"""
+    action_summary = "changed_files->terraces | verifier_result->seal/glow | scope/authority->boundary | diff/eventRoot->growth pattern"
+    palette = PALETTES[traits["palette_name"]]
+    crystal_mark_small = draw_stepped_hopper_crystal(800, 300, traits, palette, scale=0.46, include_id=False)
+    crystal_mark_large = draw_stepped_hopper_crystal(1210, 680, traits, palette, scale=0.82, include_id=True)
 
     return f'''<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
   <rect width="100%" height="100%" fill="#090b14" />
@@ -507,13 +578,13 @@ def render_receipt_card_svg(metadata: Dict, crystal_svg_hash: str) -> str:
   <text x="568" y="330" fill="#f8fbff" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">CANONICAL_RECEIPT_HASH</text>
   <text x="568" y="356" fill="#d7e3f4" font-family="Consolas, monospace" font-size="18">{canonical_short}</text>
   <text x="568" y="402" fill="#f8fbff" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">SEED DERIVATION</text>
-  <text x="568" y="428" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">MASTER_SEED · SHAPE_SEED · PALETTE_SEED</text>
-  <text x="568" y="454" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">SYMMETRY_SEED · LAYER_SEED · OXIDE_SEED · TRAIT_SEED</text>
+  <text x="568" y="428" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">MASTER_SEED | SHAPE_SEED | PALETTE_SEED</text>
+  <text x="568" y="454" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">SYMMETRY_SEED | LAYER_SEED | OXIDE_SEED | TRAIT_SEED</text>
   <text x="568" y="500" fill="#f8fbff" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">VISUAL TRAIT DERIVATION</text>
   <text x="568" y="526" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">geometry_style={traits["geometry_style"]}</text>
   <text x="568" y="552" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">palette_name={traits["palette_name"]}</text>
-  <text x="568" y="578" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">symmetry={traits["symmetry"]} · layer_count={traits["layer_count"]}</text>
-  <text x="568" y="604" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">shard_count={traits["shard_count"]} · rarity={traits["rarity"]}</text>
+  <text x="568" y="578" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">symmetry={traits["symmetry"]} | layer_count={traits["layer_count"]}</text>
+  <text x="568" y="604" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">shard_count={traits["shard_count"]} | rarity={traits["rarity"]}</text>
   <line x1="790" y1="620" x2="790" y2="760" stroke="#35507c" stroke-width="2" stroke-dasharray="8 8" />
   <text x="568" y="792" fill="#b7c4d8" font-family="Segoe UI, Arial, sans-serif" font-size="18">receipt evidence is transformed into a reproducible bismuth / hopper crystal grammar</text>
 
@@ -528,7 +599,7 @@ def render_receipt_card_svg(metadata: Dict, crystal_svg_hash: str) -> str:
   <text x="1098" y="420" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">receipt_card file: receipt-card.svg</text>
   <text x="1098" y="450" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">provenance: deterministic / reproducible / shareable</text>
   <text x="1098" y="760" fill="#f8fbff" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">CRYSTAL PREVIEW</text>
-  <text x="1098" y="790" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">crystal.svg · crystal.metadata.json · receipt-card.svg</text>
+  <text x="1098" y="790" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">crystal.svg | crystal.metadata.json | receipt-card.svg</text>
   <text x="1098" y="820" fill="#d7e3f4" font-family="Consolas, monospace" font-size="17">artifact hash: {artifact_short}</text>
 
   <rect x="50" y="890" width="1500" height="70" rx="18" ry="18" fill="#121212" stroke="#334155" stroke-width="2.5" />
