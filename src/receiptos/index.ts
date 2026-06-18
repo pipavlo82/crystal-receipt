@@ -3,3 +3,4 @@ export { AuthorizationActionSchema, ExecutionRecordSchema, AnchorProofSchema, Ha
 export { canonicalize } from "./canon/canonicalize"
 export { computeReceiptRoot, sha256, stripAnchor } from "./canon/receipt-root"
 export { verifyHandoffReceiptRoot } from "./verify/verify-receipt"
+export { attachLocalMerkleProof, applyLocalMerkleProofToEvidence, verifyLocalMerkleProof } from "./merkle/local-merkle"
