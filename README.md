@@ -203,6 +203,22 @@ This loads receipt JSON, canonicalizes it, derives seeds and visual traits, and 
 - `crystal.svg`
 - `crystal.metadata.json`
 
+### ReceiptOS Capsule Demo
+
+A non-visual proof/capsule summary can also be generated from the portable ReceiptOS evidence fixtures:
+
+```bash
+bun scripts/receiptos-capsule-demo.ts --evidence src/receiptos/fixtures/session-evidence.with-local-merkle.sample.json --out examples/receiptos-capsule-demo/capsule-summary.json
+```
+
+Input fixture:
+- `src/receiptos/fixtures/session-evidence.with-local-merkle.sample.json`
+
+Output summary:
+- `examples/receiptos-capsule-demo/capsule-summary.json`
+
+This demo does not change the SVG renderer and does not change receipt root semantics.
+
 ## Future direction
 
 Future optional layer:
