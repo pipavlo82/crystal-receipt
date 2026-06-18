@@ -1,0 +1,11 @@
+{
+  "schema": "stealth.receipt_anchor.onchain_payload.v1",
+  "receipt_root": "0x687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc",
+  "merkle_root": "0x687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc",
+  "merkle_leaf_index": 0,
+  "merkle_proof": [],
+  "merkle_proof_status": "attached",
+  "anchor_target": "onchain",
+  "network": "sepolia",
+  "hash": "sha256(left || right)"
+}

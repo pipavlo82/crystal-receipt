@@ -110,3 +110,39 @@ export type LocalMerkleVerification = {
   merkle_leaf_index: number | null
   merkle_proof_count: number
 }
+
+export type SepoliaAnchorPayload = {
+  schema: "stealth.receipt_anchor.onchain_payload.v1"
+  receipt_root: string
+  merkle_root: string
+  merkle_leaf_index: number
+  merkle_proof: string[]
+  merkle_proof_status: "attached"
+  anchor_target: "onchain"
+  network: "sepolia"
+  hash: "sha256(left || right)"
+}
+
+export type SepoliaAnchorOverlay = {
+  onchain_anchor_status: "anchored"
+  network: "sepolia"
+  contract: string
+  tx_hash: string
+}
+
+export type ImportedAnchorEvent = {
+  name?: unknown
+  receiptRoot?: unknown
+  metadataURI?: unknown
+  publisher?: unknown
+}
+
+export type ImportedAnchorResult = {
+  network?: unknown
+  chainId?: unknown
+  contractAddress?: unknown
+  txHash?: unknown
+  receiptRoot?: unknown
+  metadataURI?: unknown
+  event?: ImportedAnchorEvent | null
+}
