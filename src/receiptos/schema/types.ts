@@ -89,3 +89,24 @@ export type HandoffReceiptVerification = {
   receipt_root: string | null
   recomputed_root: string | null
 }
+
+export type LocalMerkleProofAttachment = {
+  receipt_root: string
+  merkle_root: string
+  merkle_leaf_index: number
+  merkle_proof: string[]
+  merkle_proof_status: "attached"
+  onchain_anchor_status: "not anchored"
+  network: string
+  contract: null
+  tx_hash: null
+  verifier_status?: null
+}
+
+export type LocalMerkleVerification = {
+  ok: boolean
+  merkle_root: string | null
+  recomputed_root: string | null
+  merkle_leaf_index: number | null
+  merkle_proof_count: number
+}
