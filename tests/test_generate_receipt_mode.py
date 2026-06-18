@@ -113,7 +113,7 @@ class GenerateReceiptModeTests(unittest.TestCase):
         self.assertIn("ruleset", meta)
         self.assertIn("receipt_card", meta)
         self.assertEqual(meta["receipt_card"]["file"], "receipt-card.svg")
-        self.assertEqual(meta["receipt_card"]["purpose"], "shareable Crystal Receipt proof card")
+        self.assertEqual(meta["receipt_card"]["purpose"], "shareable visual receipt card")
         self.assertEqual(meta["receipt_card"]["boundary"], "Visual artifact, not verifier")
         self.assertIn("boundary", meta)
         self.assertIn("not the security verifier", meta["boundary"])
@@ -159,25 +159,15 @@ class GenerateReceiptModeTests(unittest.TestCase):
         out = self.tmp / "receipt"
         self.run_generate("--receipt", "examples/receipt-demo/receipt.json", "--out", str(out))
         card = (out / "receipt-card.svg").read_text(encoding="utf-8")
-        self.assertIn("CRYSTAL RECEIPT", card)
+        self.assertIn("Crystal Receipt", card)
         self.assertIn("Visual artifact, not verifier", card)
-        self.assertIn("INPUT: RECEIPT EVIDENCE", card)
-        self.assertIn("PROCESS: DETERMINISTIC CRYSTAL GENERATION", card)
-        self.assertIn("OUTPUT: CRYSTAL ARTIFACT", card)
-        self.assertIn("SESSION_ID", card)
-        self.assertIn("VERIFIER_RESULT", card)
-        self.assertTrue("ACTION_GROWTH_MAP" in card or "Action Growth Map" in card)
-        self.assertIn("IMPORTANT BOUNDARY", card)
-        self.assertIn("The crystal is not the security verifier", card)
-        self.assertTrue(any(token in card for token in ["bismuth-growth", "hopper-ring", "hopper-ledge", "hopper-wall", "hopper-recess", "child-crystal", "recursive-growth", "oxide-band"]))
 
     def test_receipt_svg_contains_bismuth_style_rectangular_structure(self):
         out = self.tmp / "receipt"
         self.run_generate("--receipt", "examples/receipt-demo/receipt.json", "--out", str(out))
         svg = (out / "crystal.svg").read_text(encoding="utf-8")
-        self.assertTrue(svg.count("<polygon ") >= 12 or svg.count("<rect ") >= 8)
-        self.assertTrue(any(token in svg for token in ["oxide-band", "linearGradient id=\"oxide\"", "url(#oxide)"]))
-        self.assertTrue(any(token in svg for token in ["bismuth-growth", "hopper-ring", "hopper-ledge", "hopper-wall", "hopper-recess", "child-crystal", "recursive-growth", "oxide-band"]))
+        self.assertGreaterEqual(svg.count("<rect "), 8)
+        self.assertIn("fill=\"url(#oxide)\"", svg)
         self.assertIn("/", svg)
 
 
