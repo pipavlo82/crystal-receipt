@@ -1,0 +1,79 @@
+{
+  "schema": "stealth.session.evidence.v1",
+  "session_id": "session-demo-001",
+  "directory": "C:/demo/workspace",
+  "task": {
+    "title": "Portable ReceiptOS evidence core sample (tampered)",
+    "prompt": "Verify portable receipt_root parity."
+  },
+  "agent": {
+    "id": "stealth-main",
+    "runtime": "Stealth"
+  },
+  "scope": {
+    "permission": null,
+    "lease": {
+      "id": "session-demo-001:scoped-lease:v1",
+      "mode": "read_only",
+      "target": "C:/demo/workspace",
+      "allowed_actions": [],
+      "issued_at": 1718676000,
+      "expires_at": null,
+      "status": "missing"
+    }
+  },
+  "authorization": {
+    "delegation_ref": null,
+    "delegator": null,
+    "agent_operator": "stealth-main",
+    "target": "C:/demo/workspace",
+    "allowed_actions": [],
+    "authorization_valid_from": null,
+    "authorization_expiry": null,
+    "authorization_checked_at": 1718676060,
+    "authorization_state_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "authorized_at_execution": null
+  },
+  "execution": [
+    {
+      "call_id": "call-demo-001",
+      "tool": "exec",
+      "action_performed": "git status --short",
+      "target": "C:/demo/workspace",
+      "execution_timestamp": 1718676020,
+      "completed_timestamp": 1718676021,
+      "status": "completed",
+      "scope_match": null
+    }
+  ],
+  "commands": [
+    {
+      "command": "git status --short",
+      "exit_code": 0,
+      "stdout_summary": " M src/demo.txt"
+    }
+  ],
+  "changes": {
+    "files_changed": [
+      "src/demo.txt"
+    ],
+    "diff_sha256": "4d5e8d336a6f2d0d45d76c6f9d1fd8013a4a8b4f28e8c5cad20c4d5f0f1a0abc"
+  },
+  "anchor": {
+    "receipt_root": "0x687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc",
+    "merkle_proof_status": "not attached",
+    "merkle_root": null,
+    "merkle_leaf_index": null,
+    "merkle_proof": [],
+    "onchain_anchor_status": "not anchored",
+    "network": "local/off-chain",
+    "contract": null,
+    "tx_hash": null,
+    "verifier_status": "not verified"
+  },
+  "metadata": {
+    "message_count": 3,
+    "diff_count": 1,
+    "generated_by": "stealth.handoff.evidence.builder.v1"
+  }
+}
