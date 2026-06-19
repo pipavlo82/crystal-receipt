@@ -14,19 +14,19 @@ describe("receiptos crystal receipt mapping", () => {
     expect(mapping.core.map((section) => section.id)).toEqual(["payload"])
   })
 
-  test("inner ring maps to policy + authorization", async () => {
+  test("inner ring maps to policy + authorization + decision trace", async () => {
     const mapping = await buildCrystalReceiptMapping(readEvidence("session-evidence.sample.json"))
-    expect(mapping.inner_ring.map((section) => section.id)).toEqual(["policy_boundary", "authorization"])
+    expect(mapping.inner_ring.map((section) => section.id)).toEqual(["policy_boundary", "authorization", "decision_trace"])
   })
 
-  test("facets map to execution + evidence", async () => {
+  test("facets map to execution + evidence + counterfactual", async () => {
     const mapping = await buildCrystalReceiptMapping(readEvidence("session-evidence.sample.json"))
-    expect(mapping.facets.map((section) => section.id)).toEqual(["execution", "evidence"])
+    expect(mapping.facets.map((section) => section.id)).toEqual(["execution", "evidence", "counterfactual"])
   })
 
-  test("outer shell maps to result + receipt_root", async () => {
+  test("outer shell maps to result + receipt_root + replay_manifest", async () => {
     const mapping = await buildCrystalReceiptMapping(readEvidence("session-evidence.sample.json"))
-    expect(mapping.outer_shell.map((section) => section.id)).toEqual(["result", "receipt_root"])
+    expect(mapping.outer_shell.map((section) => section.id)).toEqual(["result", "receipt_root", "replay_manifest"])
   })
 
   test("anchor edge maps to Merkle/external anchor status", async () => {
