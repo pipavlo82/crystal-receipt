@@ -1,0 +1,72 @@
+{
+  "schema": "receiptos.evidence_capsule.v0",
+  "action": {
+    "summary": "Portable ReceiptOS evidence core sample",
+    "source_fields": [
+      "task.title",
+      "task.prompt",
+      "commands"
+    ]
+  },
+  "evidence": {
+    "summary": "1 changed file(s); diff count 1.",
+    "source_fields": [
+      "changes.files_changed",
+      "changes.diff_sha256",
+      "metadata.diff_count",
+      "metadata.message_count"
+    ],
+    "status": "present"
+  },
+  "receipt_root": {
+    "stored": "0x687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc",
+    "computed": "0x687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc",
+    "match": true,
+    "status": "verified"
+  },
+  "proof_refs": {
+    "merkle": {
+      "present": true,
+      "status": "valid"
+    },
+    "anchor": {
+      "status": "anchored"
+    }
+  },
+  "verifier_result": {
+    "ok": true,
+    "status": "verified"
+  },
+  "capsule": {
+    "sections": [
+      {
+        "id": "payload",
+        "label": "Payload / Action",
+        "status": "present",
+        "summary": "Portable ReceiptOS evidence core sample",
+        "sourceFields": ["task.title", "task.prompt", "commands"]
+      },
+      {
+        "id": "anchor",
+        "label": "Anchor",
+        "status": "pending",
+        "summary": "Merkle proof is attached, but no external anchor has been recorded.",
+        "sourceFields": ["anchor.onchain_anchor_status", "anchor.network", "anchor.contract", "anchor.tx_hash"]
+      }
+    ]
+  },
+  "replay_manifest": {
+    "summary": "Replay inputs include session/task context, 1 command(s), diff hash state, and 1 anchor reference(s).",
+    "source_fields": [
+      "session_id",
+      "directory",
+      "task",
+      "commands",
+      "changes.diff_sha256",
+      "anchor.receipt_root",
+      "anchor.merkle_root",
+      "anchor.tx_hash",
+      "metadata.generated_by"
+    ]
+  }
+}
