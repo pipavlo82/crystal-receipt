@@ -256,6 +256,7 @@
 
   <script>
     const DATA_URL = '../receiptos-capsule-demo/capsule-summary.json';
+    const V0_URL = '../receiptos-capsule-demo/evidence-capsule.v0.json';
 
     const statusClass = (status) => {
       if (['verified', 'valid', 'anchored', 'present'].includes(status)) return 'good';
@@ -393,10 +394,55 @@
       `).join('');
     }
 
-    async function boot() {
+    function adaptV0ToSummary(v0) {
+      const sections = v0.capsule.sections;
+      const findSection = (id) => sections.find((section) => section.id === id);
+      return {
+        schema: 'receiptos.capsule_summary.v0',
+        source_evidence: v0.replay_manifest.source_fields?.[0] ?? 'derived from evidence-capsule.v0.json',
+        receipt_root: v0.receipt_root.stored,
+        computed_receipt_root: v0.receipt_root.computed,
+        receipt_verification: {
+          ok: v0.verifier_result.ok,
+          status: v0.verifier_result.status,
+        },
+        local_merkle: {
+          present: v0.proof_refs.merkle.present,
+          ok: v0.proof_refs.merkle.status === 'valid',
+          status: v0.proof_refs.merkle.status,
+        },
+        capsule: {
+          sections,
+        },
+        crystal_mapping: {
+          core: sections.filter((section) => section.id === 'payload'),
+          inner_ring: sections.filter((section) => ['policy_boundary', 'authorization', 'decision_trace'].includes(section.id)),
+          facets: sections.filter((section) => ['execution', 'evidence', 'counterfactual'].includes(section.id)),
+          outer_shell: sections.filter((section) => ['result', 'receipt_root', 'replay_manifest'].includes(section.id)),
+          anchor_edge: sections.filter((section) => ['merkle', 'anchor'].includes(section.id)),
+          seal: {
+            status: v0.verifier_result.status,
+            sections: [findSection('verifier')].filter(Boolean),
+          },
+        },
+      };
+    }
+
+    async function loadData() {
+      try {
+        const v0 = await fetch(V0_URL);
+        if (v0.ok) {
+          return adaptV0ToSummary(await v0.json());
+        }
+      } catch (_) {}
+
       const response = await fetch(DATA_URL);
       if (!response.ok) throw new Error(`Failed to load capsule summary: ${response.status}`);
-      const data = await response.json();
+      return await response.json();
+    }
+
+    async function boot() {
+      const data = await loadData();
       renderSummary(data);
       renderProof(data);
       renderCapsule(data);
