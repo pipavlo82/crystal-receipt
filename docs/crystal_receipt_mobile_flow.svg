@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="900" height="3180" viewBox="0 0 900 3180" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="3840" viewBox="0 0 900 3840" role="img" aria-labelledby="title desc">
   <title id="title">Crystal Receipt Mobile Flow Diagram</title>
   <desc id="desc">A vertical black and white scientific style diagram showing the Crystal Receipt proof-first pipeline from agent action to portable evidence, receipt root, Merkle proof, anchor reference, verifier, Evidence Capsule, replay manifest, and an optional crystal surface.</desc>
   <defs>
@@ -19,100 +19,108 @@
     </style>
   </defs>
 
-  <rect class="bg" width="900" height="3180"/>
+  <rect class="bg" width="900" height="3840"/>
 
   <text x="450" y="72" text-anchor="middle" class="title">CRYSTAL RECEIPT</text>
   <text x="450" y="112" text-anchor="middle" class="subtitle">Portable receipts, proof verification, Evidence Capsule, optional visual surface</text>
 
-  <rect x="90" y="160" width="720" height="290" rx="22" ry="22" class="box"/>
+  <rect x="90" y="160" width="720" height="320" rx="22" ry="22" class="box"/>
   <text x="130" y="215" class="section">1. Agent Action</text>
-  <text x="130" y="275" class="body">A tool call, file change, signed decision, or scoped operation occurs.</text>
-  <text x="130" y="325" class="mono">task / prompt</text>
-  <text x="130" y="365" class="mono">commands / execution</text>
-  <text x="470" y="325" class="mono">scope / authority</text>
-  <text x="470" y="365" class="mono">result / side effects</text>
+  <text x="130" y="275" class="body">A tool call, file change, signed decision,</text>
+  <text x="130" y="313" class="body">or scoped operation occurs.</text>
+  <text x="130" y="365" class="mono">task / prompt</text>
+  <text x="130" y="405" class="mono">commands / execution</text>
+  <text x="470" y="365" class="mono">scope / authority</text>
+  <text x="470" y="405" class="mono">result / side effects</text>
 
-  <path d="M450 450 V520" class="arrow"/>
+  <path d="M450 480 V550" class="arrow"/>
 
-  <rect x="90" y="540" width="720" height="360" rx="22" ry="22" class="box"/>
-  <text x="130" y="595" class="section">2. Portable Evidence</text>
-  <text x="130" y="655" class="body">The action becomes portable receipt evidence.</text>
-  <text x="130" y="715" class="mono">session_id</text>
-  <text x="130" y="755" class="mono">task / prompt context</text>
-  <text x="130" y="795" class="mono">execution records</text>
-  <text x="130" y="835" class="mono">commands</text>
-  <text x="470" y="715" class="mono">changed files</text>
-  <text x="470" y="755" class="mono">diff_sha256</text>
-  <text x="470" y="795" class="mono">authorization state</text>
-  <text x="470" y="835" class="mono">metadata</text>
+  <rect x="90" y="570" width="720" height="380" rx="22" ry="22" class="box"/>
+  <text x="130" y="625" class="section">2. Portable Evidence</text>
+  <text x="130" y="685" class="body">The action becomes portable receipt evidence.</text>
+  <text x="130" y="745" class="mono">session_id</text>
+  <text x="130" y="785" class="mono">task / prompt context</text>
+  <text x="130" y="825" class="mono">execution records</text>
+  <text x="130" y="865" class="mono">commands</text>
+  <text x="470" y="745" class="mono">changed files</text>
+  <text x="470" y="785" class="mono">diff_sha256</text>
+  <text x="470" y="825" class="mono">authorization state</text>
+  <text x="470" y="865" class="mono">metadata</text>
 
-  <path d="M450 900 V970" class="arrow"/>
+  <path d="M450 950 V1020" class="arrow"/>
 
-  <rect x="120" y="990" width="660" height="230" rx="22" ry="22" class="box"/>
-  <text x="160" y="1045" class="section">3. Receipt Root</text>
-  <text x="160" y="1105" class="body">Canonical evidence is recomputed into a deterministic root.</text>
-  <text x="160" y="1165" class="mono">canonical JSON</text>
-  <text x="160" y="1205" class="mono">receipt_root</text>
+  <rect x="120" y="1040" width="660" height="250" rx="22" ry="22" class="box"/>
+  <text x="160" y="1095" class="section">3. Receipt Root</text>
+  <text x="160" y="1155" class="body">Canonical evidence is recomputed into a</text>
+  <text x="160" y="1193" class="body">deterministic root.</text>
+  <text x="160" y="1245" class="mono">canonical JSON</text>
+  <text x="160" y="1285" class="mono">receipt_root</text>
 
-  <path d="M450 1220 V1290" class="arrow"/>
+  <path d="M450 1290 V1360" class="arrow"/>
 
-  <rect x="120" y="1310" width="660" height="260" rx="22" ry="22" class="box"/>
-  <text x="160" y="1365" class="section">4. Merkle Proof</text>
-  <text x="160" y="1425" class="body">A local proof can bind the receipt root into an anchor path.</text>
-  <text x="160" y="1485" class="mono">merkle_root</text>
-  <text x="160" y="1525" class="mono">merkle_leaf_index</text>
-  <text x="470" y="1485" class="mono">merkle_proof</text>
-  <text x="470" y="1525" class="mono">proof_status</text>
+  <rect x="120" y="1380" width="660" height="290" rx="22" ry="22" class="box"/>
+  <text x="160" y="1435" class="section">4. Merkle Proof</text>
+  <text x="160" y="1495" class="body">A local proof can bind the receipt root</text>
+  <text x="160" y="1533" class="body">into an anchor path.</text>
+  <text x="160" y="1585" class="mono">merkle_root</text>
+  <text x="160" y="1625" class="mono">merkle_leaf_index</text>
+  <text x="470" y="1585" class="mono">merkle_proof</text>
+  <text x="470" y="1625" class="mono">proof_status</text>
 
-  <path d="M450 1570 V1640" class="arrow"/>
+  <path d="M450 1670 V1740" class="arrow"/>
 
-  <rect x="120" y="1660" width="660" height="260" rx="22" ry="22" class="box"/>
-  <text x="160" y="1715" class="section">5. Anchor Reference</text>
-  <text x="160" y="1775" class="body">Optional external anchor references can point to committed proof state.</text>
-  <text x="160" y="1835" class="mono">network</text>
-  <text x="160" y="1875" class="mono">contract</text>
-  <text x="470" y="1835" class="mono">tx_hash</text>
-  <text x="470" y="1875" class="mono">proof reference</text>
+  <rect x="120" y="1760" width="660" height="300" rx="22" ry="22" class="box"/>
+  <text x="160" y="1815" class="section">5. Anchor Reference</text>
+  <text x="160" y="1875" class="body">Optional external anchor references can</text>
+  <text x="160" y="1913" class="body">point to committed proof state.</text>
+  <text x="160" y="1965" class="mono">network</text>
+  <text x="160" y="2005" class="mono">contract</text>
+  <text x="470" y="1965" class="mono">tx_hash</text>
+  <text x="470" y="2005" class="mono">proof reference</text>
 
-  <path d="M450 1920 V1990" class="arrow"/>
+  <path d="M450 2060 V2130" class="arrow"/>
 
-  <rect x="120" y="2010" width="660" height="230" rx="22" ry="22" class="box"/>
-  <text x="160" y="2065" class="section">6. Verifier</text>
-  <text x="160" y="2125" class="body">The verifier recomputes and checks anchored facts.</text>
-  <text x="160" y="2185" class="mono">receipt_root check</text>
-  <text x="470" y="2185" class="mono">Merkle / anchor check</text>
+  <rect x="120" y="2150" width="660" height="250" rx="22" ry="22" class="box"/>
+  <text x="160" y="2205" class="section">6. Verifier</text>
+  <text x="160" y="2265" class="body">The verifier recomputes and checks</text>
+  <text x="160" y="2303" class="body">anchored facts.</text>
+  <text x="160" y="2355" class="mono">receipt_root check</text>
+  <text x="470" y="2355" class="mono">Merkle / anchor check</text>
 
-  <path d="M450 2240 V2310" class="arrow"/>
+  <path d="M450 2400 V2470" class="arrow"/>
 
-  <rect x="90" y="2330" width="720" height="320" rx="22" ry="22" class="box"/>
-  <text x="130" y="2385" class="section">7. Evidence Capsule</text>
-  <text x="130" y="2445" class="body">The proof state becomes a non-breaking interpretive capsule.</text>
-  <text x="130" y="2505" class="mono">payload</text>
-  <text x="130" y="2545" class="mono">authorization</text>
-  <text x="130" y="2585" class="mono">decision_trace</text>
-  <text x="470" y="2505" class="mono">evidence</text>
-  <text x="470" y="2545" class="mono">counterfactual</text>
-  <text x="470" y="2585" class="mono">verifier</text>
+  <rect x="90" y="2490" width="720" height="350" rx="22" ry="22" class="box"/>
+  <text x="130" y="2545" class="section">7. Evidence Capsule</text>
+  <text x="130" y="2605" class="body">The proof state becomes a non-breaking</text>
+  <text x="130" y="2643" class="body">interpretive capsule.</text>
+  <text x="130" y="2695" class="mono">payload</text>
+  <text x="130" y="2735" class="mono">authorization</text>
+  <text x="130" y="2775" class="mono">decision_trace</text>
+  <text x="470" y="2695" class="mono">evidence</text>
+  <text x="470" y="2735" class="mono">counterfactual</text>
+  <text x="470" y="2775" class="mono">verifier</text>
 
-  <path d="M450 2650 V2720" class="arrow"/>
+  <path d="M450 2840 V2910" class="arrow"/>
 
-  <rect x="120" y="2740" width="660" height="220" rx="22" ry="22" class="box"/>
-  <text x="160" y="2795" class="section">8. Replay Manifest</text>
-  <text x="160" y="2855" class="body">Replay-relevant inputs are made inspectable and portable.</text>
-  <text x="160" y="2915" class="mono">session / task / commands / diff / roots</text>
+  <rect x="120" y="2930" width="660" height="250" rx="22" ry="22" class="box"/>
+  <text x="160" y="2985" class="section">8. Replay Manifest</text>
+  <text x="160" y="3045" class="body">Replay-relevant inputs are made</text>
+  <text x="160" y="3083" class="body">inspectable and portable.</text>
+  <text x="160" y="3135" class="mono">session / task / commands / diff / roots</text>
 
-  <path d="M450 2960 V3030" class="arrow"/>
+  <path d="M450 3180 V3250" class="arrow"/>
 
-  <rect x="90" y="3050" width="720" height="260" rx="22" ry="22" class="box"/>
-  <text x="130" y="3105" class="section">9. Optional Crystal Surface</text>
-  <text x="130" y="3165" class="body">A deterministic crystal artifact can render the verified receipt as a secondary visual layer.</text>
+  <rect x="90" y="3270" width="720" height="290" rx="22" ry="22" class="box"/>
+  <text x="130" y="3325" class="section">9. Optional Crystal Surface</text>
+  <text x="130" y="3385" class="body">A deterministic crystal artifact can render</text>
+  <text x="130" y="3423" class="body">the verified receipt as a secondary visual layer.</text>
 
-  <rect x="620" y="3110" width="120" height="120" fill="#ffffff" stroke="#111111" stroke-width="3"/>
-  <rect x="645" y="3135" width="70" height="70" fill="#ffffff" stroke="#111111" stroke-width="2.3"/>
-  <rect x="665" y="3155" width="30" height="30" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+  <rect x="620" y="3360" width="120" height="120" fill="#ffffff" stroke="#111111" stroke-width="3"/>
+  <rect x="645" y="3385" width="70" height="70" fill="#ffffff" stroke="#111111" stroke-width="2.3"/>
+  <rect x="665" y="3405" width="30" height="30" fill="#ffffff" stroke="#111111" stroke-width="2"/>
 
-  <rect x="90" y="3340" width="720" height="190" rx="22" ry="22" class="box"/>
-  <text x="130" y="3400" class="note">- proof first, visual second</text>
-  <text x="130" y="3450" class="note">- same evidence -&gt; same verified capsule / optional artifact</text>
-  <text x="130" y="3500" class="note">- verifier is the source of truth</text>
+  <rect x="90" y="3590" width="720" height="190" rx="22" ry="22" class="box"/>
+  <text x="130" y="3650" class="note">- proof first, visual second</text>
+  <text x="130" y="3700" class="note">- same evidence -&gt; same verified capsule / optional artifact</text>
+  <text x="130" y="3750" class="note">- verifier is the source of truth</text>
 </svg>
