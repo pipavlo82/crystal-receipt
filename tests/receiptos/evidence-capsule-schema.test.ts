@@ -97,58 +97,9 @@ function validate(value: unknown, schema: JsonSchema, root: JsonSchema, path = "
 }
 
 describe("receiptos evidence capsule schema v0", () => {
-  test("derived proof substrate validates against schema", () => {
-    const summary = readJson<any>("../../examples/receiptos-capsule-demo/capsule-summary.json")
+  test("generated schema-v0 example validates against schema", () => {
+    const substrate = readJson<any>("../../examples/receiptos-capsule-demo/evidence-capsule.v0.json")
     const schema = readJson<JsonSchema>("../../schemas/evidence-capsule.v0.schema.json")
-
-    const getSection = (id: string) => summary.capsule.sections.find((section: any) => section.id === id)
-    const action = getSection("payload")
-    const evidence = getSection("evidence")
-    const merkle = getSection("merkle")
-    const anchor = getSection("anchor")
-    const replay = getSection("replay_manifest") ?? {
-      summary: "Replay manifest derived from current capsule summary.",
-      sourceFields: ["source_evidence", "receipt_root", "computed_receipt_root", "capsule.sections"],
-    }
-
-    const substrate = {
-      schema: "receiptos.evidence_capsule.v0",
-      action: {
-        summary: action.summary,
-        source_fields: action.sourceFields,
-      },
-      evidence: {
-        summary: evidence.summary,
-        source_fields: evidence.sourceFields,
-        status: evidence.status,
-      },
-      receipt_root: {
-        stored: summary.receipt_root,
-        computed: summary.computed_receipt_root,
-        match: summary.receipt_root === summary.computed_receipt_root,
-        status: summary.receipt_verification.status,
-      },
-      proof_refs: {
-        merkle: {
-          present: summary.local_merkle.present,
-          status: summary.local_merkle.status,
-        },
-        anchor: {
-          status: anchor?.status ?? "unknown",
-        },
-      },
-      verifier_result: {
-        ok: summary.receipt_verification.ok,
-        status: summary.receipt_verification.status,
-      },
-      capsule: {
-        sections: summary.capsule.sections,
-      },
-      replay_manifest: {
-        summary: replay.summary,
-        source_fields: replay.sourceFields,
-      },
-    }
 
     const errors = validate(substrate, schema, schema)
     expect(errors).toEqual([])
@@ -162,10 +113,11 @@ describe("receiptos evidence capsule schema v0", () => {
       "capsule",
       "replay_manifest",
     ])
-    expect(substrate.receipt_root.stored).toBe(summary.receipt_root)
-    expect(substrate.receipt_root.computed).toBe(summary.computed_receipt_root)
-    expect(substrate.receipt_root.status).toBe(summary.receipt_verification.status)
-    expect(substrate.verifier_result.ok).toBe(summary.receipt_verification.ok)
+    expect(substrate.receipt_root.stored).toMatch(/^0x[a-fA-F0-9]{64}$/)
+    expect(substrate.receipt_root.computed).toMatch(/^0x[a-fA-F0-9]{64}$/)
+    expect(typeof substrate.receipt_root.match).toBe("boolean")
+    expect(["verified", "mismatch", "missing"]).toContain(substrate.receipt_root.status)
+    expect(substrate.verifier_result.ok).toBe(true)
     expect(substrate.capsule.sections.length).toBeGreaterThan(0)
   })
 })

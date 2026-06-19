@@ -196,9 +196,15 @@ bun scripts/receiptos-capsule-demo.ts --evidence src/receiptos/fixtures/session-
 Input fixture:
 - `src/receiptos/fixtures/session-evidence.with-local-merkle.sample.json`
 
-Output summary:
+Output artifacts:
 - `examples/receiptos-capsule-demo/capsule-summary.json`
+- `examples/receiptos-capsule-demo/evidence-capsule.v0.json`
 
+Schema v0:
+- `schemas/evidence-capsule.v0.schema.json`
+- `docs/EVIDENCE_CAPSULE_SCHEMA_V0.md`
+
+The schema-valid `evidence-capsule.v0.json` file is proof-first and non-visual.
 This demo does not change the SVG renderer and does not change receipt root semantics.
 
 ## Optional visual renderer

@@ -64,4 +64,7 @@ A minimal summary of replay-relevant inputs and references.
 The current `examples/receiptos-capsule-demo/capsule-summary.json` file is a richer viewer-oriented artifact.
 This schema intentionally narrows that richer shape into a proof-first substrate.
 
-The validation test derives a minimal schema-conformant substrate object from the current example summary without changing production logic or generation scripts.
+The demo flow now also emits a schema-valid proof-substrate example at:
+- `examples/receiptos-capsule-demo/evidence-capsule.v0.json`
+
+The older capsule summary remains for backward compatibility, while the schema-valid output provides a smaller producer-neutral substrate.
