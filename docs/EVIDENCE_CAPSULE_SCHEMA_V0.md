@@ -67,4 +67,9 @@ This schema intentionally narrows that richer shape into a proof-first substrate
 The demo flow now also emits a schema-valid proof-substrate example at:
 - `examples/receiptos-capsule-demo/evidence-capsule.v0.json`
 
+Additional example substrates can be shipped as static example sets, such as:
+- `examples/receipt-examples/clean-local-proof/evidence-capsule.v0.json`
+- `examples/receipt-examples/tampered-mismatch/evidence-capsule.v0.json`
+- `examples/receipt-examples/anchored-proof/evidence-capsule.v0.json`
+
 The older capsule summary remains for backward compatibility, while the schema-valid output provides a smaller producer-neutral substrate.
