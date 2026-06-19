@@ -30,12 +30,15 @@ describe("receiptos capsule demo cli", () => {
         "payload",
         "policy_boundary",
         "authorization",
+        "decision_trace",
         "execution",
         "evidence",
+        "counterfactual",
         "result",
         "receipt_root",
         "merkle",
         "anchor",
+        "replay_manifest",
         "verifier",
       ])
       expect(Object.keys(summary.crystal_mapping)).toEqual([

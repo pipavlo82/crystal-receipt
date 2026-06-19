@@ -17,7 +17,7 @@ describe("receiptos evidence capsule view model", () => {
   test("valid sample produces capsule sections", async () => {
     const evidence = readEvidence("session-evidence.sample.json")
     const capsule = await buildEvidenceCapsuleViewModel(evidence)
-    expect(capsule.sections.length).toBe(10)
+    expect(capsule.sections.length).toBe(13)
   })
 
   test("includes payload/action section", async () => {
@@ -38,6 +38,14 @@ describe("receiptos evidence capsule view model", () => {
     const capsule = await buildEvidenceCapsuleViewModel(evidence)
     expect(capsule.sections.some((section) => section.id === "execution")).toBe(true)
     expect(capsule.sections.some((section) => section.id === "evidence")).toBe(true)
+  })
+
+  test("includes decision trace, counterfactual, and replay manifest sections", async () => {
+    const evidence = readEvidence("session-evidence.sample.json")
+    const capsule = await buildEvidenceCapsuleViewModel(evidence)
+    expect(capsule.sections.some((section) => section.id === "decision_trace")).toBe(true)
+    expect(capsule.sections.some((section) => section.id === "counterfactual")).toBe(true)
+    expect(capsule.sections.some((section) => section.id === "replay_manifest")).toBe(true)
   })
 
   test("includes receipt_root section", async () => {
@@ -71,6 +79,14 @@ describe("receiptos evidence capsule view model", () => {
     const proof = await getProofSurfaceStatus(evidence)
     expect(proof.receipt_root).toBe("mismatch")
     expect(proof.verifier).toBe("mismatch")
+  })
+
+  test("counterfactual remains interpretive when no denied-action evidence exists", async () => {
+    const evidence = readEvidence("session-evidence.sample.json")
+    const capsule = await buildEvidenceCapsuleViewModel(evidence)
+    const counterfactual = capsule.sections.find((section) => section.id === "counterfactual")
+    expect(counterfactual?.status).toBe("missing")
+    expect(counterfactual?.summary).toContain("No explicit denied-action")
   })
 
   test("input evidence is not mutated", async () => {
