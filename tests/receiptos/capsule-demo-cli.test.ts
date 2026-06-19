@@ -9,9 +9,10 @@ function fixturePath(name: string) {
 }
 
 describe("receiptos capsule demo cli", () => {
-  test("CLI/script can read the local Merkle fixture and write a summary JSON", async () => {
+  test("CLI/script can read the local Merkle fixture and write summary plus schema-v0 JSON", async () => {
     const tempDir = mkdtempSync(join(tmpdir(), "receiptos-capsule-demo-"))
     const outPath = join(tempDir, "capsule-summary.json")
+    const v0Path = join(tempDir, "evidence-capsule.v0.json")
 
     try {
       await runReceiptosCapsuleDemo([
@@ -22,7 +23,9 @@ describe("receiptos capsule demo cli", () => {
       ])
 
       expect(existsSync(outPath)).toBe(true)
+      expect(existsSync(v0Path)).toBe(true)
       const summary = JSON.parse(readFileSync(outPath, "utf8"))
+      const substrate = JSON.parse(readFileSync(v0Path, "utf8"))
       expect(summary.schema).toBe("receiptos.capsule_summary.v0")
       expect(summary.receipt_verification.ok).toBe(true)
       expect(summary.local_merkle.ok).toBe(true)
@@ -49,6 +52,19 @@ describe("receiptos capsule demo cli", () => {
         "anchor_edge",
         "seal",
       ])
+      expect(Object.keys(substrate)).toEqual([
+        "schema",
+        "action",
+        "evidence",
+        "receipt_root",
+        "proof_refs",
+        "verifier_result",
+        "capsule",
+        "replay_manifest",
+      ])
+      expect(substrate.receipt_root.stored).toBe(summary.receipt_root)
+      expect(substrate.receipt_root.computed).toBe(summary.computed_receipt_root)
+      expect(substrate.verifier_result.ok).toBe(summary.receipt_verification.ok)
     } finally {
       rmSync(tempDir, { recursive: true, force: true })
     }

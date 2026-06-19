@@ -47,6 +47,19 @@
         ]
       },
       {
+        "id": "decision_trace",
+        "label": "Decision Trace",
+        "status": "present",
+        "summary": "Decision trace recorded via title: Portable ReceiptOS evidence core sample, prompt present, 1 command(s), 1 execution step(s).",
+        "sourceFields": [
+          "task.title",
+          "task.prompt",
+          "commands",
+          "execution",
+          "authorization.authorized_at_execution"
+        ]
+      },
+      {
         "id": "execution",
         "label": "Execution",
         "status": "present",
@@ -66,6 +79,17 @@
           "changes.diff_sha256",
           "metadata.diff_count",
           "metadata.message_count"
+        ]
+      },
+      {
+        "id": "counterfactual",
+        "label": "Counterfactual / Denied Action",
+        "status": "missing",
+        "summary": "No explicit denied-action / counterfactual evidence is recorded in the current receipt schema.",
+        "sourceFields": [
+          "authorization.allowed_actions",
+          "execution.status",
+          "commands.exit_code"
         ]
       },
       {
@@ -109,6 +133,23 @@
           "anchor.network",
           "anchor.contract",
           "anchor.tx_hash"
+        ]
+      },
+      {
+        "id": "replay_manifest",
+        "label": "Replay Manifest",
+        "status": "present",
+        "summary": "Replay inputs include session/task context, 1 command(s), diff hash state, and 2 anchor reference(s).",
+        "sourceFields": [
+          "session_id",
+          "directory",
+          "task",
+          "commands",
+          "changes.diff_sha256",
+          "anchor.receipt_root",
+          "anchor.merkle_root",
+          "anchor.tx_hash",
+          "metadata.generated_by"
         ]
       },
       {
@@ -158,6 +199,19 @@
           "authorization.authorization_state_hash",
           "authorization.authorized_at_execution"
         ]
+      },
+      {
+        "id": "decision_trace",
+        "label": "Decision Trace",
+        "status": "present",
+        "summary": "Decision trace recorded via title: Portable ReceiptOS evidence core sample, prompt present, 1 command(s), 1 execution step(s).",
+        "sourceFields": [
+          "task.title",
+          "task.prompt",
+          "commands",
+          "execution",
+          "authorization.authorized_at_execution"
+        ]
       }
     ],
     "facets": [
@@ -182,6 +236,17 @@
           "metadata.diff_count",
           "metadata.message_count"
         ]
+      },
+      {
+        "id": "counterfactual",
+        "label": "Counterfactual / Denied Action",
+        "status": "missing",
+        "summary": "No explicit denied-action / counterfactual evidence is recorded in the current receipt schema.",
+        "sourceFields": [
+          "authorization.allowed_actions",
+          "execution.status",
+          "commands.exit_code"
+        ]
       }
     ],
     "outer_shell": [
@@ -202,6 +267,23 @@
         "summary": "Stored receipt_root matches recomputed canonical root.",
         "sourceFields": [
           "anchor.receipt_root"
+        ]
+      },
+      {
+        "id": "replay_manifest",
+        "label": "Replay Manifest",
+        "status": "present",
+        "summary": "Replay inputs include session/task context, 1 command(s), diff hash state, and 2 anchor reference(s).",
+        "sourceFields": [
+          "session_id",
+          "directory",
+          "task",
+          "commands",
+          "changes.diff_sha256",
+          "anchor.receipt_root",
+          "anchor.merkle_root",
+          "anchor.tx_hash",
+          "metadata.generated_by"
         ]
       }
     ],
