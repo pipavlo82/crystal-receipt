@@ -25,9 +25,9 @@ export async function buildCrystalReceiptMapping(evidence: HandoffEvidence): Pro
 
   return {
     core: [byId.get("payload")!],
-    inner_ring: [byId.get("policy_boundary")!, byId.get("authorization")!],
-    facets: [byId.get("execution")!, byId.get("evidence")!],
-    outer_shell: [byId.get("result")!, byId.get("receipt_root")!],
+    inner_ring: [byId.get("policy_boundary")!, byId.get("authorization")!, byId.get("decision_trace")!],
+    facets: [byId.get("execution")!, byId.get("evidence")!, byId.get("counterfactual")!],
+    outer_shell: [byId.get("result")!, byId.get("receipt_root")!, byId.get("replay_manifest")!],
     anchor_edge: [byId.get("merkle")!, byId.get("anchor")!],
     seal: {
       status: proof.verifier,

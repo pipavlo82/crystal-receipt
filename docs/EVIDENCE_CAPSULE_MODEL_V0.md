@@ -40,13 +40,16 @@ The v0 capsule model summarizes evidence into these sections:
 1. `payload`
 2. `policy_boundary`
 3. `authorization`
-4. `execution`
-5. `evidence`
-6. `result`
-7. `receipt_root`
-8. `merkle`
-9. `anchor`
-10. `verifier`
+4. `decision_trace`
+5. `execution`
+6. `evidence`
+7. `counterfactual`
+8. `result`
+9. `receipt_root`
+10. `merkle`
+11. `anchor`
+12. `replay_manifest`
+13. `verifier`
 
 Each section exposes:
 - `id`
@@ -73,9 +76,11 @@ The current model is a non-breaking interpretation layer only:
 - consumes portable evidence JSON
 - may verify using existing helpers
 - may summarize Merkle / anchor state
+- may derive decision-trace, replay-manifest, and denied-action interpretations from existing evidence
 - must not mutate evidence
 - must not change stored roots
 - must not introduce new canonical fields
+- must not invent denied-action protocol fields not present in the receipt
 - must not change schema/root behavior yet
 - must not change ERC-8275 / BeTrueCore fields yet
 
