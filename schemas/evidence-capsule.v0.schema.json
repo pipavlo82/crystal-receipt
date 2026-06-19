@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://crystal-receipt.local/schemas/evidence-capsule.v0.schema.json",
+  "title": "ReceiptOS Evidence Capsule Proof Substrate v0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "action",
+    "evidence",
+    "receipt_root",
+    "proof_refs",
+    "verifier_result",
+    "capsule",
+    "replay_manifest"
+  ],
+  "properties": {
+    "schema": {
+      "const": "receiptos.evidence_capsule.v0"
+    },
+    "action": {
+      "$ref": "#/$defs/summaryNode"
+    },
+    "evidence": {
+      "$ref": "#/$defs/statusSummaryNode"
+    },
+    "receipt_root": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stored", "computed", "match", "status"],
+      "properties": {
+        "stored": { "$ref": "#/$defs/hexRoot" },
+        "computed": { "$ref": "#/$defs/hexRoot" },
+        "match": { "type": "boolean" },
+        "status": {
+          "enum": ["verified", "mismatch", "missing"]
+        }
+      }
+    },
+    "proof_refs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["merkle", "anchor"],
+      "properties": {
+        "merkle": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["present", "status"],
+          "properties": {
+            "present": { "type": "boolean" },
+            "status": {
+              "enum": ["valid", "invalid", "missing", "pending"]
+            }
+          }
+        },
+        "anchor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status"],
+          "properties": {
+            "status": {
+              "enum": ["anchored", "pending", "missing", "unknown"]
+            }
+          }
+        }
+      }
+    },
+    "verifier_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ok", "status"],
+      "properties": {
+        "ok": { "type": "boolean" },
+        "status": {
+          "enum": ["verified", "mismatch", "missing"]
+        }
+      }
+    },
+    "capsule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sections"],
+      "properties": {
+        "sections": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/section" }
+        }
+      }
+    },
+    "replay_manifest": {
+      "$ref": "#/$defs/summaryNode"
+    }
+  },
+  "$defs": {
+    "hexRoot": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{64}$"
+    },
+    "sourceFields": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "summaryNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary", "source_fields"],
+      "properties": {
+        "summary": { "type": "string" },
+        "source_fields": { "$ref": "#/$defs/sourceFields" }
+      }
+    },
+    "statusSummaryNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary", "source_fields", "status"],
+      "properties": {
+        "summary": { "type": "string" },
+        "source_fields": { "$ref": "#/$defs/sourceFields" },
+        "status": {
+          "enum": ["present", "missing", "valid", "invalid", "pending", "anchored", "verified", "mismatch", "unknown"]
+        }
+      }
+    },
+    "section": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "status", "summary", "sourceFields"],
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "status": {
+          "enum": ["present", "missing", "valid", "invalid", "pending", "anchored", "verified", "mismatch", "unknown"]
+        },
+        "summary": { "type": "string" },
+        "sourceFields": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}
