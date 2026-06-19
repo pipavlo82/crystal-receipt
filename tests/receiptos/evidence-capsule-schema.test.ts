@@ -97,27 +97,33 @@ function validate(value: unknown, schema: JsonSchema, root: JsonSchema, path = "
 }
 
 describe("receiptos evidence capsule schema v0", () => {
-  test("generated schema-v0 example validates against schema", () => {
-    const substrate = readJson<any>("../../examples/receiptos-capsule-demo/evidence-capsule.v0.json")
-    const schema = readJson<JsonSchema>("../../schemas/evidence-capsule.v0.schema.json")
+  for (const file of [
+    "../../examples/receiptos-capsule-demo/evidence-capsule.v0.json",
+    "../../examples/receipt-examples/clean-local-proof/evidence-capsule.v0.json",
+    "../../examples/receipt-examples/tampered-mismatch/evidence-capsule.v0.json",
+    "../../examples/receipt-examples/anchored-proof/evidence-capsule.v0.json",
+  ]) {
+    test(`schema-valid substrate example validates: ${file}`, () => {
+      const substrate = readJson<any>(file)
+      const schema = readJson<JsonSchema>("../../schemas/evidence-capsule.v0.schema.json")
 
-    const errors = validate(substrate, schema, schema)
-    expect(errors).toEqual([])
-    expect(Object.keys(substrate)).toEqual([
-      "schema",
-      "action",
-      "evidence",
-      "receipt_root",
-      "proof_refs",
-      "verifier_result",
-      "capsule",
-      "replay_manifest",
-    ])
-    expect(substrate.receipt_root.stored).toMatch(/^0x[a-fA-F0-9]{64}$/)
-    expect(substrate.receipt_root.computed).toMatch(/^0x[a-fA-F0-9]{64}$/)
-    expect(typeof substrate.receipt_root.match).toBe("boolean")
-    expect(["verified", "mismatch", "missing"]).toContain(substrate.receipt_root.status)
-    expect(substrate.verifier_result.ok).toBe(true)
-    expect(substrate.capsule.sections.length).toBeGreaterThan(0)
-  })
+      const errors = validate(substrate, schema, schema)
+      expect(errors).toEqual([])
+      expect(Object.keys(substrate)).toEqual([
+        "schema",
+        "action",
+        "evidence",
+        "receipt_root",
+        "proof_refs",
+        "verifier_result",
+        "capsule",
+        "replay_manifest",
+      ])
+      expect(substrate.receipt_root.stored).toMatch(/^0x[a-fA-F0-9]{64}$/)
+      expect(substrate.receipt_root.computed).toMatch(/^0x[a-fA-F0-9]{64}$/)
+      expect(typeof substrate.receipt_root.match).toBe("boolean")
+      expect(["verified", "mismatch", "missing"]).toContain(substrate.receipt_root.status)
+      expect(substrate.capsule.sections.length).toBeGreaterThan(0)
+    })
+  }
 })
