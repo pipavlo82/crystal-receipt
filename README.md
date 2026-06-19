@@ -2,182 +2,164 @@
 
 ![Crystal Receipt architecture hero](docs/crystal_receipt_mobile_flow.svg)
 
-Crystal Receipt turns verifiable execution receipts into deterministic bismuth-inspired visual artifacts.
-
-**Stronger framing:** Crystal Receipt is a deterministic visual fingerprint layer for execution receipts: receipt evidence becomes a reproducible crystal artifact, with optional NFT export later.
+Crystal Receipt is a portable receipt and evidence surface for agent actions.
+It consumes verifiable execution evidence, preserves ReceiptOS-compatible proof semantics, and can present that evidence as an Evidence Capsule, a replayable proof summary, and optionally a deterministic visual artifact.
 
 ## What this is
 
-Crystal Receipt is an experiment in turning execution receipts into deterministic visual artifacts.
+Crystal Receipt is no longer just a visual experiment.
+Its current direction is:
 
-Every meaningful execution receipt contains evidence of a specific action: what session it belonged to, what changed, what hash was produced, what event root was recorded, what agent performed the action, what authority/scope existed, what verifier result was produced, and what signature/trust data was attached.
+- portable execution receipts
+- Evidence Capsule interpretation
+- ReceiptOS-compatible verification
+- receipt root recomputation
+- local Merkle proof attachment and checking
+- external anchor import / anchor-path support
+- optional visual rendering as a secondary presentation layer
 
-Crystal Receipt takes that receipt evidence and turns it into a unique visual fingerprint inspired by bismuth crystal growth.
+The core idea is simple:
+- an agent action produces evidence
+- the evidence can be verified and replayed
+- the evidence can be summarized into an Evidence Capsule
+- the same evidence can optionally be rendered into a deterministic crystal artifact
 
 The goal is **not** to replace cryptographic verification.
-The goal is to make receipt evidence visible, recognizable, portable, and human-readable as a visual artifact.
+The goal is to make execution evidence portable, inspectable, verifiable, and human-readable.
+
+## Current product direction
+
+Crystal Receipt now includes a portable ReceiptOS-aligned proof core in `src/receiptos`.
+
+That proof core supports:
+
+- portable evidence JSON
+- schema-preserving receipt interpretation
+- canonical `receipt_root` recomputation
+- local Merkle proof helpers
+- Sepolia anchor payload/result helpers
+- Evidence Capsule view-models
+- a non-visual capsule demo CLI
+
+The visual renderer still exists and still works, but it is no longer the only or primary product story.
+The receipt and proof layer comes first.
 
 ## Core flow
 
 ```text
-Receipt
--> Evidence
--> Verifier
--> Canonical Hash / EventRoot
--> Derived Seeds
--> Crystal Artifact
--> Metadata
--> Optional NFT Export
+Agent action
+-> portable evidence
+-> receipt_root
+-> Merkle proof
+-> anchor / proof references
+-> verifier
+-> Evidence Capsule
+-> optional crystal surface
 ```
 
-The crystal is the visible artifact.
-The verifier remains the source of truth.
-
-## How it works
-
-A receipt contains structured evidence, for example:
-
-- `session_id`
-- `receiptHash`
-- `diffHash`
-- `eventRoot`
-- `agent_id`
-- `scope / authority`
-- `changed files`
-- `timestamp`
-- `verifier result`
-- `signature / trust block`
-
-This data is first canonicalized into a deterministic JSON representation.
-From that canonical receipt object, Crystal Receipt derives a canonical receipt hash.
-Then it derives named deterministic seeds:
-
-- `master_seed`
-- `shape_seed`
-- `palette_seed`
-- `symmetry_seed`
-- `layer_seed`
-- `oxide_seed`
-- `trait_seed`
-
-Those seeds control the crystal generation.
-
-The same receipt evidence always produces the same crystal.
-Different receipt evidence produces a different crystal: different shape, colors, layers, symmetry, oxide effect, fracture pattern, shard count, and traits.
-
-## Deterministic visual identity rule
+A more concrete interpretation path in the current repo is:
 
 ```text
-same receipt.json -> same crystal
-changed receipt.json -> different crystal
+payload
+-> policy boundary
+-> authorization
+-> decision trace
+-> execution
+-> evidence record
+-> receipt root
+-> Merkle proof
+-> anchor
+-> replay manifest
+-> verification
+-> optional visual presentation
 ```
+
+## ReceiptOS compatibility
+
+Crystal Receipt is designed to stay compatible with ReceiptOS-style proof flows.
 
 That means:
-- the same receipt evidence always reproduces the same crystal
-- changed receipt evidence should change the resulting crystal identity
-- uniqueness comes from receipt evidence, not random generation
-- the crystal can be regenerated on another machine from the same receipt evidence and ruleset
+- evidence remains portable JSON
+- receipt roots remain recomputable
+- proof helpers remain deterministic
+- Merkle / anchor state remains inspectable
+- verification remains separate from presentation
 
-## Why bismuth crystals?
+Crystal Receipt does **not** redefine receipt truth.
+It consumes receipt evidence and presents it.
 
-Bismuth crystals are a good metaphor because they are structured but unique.
-They do not grow as pure random noise. They grow according to physical rules, but small differences in the environment produce different final forms.
+## Evidence Capsule
 
-Crystal Receipt uses the same idea digitally:
+Evidence Capsule is now a first-class concept in the repo.
 
-```text
-same rules
-+ deterministic receipt evidence
-= unique reproducible visual form
-```
+The capsule is a non-breaking interpretation layer over portable receipt evidence.
+It does not mutate the evidence document and it does not change receipt semantics.
 
-So the crystal is not just generative art.
-It is a visual receipt fingerprint.
+The current capsule model summarizes sections such as:
 
-The renderer is bismuth-inspired, not a physical simulation.
-Its visual identity remains deterministic and reproducible from the same receipt evidence.
+- payload
+- policy boundary
+- authorization
+- decision trace
+- execution
+- evidence
+- counterfactual / denied-action interpretation
+- result
+- receipt root
+- Merkle proof
+- anchor
+- replay manifest
+- verifier
 
-## What the crystal represents
+Useful starting points:
+- `docs/EVIDENCE_CAPSULE_MODEL_V0.md`
+- `docs/CRYSTAL_RECEIPT_MAPPING_V0.md`
 
-The crystal represents the identity and structure of a specific execution receipt.
+## Verification, Merkle, and anchor path
 
-For example:
+A receipt contains structured execution evidence, for example:
 
-- receipt identity can influence core geometry
-- authority/scope can influence the outer shell or boundary
-- verifier/trust data can influence clarity, glow, or seal-like accents
-- changed files can influence shard count or growth steps
-- diffHash/eventRoot can influence fracture and growth patterns
-- timestamp/session data can influence layer ordering or symmetry
+- `session_id`
+- task / prompt context
+- execution records
+- commands
+- changed files
+- `diff_sha256`
+- `anchor.receipt_root`
+- `anchor.merkle_root`
+- `anchor.tx_hash`
+- verifier-facing status fields
 
-This makes the artifact not only unique, but semantically connected to the receipt.
+The portable proof flow is:
+
+1. canonicalize receipt evidence
+2. recompute `receipt_root`
+3. compare against stored `anchor.receipt_root`
+4. attach / verify local Merkle proof when present
+5. prepare anchor payloads or import anchor results when needed
+6. summarize the result as a capsule / proof surface
+
+The verifier remains the source of truth.
+The capsule and crystal layers are interpretive and presentational.
 
 ## Important security boundary
 
-The crystal is not the security verifier.
+Crystal Receipt is not the security verifier.
 It does not replace:
 
 - signature verification
 - hash checks
 - replay protection
-- eventRoot validation
 - policy checks
-- scope/authority checks
+- scope / authority checks
+- Merkle verification
+- anchor verification
 - trust-chain verification
 
-The crystal is a visual artifact derived from receipt evidence.
-The actual truth of the receipt must still be checked by an independent verifier.
+Correct statement:
 
-**Correct statement:**
-
-> The crystal does not prove the work by itself.  
-> The crystal represents receipt evidence that can be independently verified.
-
-## NFT boundary
-
-If the crystal is later exported as an NFT, the NFT is also not the verifier by itself.
-
-The NFT layer is useful for:
-- portability
-- public display
-- provenance
-- ownership
-- discovery
-- artifact history
-- certificate-like presentation
-
-The NFT can store or reference:
-
-- `receiptHash`
-- `eventRoot`
-- `diffHash`
-- `verifier result`
-- `verifier version`
-- `crystal image hash`
-- `crystal metadata hash`
-- `provenance fields`
-- optional receipt reference
-
-But the NFT itself does not automatically prove the work.
-
-**Correct statement:**
-
-> The NFT does not prove the work by itself.  
-> The NFT represents a receipt whose evidence can be independently verified.
-
-## What this is not
-
-Crystal Receipt is not:
-
-- a blockchain verifier
-- an NFT marketplace
-- a replacement for ReceiptOS verification
-- a replacement for Stealth receipt checks
-- a trust oracle
-- a security proof by image
-- "AI art with metadata"
-
-It is a deterministic visual grammar for receipt evidence.
+> The artifact does not prove the work by itself.  
+> It represents receipt evidence that can be independently verified.
 
 ## Current CLI modes
 
@@ -219,56 +201,136 @@ Output summary:
 
 This demo does not change the SVG renderer and does not change receipt root semantics.
 
-## Future direction
+## Optional visual renderer
 
-Future optional layer:
+The crystal artifact remains relevant, but now as an optional presentation layer on top of the portable receipt/proof core.
+
+The visual side still provides:
+- deterministic rendering from stable evidence-derived inputs
+- a human-facing artifact layer
+- an optional certificate / collectible style surface
+
+But the visual layer is secondary to:
+- receipt evidence
+- proof verification
+- Merkle / anchor path
+- Evidence Capsule interpretation
+
+## Bismuth / crystal background
+
+Earlier versions of Crystal Receipt led with the renderer and the bismuth metaphor.
+That history is still relevant, but it is no longer the primary narrative.
+
+Bismuth crystals remain a useful visual metaphor because they are structured but unique.
+They grow according to rules, and small differences in conditions lead to different final forms.
+
+Crystal Receipt uses that metaphor in a deterministic way:
 
 ```text
-crystal artifact
--> NFT metadata export
--> optional minting later
+same evidence
++ same rules
+= same artifact
 ```
 
-Crystal Receipts may later be shared and scanned like receipt cards, but the image or QR is only a pointer/artifact layer.
-Verification remains separate and must still come from receipt evidence, hashes, signatures, `eventRoot`, and verifier logic.
+So the crystal remains a meaningful visual fingerprint — just not the core trust layer.
+
+## NFT boundary
+
+If a crystal is later exported as an NFT, the NFT is also not the verifier by itself.
+
+The NFT layer is useful for:
+- portability
+- public display
+- provenance
+- ownership
+- discovery
+- artifact history
+- certificate-like presentation
+
+But the NFT itself does not automatically prove the work.
+
+Correct statement:
+
+> The NFT does not prove the work by itself.  
+> It represents a receipt whose evidence can be independently verified.
+
+## What this is not
+
+Crystal Receipt is not:
+
+- a blockchain verifier
+- a replacement for ReceiptOS verification
+- a replacement for Stealth receipt checks
+- a trust oracle
+- a security proof by image
+- “AI art with metadata”
+
+It is a portable receipt/presentation layer with an optional deterministic visual grammar.
+
+## Future direction
+
+Future directions can still include:
+
+```text
+portable evidence
+-> proof capsule
+-> optional visual artifact
+-> optional export / collectible layer
+```
+
+But verification remains separate and must still come from receipt evidence, hashes, proofs, anchors, and verifier logic.
 
 ## Product meaning
 
-Crystal Receipt turns invisible execution evidence into a visible artifact.
+Crystal Receipt turns invisible execution evidence into a reusable proof surface.
 
-For agentic systems, this matters because future agents will perform actions, call tools, change files, spend money, deploy code, trade, sign messages, or make decisions.
+For agentic systems, this matters because agents perform actions:
+- call tools
+- change files
+- spend money
+- deploy code
+- trade
+- sign messages
+- make decisions
+
 Those actions need receipts.
-But raw receipts are hard for humans to understand.
-
-Crystal Receipt gives each receipt a visual form.
+Those receipts need verification.
+Those verified receipts benefit from a portable, inspectable presentation layer.
 
 A human can see:
-- "This action produced this crystal."
+- “This action produced this capsule / artifact.”
 
 A system can verify:
-- "This crystal came from this receipt evidence."
+- “This capsule came from this receipt evidence.”
 
 A verifier can check:
-- "This receipt evidence is valid or invalid."
+- “This receipt evidence is valid or invalid.”
 
 That separation is the key:
 
 - verifier checks truth
 - receipt stores evidence
-- crystal makes it visible
-- optional NFT makes it portable
+- capsule interprets it
+- crystal can present it
+- optional export can make it portable
 
 ## Notes
 
-- No blockchain yet
+- No blockchain submit path here
 - No NFT minting code yet
 - No Stealth integration yet
 - No external paid APIs
-- Minimal dependencies: Python standard library only
+- Visual generator remains available
+- Proof/capsule layer is now first-class
 
 ## Architecture overview
 
-Crystal Receipt takes receipt evidence, canonicalizes it, derives deterministic seeds and visual traits, builds an action-to-growth explanation layer, and writes both a crystal artifact and machine-readable metadata. The image is the human-facing fingerprint; verification still remains separate.
+Crystal Receipt now spans both:
+- a portable ReceiptOS-aligned proof core
+- and a deterministic visual artifact layer
+
+The proof layer handles evidence interpretation, root verification, Merkle state, anchor state, and capsule summaries.
+The image remains the human-facing fingerprint.
 
 - `docs/ARCHITECTURE_OVERVIEW.md`
 - `docs/crystal_receipt_mobile_flow.svg` — mobile-friendly README hero diagram
@@ -276,6 +338,8 @@ Crystal Receipt takes receipt evidence, canonicalizes it, derives deterministic 
 
 ## Related docs
 
+- `docs/EVIDENCE_CAPSULE_MODEL_V0.md`
+- `docs/CRYSTAL_RECEIPT_MAPPING_V0.md`
 - `docs/RECEIPT_DERIVATION.md`
 - `docs/METADATA_SCHEMA_V0_2.md`
 - `docs/ROADMAP.md`
@@ -284,4 +348,5 @@ Crystal Receipt takes receipt evidence, canonicalizes it, derives deterministic 
 
 ```bash
 python -m unittest discover -s tests -p "test_*.py"
+bun test tests/receiptos
 ```
