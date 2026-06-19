@@ -205,9 +205,14 @@
       <div class="eyebrow">Crystal Receipt · Static Demo</div>
       <h1>Attested agent work, not claimed work.</h1>
       <p class="sub">
-        This viewer is a static proof-first surface for portable receipt evidence. It reads a precomputed capsule summary,
-        shows verification state, exposes Evidence Capsule sections, and keeps the visual artifact secondary to the receipt.
+        This viewer is a static proof-first surface for portable receipt evidence. It reads a schema-valid substrate when available,
+        falls back to capsule summary data when needed, and keeps the visual artifact secondary to the receipt.
       </p>
+      <div style="margin-top:18px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+        <span class="kicker">Substrate Viewer</span>
+        <label for="example-select" class="label" style="margin:0;">Example receipt</label>
+        <select id="example-select" style="background:var(--chip); color:var(--text); border:1px solid var(--line); border-radius:12px; padding:10px 12px;"></select>
+      </div>
       <div class="hero-grid">
         <div class="card">
           <h2 class="section-title">Receipt summary</h2>
@@ -243,7 +248,7 @@
         <h2 class="section-title">Optional Crystal Surface</h2>
         <div class="surface">
           <div>
-            <img src="../receipt-demo/crystal.svg" alt="Optional Crystal Surface" />
+            <img id="surface-image" src="../receipt-demo/crystal.svg" alt="Optional Crystal Surface" />
           </div>
           <div>
             <div id="mapping-grid" class="capsule-list"></div>
@@ -257,6 +262,7 @@
   <script>
     const DATA_URL = '../receiptos-capsule-demo/capsule-summary.json';
     const V0_URL = '../receiptos-capsule-demo/evidence-capsule.v0.json';
+    const MANIFEST_URL = '../receipt-examples/index.json';
 
     const statusClass = (status) => {
       if (['verified', 'valid', 'anchored', 'present'].includes(status)) return 'good';
@@ -428,27 +434,56 @@
       };
     }
 
-    async function loadData() {
+    async function loadEntry(entry) {
       try {
-        const v0 = await fetch(V0_URL);
+        const v0 = await fetch(entry?.substratePath ?? V0_URL);
         if (v0.ok) {
           return adaptV0ToSummary(await v0.json());
         }
       } catch (_) {}
 
-      const response = await fetch(DATA_URL);
+      const response = await fetch(entry?.summaryPath ?? DATA_URL);
       if (!response.ok) throw new Error(`Failed to load capsule summary: ${response.status}`);
       return await response.json();
     }
 
-    async function boot() {
-      const data = await loadData();
+    async function loadManifest() {
+      try {
+        const response = await fetch(MANIFEST_URL);
+        if (!response.ok) return null;
+        return await response.json();
+      } catch (_) {
+        return null;
+      }
+    }
+
+    async function renderEntry(entry) {
+      const data = await loadEntry(entry);
       renderSummary(data);
       renderProof(data);
       renderCapsule(data);
       renderChecks(data);
       renderManifest(data);
       renderMapping(data);
+      const image = document.getElementById('surface-image');
+      image.src = entry?.visualPath ?? '../receipt-demo/crystal.svg';
+    }
+
+    async function boot() {
+      const manifest = await loadManifest();
+      const select = document.getElementById('example-select');
+      if (manifest?.examples?.length) {
+        select.innerHTML = manifest.examples.map((example) => `<option value="${esc(example.id)}">${esc(example.label)}</option>`).join('');
+        const renderById = async (id) => {
+          const entry = manifest.examples.find((example) => example.id === id) ?? manifest.examples[0];
+          await renderEntry(entry);
+        };
+        select.addEventListener('change', (event) => renderById(event.target.value));
+        await renderById(manifest.examples[0].id);
+        return;
+      }
+      select.innerHTML = '<option>Default demo</option>';
+      await renderEntry(null);
     }
 
     boot().catch((error) => {

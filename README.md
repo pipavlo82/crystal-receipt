@@ -207,6 +207,18 @@ Schema v0:
 The schema-valid `evidence-capsule.v0.json` file is proof-first and non-visual.
 This demo does not change the SVG renderer and does not change receipt root semantics.
 
+Additional static example sets now live under:
+- `examples/receipt-examples/clean-local-proof/`
+- `examples/receipt-examples/tampered-mismatch/`
+- `examples/receipt-examples/anchored-proof/`
+- `examples/receipt-examples/index.json`
+
+Example semantics:
+- `clean-local-proof` is a live verifier input example.
+- `tampered-mismatch` is a live verifier input example and should report a mismatch clearly.
+- `anchored-proof` is a static example artifact set showing imported anchor state.
+- The current verifier CLI verifies portable evidence input and does not yet recompute/import anchor overlay from the `anchored-proof` example folder.
+
 ## Optional visual renderer
 
 The crystal artifact remains relevant, but now as an optional presentation layer on top of the portable receipt/proof core.
