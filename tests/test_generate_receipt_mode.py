@@ -162,12 +162,14 @@ class GenerateReceiptModeTests(unittest.TestCase):
         self.assertIn("Crystal Receipt", card)
         self.assertIn("Visual artifact, not verifier", card)
 
-    def test_receipt_svg_contains_bismuth_style_rectangular_structure(self):
+    def test_receipt_svg_contains_bismuth_style_hopper_structure(self):
         out = self.tmp / "receipt"
         self.run_generate("--receipt", "examples/receipt-demo/receipt.json", "--out", str(out))
         svg = (out / "crystal.svg").read_text(encoding="utf-8")
+        self.assertGreaterEqual(svg.count("<polygon "), 40)
         self.assertGreaterEqual(svg.count("<rect "), 8)
         self.assertIn("fill=\"url(#oxide)\"", svg)
+        self.assertIn("filter=\"url(#deepShadow)\"", svg)
         self.assertIn("/", svg)
 
 
