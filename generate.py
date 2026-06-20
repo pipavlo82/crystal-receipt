@@ -317,32 +317,99 @@ def _hopper_rectangles(layer_count: int, shard_count: int, symmetry: str, edge_b
     return terraces, shards
 
 
+def _stepped_rect_points(rect: Dict[str, float], inset: float = 0.0) -> List[Tuple[float, float]]:
+    x = rect["x"] + inset
+    y = rect["y"] + inset
+    w = max(10.0, rect["w"] - inset * 2)
+    h = max(10.0, rect["h"] - inset * 2)
+    notch = max(6.0, min(rect["notch"], w * 0.28, h * 0.28))
+    mid_w = max(10.0, w * 0.22)
+    mid_h = max(10.0, h * 0.22)
+    return [
+        (x, y),
+        (x + w, y),
+        (x + w, y + h * 0.34),
+        (x + w - notch, y + h * 0.34),
+        (x + w - notch, y + h - notch),
+        (x + w - notch - mid_w, y + h - notch),
+        (x + w - notch - mid_w, y + h),
+        (x + notch, y + h),
+        (x + notch, y + h - mid_h),
+        (x, y + h - mid_h),
+    ]
+
+
+def _offset_points(points: List[Tuple[float, float]], dx: float, dy: float) -> List[Tuple[float, float]]:
+    return [(round(px + dx, 2), round(py + dy, 2)) for px, py in points]
+
+
+def _polygon_tag(points: List[Tuple[float, float]], **attrs: object) -> str:
+    joined = points_to_svg([(round(px, 2), round(py, 2)) for px, py in points])
+    attr_text = " ".join(f'{key.replace("_", "-")}="{value}"' for key, value in attrs.items())
+    return f'<polygon points="{joined}" {attr_text} />'
+
+
+def _terrace_surface_polygons(rect: Dict[str, float], lift: float, depth: float) -> Dict[str, List[Tuple[float, float]]]:
+    front = _stepped_rect_points(rect)
+    top = _offset_points(front, -lift, -lift * 0.82)
+    side = _offset_points(front, depth, depth * 0.55)
+    return {"front": front, "top": top, "side": side}
+
+
+def _terrace_connectors(front: List[Tuple[float, float]], shifted: List[Tuple[float, float]], edge_indexes: List[int]) -> List[List[Tuple[float, float]]]:
+    quads: List[List[Tuple[float, float]]] = []
+    count = len(front)
+    for idx in edge_indexes:
+        next_idx = (idx + 1) % count
+        quads.append([front[idx], front[next_idx], shifted[next_idx], shifted[idx]])
+    return quads
+
+
 def render_receipt_mode_svg(metadata: Dict) -> str:
     traits = metadata["visual_traits"]
     palette = PALETTES[traits["palette_name"]]
+    rng = random.Random(int(metadata["derived_seeds"]["master_seed"][:16], 16))
+    glow_std = 3.6 + traits["oxide_intensity"] * 2.4
+    shadow_shift = 18 + traits["edge_bias"] * 18
     defs = f"""
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#090b10" />
-      <stop offset="100%" stop-color="#151922" />
+      <stop offset="0%" stop-color="#07090e" />
+      <stop offset="52%" stop-color="#121722" />
+      <stop offset="100%" stop-color="#030407" />
     </linearGradient>
-    <linearGradient id="oxide" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="{palette[0]}" stop-opacity="{0.35 + traits['oxide_intensity'] * 0.3:.4f}" />
-      <stop offset="35%" stop-color="{palette[1]}" stop-opacity="{0.45 + traits['oxide_intensity'] * 0.2:.4f}" />
-      <stop offset="70%" stop-color="{palette[2]}" stop-opacity="{0.55 + traits['oxide_intensity'] * 0.15:.4f}" />
-      <stop offset="100%" stop-color="{palette[3]}" stop-opacity="{0.7 + traits['oxide_intensity'] * 0.1:.4f}" />
+    <linearGradient id="oxide" x1="18%" y1="6%" x2="82%" y2="94%">
+      <stop offset="0%" stop-color="{palette[0]}" stop-opacity="{0.42 + traits['oxide_intensity'] * 0.22:.4f}" />
+      <stop offset="22%" stop-color="{palette[1]}" stop-opacity="{0.54 + traits['oxide_intensity'] * 0.18:.4f}" />
+      <stop offset="48%" stop-color="{palette[2]}" stop-opacity="{0.66 + traits['oxide_intensity'] * 0.15:.4f}" />
+      <stop offset="74%" stop-color="{palette[3]}" stop-opacity="{0.78 + traits['oxide_intensity'] * 0.12:.4f}" />
+      <stop offset="100%" stop-color="{palette[4]}" stop-opacity="{0.88 + traits['oxide_intensity'] * 0.08:.4f}" />
+    </linearGradient>
+    <linearGradient id="coreFace" x1="15%" y1="8%" x2="82%" y2="88%">
+      <stop offset="0%" stop-color="#eef5ff" stop-opacity="0.92" />
+      <stop offset="42%" stop-color="#bfd0f8" stop-opacity="0.30" />
+      <stop offset="100%" stop-color="#0f1117" stop-opacity="0.16" />
+    </linearGradient>
+    <linearGradient id="sideShade" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0d14" stop-opacity="0.04" />
+      <stop offset="100%" stop-color="#04060a" stop-opacity="0.65" />
     </linearGradient>
     <filter id="softGlow">
-      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feGaussianBlur stdDeviation="{glow_std:.2f}" result="blur" />
       <feMerge>
         <feMergeNode in="blur" />
         <feMergeNode in="SourceGraphic" />
       </feMerge>
     </filter>
+    <filter id="deepShadow">
+      <feDropShadow dx="0" dy="{shadow_shift * 0.42:.2f}" stdDeviation="{12 + traits['edge_bias'] * 6:.2f}" flood-color="#000000" flood-opacity="0.34" />
+    </filter>
   </defs>
 """
     body = [f'<rect width="100%" height="100%" fill="url(#bg)" />']
-    body.append('<g filter="url(#softGlow)">')
+    body.append(
+        f'<ellipse cx="{CENTER_X:.2f}" cy="{CENTER_Y + 250:.2f}" rx="320" ry="94" fill="#000000" fill-opacity="0.28" filter="url(#deepShadow)" />'
+    )
 
     terraces, shards = _hopper_rectangles(
         traits["layer_count"],
@@ -355,43 +422,91 @@ def render_receipt_mode_svg(metadata: Dict) -> str:
     if terraces:
         outer = terraces[0]
         body.append(
-            f'<rect x="{outer["x"]:.2f}" y="{outer["y"]:.2f}" width="{outer["w"]:.2f}" height="{outer["h"]:.2f}" '
-            f'fill="url(#oxide)" fill-opacity="{0.16 + traits["oxide_intensity"] * 0.18:.4f}" stroke="none" />'
+            f'<rect x="{outer["x"] - 36:.2f}" y="{outer["y"] - 48:.2f}" width="{outer["w"] + 72:.2f}" height="{outer["h"] + 96:.2f}" '
+            f'fill="url(#oxide)" fill-opacity="{0.14 + traits["oxide_intensity"] * 0.16:.4f}" stroke="none" rx="44" ry="44" />'
         )
 
-    stroke_base = 1.4 + traits["edge_bias"] * 2.2
-    for idx, rect in enumerate(terraces):
-        color = palette[idx % len(palette)]
-        opacity = round(0.2 + ((traits["layer_count"] - idx) / max(traits["layer_count"], 1)) * (0.35 + traits["oxide_intensity"] * 0.2), 4)
+    body.append('<g filter="url(#softGlow)">')
+    for idx, rect in enumerate(reversed(terraces)):
+        layer_idx = len(terraces) - 1 - idx
+        color = palette[layer_idx % len(palette)]
+        polys = _terrace_surface_polygons(rect, lift=10 + layer_idx * 1.1, depth=13 + layer_idx * 1.6)
+        front = polys["front"]
+        top = polys["top"]
+        side = polys["side"]
+        side_quads = _terrace_connectors(front, side, [1, 2, 3, 4, 5, 6])
+        top_quads = _terrace_connectors(front, top, [0, 1, 8, 9])
+        face_opacity = round(0.14 + ((layer_idx + 1) / max(len(terraces), 1)) * (0.22 + traits["oxide_intensity"] * 0.18), 4)
+        edge_opacity = round(0.22 + face_opacity * 0.9, 4)
+
+        for quad in side_quads:
+            body.append(_polygon_tag(quad, fill=color, fill_opacity=f"{face_opacity * 0.88:.4f}", stroke="#f8fbff", stroke_opacity="0.05", stroke_width="0.8"))
+        for quad in top_quads:
+            body.append(_polygon_tag(quad, fill=palette[(layer_idx + 1) % len(palette)], fill_opacity=f"{min(0.72, face_opacity + 0.16):.4f}", stroke="#ffffff", stroke_opacity="0.08", stroke_width="0.8"))
+
         body.append(
-            f'<rect x="{rect["x"]:.2f}" y="{rect["y"]:.2f}" width="{rect["w"]:.2f}" height="{rect["h"]:.2f}" fill="none" '
-            f'stroke="{color}" stroke-width="{stroke_base + (idx % 2) * 0.6:.2f}" stroke-opacity="{opacity}" />'
-        )
-        inset = max(8.0, min(rect["notch"], 18.0 - min(idx, 8)))
-        inner_w = max(24.0, rect["w"] - inset * 2)
-        inner_h = max(24.0, rect["h"] - inset * 2)
-        body.append(
-            f'<rect x="{rect["x"] + inset:.2f}" y="{rect["y"] + inset:.2f}" width="{inner_w:.2f}" height="{inner_h:.2f}" fill="none" '
-            f'stroke="{palette[(idx + 1) % len(palette)]}" stroke-width="1.10" stroke-opacity="{max(0.15, opacity - 0.08):.4f}" />'
+            _polygon_tag(
+                front,
+                fill="url(#oxide)",
+                fill_opacity=f"{min(0.82, face_opacity + 0.12):.4f}",
+                stroke=color,
+                stroke_opacity=f"{edge_opacity:.4f}",
+                stroke_width=f"{1.2 + (layer_idx % 2) * 0.5:.2f}",
+            )
         )
 
-    for idx, rect in enumerate(shards):
-        color = palette[(idx + 2) % len(palette)]
-        fill_opacity = round(0.08 + traits["oxide_intensity"] * 0.25, 4)
-        body.append(
-            f'<rect x="{rect["x"]:.2f}" y="{rect["y"]:.2f}" width="{rect["w"]:.2f}" height="{rect["h"]:.2f}" fill="{color}" fill-opacity="{fill_opacity}" '
-            f'stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />'
-        )
-
-    if traits["rarity"] in {"rare", "mythic"}:
-        radius = 260 if traits["rarity"] == "rare" else 320
-        accent = palette[-1]
-        body.append(
-            f'<circle cx="{CENTER_X:.2f}" cy="{CENTER_Y:.2f}" r="{radius:.2f}" fill="none" '
-            f'stroke="{accent}" stroke-opacity="0.25" stroke-dasharray="10 12" stroke-width="2.4" />'
-        )
+        inset = max(10.0, min(rect["notch"] + 3.0, rect["w"] * 0.18, rect["h"] * 0.18))
+        inner = _stepped_rect_points(rect, inset=inset)
+        body.append(_polygon_tag(inner, fill="#05070c", fill_opacity=f"{0.22 + layer_idx * 0.012:.4f}", stroke=palette[(layer_idx + 2) % len(palette)], stroke_opacity=f"{max(0.14, edge_opacity - 0.12):.4f}", stroke_width="1.0"))
+        if layer_idx < len(terraces) - 1:
+            inner_top = _offset_points(inner, -(7 + layer_idx * 0.7), -(6 + layer_idx * 0.55))
+            for quad in _terrace_connectors(inner, inner_top, [0, 1, 8, 9]):
+                body.append(_polygon_tag(quad, fill="#f7fbff", fill_opacity="0.05", stroke="none"))
 
     body.append('</g>')
+    body.append('<g>')
+    for idx, rect in enumerate(shards):
+        color = palette[(idx + 2) % len(palette)]
+        lift = 6 + (idx % 4) * 1.8
+        depth = 7 + (idx % 5) * 1.5
+        front = [(rect["x"], rect["y"]), (rect["x"] + rect["w"], rect["y"]), (rect["x"] + rect["w"], rect["y"] + rect["h"]), (rect["x"], rect["y"] + rect["h"])]
+        top = _offset_points(front, -lift, -lift * 0.72)
+        side = _offset_points(front, depth, depth * 0.48)
+        body.append(_polygon_tag([front[1], front[2], side[2], side[1]], fill=color, fill_opacity=f"{0.14 + traits['oxide_intensity'] * 0.18:.4f}", stroke="none"))
+        body.append(_polygon_tag([front[0], front[1], top[1], top[0]], fill="#ffffff", fill_opacity=f"{0.06 + (idx % 3) * 0.015:.4f}", stroke="none"))
+        body.append(
+            f'<rect x="{rect["x"]:.2f}" y="{rect["y"]:.2f}" width="{rect["w"]:.2f}" height="{rect["h"]:.2f}" fill="{color}" fill-opacity="{0.10 + traits["oxide_intensity"] * 0.22:.4f}" '
+            f'stroke="#f8f9fa" stroke-opacity="0.08" stroke-width="0.8" />'
+        )
+        if idx % 4 != 1:
+            stripe_count = 1 + (idx % 3)
+            for stripe in range(stripe_count):
+                band_y = rect["y"] + 2.5 + stripe * max(3.0, rect["h"] / 4)
+                body.append(
+                    f'<line x1="{rect["x"] + 2:.2f}" y1="{band_y:.2f}" x2="{rect["x"] + rect["w"] - 2:.2f}" y2="{band_y:.2f}" '
+                    f'stroke="#ffffff" stroke-opacity="0.07" stroke-width="0.9" />'
+                )
+
+    band_count = 6 + int(traits["oxide_intensity"] * 6)
+    outer = terraces[0] if terraces else {"x": CENTER_X - 180, "y": CENTER_Y - 180, "w": 360, "h": 360}
+    for band_idx in range(band_count):
+        y = outer["y"] + 34 + band_idx * ((outer["h"] - 68) / max(band_count, 1))
+        x1 = outer["x"] + 24 + (band_idx % 3) * 18
+        x2 = outer["x"] + outer["w"] - 24 - ((band_idx + 1) % 3) * 14
+        body.append(
+            f'<line x1="{x1:.2f}" y1="{y:.2f}" x2="{x2:.2f}" y2="{y - rng.uniform(10, 26):.2f}" '
+            f'stroke="{palette[band_idx % len(palette)]}" stroke-opacity="{0.12 + traits["oxide_intensity"] * 0.12:.4f}" stroke-width="{3.2 - (band_idx % 2) * 0.6:.2f}" />'
+        )
+    body.append('</g>')
+
+    if traits["rarity"] in {"rare", "mythic"}:
+        radius = 268 if traits["rarity"] == "rare" else 324
+        accent = palette[-1]
+        body.append(
+            f'<circle cx="{CENTER_X:.2f}" cy="{CENTER_Y - 12:.2f}" r="{radius:.2f}" fill="none" '
+            f'stroke="{accent}" stroke-opacity="0.18" stroke-dasharray="18 14" stroke-width="2.8" />'
+        )
+
     body.append(
         f'<text x="{CENTER_X}" y="1134" text-anchor="middle" fill="#c7d0dc" font-family="monospace" font-size="18">'
         f'{metadata["canonical_receipt_hash"][:22]}…</text>'
