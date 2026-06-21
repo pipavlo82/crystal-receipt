@@ -16,3 +16,12 @@ export {
   type ProofSurfaceStatus,
 } from "./capsule/evidence-capsule"
 export { buildCrystalReceiptMapping, type CrystalReceiptMapping } from "./capsule/crystal-mapping"
+export {
+  buildRenderPlan,
+  buildRenderPlanFromCapsule,
+  getRenderPlanZoneDefinitions,
+  type RenderPlanSectionRef,
+  type RenderPlanV0,
+  type RenderPlanZone,
+  type RenderPlanZoneId,
+} from "./capsule/render-plan"
