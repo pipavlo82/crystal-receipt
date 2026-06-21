@@ -240,7 +240,37 @@ def _action_growth_map(receipt: Dict) -> Dict:
     }
 
 
-def _hopper_rectangles(layer_count: int, shard_count: int, symmetry: str, edge_bias: float, geometry_style: str) -> Tuple[List[Dict[str, float]], List[Dict[str, float]]]:
+def _capsule_spec(symmetry: str, edge_bias: float, geometry_style: str) -> Dict[str, float]:
+    symmetry_factor = {"low": 0.92, "medium": 1.0, "high": 1.08}[symmetry]
+    style_factor = {
+        "hopper": 1.0,
+        "radial": 0.94,
+        "stepped": 0.98,
+        "fractured": 0.9,
+    }[geometry_style]
+    w = (118 + edge_bias * 34) * symmetry_factor * style_factor
+    h = (272 + edge_bias * 44) * symmetry_factor
+    x = CENTER_X - w / 2
+    y = (CENTER_Y - 18) - h / 2
+    return {"x": round(x, 2), "y": round(y, 2), "w": round(w, 2), "h": round(h, 2), "r": round(min(34.0, w * 0.34), 2)}
+
+
+def _rects_overlap(a: Dict[str, float], b: Dict[str, float], padding: float = 0.0) -> bool:
+    return not (
+        a["x"] + a["w"] + padding <= b["x"]
+        or b["x"] + b["w"] + padding <= a["x"]
+        or a["y"] + a["h"] + padding <= b["y"]
+        or b["y"] + b["h"] + padding <= a["y"]
+    )
+
+
+def _hopper_rectangles(
+    layer_count: int,
+    shard_count: int,
+    symmetry: str,
+    edge_bias: float,
+    geometry_style: str,
+) -> Tuple[List[Dict[str, float]], List[Dict[str, float]], Dict[str, float]]:
     terraces: List[Dict[str, float]] = []
     shards: List[Dict[str, float]] = []
 
@@ -258,6 +288,7 @@ def _hopper_rectangles(layer_count: int, shard_count: int, symmetry: str, edge_b
     base_h = 640 * symmetry_factor * geometry_scale
     terrace_step = max(12.0, (42.0 - edge_bias * 10.0) * geometry_scale)
     notch_step = max(8.0, terrace_step * 0.6)
+    capsule = _capsule_spec(symmetry, edge_bias, geometry_style)
 
     for idx in range(layer_count):
         inset = idx * terrace_step
@@ -281,6 +312,12 @@ def _hopper_rectangles(layer_count: int, shard_count: int, symmetry: str, edge_b
     cell_w = inner["w"] / shard_cols
     cell_h = inner["h"] / shard_rows
     offset_push = edge_bias * 8.0
+    cavity = {
+        "x": capsule["x"] - 12,
+        "y": capsule["y"] - 14,
+        "w": capsule["w"] + 24,
+        "h": capsule["h"] + 28,
+    }
 
     for idx in range(shard_count):
         col = idx % shard_cols
@@ -312,9 +349,23 @@ def _hopper_rectangles(layer_count: int, shard_count: int, symmetry: str, edge_b
             x += (idx % 3) * 3.0
             h = max(10.0, h - (idx % 2) * 4.0)
 
-        shards.append({"x": x, "y": y, "w": w, "h": h})
+        shard = {"x": x, "y": y, "w": w, "h": h}
+        if _rects_overlap(shard, cavity):
+            continue
 
-    return terraces, shards
+        shard_center_x = shard["x"] + shard["w"] / 2
+        shard_center_y = shard["y"] + shard["h"] / 2
+        dx = shard_center_x - CENTER_X
+        dy = shard_center_y - (CENTER_Y - 18)
+        if abs(dx) < capsule["w"] * 0.82 and abs(dy) < capsule["h"] * 0.74:
+            shard["x"] += 10 if dx >= 0 else -10
+            shard["y"] += 6 if dy >= 0 else -6
+            if _rects_overlap(shard, cavity, padding=3):
+                continue
+
+        shards.append(shard)
+
+    return terraces, shards, capsule
 
 
 def _stepped_rect_points(rect: Dict[str, float], inset: float = 0.0) -> List[Tuple[float, float]]:
@@ -365,6 +416,139 @@ def _terrace_connectors(front: List[Tuple[float, float]], shifted: List[Tuple[fl
     return quads
 
 
+def _render_capsule_hopper_shell(body: List[str], capsule: Dict[str, float], palette: List[str], traits: Dict[str, object]) -> None:
+    x = capsule["x"]
+    y = capsule["y"]
+    w = capsule["w"]
+    h = capsule["h"]
+    shell_x = x - 16
+    shell_y = y - 18
+    shell_w = w + 32
+    shell_h = h + 36
+    edge_bias = float(traits["edge_bias"])
+    oxide = float(traits["oxide_intensity"])
+    symmetry = str(traits["symmetry"])
+    bridge = 22 + edge_bias * 20
+    lip = 18 + oxide * 12
+    shoulder = 26 + (6 if symmetry == "high" else 0)
+    waist = max(18.0, shell_w * (0.15 if symmetry == "low" else 0.18))
+    brace_color = palette[-1]
+    facet_color = palette[1]
+
+    shell_facets = [
+        [
+            (shell_x - shoulder, shell_y + shell_h * 0.18),
+            (shell_x + shell_w * 0.24, shell_y + shell_h * 0.10),
+            (shell_x + shell_w * 0.38, shell_y + shell_h * 0.24),
+            (shell_x + shell_w * 0.16, shell_y + shell_h * 0.36),
+        ],
+        [
+            (shell_x + shell_w * 0.76, shell_y + shell_h * 0.10),
+            (shell_x + shell_w + shoulder, shell_y + shell_h * 0.18),
+            (shell_x + shell_w + shell_w * 0.02, shell_y + shell_h * 0.36),
+            (shell_x + shell_w * 0.62, shell_y + shell_h * 0.24),
+        ],
+        [
+            (shell_x + shell_w * 0.18, shell_y - lip),
+            (shell_x + shell_w * 0.82, shell_y - lip),
+            (shell_x + shell_w * 0.68, shell_y + shell_h * 0.07),
+            (shell_x + shell_w * 0.32, shell_y + shell_h * 0.07),
+        ],
+        [
+            (shell_x + shell_w * 0.28, shell_y + shell_h * 0.93),
+            (shell_x + shell_w * 0.72, shell_y + shell_h * 0.93),
+            (shell_x + shell_w * 0.84, shell_y + shell_h + lip),
+            (shell_x + shell_w * 0.16, shell_y + shell_h + lip),
+        ],
+    ]
+    for idx, facet in enumerate(shell_facets):
+        body.append(
+            _polygon_tag(
+                facet,
+                fill=facet_color if idx % 2 == 0 else brace_color,
+                fill_opacity=f"{0.11 + oxide * 0.16:.4f}",
+                stroke="#f8fbff",
+                stroke_opacity="0.08",
+                stroke_width="0.9",
+            )
+        )
+
+    brace_rects = [
+        {"x": shell_x - bridge, "y": shell_y + shell_h * 0.24, "w": bridge + 10, "h": shell_h * 0.16},
+        {"x": shell_x + shell_w - 10, "y": shell_y + shell_h * 0.24, "w": bridge + 10, "h": shell_h * 0.16},
+        {"x": shell_x - waist * 0.4, "y": shell_y + shell_h * 0.44, "w": waist, "h": shell_h * 0.12},
+        {"x": shell_x + shell_w - waist * 0.6, "y": shell_y + shell_h * 0.44, "w": waist, "h": shell_h * 0.12},
+    ]
+    for idx, rect in enumerate(brace_rects):
+        body.append(
+            f'<rect x="{rect["x"]:.2f}" y="{rect["y"]:.2f}" width="{rect["w"]:.2f}" height="{rect["h"]:.2f}" '
+            f'rx="{max(8.0, rect["h"] * 0.32):.2f}" ry="{max(8.0, rect["h"] * 0.32):.2f}" fill="{palette[(idx + 2) % len(palette)]}" '
+            f'fill-opacity="{0.14 + oxide * 0.16:.4f}" stroke="#ffffff" stroke-opacity="0.08" stroke-width="0.8" />'
+        )
+
+
+def _render_center_capsule(body: List[str], capsule: Dict[str, float], palette: List[str], traits: Dict[str, object]) -> None:
+    x = capsule["x"]
+    y = capsule["y"]
+    w = capsule["w"]
+    h = capsule["h"]
+    r = capsule["r"]
+    shell_x = x - 16
+    shell_y = y - 18
+    shell_w = w + 32
+    shell_h = h + 36
+    shell_r = min(44.0, r + 10)
+    status_glow = 0.16 + float(traits["oxide_intensity"]) * 0.18
+
+    body.append(
+        f'<ellipse id="capsule-aura" cx="{CENTER_X:.2f}" cy="{CENTER_Y - 8:.2f}" rx="{w * 0.92:.2f}" ry="{h * 0.58:.2f}" '
+        f'fill="url(#capsuleAura)" fill-opacity="{status_glow:.4f}" />'
+    )
+    body.append(
+        f'<rect id="capsule-shell" x="{shell_x:.2f}" y="{shell_y:.2f}" width="{shell_w:.2f}" height="{shell_h:.2f}" '
+        f'rx="{shell_r:.2f}" ry="{shell_r:.2f}" fill="#04070d" fill-opacity="0.76" stroke="{palette[-1]}" stroke-opacity="0.22" stroke-width="1.4" />'
+    )
+    body.append(
+        f'<rect id="capsule-core" x="{x:.2f}" y="{y:.2f}" width="{w:.2f}" height="{h:.2f}" '
+        f'rx="{r:.2f}" ry="{r:.2f}" fill="url(#coreFace)" stroke="#f8fbff" stroke-opacity="0.52" stroke-width="1.6" />'
+    )
+    body.append(
+        f'<rect id="capsule-core-inner" x="{x + 8:.2f}" y="{y + 10:.2f}" width="{w - 16:.2f}" height="{h - 20:.2f}" '
+        f'rx="{max(12.0, r - 7):.2f}" ry="{max(12.0, r - 7):.2f}" fill="#090c13" fill-opacity="0.18" stroke="#ffffff" stroke-opacity="0.08" stroke-width="1.0" />'
+    )
+    body.append(
+        f'<rect id="capsule-spine" x="{x + w * 0.46:.2f}" y="{y + 22:.2f}" width="{w * 0.08:.2f}" height="{h - 44:.2f}" '
+        f'rx="{max(7.0, w * 0.045):.2f}" ry="{max(7.0, w * 0.045):.2f}" fill="#eef5ff" fill-opacity="0.16" />'
+    )
+    core_facets = [
+        (CENTER_X, y + h * 0.34),
+        (x + w * 0.62, y + h * 0.50),
+        (CENTER_X, y + h * 0.68),
+        (x + w * 0.38, y + h * 0.50),
+    ]
+    body.append(
+        _polygon_tag(
+            core_facets,
+            id="capsule-seal",
+            fill="#ffffff",
+            fill_opacity="0.07",
+            stroke="#f8fbff",
+            stroke_opacity="0.16",
+            stroke_width="1.0",
+        )
+    )
+    body.append(
+        f'<line x1="{x + 18:.2f}" y1="{y + h * 0.28:.2f}" x2="{x + w - 18:.2f}" y2="{y + h * 0.28:.2f}" stroke="#ffffff" stroke-opacity="0.10" stroke-width="1.0" />'
+    )
+    body.append(
+        f'<line x1="{x + 18:.2f}" y1="{y + h * 0.72:.2f}" x2="{x + w - 18:.2f}" y2="{y + h * 0.72:.2f}" stroke="#ffffff" stroke-opacity="0.08" stroke-width="0.9" />'
+    )
+    body.append(
+        f'<rect x="{x + 10:.2f}" y="{y + 12:.2f}" width="{w - 20:.2f}" height="{h * 0.14:.2f}" rx="{max(10.0, r * 0.48):.2f}" '
+        f'ry="{max(10.0, r * 0.48):.2f}" fill="#ffffff" fill-opacity="0.08" />'
+    )
+
+
 def render_receipt_mode_svg(metadata: Dict) -> str:
     traits = metadata["visual_traits"]
     palette = PALETTES[traits["palette_name"]]
@@ -390,6 +574,11 @@ def render_receipt_mode_svg(metadata: Dict) -> str:
       <stop offset="42%" stop-color="#bfd0f8" stop-opacity="0.30" />
       <stop offset="100%" stop-color="#0f1117" stop-opacity="0.16" />
     </linearGradient>
+    <radialGradient id="capsuleAura" cx="50%" cy="42%" r="64%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.78" />
+      <stop offset="55%" stop-color="{palette[1]}" stop-opacity="0.24" />
+      <stop offset="100%" stop-color="{palette[3]}" stop-opacity="0" />
+    </radialGradient>
     <linearGradient id="sideShade" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#0a0d14" stop-opacity="0.04" />
       <stop offset="100%" stop-color="#04060a" stop-opacity="0.65" />
@@ -411,7 +600,7 @@ def render_receipt_mode_svg(metadata: Dict) -> str:
         f'<ellipse cx="{CENTER_X:.2f}" cy="{CENTER_Y + 250:.2f}" rx="320" ry="94" fill="#000000" fill-opacity="0.28" filter="url(#deepShadow)" />'
     )
 
-    terraces, shards = _hopper_rectangles(
+    terraces, shards, capsule = _hopper_rectangles(
         traits["layer_count"],
         traits["shard_count"],
         traits["symmetry"],
@@ -497,6 +686,8 @@ def render_receipt_mode_svg(metadata: Dict) -> str:
             f'<line x1="{x1:.2f}" y1="{y:.2f}" x2="{x2:.2f}" y2="{y - rng.uniform(10, 26):.2f}" '
             f'stroke="{palette[band_idx % len(palette)]}" stroke-opacity="{0.12 + traits["oxide_intensity"] * 0.12:.4f}" stroke-width="{3.2 - (band_idx % 2) * 0.6:.2f}" />'
         )
+    _render_capsule_hopper_shell(body, capsule, palette, traits)
+    _render_center_capsule(body, capsule, palette, traits)
     body.append('</g>')
 
     if traits["rarity"] in {"rare", "mythic"}:
@@ -535,14 +726,14 @@ def render_receipt_card_svg(metadata: Dict, crystal_svg_hash: str) -> str:
 
     crystal_mark = """
   <g transform="translate(650 265)">
-    <rect x="-74" y="-74" width="148" height="148" fill="none" stroke="#151515" stroke-width="4" />
-    <rect x="-50" y="-50" width="100" height="100" fill="none" stroke="#151515" stroke-width="3" />
-    <rect x="-30" y="-30" width="60" height="60" fill="none" stroke="#151515" stroke-width="2.6" />
-    <rect x="-14" y="-14" width="28" height="28" fill="#ffffff" stroke="#151515" stroke-width="2.2" />
-    <rect x="-64" y="-8" width="26" height="16" fill="#ffffff" stroke="#151515" stroke-width="1.8" />
-    <rect x="38" y="-8" width="26" height="16" fill="#ffffff" stroke="#151515" stroke-width="1.8" />
-    <rect x="-8" y="38" width="16" height="26" fill="#ffffff" stroke="#151515" stroke-width="1.8" />
-    <rect x="-8" y="-64" width="16" height="26" fill="#ffffff" stroke="#151515" stroke-width="1.8" />
+    <polygon points="-78,-60 78,-60 56,-18 56,42 18,78 -18,78 -56,42 -56,-18" fill="none" stroke="#151515" stroke-width="4" />
+    <polygon points="-52,-38 52,-38 38,-10 38,28 12,54 -12,54 -38,28 -38,-10" fill="none" stroke="#151515" stroke-width="3" />
+    <rect x="-18" y="-56" width="36" height="112" rx="16" ry="16" fill="#ffffff" stroke="#151515" stroke-width="2.4" />
+    <polygon points="0,-12 18,0 0,14 -18,0" fill="#ffffff" stroke="#151515" stroke-width="2" />
+    <line x1="-40" y1="-22" x2="-56" y2="-42" stroke="#151515" stroke-width="2.4" />
+    <line x1="40" y1="-22" x2="56" y2="-42" stroke="#151515" stroke-width="2.4" />
+    <line x1="-32" y1="32" x2="-48" y2="52" stroke="#151515" stroke-width="2.4" />
+    <line x1="32" y1="32" x2="48" y2="52" stroke="#151515" stroke-width="2.4" />
   </g>
 """
 

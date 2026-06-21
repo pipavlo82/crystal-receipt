@@ -172,6 +172,15 @@ class GenerateReceiptModeTests(unittest.TestCase):
         self.assertIn("filter=\"url(#deepShadow)\"", svg)
         self.assertIn("/", svg)
 
+    def test_receipt_svg_preserves_capsule_center_inside_hopper_shell(self):
+        out = self.tmp / "receipt"
+        self.run_generate("--receipt", "examples/receipt-demo/receipt.json", "--out", str(out))
+        svg = (out / "crystal.svg").read_text(encoding="utf-8")
+        self.assertIn('id="capsule-shell"', svg)
+        self.assertIn('id="capsule-core"', svg)
+        self.assertIn('id="capsule-spine"', svg)
+        self.assertIn('id="capsule-aura"', svg)
+
 
 if __name__ == "__main__":
     unittest.main()

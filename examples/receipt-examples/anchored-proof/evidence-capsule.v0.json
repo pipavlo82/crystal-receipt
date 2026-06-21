@@ -151,8 +151,8 @@
       {
         "id": "anchor",
         "label": "Anchor",
-        "status": "pending",
-        "summary": "Merkle proof is attached, but no external anchor has been recorded.",
+        "status": "anchored",
+        "summary": "External anchor has been recorded and matches anchored proof references.",
         "sourceFields": [
           "anchor.onchain_anchor_status",
           "anchor.network",

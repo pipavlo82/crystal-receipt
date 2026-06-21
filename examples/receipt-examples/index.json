@@ -6,21 +6,21 @@
       "label": "Clean local proof",
       "summaryPath": "../receipt-examples/clean-local-proof/capsule-summary.json",
       "substratePath": "../receipt-examples/clean-local-proof/evidence-capsule.v0.json",
-      "visualPath": "../receipt-demo/crystal.svg"
+      "visualPath": "../receipt-examples/clean-local-proof/crystal.svg"
     },
     {
       "id": "tampered-mismatch",
       "label": "Tampered mismatch",
       "summaryPath": "../receipt-examples/tampered-mismatch/capsule-summary.json",
       "substratePath": "../receipt-examples/tampered-mismatch/evidence-capsule.v0.json",
-      "visualPath": "../receipt-demo/crystal.svg"
+      "visualPath": "../receipt-examples/tampered-mismatch/crystal.svg"
     },
     {
       "id": "anchored-proof",
       "label": "Anchored proof",
       "summaryPath": "../receipt-examples/anchored-proof/capsule-summary.json",
       "substratePath": "../receipt-examples/anchored-proof/evidence-capsule.v0.json",
-      "visualPath": "../receipt-demo/crystal.svg"
+      "visualPath": "../receipt-examples/anchored-proof/crystal.svg"
     }
   ]
 }
