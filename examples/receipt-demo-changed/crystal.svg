@@ -2,66 +2,244 @@
 
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#090b10" />
-      <stop offset="100%" stop-color="#151922" />
+      <stop offset="0%" stop-color="#07090e" />
+      <stop offset="52%" stop-color="#121722" />
+      <stop offset="100%" stop-color="#030407" />
     </linearGradient>
-    <linearGradient id="oxide" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#f8f9fa" stop-opacity="0.4792" />
-      <stop offset="35%" stop-color="#ced4da" stop-opacity="0.5361" />
-      <stop offset="70%" stop-color="#adb5bd" stop-opacity="0.6146" />
-      <stop offset="100%" stop-color="#ffcad4" stop-opacity="0.7431" />
+    <linearGradient id="oxide" x1="18%" y1="6%" x2="82%" y2="94%">
+      <stop offset="0%" stop-color="#f8f9fa" stop-opacity="0.5148" />
+      <stop offset="22%" stop-color="#ced4da" stop-opacity="0.6175" />
+      <stop offset="48%" stop-color="#adb5bd" stop-opacity="0.7246" />
+      <stop offset="74%" stop-color="#ffcad4" stop-opacity="0.8317" />
+      <stop offset="100%" stop-color="#f4acb7" stop-opacity="0.9145" />
+    </linearGradient>
+    <linearGradient id="coreFace" x1="15%" y1="8%" x2="82%" y2="88%">
+      <stop offset="0%" stop-color="#eef5ff" stop-opacity="0.92" />
+      <stop offset="42%" stop-color="#bfd0f8" stop-opacity="0.30" />
+      <stop offset="100%" stop-color="#0f1117" stop-opacity="0.16" />
+    </linearGradient>
+    <radialGradient id="capsuleAura" cx="50%" cy="42%" r="64%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.78" />
+      <stop offset="55%" stop-color="#ced4da" stop-opacity="0.24" />
+      <stop offset="100%" stop-color="#ffcad4" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="sideShade" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0d14" stop-opacity="0.04" />
+      <stop offset="100%" stop-color="#04060a" stop-opacity="0.65" />
     </linearGradient>
     <filter id="softGlow">
-      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feGaussianBlur stdDeviation="4.63" result="blur" />
       <feMerge>
         <feMergeNode in="blur" />
         <feMergeNode in="SourceGraphic" />
       </feMerge>
     </filter>
+    <filter id="deepShadow">
+      <feDropShadow dx="0" dy="11.27" stdDeviation="14.94" flood-color="#000000" flood-opacity="0.34" />
+    </filter>
   </defs>
   <rect width="100%" height="100%" fill="url(#bg)" />
+  <ellipse cx="600.00" cy="850.00" rx="320" ry="94" fill="#000000" fill-opacity="0.28" filter="url(#deepShadow)" />
+  <rect x="244.00" y="218.00" width="712.00" height="736.00" fill="url(#oxide)" fill-opacity="0.2089" stroke="none" rx="44" ry="44" />
   <g filter="url(#softGlow)">
-  <rect x="280.00" y="266.00" width="640.00" height="640.00" fill="url(#oxide)" fill-opacity="0.2375" stroke="none" />
-  <rect x="280.00" y="266.00" width="640.00" height="640.00" fill="none" stroke="#f8f9fa" stroke-width="2.48" stroke-opacity="0.6361" />
-  <rect x="298.00" y="284.00" width="604.00" height="604.00" fill="none" stroke="#ced4da" stroke-width="1.10" stroke-opacity="0.5561" />
-  <rect x="317.10" y="303.10" width="565.81" height="565.81" fill="none" stroke="#ced4da" stroke-width="3.08" stroke-opacity="0.5635" />
-  <rect x="334.10" y="320.10" width="531.81" height="531.81" fill="none" stroke="#adb5bd" stroke-width="1.10" stroke-opacity="0.4835" />
-  <rect x="354.19" y="340.19" width="491.62" height="491.62" fill="none" stroke="#adb5bd" stroke-width="2.48" stroke-opacity="0.4908" />
-  <rect x="370.19" y="356.19" width="459.62" height="459.62" fill="none" stroke="#ffcad4" stroke-width="1.10" stroke-opacity="0.4108" />
-  <rect x="391.28" y="377.28" width="417.43" height="417.43" fill="none" stroke="#ffcad4" stroke-width="3.08" stroke-opacity="0.4181" />
-  <rect x="406.28" y="392.28" width="387.43" height="387.43" fill="none" stroke="#f4acb7" stroke-width="1.10" stroke-opacity="0.3381" />
-  <rect x="428.38" y="414.38" width="343.24" height="343.24" fill="none" stroke="#f4acb7" stroke-width="2.48" stroke-opacity="0.3454" />
-  <rect x="442.38" y="428.38" width="315.24" height="315.24" fill="none" stroke="#f8f9fa" stroke-width="1.10" stroke-opacity="0.2654" />
-  <rect x="465.48" y="451.48" width="269.05" height="269.05" fill="none" stroke="#f8f9fa" stroke-width="3.08" stroke-opacity="0.2727" />
-  <rect x="478.48" y="464.48" width="243.05" height="243.05" fill="none" stroke="#ced4da" stroke-width="1.10" stroke-opacity="0.1927" />
-  <rect x="360.19" y="346.19" width="107.47" height="54.80" fill="#adb5bd" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="483.80" y="346.19" width="107.47" height="54.80" fill="#ffcad4" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="607.41" y="346.19" width="107.47" height="54.80" fill="#f4acb7" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="731.02" y="346.19" width="107.47" height="54.80" fill="#f8f9fa" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="360.19" y="417.13" width="107.47" height="54.80" fill="#ced4da" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="483.10" y="416.42" width="107.47" height="54.80" fill="#adb5bd" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="606.71" y="416.42" width="107.47" height="54.80" fill="#ffcad4" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="730.32" y="416.42" width="107.47" height="54.80" fill="#f4acb7" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="360.19" y="488.07" width="107.47" height="54.80" fill="#f8f9fa" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="483.10" y="487.36" width="107.47" height="54.80" fill="#ced4da" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="606.00" y="486.65" width="107.47" height="54.80" fill="#adb5bd" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="729.61" y="486.65" width="107.47" height="54.80" fill="#ffcad4" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="360.19" y="559.00" width="107.47" height="54.80" fill="#f4acb7" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="483.10" y="558.30" width="107.47" height="54.80" fill="#f8f9fa" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="606.00" y="557.59" width="107.47" height="54.80" fill="#ced4da" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="728.90" y="556.88" width="107.47" height="54.80" fill="#adb5bd" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="360.19" y="629.94" width="107.47" height="54.80" fill="#ffcad4" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="483.10" y="629.23" width="107.47" height="54.80" fill="#f4acb7" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="606.00" y="628.53" width="107.47" height="54.80" fill="#f8f9fa" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="728.90" y="627.82" width="107.47" height="54.80" fill="#ced4da" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="360.19" y="700.88" width="107.47" height="54.80" fill="#adb5bd" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="483.10" y="700.17" width="107.47" height="54.80" fill="#ffcad4" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="606.00" y="699.47" width="107.47" height="54.80" fill="#f4acb7" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="728.90" y="698.76" width="107.47" height="54.80" fill="#f8f9fa" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="360.19" y="771.82" width="107.47" height="54.80" fill="#ced4da" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="483.10" y="771.11" width="107.47" height="54.80" fill="#adb5bd" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="606.00" y="770.40" width="107.47" height="54.80" fill="#ffcad4" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
-  <rect x="728.90" y="769.70" width="107.47" height="54.80" fill="#f4acb7" fill-opacity="0.1877" stroke="#f8f9fa" stroke-opacity="0.10" stroke-width="0.8" />
+  <polygon points="734.53,451.48 734.53,542.95 755.53,554.5 755.53,463.03" fill="#f8f9fa" fill-opacity="0.3850" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="734.53,542.95 707.27,542.95 728.27,554.5 755.53,554.5" fill="#f8f9fa" fill-opacity="0.3850" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="707.27,542.95 707.27,693.27 728.27,704.82 728.27,554.5" fill="#f8f9fa" fill-opacity="0.3850" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="707.27,693.27 648.08,693.27 669.08,704.82 728.27,704.82" fill="#f8f9fa" fill-opacity="0.3850" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="648.08,693.27 648.08,720.53 669.08,732.08 669.08,704.82" fill="#f8f9fa" fill-opacity="0.3850" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="648.08,720.53 492.73,720.53 513.73,732.08 669.08,732.08" fill="#f8f9fa" fill-opacity="0.3850" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="465.48,451.48 734.53,451.48 719.03,438.77 449.98,438.77" fill="#ced4da" fill-opacity="0.5975" stroke="#ffffff" stroke-opacity="0.08" stroke-width="0.8" />
+  <polygon points="734.53,451.48 734.53,542.95 719.03,530.24 719.03,438.77" fill="#ced4da" fill-opacity="0.5975" stroke="#ffffff" stroke-opacity="0.08" stroke-width="0.8" />
+  <polygon points="492.73,661.33 465.48,661.33 449.98,648.62 477.23,648.62" fill="#ced4da" fill-opacity="0.5975" stroke="#ffffff" stroke-opacity="0.08" stroke-width="0.8" />
+  <polygon points="465.48,661.33 465.48,451.48 449.98,438.77 449.98,648.62" fill="#ced4da" fill-opacity="0.5975" stroke="#ffffff" stroke-opacity="0.08" stroke-width="0.8" />
+  <polygon points="465.48,451.48 734.53,451.48 734.53,542.95 707.27,542.95 707.27,693.27 648.08,693.27 648.08,720.53 492.73,720.53 492.73,661.33 465.48,661.33" fill="url(#oxide)" fill-opacity="0.5575" stroke="#f8f9fa" stroke-opacity="0.6138" stroke-width="1.70" />
+  <polygon points="495.73,481.73 704.27,481.73 704.27,552.63 677.01,552.63 677.01,663.01 631.13,663.01 631.13,690.27 522.99,690.27 522.99,644.39 495.73,644.39" fill="#05070c" fill-opacity="0.2800" stroke="#adb5bd" stroke-opacity="0.4938" stroke-width="1.0" />
+  <polygon points="771.62,414.38 771.62,531.08 791.02,541.75 791.02,425.05" fill="#f4acb7" fill-opacity="0.3414" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="771.62,531.08 746.86,531.08 766.26,541.75 791.02,541.75" fill="#f4acb7" fill-opacity="0.3414" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="746.86,531.08 746.86,732.86 766.26,743.53 766.26,541.75" fill="#f4acb7" fill-opacity="0.3414" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="746.86,732.86 671.35,732.86 690.75,743.53 766.26,743.53" fill="#f4acb7" fill-opacity="0.3414" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="671.35,732.86 671.35,757.62 690.75,768.29 690.75,743.53" fill="#f4acb7" fill-opacity="0.3414" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="671.35,757.62 453.14,757.62 472.54,768.29 690.75,768.29" fill="#f4acb7" fill-opacity="0.3414" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="428.38,414.38 771.62,414.38 757.22,402.57 413.98,402.57" fill="#f8f9fa" fill-opacity="0.5479" stroke="#ffffff" stroke-opacity="0.08" stroke-width="0.8" />
+  <polygon points="771.62,414.38 771.62,531.08 757.22,519.27 757.22,402.57" fill="#f8f9fa" fill-opacity="0.5479" stroke="#ffffff" stroke-opacity="0.08" stroke-width="0.8" />
+  <polygon points="453.14,682.11 428.38,682.11 413.98,670.3 438.74,670.3" fill="#f8f9fa" fill-opacity="0.5479" stroke="#ffffff" stroke-opacity="0.08" stroke-width="0.8" />
+  <polygon points="428.38,682.11 428.38,414.38 413.98,402.57 413.98,670.3" fill="#f8f9fa" fill-opacity="0.5479" stroke="#ffffff" stroke-opacity="0.08" stroke-width="0.8" />
+  <polygon points="428.38,414.38 771.62,414.38 771.62,531.08 746.86,531.08 746.86,732.86 671.35,732.86 671.35,757.62 453.14,757.62 453.14,682.11 428.38,682.11" fill="url(#oxide)" fill-opacity="0.5079" stroke="#f4acb7" stroke-opacity="0.5691" stroke-width="1.20" />
+  <polygon points="456.14,442.14 743.86,442.14 743.86,539.96 719.11,539.96 719.11,705.11 655.81,705.11 655.81,729.86 480.89,729.86 480.89,666.56 456.14,666.56" fill="#05070c" fill-opacity="0.2680" stroke="#ced4da" stroke-opacity="0.4491" stroke-width="1.0" />
+  <polygon points="456.14,442.14 743.86,442.14 734.06,433.94 446.34,433.94" fill="#f7fbff" fill-opacity="0.05" stroke="none" />
+  <polygon points="743.86,442.14 743.86,539.96 734.06,531.76 734.06,433.94" fill="#f7fbff" fill-opacity="0.05" stroke="none" />
+  <polygon points="480.89,666.56 456.14,666.56 446.34,658.36 471.09,658.36" fill="#f7fbff" fill-opacity="0.05" stroke="none" />
+  <polygon points="456.14,666.56 456.14,442.14 446.34,433.94 446.34,658.36" fill="#f7fbff" fill-opacity="0.05" stroke="none" />
+  <polygon points="808.71,377.28 808.71,519.21 826.51,529.0 826.51,387.07" fill="#ffcad4" fill-opacity="0.2978" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="808.71,519.21 786.46,519.21 804.26,529.0 826.51,529.0" fill="#ffcad4" fill-opacity="0.2978" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="786.46,519.21 786.46,772.46 804.26,782.25 804.26,529.0" fill="#ffcad4" fill-opacity="0.2978" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="786.46,772.46 694.62,772.46 712.42,782.25 804.26,782.25" fill="#ffcad4" fill-opacity="0.2978" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="694.62,772.46 694.62,794.71 712.42,804.5 712.42,782.25" fill="#ffcad4" fill-opacity="0.2978" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="694.62,794.71 413.54,794.71 431.34,804.5 712.42,804.5" fill="#ffcad4" fill-opacity="0.2978" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="391.28,377.28 808.71,377.28 795.41,366.38 377.98,366.38" fill="#f4acb7" fill-opacity="0.4984" stroke="#ffffff" stroke-opacity="0.08" stroke-width="0.8" />
+  <polygon points="808.71,377.28 808.71,519.21 795.41,508.31 795.41,366.38" fill="#f4acb7" fill-opacity="0.4984" stroke="#ffffff" stroke-opacity="0.08" stroke-width="0.8" />
+  <polygon points="413.54,702.88 391.28,702.88 377.98,691.97 400.24,691.97" fill="#f4acb7" fill-opacity="0.4984" stroke="#ffffff" stroke-opacity="0.08" stroke-width="0.8" />
+  <polygon points="391.28,702.88 391.28,377.28 377.98,366.38 377.98,691.97" fill="#f4acb7" fill-opacity="0.4984" stroke="#ffffff" stroke-opacity="0.08" stroke-width="0.8" />
+  <polygon points="391.28,377.28 808.71,377.28 808.71,519.21 786.46,519.21 786.46,772.46 694.62,772.46 694.62,794.71 413.54,794.71 413.54,702.88 391.28,702.88" fill="url(#oxide)" fill-opacity="0.4584" stroke="#ffcad4" stroke-opacity="0.5246" stroke-width="1.70" />
+  <polygon points="416.54,402.54 783.46,402.54 783.46,527.29 761.2,527.29 761.2,747.2 680.48,747.2 680.48,769.46 438.8,769.46 438.8,688.74 416.54,688.74" fill="#05070c" fill-opacity="0.2560" stroke="#f8f9fa" stroke-opacity="0.4046" stroke-width="1.0" />
+  <polygon points="416.54,402.54 783.46,402.54 774.36,394.89 407.44,394.89" fill="#f7fbff" fill-opacity="0.05" stroke="none" />
+  <polygon points="783.46,402.54 783.46,527.29 774.36,519.64 774.36,394.89" fill="#f7fbff" fill-opacity="0.05" stroke="none" />
+  <polygon points="438.8,688.74 416.54,688.74 407.44,681.09 429.7,681.09" fill="#f7fbff" fill-opacity="0.05" stroke="none" />
+  <polygon points="416.54,688.74 416.54,402.54 407.44,394.89 407.44,681.09" fill="#f7fbff" fill-opacity="0.05" stroke="none" />
+  <polygon points="845.81,340.19 845.81,507.34 862.01,516.25 862.01,349.1" fill="#adb5bd" fill-opacity="0.2541" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="845.81,507.34 818.55,507.34 834.75,516.25 862.01,516.25" fill="#adb5bd" fill-opacity="0.2541" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="818.55,507.34 818.55,804.55 834.75,813.46 834.75,516.25" fill="#adb5bd" fill-opacity="0.2541" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="818.55,804.55 710.4,804.55 726.6,813.46 834.75,813.46" fill="#adb5bd" fill-opacity="0.2541" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="710.4,804.55 710.4,831.81 726.6,840.72 726.6,813.46" fill="#adb5bd" fill-opacity="0.2541" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="710.4,831.81 381.45,831.81 397.65,840.72 726.6,840.72" fill="#adb5bd" fill-opacity="0.2541" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="354.19,340.19 845.81,340.19 833.61,330.19 341.99,330.19" fill="#ffcad4" fill-opacity="0.4488" stroke="#ffffff" stroke-opacity="0.08" stroke-width="0.8" />
+  <polygon points="845.81,340.19 845.81,507.34 833.61,497.34 833.61,330.19" fill="#ffcad4" fill-opacity="0.4488" stroke="#ffffff" stroke-opacity="0.08" stroke-width="0.8" />
+  <polygon points="381.45,723.65 354.19,723.65 341.99,713.65 369.25,713.65" fill="#ffcad4" fill-opacity="0.4488" stroke="#ffffff" stroke-opacity="0.08" stroke-width="0.8" />
+  <polygon points="354.19,723.65 354.19,340.19 341.99,330.19 341.99,713.65" fill="#ffcad4" fill-opacity="0.4488" stroke="#ffffff" stroke-opacity="0.08" stroke-width="0.8" />
+  <polygon points="354.19,340.19 845.81,340.19 845.81,507.34 818.55,507.34 818.55,804.55 710.4,804.55 710.4,831.81 381.45,831.81 381.45,723.65 354.19,723.65" fill="url(#oxide)" fill-opacity="0.4088" stroke="#adb5bd" stroke-opacity="0.4799" stroke-width="1.20" />
+  <polygon points="384.45,370.45 815.55,370.45 815.55,517.02 788.3,517.02 788.3,774.3 693.45,774.3 693.45,801.55 411.7,801.55 411.7,706.71 384.45,706.71" fill="#05070c" fill-opacity="0.2440" stroke="#f4acb7" stroke-opacity="0.3599" stroke-width="1.0" />
+  <polygon points="384.45,370.45 815.55,370.45 807.15,363.35 376.05,363.35" fill="#f7fbff" fill-opacity="0.05" stroke="none" />
+  <polygon points="815.55,370.45 815.55,517.02 807.15,509.92 807.15,363.35" fill="#f7fbff" fill-opacity="0.05" stroke="none" />
+  <polygon points="411.7,706.71 384.45,706.71 376.05,699.61 403.3,699.61" fill="#f7fbff" fill-opacity="0.05" stroke="none" />
+  <polygon points="384.45,706.71 384.45,370.45 376.05,363.35 376.05,699.61" fill="#f7fbff" fill-opacity="0.05" stroke="none" />
+  <polygon points="882.9,303.1 882.9,495.47 897.5,503.5 897.5,311.12" fill="#ced4da" fill-opacity="0.2105" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="882.9,495.47 858.15,495.47 872.75,503.5 897.5,503.5" fill="#ced4da" fill-opacity="0.2105" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="858.15,495.47 858.15,844.15 872.75,852.18 872.75,503.5" fill="#ced4da" fill-opacity="0.2105" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="858.15,844.15 733.67,844.15 748.27,852.18 872.75,852.18" fill="#ced4da" fill-opacity="0.2105" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="733.67,844.15 733.67,868.9 748.27,876.93 748.27,852.18" fill="#ced4da" fill-opacity="0.2105" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="733.67,868.9 341.85,868.9 356.45,876.93 748.27,876.93" fill="#ced4da" fill-opacity="0.2105" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="317.1,303.1 882.9,303.1 871.8,293.99 306.0,293.99" fill="#adb5bd" fill-opacity="0.3992" stroke="#ffffff" stroke-opacity="0.08" stroke-width="0.8" />
+  <polygon points="882.9,303.1 882.9,495.47 871.8,486.37 871.8,293.99" fill="#adb5bd" fill-opacity="0.3992" stroke="#ffffff" stroke-opacity="0.08" stroke-width="0.8" />
+  <polygon points="341.85,744.43 317.1,744.43 306.0,735.32 330.75,735.32" fill="#adb5bd" fill-opacity="0.3992" stroke="#ffffff" stroke-opacity="0.08" stroke-width="0.8" />
+  <polygon points="317.1,744.43 317.1,303.1 306.0,293.99 306.0,735.32" fill="#adb5bd" fill-opacity="0.3992" stroke="#ffffff" stroke-opacity="0.08" stroke-width="0.8" />
+  <polygon points="317.1,303.1 882.9,303.1 882.9,495.47 858.15,495.47 858.15,844.15 733.67,844.15 733.67,868.9 341.85,868.9 341.85,744.43 317.1,744.43" fill="url(#oxide)" fill-opacity="0.3592" stroke="#ced4da" stroke-opacity="0.4353" stroke-width="1.70" />
+  <polygon points="344.85,330.85 855.15,330.85 855.15,504.35 830.39,504.35 830.39,816.39 718.13,816.39 718.13,841.15 369.61,841.15 369.61,728.88 344.85,728.88" fill="#05070c" fill-opacity="0.2320" stroke="#ffcad4" stroke-opacity="0.3153" stroke-width="1.0" />
+  <polygon points="344.85,330.85 855.15,330.85 847.45,324.3 337.15,324.3" fill="#f7fbff" fill-opacity="0.05" stroke="none" />
+  <polygon points="855.15,330.85 855.15,504.35 847.45,497.8 847.45,324.3" fill="#f7fbff" fill-opacity="0.05" stroke="none" />
+  <polygon points="369.61,728.88 344.85,728.88 337.15,722.33 361.91,722.33" fill="#f7fbff" fill-opacity="0.05" stroke="none" />
+  <polygon points="344.85,728.88 344.85,330.85 337.15,324.3 337.15,722.33" fill="#f7fbff" fill-opacity="0.05" stroke="none" />
+  <polygon points="920.0,266.0 920.0,483.6 933.0,490.75 933.0,273.15" fill="#f8f9fa" fill-opacity="0.1668" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="920.0,483.6 897.74,483.6 910.74,490.75 933.0,490.75" fill="#f8f9fa" fill-opacity="0.1668" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="897.74,483.6 897.74,883.74 910.74,890.89 910.74,490.75" fill="#f8f9fa" fill-opacity="0.1668" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="897.74,883.74 756.94,883.74 769.94,890.89 910.74,890.89" fill="#f8f9fa" fill-opacity="0.1668" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="756.94,883.74 756.94,906.0 769.94,913.15 769.94,890.89" fill="#f8f9fa" fill-opacity="0.1668" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="756.94,906.0 302.26,906.0 315.26,913.15 769.94,913.15" fill="#f8f9fa" fill-opacity="0.1668" stroke="#f8fbff" stroke-opacity="0.05" stroke-width="0.8" />
+  <polygon points="280.0,266.0 920.0,266.0 910.0,257.8 270.0,257.8" fill="#ced4da" fill-opacity="0.3496" stroke="#ffffff" stroke-opacity="0.08" stroke-width="0.8" />
+  <polygon points="920.0,266.0 920.0,483.6 910.0,475.4 910.0,257.8" fill="#ced4da" fill-opacity="0.3496" stroke="#ffffff" stroke-opacity="0.08" stroke-width="0.8" />
+  <polygon points="302.26,765.2 280.0,765.2 270.0,757.0 292.26,757.0" fill="#ced4da" fill-opacity="0.3496" stroke="#ffffff" stroke-opacity="0.08" stroke-width="0.8" />
+  <polygon points="280.0,765.2 280.0,266.0 270.0,257.8 270.0,757.0" fill="#ced4da" fill-opacity="0.3496" stroke="#ffffff" stroke-opacity="0.08" stroke-width="0.8" />
+  <polygon points="280.0,266.0 920.0,266.0 920.0,483.6 897.74,483.6 897.74,883.74 756.94,883.74 756.94,906.0 302.26,906.0 302.26,765.2 280.0,765.2" fill="url(#oxide)" fill-opacity="0.3096" stroke="#f8f9fa" stroke-opacity="0.3906" stroke-width="1.20" />
+  <polygon points="305.26,291.26 894.74,291.26 894.74,491.68 872.49,491.68 872.49,858.49 742.8,858.49 742.8,880.74 327.51,880.74 327.51,751.06 305.26,751.06" fill="#05070c" fill-opacity="0.2200" stroke="#adb5bd" stroke-opacity="0.2706" stroke-width="1.0" />
+  <polygon points="305.26,291.26 894.74,291.26 887.74,285.26 298.26,285.26" fill="#f7fbff" fill-opacity="0.05" stroke="none" />
+  <polygon points="894.74,291.26 894.74,491.68 887.74,485.68 887.74,285.26" fill="#f7fbff" fill-opacity="0.05" stroke="none" />
+  <polygon points="327.51,751.06 305.26,751.06 298.26,745.06 320.51,745.06" fill="#f7fbff" fill-opacity="0.05" stroke="none" />
+  <polygon points="305.26,751.06 305.26,291.26 298.26,285.26 298.26,745.06" fill="#f7fbff" fill-opacity="0.05" stroke="none" />
+  </g>
+  <g>
+  <polygon points="467.66,346.19 467.66,400.99 474.66,404.35 474.66,349.55" fill="#adb5bd" fill-opacity="0.2175" stroke="none" />
+  <polygon points="360.19,346.19 467.66,346.19 461.66,341.87 354.19,341.87" fill="#ffffff" fill-opacity="0.0600" stroke="none" />
+  <rect x="360.19" y="346.19" width="107.47" height="54.80" fill="#adb5bd" fill-opacity="0.1948" stroke="#f8f9fa" stroke-opacity="0.08" stroke-width="0.8" />
+  <line x1="362.19" y1="348.69" x2="465.66" y2="348.69" stroke="#ffffff" stroke-opacity="0.07" stroke-width="0.9" />
+  <polygon points="581.27,340.19 581.27,394.99 589.77,399.07 589.77,344.27" fill="#ffcad4" fill-opacity="0.2175" stroke="none" />
+  <polygon points="473.8,340.19 581.27,340.19 573.47,334.57 466.0,334.57" fill="#ffffff" fill-opacity="0.0750" stroke="none" />
+  <rect x="473.80" y="340.19" width="107.47" height="54.80" fill="#ffcad4" fill-opacity="0.1948" stroke="#f8f9fa" stroke-opacity="0.08" stroke-width="0.8" />
+  <polygon points="724.88,340.19 724.88,394.99 734.88,399.79 734.88,344.99" fill="#f4acb7" fill-opacity="0.2175" stroke="none" />
+  <polygon points="617.41,340.19 724.88,340.19 715.28,333.28 607.81,333.28" fill="#ffffff" fill-opacity="0.0900" stroke="none" />
+  <rect x="617.41" y="340.19" width="107.47" height="54.80" fill="#f4acb7" fill-opacity="0.1948" stroke="#f8f9fa" stroke-opacity="0.08" stroke-width="0.8" />
+  <line x1="619.41" y1="342.69" x2="722.88" y2="342.69" stroke="#ffffff" stroke-opacity="0.07" stroke-width="0.9" />
+  <line x1="619.41" y1="356.39" x2="722.88" y2="356.39" stroke="#ffffff" stroke-opacity="0.07" stroke-width="0.9" />
+  <line x1="619.41" y1="370.09" x2="722.88" y2="370.09" stroke="#ffffff" stroke-opacity="0.07" stroke-width="0.9" />
+  <polygon points="838.5,346.19 838.5,400.99 850.0,406.51 850.0,351.71" fill="#f8f9fa" fill-opacity="0.2175" stroke="none" />
+  <polygon points="731.02,346.19 838.5,346.19 827.1,337.98 719.62,337.98" fill="#ffffff" fill-opacity="0.0600" stroke="none" />
+  <rect x="731.02" y="346.19" width="107.47" height="54.80" fill="#f8f9fa" fill-opacity="0.1948" stroke="#f8f9fa" stroke-opacity="0.08" stroke-width="0.8" />
+  <line x1="733.02" y1="348.69" x2="836.50" y2="348.69" stroke="#ffffff" stroke-opacity="0.07" stroke-width="0.9" />
+  <polygon points="467.66,417.13 467.66,471.93 480.66,478.17 480.66,423.37" fill="#ced4da" fill-opacity="0.2175" stroke="none" />
+  <polygon points="360.19,417.13 467.66,417.13 461.66,412.81 354.19,412.81" fill="#ffffff" fill-opacity="0.0750" stroke="none" />
+  <rect x="360.19" y="417.13" width="107.47" height="54.80" fill="#ced4da" fill-opacity="0.1948" stroke="#f8f9fa" stroke-opacity="0.08" stroke-width="0.8" />
+  <line x1="362.19" y1="419.63" x2="465.66" y2="419.63" stroke="#ffffff" stroke-opacity="0.07" stroke-width="0.9" />
+  <line x1="362.19" y1="433.33" x2="465.66" y2="433.33" stroke="#ffffff" stroke-opacity="0.07" stroke-width="0.9" />
+  <polygon points="837.79,416.42 837.79,471.22 844.79,474.58 844.79,419.78" fill="#adb5bd" fill-opacity="0.2175" stroke="none" />
+  <polygon points="730.32,416.42 837.79,416.42 829.99,410.81 722.52,410.81" fill="#ffffff" fill-opacity="0.0900" stroke="none" />
+  <rect x="730.32" y="416.42" width="107.47" height="54.80" fill="#adb5bd" fill-opacity="0.1948" stroke="#f8f9fa" stroke-opacity="0.08" stroke-width="0.8" />
+  <polygon points="467.66,488.07 467.66,542.86 476.16,546.94 476.16,492.15" fill="#ffcad4" fill-opacity="0.2175" stroke="none" />
+  <polygon points="360.19,488.07 467.66,488.07 458.06,481.15 350.59,481.15" fill="#ffffff" fill-opacity="0.0600" stroke="none" />
+  <rect x="360.19" y="488.07" width="107.47" height="54.80" fill="#ffcad4" fill-opacity="0.1948" stroke="#f8f9fa" stroke-opacity="0.08" stroke-width="0.8" />
+  <line x1="362.19" y1="490.57" x2="465.66" y2="490.57" stroke="#ffffff" stroke-opacity="0.07" stroke-width="0.9" />
+  <polygon points="837.08,486.65 837.08,541.45 847.08,546.25 847.08,491.45" fill="#f4acb7" fill-opacity="0.2175" stroke="none" />
+  <polygon points="729.61,486.65 837.08,486.65 825.68,478.44 718.21,478.44" fill="#ffffff" fill-opacity="0.0750" stroke="none" />
+  <rect x="729.61" y="486.65" width="107.47" height="54.80" fill="#f4acb7" fill-opacity="0.1948" stroke="#f8f9fa" stroke-opacity="0.08" stroke-width="0.8" />
+  <line x1="731.61" y1="489.15" x2="835.08" y2="489.15" stroke="#ffffff" stroke-opacity="0.07" stroke-width="0.9" />
+  <line x1="731.61" y1="502.85" x2="835.08" y2="502.85" stroke="#ffffff" stroke-opacity="0.07" stroke-width="0.9" />
+  <polygon points="467.66,559.0 467.66,613.8 479.16,619.32 479.16,564.52" fill="#f8f9fa" fill-opacity="0.2175" stroke="none" />
+  <polygon points="360.19,559.0 467.66,559.0 461.66,554.68 354.19,554.68" fill="#ffffff" fill-opacity="0.0900" stroke="none" />
+  <rect x="360.19" y="559.00" width="107.47" height="54.80" fill="#f8f9fa" fill-opacity="0.1948" stroke="#f8f9fa" stroke-opacity="0.08" stroke-width="0.8" />
+  <line x1="362.19" y1="561.50" x2="465.66" y2="561.50" stroke="#ffffff" stroke-opacity="0.07" stroke-width="0.9" />
+  <line x1="362.19" y1="575.20" x2="465.66" y2="575.20" stroke="#ffffff" stroke-opacity="0.07" stroke-width="0.9" />
+  <line x1="362.19" y1="588.90" x2="465.66" y2="588.90" stroke="#ffffff" stroke-opacity="0.07" stroke-width="0.9" />
+  <polygon points="836.38,556.88 836.38,611.68 849.38,617.92 849.38,563.12" fill="#ced4da" fill-opacity="0.2175" stroke="none" />
+  <polygon points="728.9,556.88 836.38,556.88 828.58,551.27 721.11,551.27" fill="#ffffff" fill-opacity="0.0600" stroke="none" />
+  <rect x="728.90" y="556.88" width="107.47" height="54.80" fill="#ced4da" fill-opacity="0.1948" stroke="#f8f9fa" stroke-opacity="0.08" stroke-width="0.8" />
+  <polygon points="467.66,629.94 467.66,684.74 474.66,688.1 474.66,633.3" fill="#adb5bd" fill-opacity="0.2175" stroke="none" />
+  <polygon points="360.19,629.94 467.66,629.94 458.06,623.03 350.59,623.03" fill="#ffffff" fill-opacity="0.0750" stroke="none" />
+  <rect x="360.19" y="629.94" width="107.47" height="54.80" fill="#adb5bd" fill-opacity="0.1948" stroke="#f8f9fa" stroke-opacity="0.08" stroke-width="0.8" />
+  <line x1="362.19" y1="632.44" x2="465.66" y2="632.44" stroke="#ffffff" stroke-opacity="0.07" stroke-width="0.9" />
+  <line x1="362.19" y1="646.14" x2="465.66" y2="646.14" stroke="#ffffff" stroke-opacity="0.07" stroke-width="0.9" />
+  <polygon points="836.38,627.82 836.38,682.62 844.88,686.7 844.88,631.9" fill="#ffcad4" fill-opacity="0.2175" stroke="none" />
+  <polygon points="728.9,627.82 836.38,627.82 824.98,619.61 717.5,619.61" fill="#ffffff" fill-opacity="0.0900" stroke="none" />
+  <rect x="728.90" y="627.82" width="107.47" height="54.80" fill="#ffcad4" fill-opacity="0.1948" stroke="#f8f9fa" stroke-opacity="0.08" stroke-width="0.8" />
+  <line x1="730.90" y1="630.32" x2="834.38" y2="630.32" stroke="#ffffff" stroke-opacity="0.07" stroke-width="0.9" />
+  <line x1="730.90" y1="644.02" x2="834.38" y2="644.02" stroke="#ffffff" stroke-opacity="0.07" stroke-width="0.9" />
+  <line x1="730.90" y1="657.72" x2="834.38" y2="657.72" stroke="#ffffff" stroke-opacity="0.07" stroke-width="0.9" />
+  <polygon points="467.66,700.88 467.66,755.68 477.66,760.48 477.66,705.68" fill="#f4acb7" fill-opacity="0.2175" stroke="none" />
+  <polygon points="360.19,700.88 467.66,700.88 461.66,696.56 354.19,696.56" fill="#ffffff" fill-opacity="0.0600" stroke="none" />
+  <rect x="360.19" y="700.88" width="107.47" height="54.80" fill="#f4acb7" fill-opacity="0.1948" stroke="#f8f9fa" stroke-opacity="0.08" stroke-width="0.8" />
+  <line x1="362.19" y1="703.38" x2="465.66" y2="703.38" stroke="#ffffff" stroke-opacity="0.07" stroke-width="0.9" />
+  <polygon points="836.38,698.76 836.38,753.56 847.88,759.08 847.88,704.28" fill="#f8f9fa" fill-opacity="0.2175" stroke="none" />
+  <polygon points="728.9,698.76 836.38,698.76 828.58,693.14 721.11,693.14" fill="#ffffff" fill-opacity="0.0750" stroke="none" />
+  <rect x="728.90" y="698.76" width="107.47" height="54.80" fill="#f8f9fa" fill-opacity="0.1948" stroke="#f8f9fa" stroke-opacity="0.08" stroke-width="0.8" />
+  <polygon points="467.66,771.82 467.66,826.61 480.66,832.85 480.66,778.06" fill="#ced4da" fill-opacity="0.2175" stroke="none" />
+  <polygon points="360.19,771.82 467.66,771.82 458.06,764.9 350.59,764.9" fill="#ffffff" fill-opacity="0.0900" stroke="none" />
+  <rect x="360.19" y="771.82" width="107.47" height="54.80" fill="#ced4da" fill-opacity="0.1948" stroke="#f8f9fa" stroke-opacity="0.08" stroke-width="0.8" />
+  <line x1="362.19" y1="774.32" x2="465.66" y2="774.32" stroke="#ffffff" stroke-opacity="0.07" stroke-width="0.9" />
+  <line x1="362.19" y1="788.02" x2="465.66" y2="788.02" stroke="#ffffff" stroke-opacity="0.07" stroke-width="0.9" />
+  <line x1="362.19" y1="801.72" x2="465.66" y2="801.72" stroke="#ffffff" stroke-opacity="0.07" stroke-width="0.9" />
+  <polygon points="580.57,777.11 580.57,831.91 587.57,835.27 587.57,780.47" fill="#adb5bd" fill-opacity="0.2175" stroke="none" />
+  <polygon points="473.1,777.11 580.57,777.11 569.17,768.9 461.7,768.9" fill="#ffffff" fill-opacity="0.0600" stroke="none" />
+  <rect x="473.10" y="777.11" width="107.47" height="54.80" fill="#adb5bd" fill-opacity="0.1948" stroke="#f8f9fa" stroke-opacity="0.08" stroke-width="0.8" />
+  <line x1="475.10" y1="779.61" x2="578.57" y2="779.61" stroke="#ffffff" stroke-opacity="0.07" stroke-width="0.9" />
+  <polygon points="723.47,776.4 723.47,831.2 731.97,835.28 731.97,780.48" fill="#ffcad4" fill-opacity="0.2175" stroke="none" />
+  <polygon points="616.0,776.4 723.47,776.4 717.47,772.08 610.0,772.08" fill="#ffffff" fill-opacity="0.0750" stroke="none" />
+  <rect x="616.00" y="776.40" width="107.47" height="54.80" fill="#ffcad4" fill-opacity="0.1948" stroke="#f8f9fa" stroke-opacity="0.08" stroke-width="0.8" />
+  <line x1="618.00" y1="778.90" x2="721.47" y2="778.90" stroke="#ffffff" stroke-opacity="0.07" stroke-width="0.9" />
+  <line x1="618.00" y1="792.60" x2="721.47" y2="792.60" stroke="#ffffff" stroke-opacity="0.07" stroke-width="0.9" />
+  <polygon points="836.38,769.7 836.38,824.5 846.38,829.3 846.38,774.5" fill="#f4acb7" fill-opacity="0.2175" stroke="none" />
+  <polygon points="728.9,769.7 836.38,769.7 828.58,764.08 721.11,764.08" fill="#ffffff" fill-opacity="0.0900" stroke="none" />
+  <rect x="728.90" y="769.70" width="107.47" height="54.80" fill="#f4acb7" fill-opacity="0.1948" stroke="#f8f9fa" stroke-opacity="0.08" stroke-width="0.8" />
+  <line x1="304.00" y1="300.00" x2="882.00" y2="275.67" stroke="#f8f9fa" stroke-opacity="0.1717" stroke-width="3.20" />
+  <line x1="322.00" y1="371.50" x2="868.00" y2="356.08" stroke="#ced4da" stroke-opacity="0.1717" stroke-width="2.60" />
+  <line x1="340.00" y1="443.00" x2="896.00" y2="423.70" stroke="#adb5bd" stroke-opacity="0.1717" stroke-width="3.20" />
+  <line x1="304.00" y1="514.50" x2="882.00" y2="493.74" stroke="#ffcad4" stroke-opacity="0.1717" stroke-width="2.60" />
+  <line x1="322.00" y1="586.00" x2="868.00" y2="570.18" stroke="#f4acb7" stroke-opacity="0.1717" stroke-width="3.20" />
+  <line x1="340.00" y1="657.50" x2="896.00" y2="634.97" stroke="#f8f9fa" stroke-opacity="0.1717" stroke-width="2.60" />
+  <line x1="304.00" y1="729.00" x2="882.00" y2="709.76" stroke="#ced4da" stroke-opacity="0.1717" stroke-width="3.20" />
+  <line x1="322.00" y1="800.50" x2="868.00" y2="786.03" stroke="#adb5bd" stroke-opacity="0.1717" stroke-width="2.60" />
+  <polygon points="479.27,469.02 553.86,440.78 578.7,490.21 539.66,532.58" fill="#ced4da" fill-opacity="0.1789" stroke="#f8fbff" stroke-opacity="0.08" stroke-width="0.9" />
+  <polygon points="646.13,440.78 720.72,469.02 692.27,532.58 621.29,490.21" fill="#f4acb7" fill-opacity="0.1789" stroke="#f8fbff" stroke-opacity="0.08" stroke-width="0.9" />
+  <polygon points="543.21,382.3 656.78,382.3 631.94,430.18 568.05,430.18" fill="#ced4da" fill-opacity="0.1789" stroke="#f8fbff" stroke-opacity="0.08" stroke-width="0.9" />
+  <polygon points="560.96,733.83 639.03,733.83 660.33,781.71 539.66,781.71" fill="#f4acb7" fill-opacity="0.1789" stroke="#f8fbff" stroke-opacity="0.08" stroke-width="0.9" />
+  <rect x="479.46" y="490.21" width="41.81" height="56.49" rx="18.08" ry="18.08" fill="#adb5bd" fill-opacity="0.2089" stroke="#ffffff" stroke-opacity="0.08" stroke-width="0.8" />
+  <rect x="678.72" y="490.21" width="41.81" height="56.49" rx="18.08" ry="18.08" fill="#ffcad4" fill-opacity="0.2089" stroke="#ffffff" stroke-opacity="0.08" stroke-width="0.8" />
+  <rect x="498.49" y="560.82" width="31.94" height="42.37" rx="13.56" ry="13.56" fill="#f4acb7" fill-opacity="0.2089" stroke="#ffffff" stroke-opacity="0.08" stroke-width="0.8" />
+  <rect x="669.56" y="560.82" width="31.94" height="42.37" rx="13.56" ry="13.56" fill="#f8f9fa" fill-opacity="0.2089" stroke="#ffffff" stroke-opacity="0.08" stroke-width="0.8" />
+  <ellipse id="capsule-aura" cx="600.00" cy="592.00" rx="133.81" ry="183.90" fill="url(#capsuleAura)" fill-opacity="0.2375" />
+  <rect id="capsule-shell" x="511.27" y="405.47" width="177.45" height="353.07" rx="44.00" ry="44.00" fill="#04070d" fill-opacity="0.76" stroke="#f4acb7" stroke-opacity="0.22" stroke-width="1.4" />
+  <rect id="capsule-core" x="527.27" y="423.47" width="145.45" height="317.07" rx="34.00" ry="34.00" fill="url(#coreFace)" stroke="#f8fbff" stroke-opacity="0.52" stroke-width="1.6" />
+  <rect id="capsule-core-inner" x="535.27" y="433.47" width="129.45" height="297.07" rx="27.00" ry="27.00" fill="#090c13" fill-opacity="0.18" stroke="#ffffff" stroke-opacity="0.08" stroke-width="1.0" />
+  <rect id="capsule-spine" x="594.18" y="445.47" width="11.64" height="273.07" rx="7.00" ry="7.00" fill="#eef5ff" fill-opacity="0.16" />
+  <polygon points="600.0,531.27 617.45,582.0 600.0,639.08 582.54,582.0" id="capsule-seal" fill="#ffffff" fill-opacity="0.07" stroke="#f8fbff" stroke-opacity="0.16" stroke-width="1.0" />
+  <line x1="545.27" y1="512.25" x2="654.72" y2="512.25" stroke="#ffffff" stroke-opacity="0.10" stroke-width="1.0" />
+  <line x1="545.27" y1="651.76" x2="654.72" y2="651.76" stroke="#ffffff" stroke-opacity="0.08" stroke-width="0.9" />
+  <rect x="537.27" y="435.47" width="125.45" height="44.39" rx="16.32" ry="16.32" fill="#ffffff" fill-opacity="0.08" />
   </g>
   <text x="600.0" y="1134" text-anchor="middle" fill="#c7d0dc" font-family="monospace" font-size="18">826b5c68c64992f89a73d4…</text>
   <text x="600.0" y="1162" text-anchor="middle" fill="#7d8896" font-family="monospace" font-size="14">hopper / silver_rose / common</text>
