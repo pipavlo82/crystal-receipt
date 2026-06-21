@@ -3,6 +3,7 @@ import { dirname, resolve } from "node:path"
 import {
   buildCrystalReceiptMapping,
   buildEvidenceCapsuleViewModel,
+  buildRenderPlanFromCapsule,
   computeReceiptRoot,
   stripAnchor,
   verifyHandoffReceiptRoot,
@@ -28,6 +29,7 @@ type CapsuleSummary = {
     sections: Awaited<ReturnType<typeof buildEvidenceCapsuleViewModel>>["sections"]
   }
   crystal_mapping: Awaited<ReturnType<typeof buildCrystalReceiptMapping>>
+  render_plan: ReturnType<typeof buildRenderPlanFromCapsule>
 }
 
 type EvidenceCapsuleV0 = {
@@ -114,6 +116,7 @@ export async function createCapsuleSummary(evidencePath: string): Promise<Capsul
   const merkleVerification = merkleAttachment ? verifyLocalMerkleProof(merkleAttachment) : null
   const capsule = await buildEvidenceCapsuleViewModel(evidence)
   const crystalMapping = await buildCrystalReceiptMapping(evidence)
+  const renderPlan = buildRenderPlanFromCapsule(capsule)
   const computedReceiptRoot = computeReceiptRoot(stripAnchor(evidence))
 
   return {
@@ -136,6 +139,7 @@ export async function createCapsuleSummary(evidencePath: string): Promise<Capsul
       sections: capsule.sections,
     },
     crystal_mapping: crystalMapping,
+    render_plan: renderPlan,
   }
 }
 
@@ -205,6 +209,8 @@ export async function runReceiptosCapsuleDemo(argv: string[]) {
   writeFileSync(outPath, JSON.stringify(summary, null, 2) + "\n")
   const substratePath = resolve(dirname(outPath), "evidence-capsule.v0.json")
   writeFileSync(substratePath, JSON.stringify(substrate, null, 2) + "\n")
+  const renderPlanPath = resolve(dirname(outPath), "render-plan.v0.json")
+  writeFileSync(renderPlanPath, JSON.stringify(summary.render_plan, null, 2) + "\n")
   console.log(outPath)
 }
 
