@@ -13,6 +13,7 @@ describe("receiptos capsule demo cli", () => {
     const tempDir = mkdtempSync(join(tmpdir(), "receiptos-capsule-demo-"))
     const outPath = join(tempDir, "capsule-summary.json")
     const v0Path = join(tempDir, "evidence-capsule.v0.json")
+    const renderPlanPath = join(tempDir, "render-plan.v0.json")
 
     try {
       await runReceiptosCapsuleDemo([
@@ -24,8 +25,10 @@ describe("receiptos capsule demo cli", () => {
 
       expect(existsSync(outPath)).toBe(true)
       expect(existsSync(v0Path)).toBe(true)
+      expect(existsSync(renderPlanPath)).toBe(true)
       const summary = JSON.parse(readFileSync(outPath, "utf8"))
       const substrate = JSON.parse(readFileSync(v0Path, "utf8"))
+      const renderPlan = JSON.parse(readFileSync(renderPlanPath, "utf8"))
       expect(summary.schema).toBe("receiptos.capsule_summary.v0")
       expect(summary.receipt_verification.ok).toBe(true)
       expect(summary.local_merkle.ok).toBe(true)
@@ -52,6 +55,8 @@ describe("receiptos capsule demo cli", () => {
         "anchor_edge",
         "seal",
       ])
+      expect(summary.render_plan.schema).toBe("receiptos.render_plan.v0")
+      expect(renderPlan).toEqual(summary.render_plan)
       expect(Object.keys(substrate)).toEqual([
         "schema",
         "action",
