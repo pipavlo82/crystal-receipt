@@ -59,9 +59,10 @@ This track is secondary. It produces an optional, deterministic visual presentat
 - [x] example output
 - [x] determinism tests
 
-Current scope remains deliberately simple:
-- one `receiptHash` in
-- one deterministic crystal out
+Current visual scope remains deliberately secondary:
+- hash mode remains supported for deterministic baseline examples
+- receipt mode is implemented for receipt-derived visual identity
+- visual output remains downstream from receipt evidence and proof semantics
 
 ### v0.2 direction
 
