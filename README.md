@@ -5,6 +5,25 @@
 Crystal Receipt is a portable receipt and evidence surface for agent actions.
 It consumes verifiable execution evidence, preserves ReceiptOS-compatible proof semantics, and can present that evidence as an Evidence Capsule, a replayable proof summary, and optionally a deterministic visual artifact.
 
+## Execution Provenance
+
+Crystal Receipt is evolving toward a portable execution provenance layer for AI agents and autonomous systems.
+
+The goal is not simply to display receipts or logs.
+
+The goal is to produce portable, tamper-evident execution artifacts that answer:
+
+- what happened
+- what evidence supports it
+- what policy governed it
+- what verifier checked it
+- whether the result can be independently recomputed
+
+This places Crystal Receipt in the broader execution provenance category alongside software supply-chain provenance, agent audit trails, and verifiable execution systems.
+
+See:
+- `docs/EXECUTION_PROVENANCE_FRAMING.md`
+  
 ## What this is
 
 Crystal Receipt is no longer just a visual experiment.
