@@ -7,23 +7,42 @@ It consumes verifiable execution evidence, preserves ReceiptOS-compatible proof 
 
 ## Execution Provenance
 
-Crystal Receipt is evolving toward a portable execution provenance layer for AI agents and autonomous systems.
+Crystal Receipt is a portable execution provenance surface for agent actions.
 
-The goal is not simply to display receipts or logs.
+The goal is not simply to display receipts, logs, or visual artifacts.
 
-The goal is to produce portable, tamper-evident execution artifacts that answer:
+The goal is to make agent execution independently inspectable and verifiable:
 
-- what happened
-- what evidence supports it
-- what policy governed it
-- what verifier checked it
-- whether the result can be independently recomputed
+```text
+agent input
+-> policy
+-> authorization
+-> tool/action
+-> evidence
+-> result
+-> verifier
+-> receipt
+```
 
-This places Crystal Receipt in the broader execution provenance category alongside software supply-chain provenance, agent audit trails, and verifiable execution systems.
+Crystal Receipt packages this into portable proof-facing artifacts:
+
+- schema-valid receipts
+- recomputable receipt roots
+- verifier results
+- proof references / anchor state
+- Evidence Capsules
+- replay summaries / manifests
+- invariant validation
+- browser-inspectable proof views
+
+This places Crystal Receipt in the broader execution provenance category: SLSA / in-toto for software supply chain, but for autonomous agent execution.
+
+The verifier remains the truth source.
+Visual artifacts, crystal surfaces, exports, and collectibles are optional downstream presentation layers. They do not prove the work by themselves.
 
 See:
 - `docs/EXECUTION_PROVENANCE_FRAMING.md`
-  
+
 ## What this is
 
 Crystal Receipt is no longer just a visual experiment.
@@ -62,6 +81,8 @@ That proof core supports:
 
 The visual renderer still exists and still works, but it is no longer the only or primary product story.
 The receipt and proof layer comes first.
+
+The pipeline above is the conceptual view. The flow below is the package-level view, and the concrete repo path further down is the implementation-level mapping of the same flow.
 
 ## Core flow
 
@@ -375,6 +396,7 @@ The image remains the human-facing fingerprint.
 
 ## Related docs
 
+- `docs/EXECUTION_PROVENANCE_FRAMING.md`
 - `docs/EVIDENCE_CAPSULE_MODEL_V0.md`
 - `docs/CRYSTAL_RECEIPT_MAPPING_V0.md`
 - `docs/RECEIPT_DERIVATION.md`
