@@ -292,25 +292,23 @@ same evidence
 
 So the crystal remains a meaningful visual fingerprint — just not the core trust layer.
 
-## NFT boundary
+## Optional export boundary
 
-If a crystal is later exported as an NFT, the NFT is also not the verifier by itself.
+If a receipt, capsule, or visual artifact is exported to another medium, that export is still not the verifier.
 
-The NFT layer is useful for:
+Export layers may be useful for:
 - portability
 - public display
-- provenance
-- ownership
 - discovery
 - artifact history
 - certificate-like presentation
 
-But the NFT itself does not automatically prove the work.
+But exported artifacts do not automatically prove the work.
 
 Correct statement:
 
-> The NFT does not prove the work by itself.  
-> It represents a receipt whose evidence can be independently verified.
+> The export does not prove the work by itself.  
+> It represents receipt evidence that can be independently verified.
 
 ## What this is not
 
@@ -327,20 +325,24 @@ It is a portable receipt/presentation layer with an optional deterministic visua
 
 ## Future direction
 
-Future directions can still include:
+Future directions should prioritize execution provenance:
 
 ```text
-portable evidence
--> proof capsule
--> optional visual artifact
--> optional export / collectible layer
+agent execution
+-> portable evidence
+-> receipt_root
+-> verifier result
+-> Evidence Capsule
+-> provenance artifact
+-> optional viewer / export layer
 ```
 
-But verification remains separate and must still come from receipt evidence, hashes, proofs, anchors, and verifier logic.
+Visual artifacts and exports remain useful, but they are downstream presentation layers.
+Verification continues to come from receipt evidence, hashes, proofs, anchors, and verifier logic.
 
 ## Product meaning
 
-Crystal Receipt turns invisible execution evidence into a reusable proof surface.
+Crystal Receipt turns invisible agent execution into a portable, inspectable provenance surface.
 
 For agentic systems, this matters because agents perform actions:
 - call tools
