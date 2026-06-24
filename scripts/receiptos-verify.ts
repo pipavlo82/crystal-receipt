@@ -1,6 +1,6 @@
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
+import { mkdirSync, writeFileSync } from "node:fs"
 import { dirname, resolve } from "node:path"
-import { createCapsuleSummary, createEvidenceCapsuleV0 } from "./receiptos-capsule-demo"
+import { createCapsuleSummary, createEvidenceCapsuleV0 } from "../src/receiptos"
 
 type VerifyResult = {
   schema: "receiptos.verify_result.v0"
