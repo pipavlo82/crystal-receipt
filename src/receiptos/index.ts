@@ -15,6 +15,14 @@ export {
   type EvidenceCapsuleViewModel,
   type ProofSurfaceStatus,
 } from "./capsule/evidence-capsule"
+export {
+  createCapsuleSummary,
+  createEvidenceCapsuleV0,
+  createProvenanceSummaryV0,
+  type CapsuleSummary,
+  type EvidenceCapsuleV0,
+  type ProvenanceSummaryV0,
+} from "./capsule/evidence-capsule-v0"
 export { buildCrystalReceiptMapping, type CrystalReceiptMapping } from "./capsule/crystal-mapping"
 export {
   buildRenderPlan,

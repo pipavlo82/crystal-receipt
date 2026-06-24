@@ -32,6 +32,18 @@ describe("receiptos capsule demo cli", () => {
       expect(summary.schema).toBe("receiptos.capsule_summary.v0")
       expect(summary.receipt_verification.ok).toBe(true)
       expect(summary.local_merkle.ok).toBe(true)
+      expect(summary.provenance_summary).toEqual({
+        schema: "receiptos.provenance_summary.v0",
+        version: "v0",
+        what_happened: summary.capsule.sections.find((section: { id: string }) => section.id === "payload")?.summary,
+        evidence_present: true,
+        verifier_status: "verified",
+        receipt_root_status: "verified",
+        anchor_status: "pending",
+        replay_status: "present",
+        warnings: [],
+        risk_flags: [],
+      })
       expect(summary.capsule.sections.map((section: { id: string }) => section.id)).toEqual([
         "payload",
         "policy_boundary",
