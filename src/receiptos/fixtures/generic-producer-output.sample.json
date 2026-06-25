@@ -1,0 +1,33 @@
+{
+  "producer": "generic",
+  "run_id": "generic-producer-run-001",
+  "workspace": "C:/generic/workspace",
+  "action": {
+    "title": "Generic producer import sample",
+    "prompt": "Summarize report.json and persist a receipt-ready output.",
+    "tool": "exec",
+    "command": "python tools/summarize.py --input inputs/report.json --output outputs/summary.txt",
+    "target": "C:/generic/workspace"
+  },
+  "timing": {
+    "started_at": 1718682000,
+    "completed_at": 1718682006
+  },
+  "result": {
+    "status": "completed",
+    "exit_code": 0,
+    "stdout_summary": "summary written to outputs/summary.txt"
+  },
+  "evidence": {
+    "files_changed": [
+      "outputs/summary.txt",
+      "logs/tool-run.json"
+    ],
+    "diff_sha256": "9d5e8d336a6f2d0d45d76c6f9d1fd8013a4a8b4f28e8c5cad20c4d5f0f1a0ac1"
+  },
+  "metadata": {
+    "message_count": 4,
+    "diff_count": 2,
+    "producer_id": "generic-tool-runner"
+  }
+}
