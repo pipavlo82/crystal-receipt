@@ -21,6 +21,15 @@
       "summaryPath": "../receipt-examples/anchored-proof/capsule-summary.json",
       "substratePath": "../receipt-examples/anchored-proof/evidence-capsule.v0.json",
       "visualPath": "../receipt-examples/anchored-proof/crystal.svg"
+    },
+    {
+      "id": "external-coding-run",
+      "label": "External Coding Run",
+      "description": "Non-Stealth coding-agent/tool-run example showing the ReceiptOS evidence, capsule, and provenance path.",
+      "summaryPath": "../receipt-examples/external-coding-run/capsule-summary.json",
+      "substratePath": "../receipt-examples/external-coding-run/evidence-capsule.v0.json",
+      "provenancePath": "../receipt-examples/external-coding-run/provenance-summary.v0.json",
+      "normalizedPath": "../receipt-examples/external-coding-run/normalized-evidence.json"
     }
   ]
 }
