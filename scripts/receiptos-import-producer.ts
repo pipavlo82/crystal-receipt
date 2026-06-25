@@ -72,7 +72,7 @@ export function normalizeGenericProducerOutput(source: GenericProducerOutput): N
     },
     agent: {
       id: source.metadata.producer_id ?? source.producer,
-      runtime: "generic-producer-import" as "Stealth",
+      runtime: "generic-producer-import",
     },
     scope: {
       permission: null,
@@ -124,7 +124,7 @@ export function normalizeGenericProducerOutput(source: GenericProducerOutput): N
     metadata: {
       message_count: source.metadata.message_count,
       diff_count: source.metadata.diff_count,
-      generated_by: "receiptos.generic_producer_import.v0" as "stealth.handoff.evidence.builder.v1",
+      generated_by: "receiptos.generic_producer_import.v0",
     },
   }
 
