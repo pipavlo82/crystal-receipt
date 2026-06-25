@@ -95,7 +95,14 @@ A healthy integration should therefore confirm both:
 - normal root computation succeeds for anchor-less evidence
 - root computation remains unchanged when the same evidence is given a synthetic top-level anchor
 
-## 7. Non-goals
+## 7. GitHub Actions export-time conclusion semantics
+
+For the current `github.actions_run.v0` export flow, the source artifact is generated mid-workflow.
+Its `conclusion` field therefore reflects the workflow state at export time, not necessarily the final GitHub Actions workflow or job outcome shown in the GitHub UI.
+The GitHub Actions UI remains the source of truth for final workflow/job conclusion.
+Final-job-conclusion reconciliation via a second job and GitHub API access is intentionally deferred.
+
+## 8. Non-goals
 
 This document does not:
 
@@ -106,7 +113,7 @@ This document does not:
 - change evidence capsule output shape
 - redefine producer-specific trust semantics beyond the existing ReceiptOS verification model
 
-## 8. Summary
+## 9. Summary
 
 ReceiptOS ingests producer-neutral evidence through a portable envelope.
 It computes and verifies roots deterministically.

@@ -66,6 +66,8 @@ describe("github actions export helper", () => {
     expect(json.workflow.run_id).toBe(1234567890)
     expect(json.workflow.run_attempt).toBe(1)
     expect(json.workflow.event_name).toBe("workflow_dispatch")
+    expect(json.job.conclusion).toBe("success")
+    expect(["success", "failure"]).toContain(json.job.conclusion)
     expect(json.source_metadata.producer_id).toBe("github-actions")
     expect(json.source_metadata.generated_by).toBe("github.actions_run.v0")
     expect(json.steps[2].command_summary).toBe("bun test tests/receiptos")
