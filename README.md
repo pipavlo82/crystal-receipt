@@ -168,6 +168,7 @@ The current capsule model summarizes sections such as:
 Useful starting points:
 - `docs/EVIDENCE_CAPSULE_MODEL_V0.md`
 - `docs/CRYSTAL_RECEIPT_MAPPING_V0.md`
+- `docs/receiptos_integration_manifest_v0.md`
 
 ## Verification, Merkle, and anchor path
 

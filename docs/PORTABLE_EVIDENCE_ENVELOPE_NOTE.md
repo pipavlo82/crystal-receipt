@@ -34,6 +34,8 @@ In the current architecture, producer identity is carried by:
 
 That is where a producer distinguishes itself from other producer systems while still targeting the same proof boundary.
 
+`stealth.session.evidence.v1` therefore remains the historical/current portable envelope id, while root computation stays anchor-independent and producer identity remains in runtime, `generated_by`, and source metadata.
+
 ## ReceiptOS trust boundary
 
 ReceiptOS verifies:
@@ -53,7 +55,7 @@ This means that:
 - Stealth is one producer shape, not the only producer shape
 - CYPHES-like workflow systems are another producer shape
 - generic producer import now exists
-- the generic producer import path is now cast-free
+- generic producer import participates in the same producer-neutral, anchor-independent `receipt_root` semantics
 - future producer systems may target the same current input path
 
 ## Non-goals
