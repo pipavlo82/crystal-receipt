@@ -127,6 +127,7 @@ In the current implementation, ReceiptOS guarantees:
 - a stable `receiptos.evidence_capsule.v0` output shape
 - a stable `receiptos.provenance_summary.v0` output shape
 - independently recomputed `receipt_root` comparison
+- top-level `anchor` does not affect `receipt_root`
 - stable verifier-facing proof status semantics
 - stable Merkle proof reference semantics
 - stable anchor status semantics
