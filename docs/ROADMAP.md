@@ -41,6 +41,7 @@ This is the primary track. It covers the portable ReceiptOS-aligned proof core (
 
 - stabilize `evidence-capsule.v0` schema and naming conventions
 - expand external producer adapters beyond the first external coding-run import path
+- GitHub Actions export: final-job-conclusion reconciliation via second job is deferred; see docs/receiptos_integration_manifest_v0.md.
 - handoff chain summaries between agent sessions
 - provenance graph experiments (receipts referencing receipts) — sandboxed, no schema commitments until field shapes are stable
 - import/export between execution systems and proof viewers
