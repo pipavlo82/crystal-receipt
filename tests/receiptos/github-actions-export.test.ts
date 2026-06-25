@@ -69,6 +69,7 @@ describe("github actions export helper", () => {
     expect(json.source_metadata.producer_id).toBe("github-actions")
     expect(json.source_metadata.generated_by).toBe("github.actions_run.v0")
     expect(json.steps[2].command_summary).toBe("bun test tests/receiptos")
+    expect(json.steps.map((step: { name: string }) => step.name)).not.toContain("Generate ReceiptOS artifacts")
     expect(json.evidence.artifact_hash).toMatch(/^0x[a-f0-9]{64}$/)
   })
 })
