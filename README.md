@@ -230,6 +230,7 @@ Correct statement:
 
 The fastest runnable example of the producer-neutral ReceiptOS integration flow.
 Run `bun scripts/demo-external-producer-e2e.ts` for a minimal generic producer example that walks through normalization, `receipt_root` computation, Evidence Capsule generation, and Provenance Summary generation.
+Run `bun scripts/demo-external-coding-run-e2e.ts` for the first concrete external coding-agent/tool-run producer example.
 
 ## Current CLI modes
 
@@ -294,6 +295,7 @@ Example semantics:
 A generic external producer output can also be normalized into the current ReceiptOS input path and reduced into proof artifacts.
 This is the current producer-neutral import path.
 `receipt_root` is computed independently of the top-level `anchor`; see `bun scripts/demo-external-producer-e2e.ts` for the fastest runnable example.
+The repo now also includes `external-coding-run` as a concrete coding-agent/tool-run producer example.
 
 ```bash
 bun scripts/receiptos-import-producer.ts \

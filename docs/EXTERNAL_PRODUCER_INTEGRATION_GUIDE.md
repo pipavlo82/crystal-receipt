@@ -201,6 +201,7 @@ Current repo examples already cover multiple producer shapes, including:
 - Stealth / handoff evidence
 - CYPHES-like workflow evidence
 - generic tool-run evidence
+- `external.coding_run.v0` as the first concrete external coding-agent/tool-run import example
 
 Those source shapes differ.
 The shared proof boundary does not.

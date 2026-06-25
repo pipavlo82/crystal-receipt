@@ -40,7 +40,7 @@ This is the primary track. It covers the portable ReceiptOS-aligned proof core (
 ### Next steps
 
 - stabilize `evidence-capsule.v0` schema and naming conventions
-- implement the first external producer adapter (Stealth) per the adapter boundary spec
+- expand external producer adapters beyond the first external coding-run import path
 - handoff chain summaries between agent sessions
 - provenance graph experiments (receipts referencing receipts) — sandboxed, no schema commitments until field shapes are stable
 - import/export between execution systems and proof viewers
