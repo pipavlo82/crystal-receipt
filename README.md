@@ -49,6 +49,7 @@ See:
 - `docs/EXECUTION_PROVENANCE_FRAMING.md`
 - `docs/PRODUCER_NEUTRAL_PROOF_BOUNDARY.md`
 - `docs/PRODUCER_PROOF_CONTRACT_V0.md`
+- `docs/EXTERNAL_PRODUCER_INTEGRATION_GUIDE.md`
 
 ## What this is
 
@@ -271,6 +272,23 @@ Example semantics:
 - `tampered-mismatch` is a live verifier input example and should report a mismatch clearly.
 - `anchored-proof` is a static example artifact set showing imported anchor state.
 - The current verifier CLI verifies portable evidence input and does not yet recompute/import anchor overlay from the `anchored-proof` example folder.
+
+### Generic Producer Import CLI
+
+A generic external producer output can also be normalized into the current ReceiptOS input path and reduced into proof artifacts:
+
+```bash
+bun scripts/receiptos-import-producer.ts \
+ --producer generic \
+ --input src/receiptos/fixtures/generic-producer-output.sample.json \
+ --out examples/imported-producer
+```
+
+Output artifacts:
+- `normalized-evidence.json`
+- `capsule-summary.json`
+- `evidence-capsule.v0.json`
+- `provenance-summary.v0.json`
 
 ## Optional visual renderer
 
