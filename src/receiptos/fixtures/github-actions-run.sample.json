@@ -1,0 +1,54 @@
+{
+  "schema": "github.actions_run.v0",
+  "repository": "pipavlo82/crystal-receipt",
+  "ref": "refs/heads/main",
+  "commit_sha": "0123456789abcdef0123456789abcdef01234567",
+  "workflow": {
+    "name": "CI",
+    "run_id": 1234567890,
+    "run_attempt": 1,
+    "event_name": "pull_request",
+    "html_url": "https://github.com/pipavlo82/crystal-receipt/actions/runs/1234567890"
+  },
+  "job": {
+    "id": 987654321,
+    "name": "receiptos-tests",
+    "runner_name": "GitHub Actions hosted runner",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-06-25T12:00:00Z",
+    "completed_at": "2026-06-25T12:03:00Z"
+  },
+  "actor": {
+    "login": "octocat"
+  },
+  "steps": [
+    {
+      "name": "Checkout",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Install dependencies",
+      "status": "completed",
+      "conclusion": "success",
+      "command_summary": "bun install"
+    },
+    {
+      "name": "Run ReceiptOS tests",
+      "status": "completed",
+      "conclusion": "success",
+      "command_summary": "bun test tests/receiptos"
+    }
+  ],
+  "evidence": {
+    "artifact_summary": "ReceiptOS test suite passed in CI.",
+    "artifact_hash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+    "files_changed": [],
+    "diff_sha256": null
+  },
+  "source_metadata": {
+    "producer_id": "github-actions",
+    "generated_by": "github.actions_run.v0"
+  }
+}
