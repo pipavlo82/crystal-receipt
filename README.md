@@ -232,6 +232,28 @@ The fastest runnable example of the producer-neutral ReceiptOS integration flow.
 Run `bun scripts/demo-external-producer-e2e.ts` for a minimal generic producer example that walks through normalization, `receipt_root` computation, Evidence Capsule generation, and Provenance Summary generation.
 Run `bun scripts/demo-external-coding-run-e2e.ts` for the first concrete external coding-agent/tool-run producer example.
 
+### Where do Viewer artifacts come from?
+
+ReceiptOS artifacts are produced by the import/demo scripts or by a producer integration. The Viewer can inspect those generated JSON files directly from your computer; files stay local in the browser and are not uploaded.
+
+Example:
+
+```bash
+bun scripts/receiptos-import-producer.ts \
+ --producer github-actions \
+ --input src/receiptos/fixtures/github-actions-run.sample.json \
+ --out out/github-actions-demo
+```
+
+Then open the ReceiptOS Viewer and load files from `out/github-actions-demo/`:
+
+- `evidence-capsule.v0.json` — primary artifact
+- `provenance-summary.v0.json` — optional provenance summary
+- `capsule-summary.json` — optional richer viewer summary
+- `normalized-evidence.json` — optional producer/runtime context
+
+Existing committed examples live under `docs/receipt-examples/`, and real producers or CI systems can publish the same files as build artifacts.
+
 ## Current CLI modes
 
 ### Hash mode
