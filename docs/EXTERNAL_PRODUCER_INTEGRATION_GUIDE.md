@@ -57,6 +57,7 @@ A producer may differ in:
 But once the evidence enters ReceiptOS, the target proof boundary remains stable.
 
 For the architectural boundary, see:
+- `docs/receiptos_integration_manifest_v0.md`
 - `docs/PRODUCER_NEUTRAL_PROOF_BOUNDARY.md`
 - `docs/PRODUCER_PROOF_CONTRACT_V0.md`
 
@@ -180,6 +181,8 @@ In the current implementation, ReceiptOS guarantees:
 - stable Merkle proof reference semantics
 - stable anchor status semantics
 - replay-manifest boundary generation from source evidence
+
+`receipt_root` computation ignores the top-level `anchor`, so producers should expect the same root whether normalized evidence is anchor-less or already carries a top-level anchor.
 
 ReceiptOS does **not** guarantee producer workflow truth beyond what the source evidence itself supports.
 
