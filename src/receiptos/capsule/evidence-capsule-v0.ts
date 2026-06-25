@@ -3,7 +3,7 @@ import { resolve } from "node:path"
 import { buildCrystalReceiptMapping } from "./crystal-mapping"
 import { buildEvidenceCapsuleViewModel } from "./evidence-capsule"
 import { buildRenderPlanFromCapsule } from "./render-plan"
-import { computeReceiptRoot, stripAnchor } from "../canon/receipt-root"
+import { computeReceiptRoot } from "../canon/receipt-root"
 import { verifyLocalMerkleProof } from "../merkle/local-merkle"
 import { verifyHandoffReceiptRoot } from "../verify/verify-receipt"
 import type {
@@ -118,7 +118,7 @@ export async function createCapsuleSummary(evidencePath: string): Promise<Capsul
   const capsule = await buildEvidenceCapsuleViewModel(evidence)
   const crystalMapping = await buildCrystalReceiptMapping(evidence)
   const renderPlan = buildRenderPlanFromCapsule(capsule)
-  const computedReceiptRoot = computeReceiptRoot(stripAnchor(evidence))
+  const computedReceiptRoot = computeReceiptRoot(evidence)
 
   return {
     schema: "receiptos.capsule_summary.v0",

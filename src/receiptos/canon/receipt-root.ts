@@ -12,6 +12,10 @@ export function stripAnchor<T extends { anchor?: unknown }>(value: T): Omit<T, "
   return clone as Omit<T, "anchor">
 }
 
-export function computeReceiptRoot(value: Omit<HandoffEvidence, "anchor">): string {
-  return `0x${sha256(canonicalize(value))}`
+type ReceiptRootInput = HandoffEvidence | Omit<HandoffEvidence, "anchor">
+
+// computeReceiptRoot() always ignores the top-level anchor field.
+// This prevents receipt_root from depending on its own anchored value.
+export function computeReceiptRoot(value: ReceiptRootInput): string {
+  return `0x${sha256(canonicalize(stripAnchor(value)))}`
 }
