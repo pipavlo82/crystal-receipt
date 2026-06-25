@@ -4,6 +4,7 @@
 
 Crystal Receipt is a portable receipt and evidence surface for agent actions.
 It consumes verifiable execution evidence, preserves ReceiptOS-compatible proof semantics, and can present that evidence as an Evidence Capsule, a replayable proof summary, and optionally a deterministic visual artifact.
+The repository is organized into two layers: a producer-neutral ReceiptOS proof core and an optional crystal rendering layer built on top of it.
 
 In the current architecture:
 - **ReceiptOS** is the stable proof substrate
@@ -47,9 +48,17 @@ Visual artifacts, crystal surfaces, exports, and collectibles are optional downs
 
 See:
 - `docs/EXECUTION_PROVENANCE_FRAMING.md`
-- `docs/PRODUCER_NEUTRAL_PROOF_BOUNDARY.md`
-- `docs/PRODUCER_PROOF_CONTRACT_V0.md`
+- `docs/receiptos_integration_manifest_v0.md`
 - `docs/EXTERNAL_PRODUCER_INTEGRATION_GUIDE.md`
+- `docs/PRODUCER_PROOF_CONTRACT_V0.md`
+- `docs/PRODUCER_NEUTRAL_PROOF_BOUNDARY.md`
+- `scripts/demo-external-producer-e2e.ts`
+
+## External producer quick start
+
+- Read `docs/receiptos_integration_manifest_v0.md`
+- Read `docs/EXTERNAL_PRODUCER_INTEGRATION_GUIDE.md`
+- Run `bun scripts/demo-external-producer-e2e.ts`
 
 ## What this is
 
@@ -196,6 +205,7 @@ The portable proof flow is:
 
 The verifier remains the source of truth.
 The capsule and crystal layers are interpretive and presentational.
+Producer identity (runtime, generated_by, source metadata) is provenance metadata, not proof truth.
 
 ## Important security boundary
 
@@ -218,6 +228,7 @@ Correct statement:
 
 ## External Producer E2E Demo
 
+The fastest runnable example of the producer-neutral ReceiptOS integration flow.
 Run `bun scripts/demo-external-producer-e2e.ts` for a minimal generic producer example that walks through normalization, `receipt_root` computation, Evidence Capsule generation, and Provenance Summary generation.
 
 ## Current CLI modes
@@ -280,7 +291,9 @@ Example semantics:
 
 ### Generic Producer Import CLI
 
-A generic external producer output can also be normalized into the current ReceiptOS input path and reduced into proof artifacts:
+A generic external producer output can also be normalized into the current ReceiptOS input path and reduced into proof artifacts.
+This is the current producer-neutral import path.
+`receipt_root` is computed independently of the top-level `anchor`; see `bun scripts/demo-external-producer-e2e.ts` for the fastest runnable example.
 
 ```bash
 bun scripts/receiptos-import-producer.ts \
@@ -414,7 +427,7 @@ That separation is the key:
 
 - No blockchain submit path here
 - No NFT minting code yet
-- No Stealth integration yet
+- No producer-specific runtime integration SDK yet
 - No external paid APIs
 - Visual generator remains available
 - Proof/capsule layer is now first-class
