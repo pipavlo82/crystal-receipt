@@ -13,6 +13,7 @@ function readFixture(name: string): HandoffEvidence {
 describe("receiptos receipt root", () => {
   test("computeReceiptRoot(sample) equals exact expected root", () => {
     const sample = readFixture("session-evidence.sample.json")
+    expect(computeReceiptRoot(sample)).toBe(sample.anchor.receipt_root)
     expect(computeReceiptRoot(stripAnchor(sample))).toBe(sample.anchor.receipt_root)
   })
 
@@ -29,6 +30,7 @@ describe("receiptos receipt root", () => {
       },
     }
 
+    expect(computeReceiptRoot(changedAnchor)).toBe(sample.anchor.receipt_root)
     expect(computeReceiptRoot(stripAnchor(changedAnchor))).toBe(sample.anchor.receipt_root)
   })
 
