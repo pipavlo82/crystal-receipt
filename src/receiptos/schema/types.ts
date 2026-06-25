@@ -35,6 +35,7 @@ export type HandoffAnchorProof = {
 }
 
 export type HandoffEvidence = {
+  // Historical/current portable evidence envelope id used by the ReceiptOS input path.
   schema: "stealth.session.evidence.v1"
   session_id: string
   directory: string
@@ -44,7 +45,7 @@ export type HandoffEvidence = {
   }
   agent: {
     id?: string
-    runtime: "Stealth"
+    runtime: string
   }
   scope: {
     permission: unknown | null
@@ -80,7 +81,8 @@ export type HandoffEvidence = {
   metadata: {
     message_count: number
     diff_count: number
-    generated_by: "stealth.handoff.evidence.builder.v1"
+    // The envelope id is historical; producer identity is carried by runtime/generated_by/source fields.
+    generated_by: string
   }
 }
 
