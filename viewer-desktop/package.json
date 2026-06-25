@@ -1,0 +1,38 @@
+{
+  "name": "receiptos-viewer-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Offline Electron wrapper for the static ReceiptOS Viewer.",
+  "main": "main.js",
+  "scripts": {
+    "dev": "electron .",
+    "dist": "electron-builder --win portable"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "io.receiptos.viewer",
+    "productName": "ReceiptOS Viewer",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../docs",
+        "to": "docs"
+      }
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ]
+    }
+  }
+}
