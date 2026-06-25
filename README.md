@@ -216,6 +216,10 @@ Correct statement:
 > The artifact does not prove the work by itself.  
 > It represents receipt evidence that can be independently verified.
 
+## External Producer E2E Demo
+
+Run `bun scripts/demo-external-producer-e2e.ts` for a minimal generic producer example that walks through normalization, `receipt_root` computation, Evidence Capsule generation, and Provenance Summary generation.
+
 ## Current CLI modes
 
 ### Hash mode
