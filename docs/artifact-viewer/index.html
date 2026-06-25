@@ -217,6 +217,37 @@
         <select id="example-select" style="background:var(--chip); color:var(--text); border:1px solid var(--line); border-radius:12px; padding:10px 12px;"></select>
       </div>
       <p id="example-description" class="footer-note" style="margin-top:12px; max-width:900px;"></p>
+      <div class="card" style="margin-top:18px;">
+        <h2 class="section-title">Load local artifacts</h2>
+        <div class="grid two">
+          <div class="stat">
+            <div class="label">Primary artifact</div>
+            <div class="small">Evidence Capsule v0 is required unless capsule-summary.json is provided.</div>
+            <input id="local-v0" type="file" accept="application/json,.json" style="margin-top:10px;" />
+          </div>
+          <div class="stat">
+            <div class="label">Optional provenance</div>
+            <div class="small">Attach provenance-summary.v0.json for extra proof posture detail.</div>
+            <input id="local-provenance" type="file" accept="application/json,.json" style="margin-top:10px;" />
+          </div>
+          <div class="stat">
+            <div class="label">Optional capsule summary</div>
+            <div class="small">If provided, capsule-summary.json becomes the richer primary summary source.</div>
+            <input id="local-summary" type="file" accept="application/json,.json" style="margin-top:10px;" />
+          </div>
+          <div class="stat">
+            <div class="label">Optional normalized evidence</div>
+            <div class="small">Attach normalized-evidence.json to surface producer/runtime/generated_by fields.</div>
+            <input id="local-normalized" type="file" accept="application/json,.json" style="margin-top:10px;" />
+          </div>
+        </div>
+        <div style="margin-top:18px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+          <button id="load-local" style="background:#cfe1ff; color:#07111f; border:0; border-radius:999px; padding:12px 16px; font-weight:700; cursor:pointer;">Load local artifacts</button>
+          <button id="reset-examples" style="background:var(--chip); color:var(--text); border:1px solid var(--line); border-radius:999px; padding:12px 16px; font-weight:700; cursor:pointer;">Reset to examples</button>
+          <span id="local-status" class="small"></span>
+        </div>
+        <p id="local-error" class="footer-note" style="color:var(--bad); display:none;"></p>
+      </div>
       <div class="hero-grid">
         <div class="card">
           <h2 class="section-title">Receipt summary</h2>
@@ -288,6 +319,28 @@
       } catch (_) {
         return null;
       }
+    }
+
+    async function readOptionalJsonFromInput(id) {
+      const input = document.getElementById(id);
+      const file = input?.files?.[0];
+      if (!file) return null;
+      try {
+        return JSON.parse(await file.text());
+      } catch (error) {
+        throw new Error(`Malformed JSON in ${file.name}`);
+      }
+    }
+
+    function setLocalError(message) {
+      const node = document.getElementById('local-error');
+      node.textContent = message ?? '';
+      node.style.display = message ? 'block' : 'none';
+    }
+
+    function setLocalStatus(message) {
+      const node = document.getElementById('local-status');
+      node.textContent = message ?? '';
     }
 
     function renderSummary(data) {
@@ -503,28 +556,64 @@
         const v0 = await fetch(entry?.substratePath ?? V0_URL);
         if (v0.ok) {
           const summary = adaptV0ToSummary(await v0.json());
-          summary.viewer = {
+          return attachViewerOverlay(summary, {
             producerKind: entry?.id ?? 'default-demo',
             runtime: normalized?.agent?.runtime ?? null,
             agentId: normalized?.agent?.id ?? null,
             generatedBy: normalized?.metadata?.generated_by ?? null,
             provenance,
-          };
-          return summary;
+          });
         }
       } catch (_) {}
 
       const response = await fetch(entry?.summaryPath ?? DATA_URL);
       if (!response.ok) throw new Error(`Failed to load capsule summary: ${response.status}`);
       const summary = await response.json();
-      summary.viewer = {
+      return attachViewerOverlay(summary, {
         producerKind: entry?.id ?? 'default-demo',
         runtime: normalized?.agent?.runtime ?? null,
         agentId: normalized?.agent?.id ?? null,
         generatedBy: normalized?.metadata?.generated_by ?? null,
         provenance,
+      });
+    }
+
+    function attachViewerOverlay(summary, viewer) {
+      summary.viewer = {
+        producerKind: viewer?.producerKind ?? null,
+        runtime: viewer?.runtime ?? null,
+        agentId: viewer?.agentId ?? null,
+        generatedBy: viewer?.generatedBy ?? null,
+        provenance: viewer?.provenance ?? null,
       };
       return summary;
+    }
+
+    async function buildViewerDataFromLocalFiles() {
+      const [v0, provenance, summary, normalized] = await Promise.all([
+        readOptionalJsonFromInput('local-v0'),
+        readOptionalJsonFromInput('local-provenance'),
+        readOptionalJsonFromInput('local-summary'),
+        readOptionalJsonFromInput('local-normalized'),
+      ]);
+
+      if (!summary && !v0) {
+        throw new Error('Select evidence-capsule.v0.json or capsule-summary.json to load local artifacts.');
+      }
+
+      const viewer = {
+        producerKind: 'local-upload',
+        runtime: normalized?.agent?.runtime ?? null,
+        agentId: normalized?.agent?.id ?? null,
+        generatedBy: normalized?.metadata?.generated_by ?? null,
+        provenance,
+      };
+
+      if (summary) {
+        return attachViewerOverlay(summary, viewer);
+      }
+
+      return attachViewerOverlay(adaptV0ToSummary(v0), viewer);
     }
 
     async function loadManifest() {
@@ -537,8 +626,7 @@
       }
     }
 
-    async function renderEntry(entry) {
-      const data = await loadEntry(entry);
+    function renderViewerData(data, options = {}) {
       renderSummary(data);
       renderProof(data);
       renderCapsule(data);
@@ -546,28 +634,73 @@
       renderManifest(data);
       renderMapping(data);
       const image = document.getElementById('surface-image');
-      image.src = entry?.visualPath ?? '../receipt-demo/crystal.svg';
+      image.src = options.visualPath ?? '../receipt-demo/crystal.svg';
       const description = document.getElementById('example-description');
-      description.textContent = entry?.description ?? 'Portable ReceiptOS proof artifact example.';
+      description.textContent = options.description ?? 'Portable ReceiptOS proof artifact example.';
+    }
+
+    async function renderEntry(entry) {
+      const data = await loadEntry(entry);
+      renderViewerData(data, {
+        visualPath: entry?.visualPath,
+        description: entry?.description ?? 'Portable ReceiptOS proof artifact example.',
+      });
     }
 
     async function boot() {
       const manifest = await loadManifest();
       const select = document.getElementById('example-select');
-      if (manifest?.examples?.length) {
-        select.innerHTML = manifest.examples.map((example) => `<option value="${esc(example.id)}">${esc(example.label)}</option>`).join('');
-        const renderById = async (id) => {
+      const loadLocalButton = document.getElementById('load-local');
+      const resetExamplesButton = document.getElementById('reset-examples');
+      const defaultDescription = 'Portable ReceiptOS proof artifact example.';
+
+      const renderById = async (id) => {
+        if (manifest?.examples?.length) {
           const entry = manifest.examples.find((example) => example.id === id) ?? manifest.examples[0];
           await renderEntry(entry);
-        };
+          setLocalError(null);
+          setLocalStatus('');
+          return;
+        }
+        await renderEntry(null);
+        const description = document.getElementById('example-description');
+        description.textContent = defaultDescription;
+      };
+
+      if (manifest?.examples?.length) {
+        select.innerHTML = manifest.examples.map((example) => `<option value="${esc(example.id)}">${esc(example.label)}</option>`).join('');
         select.addEventListener('change', (event) => renderById(event.target.value));
         await renderById(manifest.examples[0].id);
-        return;
+      } else {
+        select.innerHTML = '<option>Default demo</option>';
+        await renderEntry(null);
+        const description = document.getElementById('example-description');
+        description.textContent = defaultDescription;
       }
-      select.innerHTML = '<option>Default demo</option>';
-      await renderEntry(null);
-      const description = document.getElementById('example-description');
-      description.textContent = 'Portable ReceiptOS proof artifact example.';
+
+      loadLocalButton.addEventListener('click', async () => {
+        try {
+          setLocalError(null);
+          const data = await buildViewerDataFromLocalFiles();
+          renderViewerData(data, {
+            description: 'Loaded from local files. Nothing was uploaded.',
+          });
+          setLocalStatus('Loaded local artifacts successfully.');
+        } catch (error) {
+          setLocalStatus('');
+          setLocalError(error instanceof Error ? error.message : String(error));
+        }
+      });
+
+      resetExamplesButton.addEventListener('click', async () => {
+        for (const id of ['local-v0', 'local-provenance', 'local-summary', 'local-normalized']) {
+          const input = document.getElementById(id);
+          if (input) input.value = '';
+        }
+        setLocalError(null);
+        setLocalStatus('');
+        await renderById(select.value);
+      });
     }
 
     boot().catch((error) => {
