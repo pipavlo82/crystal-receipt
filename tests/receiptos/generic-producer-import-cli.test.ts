@@ -3,6 +3,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 import { normalizeGenericProducerOutput, runReceiptosImportProducer } from "../../scripts/receiptos-import-producer"
+import { computeReceiptRoot } from "../../src/receiptos/canon/receipt-root"
 
 function fixturePath(name: string) {
   return resolve(import.meta.dir, "../../src/receiptos/fixtures", name)
@@ -74,5 +75,29 @@ describe("generic producer import cli", () => {
 
     expect(normalized.schema).toBe("stealth.session.evidence.v1")
     expect(normalized.anchor.receipt_root).toMatch(/^0x[a-fA-F0-9]{64}$/)
+  })
+
+  test("generic producer import roots are anchor-independent", () => {
+    const source = JSON.parse(readFileSync(fixturePath("generic-producer-output.sample.json"), "utf8"))
+    const normalized = normalizeGenericProducerOutput(source)
+    const { anchor, ...withoutAnchor } = normalized
+    const withFakeAnchor = {
+      ...withoutAnchor,
+      anchor: {
+        receipt_root: "0x" + "f".repeat(64),
+        merkle_proof_status: "attached",
+        merkle_root: "0x" + "a".repeat(64),
+        merkle_leaf_index: 7,
+        merkle_proof: ["0x" + "b".repeat(64)],
+        onchain_anchor_status: "anchored",
+        network: "sepolia",
+        contract: "0x" + "1".repeat(40),
+        tx_hash: "0x" + "2".repeat(64),
+        verifier_status: "verified",
+      },
+    }
+
+    expect(computeReceiptRoot(withoutAnchor)).toBe(computeReceiptRoot(withFakeAnchor))
+    expect(computeReceiptRoot(withFakeAnchor)).toBe(normalized.anchor.receipt_root)
   })
 })
