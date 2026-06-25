@@ -1,15 +1,11 @@
 import type { HandoffEvidence, HandoffReceiptVerification } from "../schema/types"
 import { canonicalize } from "../canon/canonicalize"
+import { stripAnchor } from "../canon/receipt-root"
 
 type HandoffEvidenceWithAnchor = HandoffEvidence & {
   anchor?: {
     receipt_root?: string | null
   }
-}
-
-function stripTopLevelAnchor(evidence: HandoffEvidenceWithAnchor): Omit<HandoffEvidenceWithAnchor, "anchor"> {
-  const { anchor: _anchor, ...withoutAnchor } = evidence
-  return withoutAnchor
 }
 
 async function sha256Hex(value: string): Promise<string> {
@@ -30,7 +26,7 @@ export async function verifyHandoffReceiptRoot(evidence: HandoffEvidenceWithAnch
     }
   }
 
-  const recomputedRoot = `0x${await sha256Hex(canonicalize(stripTopLevelAnchor(evidence)))}`
+  const recomputedRoot = `0x${await sha256Hex(canonicalize(stripAnchor(evidence)))}`
 
   return {
     ok: receiptRoot.toLowerCase() === recomputedRoot.toLowerCase(),

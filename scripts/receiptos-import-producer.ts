@@ -5,7 +5,6 @@ import {
   createCapsuleSummary,
   createEvidenceCapsuleV0,
   createProvenanceSummaryV0,
-  stripAnchor,
   type HandoffEvidence,
 } from "../src/receiptos"
 
@@ -128,7 +127,7 @@ export function normalizeGenericProducerOutput(source: GenericProducerOutput): N
     },
   }
 
-  const receiptRoot = computeReceiptRoot(stripAnchor({ ...normalizedWithoutAnchor, anchor: undefined } as NormalizedEvidence))
+  const receiptRoot = computeReceiptRoot({ ...normalizedWithoutAnchor, anchor: undefined } as NormalizedEvidence)
 
   return {
     ...normalizedWithoutAnchor,
