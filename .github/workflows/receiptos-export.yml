@@ -57,6 +57,15 @@ jobs:
         if: always()
         run: ls -la "$RECEIPTOS_OUT_DIR"
 
+      - name: Check required ReceiptOS artifacts exist
+        if: always()
+        run: |
+          test -f "$RECEIPTOS_SOURCE_PATH"
+          test -f "$RECEIPTOS_OUT_DIR/normalized-evidence.json"
+          test -f "$RECEIPTOS_OUT_DIR/capsule-summary.json"
+          test -f "$RECEIPTOS_OUT_DIR/evidence-capsule.v0.json"
+          test -f "$RECEIPTOS_OUT_DIR/provenance-summary.v0.json"
+
       - name: Upload ReceiptOS artifact bundle
         if: always()
         uses: actions/upload-artifact@v4

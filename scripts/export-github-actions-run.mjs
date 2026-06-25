@@ -128,11 +128,6 @@ function main() {
         conclusion: args.conclusion,
         command_summary: args.commandSummary,
       },
-      {
-        name: "Generate ReceiptOS artifacts",
-        status: "completed",
-        conclusion: args.conclusion,
-      },
     ],
     evidence: {
       artifact_summary: args.artifactSummary,
