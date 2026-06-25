@@ -1,0 +1,56 @@
+{
+  "schema": "external.coding_run.v0",
+  "run_id": "ext-coding-run-001",
+  "workspace": "/repo",
+  "task": {
+    "title": "Fix receipt root regression",
+    "prompt_summary": "Make receipt root computation independent of top-level anchor."
+  },
+  "producer": {
+    "id": "external-coding-agent",
+    "runtime": "external/coding-agent",
+    "generated_by": "external.coding_run.v0"
+  },
+  "scope": {
+    "target": "/repo",
+    "mode": "edit",
+    "allowed_actions": ["read", "write", "test"]
+  },
+  "timing": {
+    "started_at": 1735689600,
+    "completed_at": 1735689720
+  },
+  "result": {
+    "status": "completed",
+    "exit_code": 0,
+    "summary": "Updated receipt-root handling and verified tests pass."
+  },
+  "execution": {
+    "commands": [
+      {
+        "command": "bun test tests/receiptos",
+        "exit_code": 0,
+        "stdout_summary": "93 tests passed"
+      }
+    ],
+    "tool_calls": [
+      {
+        "tool": "exec",
+        "action": "bun test tests/receiptos",
+        "target": "tests/receiptos",
+        "status": "completed"
+      }
+    ]
+  },
+  "evidence": {
+    "files_changed": [
+      "src/receiptos/canon/receipt-root.ts",
+      "tests/receiptos/receipt-root.test.ts"
+    ],
+    "diff_sha256": "0x0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "source_metadata": {
+    "message_count": 4,
+    "diff_count": 2
+  }
+}
