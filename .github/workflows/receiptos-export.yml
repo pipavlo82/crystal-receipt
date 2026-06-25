@@ -1,0 +1,70 @@
+name: ReceiptOS Export
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  receiptos-export:
+    runs-on: ubuntu-latest
+    env:
+      RECEIPTOS_OUT_DIR: out/github-actions-ci
+      RECEIPTOS_SOURCE_PATH: out/github-actions-ci/github.actions_run.v0.json
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Record start timestamp
+        run: echo "RECEIPTOS_JOB_STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+
+      - name: Run ReceiptOS tests
+        run: bun test tests/receiptos
+
+      - name: Record completion timestamp
+        if: always()
+        run: echo "RECEIPTOS_JOB_COMPLETED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+
+      - name: Export GitHub Actions source artifact
+        if: always()
+        run: >-
+          node scripts/export-github-actions-run.mjs
+          --out "$RECEIPTOS_SOURCE_PATH"
+          --workflow-name "ReceiptOS Export"
+          --job-name "receiptos-export"
+          --conclusion "${{ job.status == 'success' && 'success' || 'failure' }}"
+          --artifact-summary "ReceiptOS test suite completed in CI."
+          --command-summary "bun test tests/receiptos"
+
+      - name: Generate ReceiptOS artifacts
+        if: always()
+        run: >-
+          bun scripts/receiptos-import-producer.ts
+          --producer github-actions
+          --input "$RECEIPTOS_SOURCE_PATH"
+          --out "$RECEIPTOS_OUT_DIR"
+
+      - name: List exported artifacts
+        if: always()
+        run: ls -la "$RECEIPTOS_OUT_DIR"
+
+      - name: Upload ReceiptOS artifact bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: receiptos-github-actions-artifacts
+          path: |
+            out/github-actions-ci/github.actions_run.v0.json
+            out/github-actions-ci/normalized-evidence.json
+            out/github-actions-ci/capsule-summary.json
+            out/github-actions-ci/evidence-capsule.v0.json
+            out/github-actions-ci/provenance-summary.v0.json
