@@ -5,6 +5,11 @@
 Crystal Receipt is a portable receipt and evidence surface for agent actions.
 It consumes verifiable execution evidence, preserves ReceiptOS-compatible proof semantics, and can present that evidence as an Evidence Capsule, a replayable proof summary, and optionally a deterministic visual artifact.
 
+In the current architecture:
+- **ReceiptOS** is the stable proof substrate
+- **producers** are systems that emit execution evidence into that substrate
+- **Crystal Receipt** is the visualization / inspection layer built around that proof boundary
+
 ## Execution Provenance
 
 Crystal Receipt is a portable execution provenance surface for agent actions.
@@ -42,6 +47,8 @@ Visual artifacts, crystal surfaces, exports, and collectibles are optional downs
 
 See:
 - `docs/EXECUTION_PROVENANCE_FRAMING.md`
+- `docs/PRODUCER_NEUTRAL_PROOF_BOUNDARY.md`
+- `docs/PRODUCER_PROOF_CONTRACT_V0.md`
 
 ## What this is
 
@@ -127,6 +134,12 @@ That means:
 
 Crystal Receipt does **not** redefine receipt truth.
 It consumes receipt evidence and presents it.
+
+In the current repo, this proof boundary is also producer-neutral:
+- multiple producer shapes are supported conceptually and in fixtures/tests
+- producers may differ in workflow model, runtime, and source semantics
+- the shared Evidence Capsule / proof boundary remains stable
+- producer-specific workflow logic stays outside the shared proof substrate
 
 ## Evidence Capsule
 
@@ -227,7 +240,7 @@ This loads receipt JSON, canonicalizes it, derives seeds and visual traits, and 
 
 ### ReceiptOS Capsule Demo
 
-A non-visual proof/capsule summary can also be generated from the portable ReceiptOS evidence fixtures:
+A non-visual proof/capsule summary can also be generated from portable ReceiptOS evidence fixtures produced by different source systems.
 
 ```bash
 bun scripts/receiptos-capsule-demo.ts --evidence src/receiptos/fixtures/session-evidence.with-local-merkle.sample.json --out examples/receiptos-capsule-demo/capsule-summary.json
