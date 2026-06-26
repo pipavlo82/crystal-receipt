@@ -17,9 +17,13 @@ import {
   normalizeGitHubActionsRunOutput,
   type GitHubActionsRunOutput,
 } from "../src/receiptos/adapters/github-actions"
+import {
+  normalizeStealthHandoffOutput,
+  type StealthHandoffOutput,
+} from "../src/receiptos/adapters/stealth-handoff"
 import { resolveProducerAdapter } from "../src/receiptos/adapters/registry"
 
-export { normalizeGenericProducerOutput, normalizeExternalCodingRunOutput, normalizeGitHubActionsRunOutput }
+export { normalizeGenericProducerOutput, normalizeExternalCodingRunOutput, normalizeGitHubActionsRunOutput, normalizeStealthHandoffOutput }
 
 function parseArgs(argv: string[]) {
   let producer: string | undefined
@@ -33,8 +37,8 @@ function parseArgs(argv: string[]) {
     if (arg === "--out") out = argv[index + 1]
   }
 
-  if ((producer !== "generic" && producer !== "external-coding-run" && producer !== "github-actions") || !input || !out) {
-    throw new Error("Usage: bun scripts/receiptos-import-producer.ts --producer <generic|external-coding-run|github-actions> --input <path> --out <dir>")
+  if ((producer !== "generic" && producer !== "external-coding-run" && producer !== "github-actions" && producer !== "stealth-handoff") || !input || !out) {
+    throw new Error("Usage: bun scripts/receiptos-import-producer.ts --producer <generic|external-coding-run|github-actions|stealth-handoff> --input <path> --out <dir>")
   }
 
   return { producer, input, out }
@@ -44,7 +48,7 @@ export async function runReceiptosImportProducer(argv: string[]) {
   const { producer, input, out } = parseArgs(argv)
   const inputPath = resolve(input)
   const outDir = resolve(out)
-  const source = JSON.parse(readFileSync(inputPath, "utf8")) as GenericProducerOutput | ExternalCodingRunOutput | GitHubActionsRunOutput
+  const source = JSON.parse(readFileSync(inputPath, "utf8")) as GenericProducerOutput | ExternalCodingRunOutput | GitHubActionsRunOutput | StealthHandoffOutput
   const adapter = resolveProducerAdapter(producer)
   const normalized = adapter.normalize(source as never)
 
