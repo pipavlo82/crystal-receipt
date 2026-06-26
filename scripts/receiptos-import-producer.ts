@@ -1,5 +1,5 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
-import { resolve } from "node:path"
+import { extname, resolve } from "node:path"
 import {
   createCapsuleSummary,
   createEvidenceCapsuleV0,
@@ -23,6 +23,7 @@ import {
 } from "../src/receiptos/adapters/stealth-handoff"
 import {
   normalizeClaudeCodeSessionOutput,
+  parseClaudeCodeJsonlSession,
   type ClaudeCodeSessionOutput,
 } from "../src/receiptos/adapters/claude-code-session"
 import { resolveProducerAdapter } from "../src/receiptos/adapters/registry"
@@ -33,6 +34,7 @@ export {
   normalizeGitHubActionsRunOutput,
   normalizeStealthHandoffOutput,
   normalizeClaudeCodeSessionOutput,
+  parseClaudeCodeJsonlSession,
 }
 
 function parseArgs(argv: string[]) {
@@ -58,8 +60,10 @@ export async function runReceiptosImportProducer(argv: string[]) {
   const { producer, input, out } = parseArgs(argv)
   const inputPath = resolve(input)
   const outDir = resolve(out)
-  const source = JSON.parse(readFileSync(inputPath, "utf8")) as GenericProducerOutput | ExternalCodingRunOutput | GitHubActionsRunOutput | StealthHandoffOutput | ClaudeCodeSessionOutput
   const adapter = resolveProducerAdapter(producer)
+  const source = producer === "claude-code-session" && extname(inputPath).toLowerCase() === ".jsonl"
+    ? parseClaudeCodeJsonlSession(readFileSync(inputPath, "utf8"), { sourcePath: inputPath })
+    : JSON.parse(readFileSync(inputPath, "utf8")) as GenericProducerOutput | ExternalCodingRunOutput | GitHubActionsRunOutput | StealthHandoffOutput | ClaudeCodeSessionOutput
   const normalized = adapter.normalize(source as never)
 
   mkdirSync(outDir, { recursive: true })

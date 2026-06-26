@@ -1,0 +1,4 @@
+{"type":"message","role":"user","summary":"Requested a small ReceiptOS adapter implementation."}
+{"type":"tool_use","tool":"read","target":"src/receiptos/adapters/registry.ts","status":"completed"}
+{"type":"tool_use","tool":"edit","target":"src/receiptos/adapters/claude-code-session.ts","status":"completed"}
+{"type":"tool_use","tool":"exec","command_summary":"bun test tests/receiptos","status":"completed","exit_code":0,"stdout_summary":"ReceiptOS tests passed."}
