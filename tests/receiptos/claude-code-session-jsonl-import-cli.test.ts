@@ -55,9 +55,18 @@ describe("claude code session jsonl import cli", () => {
     expect(normalized.schema).toBe("stealth.session.evidence.v1")
     expect(normalized.agent.runtime).toBe("claude/code")
     expect(normalized.metadata.generated_by).toBe("claude.code.session.v0")
-    expect(normalized.task.prompt).toBe("Requested a small ReceiptOS adapter implementation.")
+    expect(normalized.task.prompt).toContain("Please add a small ReceiptOS adapter test")
+    expect(wrapped.summary.nested_tool_use_count).toBeGreaterThan(0)
+    expect(wrapped.summary.parsed_tool_use_count).toBeGreaterThan(0)
+    expect(wrapped.summary.tool_call_count).toBeGreaterThan(0)
+    expect(wrapped.summary.command_count).toBeGreaterThan(0)
+    expect(wrapped.summary.unmatched_tool_result_count).toBe(0)
+    expect(wrapped.summary.unsupported_block_count).toBe(0)
     expect(normalized.execution.length).toBeGreaterThan(0)
     expect(normalized.commands.some((command) => command.command === "bun test tests/receiptos")).toBe(true)
+    expect(normalized.authorization.allowed_actions.map((item) => item.action)).toEqual(expect.arrayContaining(["read", "write", "exec"]))
+    expect(normalized.scope.lease?.mode).toBe("edit")
+    expect(JSON.stringify(normalized)).not.toContain("115 passing")
   })
 
   test("JSONL-derived Claude Code roots are anchor-independent", () => {
@@ -83,6 +92,19 @@ describe("claude code session jsonl import cli", () => {
 
     expect(computeReceiptRoot(withoutAnchor)).toBe(computeReceiptRoot(withFakeAnchor))
     expect(computeReceiptRoot(withFakeAnchor)).toBe(normalized.anchor.receipt_root)
+  })
+
+  test("unmatched tool_result is surfaced in wrapped summary instead of silently ignored", () => {
+    const text = '{"type":"assistant","message":{"content":[{"type":"tool_result","tool_use_id":"missing","content":"orphan result"}]}}\n'
+    const wrapped = parseClaudeCodeJsonlSession(text)
+    expect(wrapped.summary.unmatched_tool_result_count).toBe(1)
+    expect(wrapped.summary.tool_call_count).toBe(0)
+  })
+
+  test("unsupported block types are surfaced in wrapped summary", () => {
+    const text = '{"type":"assistant","message":{"content":[{"type":"image","source":"redacted"}]}}\n'
+    const wrapped = parseClaudeCodeJsonlSession(text)
+    expect(wrapped.summary.unsupported_block_count).toBe(1)
   })
 
   test("invalid JSONL reports the failing line number", () => {

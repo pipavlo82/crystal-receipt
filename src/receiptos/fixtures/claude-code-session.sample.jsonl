@@ -1,4 +1,7 @@
-{"type":"message","role":"user","summary":"Requested a small ReceiptOS adapter implementation."}
-{"type":"tool_use","tool":"read","target":"src/receiptos/adapters/registry.ts","status":"completed"}
-{"type":"tool_use","tool":"edit","target":"src/receiptos/adapters/claude-code-session.ts","status":"completed"}
-{"type":"tool_use","tool":"exec","command_summary":"bun test tests/receiptos","status":"completed","exit_code":0,"stdout_summary":"ReceiptOS tests passed."}
+{"type":"user","message":{"content":"Please add a small ReceiptOS adapter test without changing proof semantics."}}
+{"type":"assistant","message":{"content":[{"type":"text","text":"I will inspect the registry and add the adapter."},{"type":"tool_use","id":"toolu_read_001","name":"Read","input":{"file_path":"src/receiptos/adapters/registry.ts"}}]}}
+{"type":"user","message":{"content":[{"type":"tool_result","tool_use_id":"toolu_read_001","content":"Registry file loaded successfully."}]}}
+{"type":"assistant","message":{"content":[{"type":"tool_use","id":"toolu_edit_001","name":"Edit","input":{"file_path":"src/receiptos/adapters/claude-code-session.ts"}}]}}
+{"type":"user","message":{"content":[{"type":"tool_result","tool_use_id":"toolu_edit_001","content":"Applied a small adapter implementation."}]}}
+{"type":"assistant","message":{"content":[{"type":"tool_use","id":"toolu_bash_001","name":"Bash","input":{"command":"bun test tests/receiptos"}}]}}
+{"type":"user","message":{"content":[{"type":"tool_result","tool_use_id":"toolu_bash_001","content":"ReceiptOS tests passed. 115 passing."}]}}
