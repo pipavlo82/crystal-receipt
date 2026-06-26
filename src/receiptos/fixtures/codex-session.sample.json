@@ -1,0 +1,58 @@
+{
+  "schema": "codex.session.v0",
+  "session_id": "codex-session-001",
+  "project": "crystal-receipt",
+  "workspace": "/repo/crystal-receipt",
+  "runtime": {
+    "producer_id": "codex",
+    "generated_by": "codex.session.v0"
+  },
+  "task": {
+    "title": "Add Codex producer adapter test",
+    "prompt_summary": "Add and validate a Codex session producer adapter without changing proof semantics."
+  },
+  "events": [
+    {
+      "type": "message",
+      "role": "user",
+      "summary": "Requested a small Codex producer adapter update."
+    },
+    {
+      "type": "message",
+      "role": "assistant",
+      "summary": "Planned a minimal adapter change and test pass."
+    },
+    {
+      "type": "tool_use",
+      "tool": "read",
+      "target": "src/receiptos/adapters/registry.ts",
+      "status": "completed"
+    },
+    {
+      "type": "tool_use",
+      "tool": "edit",
+      "target": "src/receiptos/adapters/codex-session.ts",
+      "status": "completed"
+    },
+    {
+      "type": "tool_use",
+      "tool": "exec",
+      "target": "/repo/crystal-receipt",
+      "command_summary": "bun test tests/receiptos",
+      "status": "completed",
+      "exit_code": 0,
+      "stdout_summary": "ReceiptOS tests passed."
+    }
+  ],
+  "summary": {
+    "status": "completed",
+    "message_count": 2,
+    "tool_call_count": 3,
+    "command_count": 1,
+    "files_changed": [
+      "src/receiptos/adapters/codex-session.ts",
+      "tests/receiptos/codex-session-import-cli.test.ts"
+    ],
+    "diff_sha256": "0x0000000000000000000000000000000000000000000000000000000000000000"
+  }
+}

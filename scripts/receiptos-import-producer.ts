@@ -30,6 +30,10 @@ import {
   normalizeCursorSessionOutput,
   type CursorSessionOutput,
 } from "../src/receiptos/adapters/cursor-session"
+import {
+  normalizeCodexSessionOutput,
+  type CodexSessionOutput,
+} from "../src/receiptos/adapters/codex-session"
 import { resolveProducerAdapter } from "../src/receiptos/adapters/registry"
 
 export {
@@ -40,6 +44,7 @@ export {
   normalizeClaudeCodeSessionOutput,
   parseClaudeCodeJsonlSession,
   normalizeCursorSessionOutput,
+  normalizeCodexSessionOutput,
 }
 
 function parseArgs(argv: string[]) {
@@ -54,8 +59,8 @@ function parseArgs(argv: string[]) {
     if (arg === "--out") out = argv[index + 1]
   }
 
-  if ((producer !== "generic" && producer !== "external-coding-run" && producer !== "github-actions" && producer !== "stealth-handoff" && producer !== "claude-code-session" && producer !== "cursor-session") || !input || !out) {
-    throw new Error("Usage: bun scripts/receiptos-import-producer.ts --producer <generic|external-coding-run|github-actions|stealth-handoff|claude-code-session|cursor-session> --input <path> --out <dir>")
+  if ((producer !== "generic" && producer !== "external-coding-run" && producer !== "github-actions" && producer !== "stealth-handoff" && producer !== "claude-code-session" && producer !== "cursor-session" && producer !== "codex-session") || !input || !out) {
+    throw new Error("Usage: bun scripts/receiptos-import-producer.ts --producer <generic|external-coding-run|github-actions|stealth-handoff|claude-code-session|cursor-session|codex-session> --input <path> --out <dir>")
   }
 
   return { producer, input, out }
@@ -68,7 +73,7 @@ export async function runReceiptosImportProducer(argv: string[]) {
   const adapter = resolveProducerAdapter(producer)
   const source = producer === "claude-code-session" && extname(inputPath).toLowerCase() === ".jsonl"
     ? parseClaudeCodeJsonlSession(readFileSync(inputPath, "utf8"), { sourcePath: inputPath })
-    : JSON.parse(readFileSync(inputPath, "utf8")) as GenericProducerOutput | ExternalCodingRunOutput | GitHubActionsRunOutput | StealthHandoffOutput | ClaudeCodeSessionOutput | CursorSessionOutput
+    : JSON.parse(readFileSync(inputPath, "utf8")) as GenericProducerOutput | ExternalCodingRunOutput | GitHubActionsRunOutput | StealthHandoffOutput | ClaudeCodeSessionOutput | CursorSessionOutput | CodexSessionOutput
   const normalized = adapter.normalize(source as never)
 
   mkdirSync(outDir, { recursive: true })
