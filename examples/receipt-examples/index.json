@@ -1,5 +1,10 @@
 {
   "schema": "receiptos.example_index.v0",
+  "notes": [
+    "The committed Viewer example index is proof-state oriented, not a complete producer-by-producer gallery.",
+    "Producer-specific committed Viewer bundles for Stealth handoff, GitHub Actions, Claude Code, Cursor, Codex, and generic producer runs are planned/future documentation work unless a concrete example folder is already committed.",
+    "See docs/PRODUCER_SUPPORT_MATRIX.md for current producer coverage across adapters, fixtures, tests, and demos."
+  ],
   "examples": [
     {
       "id": "clean-local-proof",
