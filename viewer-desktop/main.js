@@ -20,11 +20,26 @@ function docsRoot() {
     : path.resolve(__dirname, '..', 'docs')
 }
 
+function examplesRoot() {
+  return app.isPackaged
+    ? path.join(process.resourcesPath, 'examples', 'receipt-examples')
+    : path.resolve(__dirname, '..', 'examples', 'receipt-examples')
+}
+
+function resolveAppPath(relativePath) {
+  if (relativePath === 'receipt-examples' || relativePath.startsWith('receipt-examples/')) {
+    const exampleRelativePath = relativePath.replace(/^receipt-examples\/?/, '')
+    return path.join(examplesRoot(), exampleRelativePath)
+  }
+
+  return path.join(docsRoot(), relativePath)
+}
+
 function registerAppProtocol() {
   protocol.handle('app', (request) => {
     const url = new URL(request.url)
     const relativePath = url.pathname.replace(/^\/+/, '')
-    const filePath = path.join(docsRoot(), relativePath)
+    const filePath = resolveAppPath(relativePath)
     return net.fetch(pathToFileURL(filePath).toString())
   })
 }
