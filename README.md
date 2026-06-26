@@ -52,6 +52,7 @@ See:
 - `docs/EXTERNAL_PRODUCER_INTEGRATION_GUIDE.md`
 - `docs/PRODUCER_PROOF_CONTRACT_V0.md`
 - `docs/PRODUCER_NEUTRAL_PROOF_BOUNDARY.md`
+- `docs/CYPHES_RECEIPTOS_INTEGRATION_STATUS.md`
 - `scripts/demo-external-producer-e2e.ts`
 
 ## External producer quick start
