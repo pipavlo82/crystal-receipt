@@ -1,0 +1,12 @@
+{
+  "schema": "receiptos.provenance_summary.v0",
+  "version": "v0",
+  "what_happened": "Add ReceiptOS adapter test",
+  "evidence_present": true,
+  "verifier_status": "verified",
+  "receipt_root_status": "verified",
+  "anchor_status": "missing",
+  "replay_status": "present",
+  "warnings": [],
+  "risk_flags": []
+}

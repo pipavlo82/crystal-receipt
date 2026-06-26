@@ -1,0 +1,178 @@
+{
+  "schema": "receiptos.render_plan.v0",
+  "source": {
+    "schema": "stealth.session.evidence.v1",
+    "session_id": "claude-code-session-001",
+    "section_count": 13
+  },
+  "zones": [
+    {
+      "id": "core",
+      "label": "Core",
+      "semantic_role": "Primary claimed payload/action at the center of the visual composition.",
+      "section_ids": [
+        "payload"
+      ],
+      "sections": [
+        {
+          "id": "payload",
+          "label": "Payload / Action",
+          "status": "present"
+        }
+      ]
+    },
+    {
+      "id": "inner_ring",
+      "label": "Inner Ring",
+      "semantic_role": "Immediate execution boundary: policy scope, authorization, and decision trace around the core action.",
+      "section_ids": [
+        "policy_boundary",
+        "authorization",
+        "decision_trace"
+      ],
+      "sections": [
+        {
+          "id": "policy_boundary",
+          "label": "Policy Boundary",
+          "status": "present"
+        },
+        {
+          "id": "authorization",
+          "label": "Authorization",
+          "status": "valid"
+        },
+        {
+          "id": "decision_trace",
+          "label": "Decision Trace",
+          "status": "present"
+        }
+      ]
+    },
+    {
+      "id": "facets",
+      "label": "Facets",
+      "semantic_role": "Operational evidence surfaces: execution, evidence record, and counterfactual/denied-action interpretation.",
+      "section_ids": [
+        "execution",
+        "evidence",
+        "counterfactual"
+      ],
+      "sections": [
+        {
+          "id": "execution",
+          "label": "Execution",
+          "status": "present"
+        },
+        {
+          "id": "evidence",
+          "label": "Evidence Record",
+          "status": "present"
+        },
+        {
+          "id": "counterfactual",
+          "label": "Counterfactual / Denied Action",
+          "status": "missing"
+        }
+      ]
+    },
+    {
+      "id": "outer_shell",
+      "label": "Outer Shell",
+      "semantic_role": "Portable replay and integrity shell: result, receipt root, and replay manifest.",
+      "section_ids": [
+        "result",
+        "receipt_root",
+        "replay_manifest"
+      ],
+      "sections": [
+        {
+          "id": "result",
+          "label": "Result",
+          "status": "present"
+        },
+        {
+          "id": "receipt_root",
+          "label": "Receipt Root",
+          "status": "valid"
+        },
+        {
+          "id": "replay_manifest",
+          "label": "Replay Manifest",
+          "status": "present"
+        }
+      ]
+    },
+    {
+      "id": "anchor_edge",
+      "label": "Anchor Edge",
+      "semantic_role": "Proof attachment perimeter: local Merkle proof and external anchor state.",
+      "section_ids": [
+        "merkle",
+        "anchor"
+      ],
+      "sections": [
+        {
+          "id": "merkle",
+          "label": "Merkle Proof",
+          "status": "pending"
+        },
+        {
+          "id": "anchor",
+          "label": "Anchor",
+          "status": "missing"
+        }
+      ]
+    },
+    {
+      "id": "seal",
+      "label": "Seal",
+      "semantic_role": "Verifier seal showing the portable verifier outcome without changing proof semantics.",
+      "section_ids": [
+        "verifier"
+      ],
+      "sections": [
+        {
+          "id": "verifier",
+          "label": "Verifier",
+          "status": "verified"
+        }
+      ]
+    }
+  ],
+  "invariants": {
+    "all_section_ids": [
+      "payload",
+      "policy_boundary",
+      "authorization",
+      "decision_trace",
+      "execution",
+      "evidence",
+      "counterfactual",
+      "result",
+      "receipt_root",
+      "merkle",
+      "anchor",
+      "replay_manifest",
+      "verifier"
+    ],
+    "mapped_section_ids": [
+      "payload",
+      "policy_boundary",
+      "authorization",
+      "decision_trace",
+      "execution",
+      "evidence",
+      "counterfactual",
+      "result",
+      "receipt_root",
+      "replay_manifest",
+      "merkle",
+      "anchor",
+      "verifier"
+    ],
+    "unmapped_section_ids": [],
+    "duplicate_section_ids": [],
+    "complete": true,
+    "unique": true
+  }
+}
