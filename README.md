@@ -50,10 +50,45 @@ See:
 - `docs/EXECUTION_PROVENANCE_FRAMING.md`
 - `docs/receiptos_integration_manifest_v0.md`
 - `docs/EXTERNAL_PRODUCER_INTEGRATION_GUIDE.md`
+- `docs/PRODUCER_SUPPORT_MATRIX.md`
 - `docs/PRODUCER_PROOF_CONTRACT_V0.md`
 - `docs/PRODUCER_NEUTRAL_PROOF_BOUNDARY.md`
 - `docs/CYPHES_RECEIPTOS_INTEGRATION_STATUS.md`
 - `scripts/demo-external-producer-e2e.ts`
+
+## Producer coverage
+
+ReceiptOS uses the same proof pipeline across different producer systems.
+
+Core message:
+
+```text
+Same proof pipeline.
+Different producers.
+One portable receipt model.
+```
+
+The current documented producer set is:
+
+- Stealth handoff
+- GitHub Actions
+- Claude Code session
+- Cursor session
+- Codex session
+- generic producer
+- `external.coding_run.v0`
+
+These producers differ in runtime, workflow shape, and source semantics.
+They do not get separate proof semantics.
+They normalize into the same ReceiptOS proof boundary and produce the same core proof-facing artifacts:
+
+- recomputable `receipt_root`
+- `receiptos.evidence_capsule.v0`
+- `receiptos.provenance_summary.v0`
+- verifier-facing proof state
+- replay-oriented evidence summaries
+
+For the current support matrix, see `docs/PRODUCER_SUPPORT_MATRIX.md`.
 
 ## External producer quick start
 
@@ -147,7 +182,7 @@ Crystal Receipt does **not** redefine receipt truth.
 It consumes receipt evidence and presents it.
 
 In the current repo, this proof boundary is also producer-neutral:
-- multiple producer shapes are supported conceptually and in fixtures/tests
+- Stealth handoff, GitHub Actions, Claude Code session, Cursor session, Codex session, generic producer, and `external.coding_run.v0` are all supported in the current adapter/fixture/test surface
 - producers may differ in workflow model, runtime, and source semantics
 - the shared Evidence Capsule / proof boundary remains stable
 - producer-specific workflow logic stays outside the shared proof substrate
@@ -253,7 +288,9 @@ Then open the ReceiptOS Viewer and load files from `out/github-actions-demo/`:
 - `capsule-summary.json` — optional richer viewer summary
 - `normalized-evidence.json` — optional producer/runtime context
 
-Existing committed examples live under `docs/receipt-examples/`, and real producers or CI systems can publish the same files as build artifacts.
+Existing committed examples live under `examples/receipt-examples/`, and real producers or CI systems can publish the same files as build artifacts.
+
+Current committed Viewer examples are proof-state examples rather than a full producer-by-producer gallery. Producer-specific committed Viewer bundles for GitHub Actions, Claude Code, Cursor, Codex, generic producer runs, and Stealth handoff flows are future documentation/example work rather than a claim that all of those bundle folders already exist in-repo today.
 
 ## Current CLI modes
 
