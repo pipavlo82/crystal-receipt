@@ -6,6 +6,7 @@ describe("producer adapter registry", () => {
     expect(resolveProducerAdapter("generic").id).toBe("generic")
     expect(resolveProducerAdapter("external-coding-run").id).toBe("external-coding-run")
     expect(resolveProducerAdapter("github-actions").id).toBe("github-actions")
+    expect(resolveProducerAdapter("cursor-session").id).toBe("cursor-session")
   })
 
   test("throws a clear error for unknown producers", () => {
