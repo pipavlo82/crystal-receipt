@@ -1,3 +1,4 @@
+import { claudeCodeSessionAdapter } from "./claude-code-session"
 import { externalCodingRunAdapter } from "./external-coding-run"
 import { genericAdapter } from "./generic"
 import { githubActionsAdapter } from "./github-actions"
@@ -9,6 +10,7 @@ export const adapters: ProducerAdapter[] = [
   externalCodingRunAdapter,
   githubActionsAdapter,
   stealthHandoffAdapter,
+  claudeCodeSessionAdapter,
 ]
 
 export function resolveProducerAdapter(producerId: string): ProducerAdapter {

@@ -1,0 +1,53 @@
+{
+  "schema": "claude.code.session.v0",
+  "project": "crystal-receipt",
+  "session_id": "claude-code-session-001",
+  "workspace": "/repo/crystal-receipt",
+  "source_format": "claude-code-jsonl",
+  "runtime": {
+    "producer_id": "claude-code",
+    "generated_by": "claude.code.session.v0"
+  },
+  "task": {
+    "title": "Add ReceiptOS adapter test",
+    "prompt_summary": "Add and validate a ReceiptOS producer adapter without changing proof semantics."
+  },
+  "events": [
+    {
+      "type": "message",
+      "role": "user",
+      "summary": "Requested a small ReceiptOS adapter implementation."
+    },
+    {
+      "type": "tool_use",
+      "tool": "read",
+      "target": "src/receiptos/adapters/registry.ts",
+      "status": "completed"
+    },
+    {
+      "type": "tool_use",
+      "tool": "edit",
+      "target": "src/receiptos/adapters/claude-code-session.ts",
+      "status": "completed"
+    },
+    {
+      "type": "tool_use",
+      "tool": "exec",
+      "command_summary": "bun test tests/receiptos",
+      "status": "completed",
+      "exit_code": 0,
+      "stdout_summary": "ReceiptOS tests passed."
+    }
+  ],
+  "summary": {
+    "status": "completed",
+    "message_count": 1,
+    "tool_call_count": 3,
+    "command_count": 1,
+    "files_changed": [
+      "src/receiptos/adapters/claude-code-session.ts",
+      "tests/receiptos/claude-code-session-import-cli.test.ts"
+    ],
+    "diff_sha256": "0x0000000000000000000000000000000000000000000000000000000000000000"
+  }
+}
