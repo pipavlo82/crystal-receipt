@@ -347,6 +347,45 @@
       }
     }
 
+    function fileKey(file) {
+      const relative = file.webkitRelativePath || file.name || '';
+      const parts = relative.split('/').filter(Boolean);
+      return parts[parts.length - 1] || file.name;
+    }
+
+    async function filesFromEntry(entry) {
+      if (entry.isFile) {
+        return [await new Promise((resolve, reject) => entry.file(resolve, reject))];
+      }
+      if (!entry.isDirectory) return [];
+      const reader = entry.createReader();
+      const files = [];
+      while (true) {
+        const entries = await new Promise((resolve, reject) => reader.readEntries(resolve, reject));
+        if (!entries.length) break;
+        for (const child of entries) {
+          files.push(...await filesFromEntry(child));
+        }
+      }
+      return files;
+    }
+
+    async function collectFolderFiles(input) {
+      const directFiles = Array.from(input?.files ?? []);
+      if (directFiles.length > 0) {
+        return directFiles;
+      }
+      const entries = Array.from(input?.webkitEntries ?? []);
+      if (!entries.length) {
+        return [];
+      }
+      const nested = [];
+      for (const entry of entries) {
+        nested.push(...await filesFromEntry(entry));
+      }
+      return nested;
+    }
+
     function setLocalError(message) {
       const node = document.getElementById('local-error');
       node.textContent = message ?? '';
@@ -637,12 +676,16 @@
 
     async function buildViewerDataFromFolderInput() {
       const input = document.getElementById('local-folder');
-      const files = Array.from(input?.files ?? []);
+      const files = await collectFolderFiles(input);
       if (files.length === 0) {
         throw new Error('Select an extracted ReceiptOS artifact folder to load local artifacts.');
       }
 
-      const byName = new Map(files.map((file) => [file.name, file]));
+      const names = files.map((file) => fileKey(file));
+      console.log('[receiptos-viewer] folder files', names);
+      setLocalStatus(`Folder detected ${files.length} file(s): ${names.slice(0, 6).join(', ')}${names.length > 6 ? ', ...' : ''}`);
+
+      const byName = new Map(files.map((file) => [fileKey(file), file]));
       const resolved = {
         v0: await readOptionalJsonFromFile(byName.get('evidence-capsule.v0.json')),
         provenance: await readOptionalJsonFromFile(byName.get('provenance-summary.v0.json')),
@@ -715,6 +758,21 @@
         const description = document.getElementById('example-description');
         description.textContent = defaultDescription;
       }
+
+      folderInput?.addEventListener('change', async () => {
+        try {
+          const files = await collectFolderFiles(folderInput);
+          const names = files.map((file) => fileKey(file));
+          console.log('[receiptos-viewer] folder input change', names);
+          setLocalError(null);
+          setLocalStatus(files.length
+            ? `Folder selected ${files.length} file(s): ${names.slice(0, 6).join(', ')}${names.length > 6 ? ', ...' : ''}`
+            : 'Folder selected, but no files were detected.');
+        } catch (error) {
+          setLocalStatus('');
+          setLocalError(error instanceof Error ? error.message : String(error));
+        }
+      });
 
       loadLocalButton.addEventListener('click', async () => {
         try {
