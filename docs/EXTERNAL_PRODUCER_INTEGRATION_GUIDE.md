@@ -30,6 +30,31 @@ Examples include:
 It is not specific to Stealth, CYPHES, or any single producer.
 Those are examples of producer shapes, not special cases in the shared proof boundary.
 
+## 2.1 Current producer coverage
+
+The current repository already demonstrates that multiple producer systems can flow into the same ReceiptOS proof boundary.
+
+Current documented producer set:
+
+- Stealth handoff
+- GitHub Actions
+- Claude Code session
+- Cursor session
+- Codex session
+- generic producer
+- `external.coding_run.v0`
+
+Core message:
+
+```text
+Same proof pipeline.
+Different producers.
+One portable receipt model.
+```
+
+This list should be read as current producer coverage in adapters, fixtures, tests, and demos.
+It should not be read as a claim that every producer already has a dedicated committed Viewer example bundle in the repo.
+
 ## 3. Producer → ReceiptOS flow
 
 At a high level, the integration flow is:
@@ -197,14 +222,19 @@ A practical end-to-end integration flow looks like this:
 5. ReceiptOS derives `receiptos.provenance_summary.v0` via `createProvenanceSummaryV0()`.
 6. Crystal Receipt or another viewer may present those artifacts visually, but visual presentation is downstream of the proof substrate.
 
-Current repo examples already cover multiple producer shapes, including:
-- Stealth / handoff evidence
-- CYPHES-like workflow evidence
-- generic tool-run evidence
+Current repo coverage already spans multiple producer shapes, including:
+- Stealth handoff evidence
+- GitHub Actions runs
+- Claude Code sessions
+- Cursor sessions
+- Codex sessions
+- generic producer evidence
 - `external.coding_run.v0` as the first concrete external coding-agent/tool-run import example
 
 Those source shapes differ.
 The shared proof boundary does not.
+
+The committed Viewer example index is still proof-state oriented rather than producer-by-producer. Producer-specific committed Viewer bundles for GitHub Actions, Claude Code, Cursor, Codex, generic producer runs, and Stealth handoff flows are future example/documentation work, not a claim that all such folders already exist in-repo today.
 
 ## 9. Non-goals
 
