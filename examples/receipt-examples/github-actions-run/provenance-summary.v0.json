@@ -1,0 +1,16 @@
+{
+  "schema": "receiptos.provenance_summary.v0",
+  "version": "v0",
+  "what_happened": "GitHub Actions CI / receiptos-tests",
+  "evidence_present": false,
+  "verifier_status": "verified",
+  "receipt_root_status": "verified",
+  "anchor_status": "missing",
+  "replay_status": "present",
+  "warnings": [
+    "Evidence record is missing or incomplete."
+  ],
+  "risk_flags": [
+    "missing_evidence"
+  ]
+}
