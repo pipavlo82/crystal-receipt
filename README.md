@@ -290,7 +290,7 @@ Then open the ReceiptOS Viewer and load files from `out/github-actions-demo/`:
 
 Existing committed examples live under `examples/receipt-examples/`, and real producers or CI systems can publish the same files as build artifacts.
 
-Current committed Viewer examples are proof-state examples rather than a full producer-by-producer gallery. Producer-specific committed Viewer bundles for GitHub Actions, Claude Code, Cursor, Codex, generic producer runs, and Stealth handoff flows are future documentation/example work rather than a claim that all of those bundle folders already exist in-repo today.
+Current committed Viewer examples now include both proof-state examples and producer-specific ReceiptOS bundles generated from existing fixtures/import paths. The proof-state examples remain useful for clean/tampered/anchored integrity surfaces, while the producer-specific bundles make the shared multi-producer proof model directly visible in the Viewer.
 
 ## Current CLI modes
 
