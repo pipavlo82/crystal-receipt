@@ -21,9 +21,19 @@ import {
   normalizeStealthHandoffOutput,
   type StealthHandoffOutput,
 } from "../src/receiptos/adapters/stealth-handoff"
+import {
+  normalizeClaudeCodeSessionOutput,
+  type ClaudeCodeSessionOutput,
+} from "../src/receiptos/adapters/claude-code-session"
 import { resolveProducerAdapter } from "../src/receiptos/adapters/registry"
 
-export { normalizeGenericProducerOutput, normalizeExternalCodingRunOutput, normalizeGitHubActionsRunOutput, normalizeStealthHandoffOutput }
+export {
+  normalizeGenericProducerOutput,
+  normalizeExternalCodingRunOutput,
+  normalizeGitHubActionsRunOutput,
+  normalizeStealthHandoffOutput,
+  normalizeClaudeCodeSessionOutput,
+}
 
 function parseArgs(argv: string[]) {
   let producer: string | undefined
@@ -37,8 +47,8 @@ function parseArgs(argv: string[]) {
     if (arg === "--out") out = argv[index + 1]
   }
 
-  if ((producer !== "generic" && producer !== "external-coding-run" && producer !== "github-actions" && producer !== "stealth-handoff") || !input || !out) {
-    throw new Error("Usage: bun scripts/receiptos-import-producer.ts --producer <generic|external-coding-run|github-actions|stealth-handoff> --input <path> --out <dir>")
+  if ((producer !== "generic" && producer !== "external-coding-run" && producer !== "github-actions" && producer !== "stealth-handoff" && producer !== "claude-code-session") || !input || !out) {
+    throw new Error("Usage: bun scripts/receiptos-import-producer.ts --producer <generic|external-coding-run|github-actions|stealth-handoff|claude-code-session> --input <path> --out <dir>")
   }
 
   return { producer, input, out }
@@ -48,7 +58,7 @@ export async function runReceiptosImportProducer(argv: string[]) {
   const { producer, input, out } = parseArgs(argv)
   const inputPath = resolve(input)
   const outDir = resolve(out)
-  const source = JSON.parse(readFileSync(inputPath, "utf8")) as GenericProducerOutput | ExternalCodingRunOutput | GitHubActionsRunOutput | StealthHandoffOutput
+  const source = JSON.parse(readFileSync(inputPath, "utf8")) as GenericProducerOutput | ExternalCodingRunOutput | GitHubActionsRunOutput | StealthHandoffOutput | ClaudeCodeSessionOutput
   const adapter = resolveProducerAdapter(producer)
   const normalized = adapter.normalize(source as never)
 
