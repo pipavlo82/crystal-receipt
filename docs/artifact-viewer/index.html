@@ -219,6 +219,12 @@
       <p id="example-description" class="footer-note" style="margin-top:12px; max-width:900px;"></p>
       <div class="card" style="margin-top:18px;">
         <h2 class="section-title">Load local artifacts</h2>
+        <div class="stat" style="margin-bottom:18px;">
+          <div class="label">Load ReceiptOS folder</div>
+          <div class="small">Select an extracted ReceiptOS artifact folder. Files remain local in your browser.</div>
+          <div class="small">For GitHub Actions artifacts, download and extract the workflow artifact ZIP, then select the extracted folder.</div>
+          <input id="local-folder" type="file" webkitdirectory multiple style="margin-top:10px;" />
+        </div>
         <div class="grid two">
           <div class="stat">
             <div class="label">Primary artifact</div>
@@ -324,6 +330,15 @@
     async function readOptionalJsonFromInput(id) {
       const input = document.getElementById(id);
       const file = input?.files?.[0];
+      if (!file) return null;
+      try {
+        return JSON.parse(await file.text());
+      } catch (error) {
+        throw new Error(`Malformed JSON in ${file.name}`);
+      }
+    }
+
+    async function readOptionalJsonFromFile(file) {
       if (!file) return null;
       try {
         return JSON.parse(await file.text());
@@ -589,14 +604,7 @@
       return summary;
     }
 
-    async function buildViewerDataFromLocalFiles() {
-      const [v0, provenance, summary, normalized] = await Promise.all([
-        readOptionalJsonFromInput('local-v0'),
-        readOptionalJsonFromInput('local-provenance'),
-        readOptionalJsonFromInput('local-summary'),
-        readOptionalJsonFromInput('local-normalized'),
-      ]);
-
+    function buildViewerDataFromResolvedFiles({ v0, provenance, summary, normalized }) {
       if (!summary && !v0) {
         throw new Error('Select evidence-capsule.v0.json or capsule-summary.json to load local artifacts.');
       }
@@ -614,6 +622,35 @@
       }
 
       return attachViewerOverlay(adaptV0ToSummary(v0), viewer);
+    }
+
+    async function buildViewerDataFromLocalFiles() {
+      const [v0, provenance, summary, normalized] = await Promise.all([
+        readOptionalJsonFromInput('local-v0'),
+        readOptionalJsonFromInput('local-provenance'),
+        readOptionalJsonFromInput('local-summary'),
+        readOptionalJsonFromInput('local-normalized'),
+      ]);
+
+      return buildViewerDataFromResolvedFiles({ v0, provenance, summary, normalized });
+    }
+
+    async function buildViewerDataFromFolderInput() {
+      const input = document.getElementById('local-folder');
+      const files = Array.from(input?.files ?? []);
+      if (files.length === 0) {
+        throw new Error('Select an extracted ReceiptOS artifact folder to load local artifacts.');
+      }
+
+      const byName = new Map(files.map((file) => [file.name, file]));
+      const resolved = {
+        v0: await readOptionalJsonFromFile(byName.get('evidence-capsule.v0.json')),
+        provenance: await readOptionalJsonFromFile(byName.get('provenance-summary.v0.json')),
+        summary: await readOptionalJsonFromFile(byName.get('capsule-summary.json')),
+        normalized: await readOptionalJsonFromFile(byName.get('normalized-evidence.json')),
+      };
+
+      return buildViewerDataFromResolvedFiles(resolved);
     }
 
     async function loadManifest() {
@@ -652,6 +689,7 @@
       const select = document.getElementById('example-select');
       const loadLocalButton = document.getElementById('load-local');
       const resetExamplesButton = document.getElementById('reset-examples');
+      const folderInput = document.getElementById('local-folder');
       const defaultDescription = 'Portable ReceiptOS proof artifact example.';
 
       const renderById = async (id) => {
@@ -681,11 +719,15 @@
       loadLocalButton.addEventListener('click', async () => {
         try {
           setLocalError(null);
-          const data = await buildViewerDataFromLocalFiles();
+          const data = folderInput?.files?.length
+            ? await buildViewerDataFromFolderInput()
+            : await buildViewerDataFromLocalFiles();
           renderViewerData(data, {
             description: 'Loaded from local files. Nothing was uploaded.',
           });
-          setLocalStatus('Loaded local artifacts successfully.');
+          setLocalStatus(folderInput?.files?.length
+            ? 'Loaded local artifacts from folder successfully.'
+            : 'Loaded local artifacts successfully.');
         } catch (error) {
           setLocalStatus('');
           setLocalError(error instanceof Error ? error.message : String(error));
@@ -693,7 +735,7 @@
       });
 
       resetExamplesButton.addEventListener('click', async () => {
-        for (const id of ['local-v0', 'local-provenance', 'local-summary', 'local-normalized']) {
+        for (const id of ['local-folder', 'local-v0', 'local-provenance', 'local-summary', 'local-normalized']) {
           const input = document.getElementById(id);
           if (input) input.value = '';
         }
