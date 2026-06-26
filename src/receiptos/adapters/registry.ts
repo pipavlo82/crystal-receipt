@@ -1,12 +1,14 @@
 import { externalCodingRunAdapter } from "./external-coding-run"
 import { genericAdapter } from "./generic"
 import { githubActionsAdapter } from "./github-actions"
+import { stealthHandoffAdapter } from "./stealth-handoff"
 import type { ProducerAdapter } from "./types"
 
 export const adapters: ProducerAdapter[] = [
   genericAdapter,
   externalCodingRunAdapter,
   githubActionsAdapter,
+  stealthHandoffAdapter,
 ]
 
 export function resolveProducerAdapter(producerId: string): ProducerAdapter {
