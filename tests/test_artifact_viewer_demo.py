@@ -24,11 +24,59 @@ class ArtifactViewerDemoTests(unittest.TestCase):
         self.assertTrue(manifest.exists(), "example manifest should exist")
         data = json.loads(manifest.read_text(encoding="utf-8"))
         ids = [item["id"] for item in data["examples"]]
-        self.assertEqual(ids, ["clean-local-proof", "tampered-mismatch", "anchored-proof"])
-        visual_paths = [item["visualPath"] for item in data["examples"]]
+        self.assertEqual(ids, [
+            "clean-local-proof",
+            "tampered-mismatch",
+            "anchored-proof",
+            "stealth-handoff",
+            "github-actions-run",
+            "claude-code-session",
+            "cursor-session",
+            "codex-session",
+            "generic-producer",
+            "external-coding-run",
+        ])
+        self.assertGreaterEqual(len(data.get("notes", [])), 1)
+
+        for item in data["examples"]:
+            self.assertIn("summaryPath", item)
+            self.assertIn("substratePath", item)
+
+        visual_paths = [item["visualPath"] for item in data["examples"] if "visualPath" in item]
         self.assertEqual(len(set(visual_paths)), 3)
         for visual_path in visual_paths:
             self.assertTrue(visual_path.endswith("crystal.svg"))
+
+    def test_example_bundle_files_exist(self):
+        for folder in [
+            "clean-local-proof",
+            "tampered-mismatch",
+            "anchored-proof",
+            "stealth-handoff",
+            "github-actions-run",
+            "claude-code-session",
+            "cursor-session",
+            "codex-session",
+            "generic-producer",
+            "external-coding-run",
+        ]:
+            base = Path("examples/receipt-examples") / folder
+            self.assertTrue((base / "capsule-summary.json").exists(), f"missing summary for {folder}")
+            self.assertTrue((base / "evidence-capsule.v0.json").exists(), f"missing substrate for {folder}")
+
+        for folder in [
+            "stealth-handoff",
+            "github-actions-run",
+            "claude-code-session",
+            "cursor-session",
+            "codex-session",
+            "generic-producer",
+            "external-coding-run",
+        ]:
+            base = Path("examples/receipt-examples") / folder
+            self.assertTrue((base / "normalized-evidence.json").exists(), f"missing normalized evidence for {folder}")
+            self.assertTrue((base / "provenance-summary.v0.json").exists(), f"missing provenance summary for {folder}")
+            self.assertTrue((base / "render-plan.v0.json").exists(), f"missing render plan for {folder}")
 
     def test_example_visual_files_exist(self):
         for path in [

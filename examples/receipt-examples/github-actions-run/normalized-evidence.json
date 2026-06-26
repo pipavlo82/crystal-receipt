@@ -1,0 +1,100 @@
+{
+  "schema": "stealth.session.evidence.v1",
+  "session_id": "gha-run-1234567890-job-987654321",
+  "directory": "pipavlo82/crystal-receipt",
+  "task": {
+    "title": "GitHub Actions CI / receiptos-tests",
+    "prompt": "ReceiptOS test suite passed in CI."
+  },
+  "agent": {
+    "id": "github-actions",
+    "runtime": "github/actions"
+  },
+  "scope": {
+    "permission": null,
+    "lease": {
+      "id": "gha-run-1234567890-job-987654321:scoped-lease:v1",
+      "mode": "read_only",
+      "target": "pipavlo82/crystal-receipt",
+      "allowed_actions": [],
+      "issued_at": 1782388800,
+      "expires_at": null,
+      "status": "missing"
+    }
+  },
+  "authorization": {
+    "delegation_ref": null,
+    "delegator": "octocat",
+    "agent_operator": "github-actions",
+    "target": "pipavlo82/crystal-receipt",
+    "allowed_actions": [],
+    "authorization_valid_from": null,
+    "authorization_expiry": null,
+    "authorization_checked_at": 1782388980,
+    "authorization_state_hash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+    "authorized_at_execution": null
+  },
+  "execution": [
+    {
+      "call_id": "gha-run-1234567890-job-987654321:step-001",
+      "tool": "github-actions-step",
+      "action_performed": "Checkout",
+      "target": "https://github.com/pipavlo82/crystal-receipt/actions/runs/1234567890",
+      "execution_timestamp": 1782388800,
+      "completed_timestamp": 1782388980,
+      "status": "completed",
+      "scope_match": null
+    },
+    {
+      "call_id": "gha-run-1234567890-job-987654321:step-002",
+      "tool": "github-actions-step",
+      "action_performed": "bun install",
+      "target": "https://github.com/pipavlo82/crystal-receipt/actions/runs/1234567890",
+      "execution_timestamp": 1782388800,
+      "completed_timestamp": 1782388980,
+      "status": "completed",
+      "scope_match": null
+    },
+    {
+      "call_id": "gha-run-1234567890-job-987654321:step-003",
+      "tool": "github-actions-step",
+      "action_performed": "bun test tests/receiptos",
+      "target": "https://github.com/pipavlo82/crystal-receipt/actions/runs/1234567890",
+      "execution_timestamp": 1782388800,
+      "completed_timestamp": 1782388980,
+      "status": "completed",
+      "scope_match": null
+    }
+  ],
+  "commands": [
+    {
+      "command": "bun install",
+      "stdout_summary": "Install dependencies: success"
+    },
+    {
+      "command": "bun test tests/receiptos",
+      "stdout_summary": "Run ReceiptOS tests: success"
+    }
+  ],
+  "changes": {
+    "files_changed": [],
+    "diff_sha256": null
+  },
+  "metadata": {
+    "message_count": 3,
+    "diff_count": 0,
+    "generated_by": "github.actions_run.v0"
+  },
+  "anchor": {
+    "receipt_root": "0xa31e01440e5b47e7fe578a41bdebd2f6a70ea7e83deb765316ab16a88d0ae3ac",
+    "merkle_proof_status": "not attached",
+    "merkle_root": null,
+    "merkle_leaf_index": null,
+    "merkle_proof": [],
+    "onchain_anchor_status": "not anchored",
+    "network": "local/off-chain",
+    "contract": null,
+    "tx_hash": null,
+    "verifier_status": "not verified"
+  }
+}
