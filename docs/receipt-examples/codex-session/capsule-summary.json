@@ -1,8 +1,8 @@
 {
   "schema": "receiptos.capsule_summary.v0",
-  "source_evidence": "C:\\Users\\msi\\dev\\crystal-receipt\\examples\\receipt-examples\\external-coding-run\\normalized-evidence.json",
-  "receipt_root": "0x3c1e6cd29a2ae439c07726a9ca1548adb160d2e57e80557a0f113decfd13b87e",
-  "computed_receipt_root": "0x3c1e6cd29a2ae439c07726a9ca1548adb160d2e57e80557a0f113decfd13b87e",
+  "source_evidence": "C:\\Users\\msi\\dev\\crystal-receipt\\examples\\receipt-examples\\codex-session\\normalized-evidence.json",
+  "receipt_root": "0x38f68f1f6abe0f5249883075c0e85e630c5b2353bd08ee4ec90fe160348d5c4c",
+  "computed_receipt_root": "0x38f68f1f6abe0f5249883075c0e85e630c5b2353bd08ee4ec90fe160348d5c4c",
   "receipt_verification": {
     "ok": true,
     "status": "verified"
@@ -18,7 +18,7 @@
         "id": "payload",
         "label": "Payload / Action",
         "status": "present",
-        "summary": "Fix receipt root regression",
+        "summary": "Add Codex producer adapter test",
         "sourceFields": [
           "task.title",
           "task.prompt",
@@ -50,7 +50,7 @@
         "id": "decision_trace",
         "label": "Decision Trace",
         "status": "present",
-        "summary": "Decision trace recorded via title: Fix receipt root regression, prompt present, 1 command(s), 1 execution step(s).",
+        "summary": "Decision trace recorded via title: Add Codex producer adapter test, prompt present, 1 command(s), 3 execution step(s).",
         "sourceFields": [
           "task.title",
           "task.prompt",
@@ -63,7 +63,7 @@
         "id": "execution",
         "label": "Execution",
         "status": "present",
-        "summary": "1 execution record(s); 1 completed, 0 error.",
+        "summary": "3 execution record(s); 3 completed, 0 error.",
         "sourceFields": [
           "execution",
           "commands"
@@ -73,7 +73,7 @@
         "id": "evidence",
         "label": "Evidence Record",
         "status": "present",
-        "summary": "2 changed file(s); diff count 2.",
+        "summary": "2 changed file(s); diff count 1.",
         "sourceFields": [
           "changes.files_changed",
           "changes.diff_sha256",
@@ -170,7 +170,7 @@
         "id": "payload",
         "label": "Payload / Action",
         "status": "present",
-        "summary": "Fix receipt root regression",
+        "summary": "Add Codex producer adapter test",
         "sourceFields": [
           "task.title",
           "task.prompt",
@@ -204,7 +204,7 @@
         "id": "decision_trace",
         "label": "Decision Trace",
         "status": "present",
-        "summary": "Decision trace recorded via title: Fix receipt root regression, prompt present, 1 command(s), 1 execution step(s).",
+        "summary": "Decision trace recorded via title: Add Codex producer adapter test, prompt present, 1 command(s), 3 execution step(s).",
         "sourceFields": [
           "task.title",
           "task.prompt",
@@ -219,7 +219,7 @@
         "id": "execution",
         "label": "Execution",
         "status": "present",
-        "summary": "1 execution record(s); 1 completed, 0 error.",
+        "summary": "3 execution record(s); 3 completed, 0 error.",
         "sourceFields": [
           "execution",
           "commands"
@@ -229,7 +229,7 @@
         "id": "evidence",
         "label": "Evidence Record",
         "status": "present",
-        "summary": "2 changed file(s); diff count 2.",
+        "summary": "2 changed file(s); diff count 1.",
         "sourceFields": [
           "changes.files_changed",
           "changes.diff_sha256",
@@ -333,7 +333,7 @@
     "schema": "receiptos.render_plan.v0",
     "source": {
       "schema": "stealth.session.evidence.v1",
-      "session_id": "ext-coding-run-001",
+      "session_id": "codex-session-001",
       "section_count": 13
     },
     "zones": [

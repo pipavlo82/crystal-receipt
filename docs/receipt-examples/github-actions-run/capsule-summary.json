@@ -1,8 +1,8 @@
 {
   "schema": "receiptos.capsule_summary.v0",
-  "source_evidence": "C:\\Users\\msi\\dev\\crystal-receipt\\examples\\receipt-examples\\external-coding-run\\normalized-evidence.json",
-  "receipt_root": "0x3c1e6cd29a2ae439c07726a9ca1548adb160d2e57e80557a0f113decfd13b87e",
-  "computed_receipt_root": "0x3c1e6cd29a2ae439c07726a9ca1548adb160d2e57e80557a0f113decfd13b87e",
+  "source_evidence": "C:\\Users\\msi\\dev\\crystal-receipt\\examples\\receipt-examples\\github-actions-run\\normalized-evidence.json",
+  "receipt_root": "0xa31e01440e5b47e7fe578a41bdebd2f6a70ea7e83deb765316ab16a88d0ae3ac",
+  "computed_receipt_root": "0xa31e01440e5b47e7fe578a41bdebd2f6a70ea7e83deb765316ab16a88d0ae3ac",
   "receipt_verification": {
     "ok": true,
     "status": "verified"
@@ -18,7 +18,7 @@
         "id": "payload",
         "label": "Payload / Action",
         "status": "present",
-        "summary": "Fix receipt root regression",
+        "summary": "GitHub Actions CI / receiptos-tests",
         "sourceFields": [
           "task.title",
           "task.prompt",
@@ -29,7 +29,7 @@
         "id": "policy_boundary",
         "label": "Policy Boundary",
         "status": "present",
-        "summary": "Scope lease missing in mode edit.",
+        "summary": "Scope lease missing in mode read_only.",
         "sourceFields": [
           "scope.permission",
           "scope.lease"
@@ -38,8 +38,8 @@
       {
         "id": "authorization",
         "label": "Authorization",
-        "status": "valid",
-        "summary": "3 allowed action rule(s).",
+        "status": "present",
+        "summary": "0 allowed action rule(s).",
         "sourceFields": [
           "authorization.allowed_actions",
           "authorization.authorization_state_hash",
@@ -50,7 +50,7 @@
         "id": "decision_trace",
         "label": "Decision Trace",
         "status": "present",
-        "summary": "Decision trace recorded via title: Fix receipt root regression, prompt present, 1 command(s), 1 execution step(s).",
+        "summary": "Decision trace recorded via title: GitHub Actions CI / receiptos-tests, prompt present, 2 command(s), 3 execution step(s).",
         "sourceFields": [
           "task.title",
           "task.prompt",
@@ -63,7 +63,7 @@
         "id": "execution",
         "label": "Execution",
         "status": "present",
-        "summary": "1 execution record(s); 1 completed, 0 error.",
+        "summary": "3 execution record(s); 3 completed, 0 error.",
         "sourceFields": [
           "execution",
           "commands"
@@ -72,8 +72,8 @@
       {
         "id": "evidence",
         "label": "Evidence Record",
-        "status": "present",
-        "summary": "2 changed file(s); diff count 2.",
+        "status": "missing",
+        "summary": "0 changed file(s); diff count 0.",
         "sourceFields": [
           "changes.files_changed",
           "changes.diff_sha256",
@@ -139,7 +139,7 @@
         "id": "replay_manifest",
         "label": "Replay Manifest",
         "status": "present",
-        "summary": "Replay inputs include session/task context, 1 command(s), diff hash state, and 1 anchor reference(s).",
+        "summary": "Replay inputs include session/task context, 2 command(s), diff hash state, and 1 anchor reference(s).",
         "sourceFields": [
           "session_id",
           "directory",
@@ -170,7 +170,7 @@
         "id": "payload",
         "label": "Payload / Action",
         "status": "present",
-        "summary": "Fix receipt root regression",
+        "summary": "GitHub Actions CI / receiptos-tests",
         "sourceFields": [
           "task.title",
           "task.prompt",
@@ -183,7 +183,7 @@
         "id": "policy_boundary",
         "label": "Policy Boundary",
         "status": "present",
-        "summary": "Scope lease missing in mode edit.",
+        "summary": "Scope lease missing in mode read_only.",
         "sourceFields": [
           "scope.permission",
           "scope.lease"
@@ -192,8 +192,8 @@
       {
         "id": "authorization",
         "label": "Authorization",
-        "status": "valid",
-        "summary": "3 allowed action rule(s).",
+        "status": "present",
+        "summary": "0 allowed action rule(s).",
         "sourceFields": [
           "authorization.allowed_actions",
           "authorization.authorization_state_hash",
@@ -204,7 +204,7 @@
         "id": "decision_trace",
         "label": "Decision Trace",
         "status": "present",
-        "summary": "Decision trace recorded via title: Fix receipt root regression, prompt present, 1 command(s), 1 execution step(s).",
+        "summary": "Decision trace recorded via title: GitHub Actions CI / receiptos-tests, prompt present, 2 command(s), 3 execution step(s).",
         "sourceFields": [
           "task.title",
           "task.prompt",
@@ -219,7 +219,7 @@
         "id": "execution",
         "label": "Execution",
         "status": "present",
-        "summary": "1 execution record(s); 1 completed, 0 error.",
+        "summary": "3 execution record(s); 3 completed, 0 error.",
         "sourceFields": [
           "execution",
           "commands"
@@ -228,8 +228,8 @@
       {
         "id": "evidence",
         "label": "Evidence Record",
-        "status": "present",
-        "summary": "2 changed file(s); diff count 2.",
+        "status": "missing",
+        "summary": "0 changed file(s); diff count 0.",
         "sourceFields": [
           "changes.files_changed",
           "changes.diff_sha256",
@@ -273,7 +273,7 @@
         "id": "replay_manifest",
         "label": "Replay Manifest",
         "status": "present",
-        "summary": "Replay inputs include session/task context, 1 command(s), diff hash state, and 1 anchor reference(s).",
+        "summary": "Replay inputs include session/task context, 2 command(s), diff hash state, and 1 anchor reference(s).",
         "sourceFields": [
           "session_id",
           "directory",
@@ -333,7 +333,7 @@
     "schema": "receiptos.render_plan.v0",
     "source": {
       "schema": "stealth.session.evidence.v1",
-      "session_id": "ext-coding-run-001",
+      "session_id": "gha-run-1234567890-job-987654321",
       "section_count": 13
     },
     "zones": [
@@ -370,7 +370,7 @@
           {
             "id": "authorization",
             "label": "Authorization",
-            "status": "valid"
+            "status": "present"
           },
           {
             "id": "decision_trace",
@@ -397,7 +397,7 @@
           {
             "id": "evidence",
             "label": "Evidence Record",
-            "status": "present"
+            "status": "missing"
           },
           {
             "id": "counterfactual",
