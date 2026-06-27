@@ -130,8 +130,5 @@ export function normalizeGitHubActionsRunOutput(source: GitHubActionsRunOutput):
 export const githubActionsAdapter: ProducerAdapter<GitHubActionsRunOutput> = {
   id: "github-actions",
   sourceSchema: "github.actions_run.v0",
-  matches(input: unknown): boolean {
-    return typeof input === "object" && input !== null && (input as { schema?: unknown }).schema === "github.actions_run.v0"
-  },
   normalize: normalizeGitHubActionsRunOutput,
 }

@@ -157,8 +157,5 @@ export function normalizeCodexSessionOutput(source: CodexSessionOutput): Handoff
 export const codexSessionAdapter: ProducerAdapter<CodexSessionOutput> = {
   id: "codex-session",
   sourceSchema: "codex.session.v0",
-  matches(input: unknown): boolean {
-    return typeof input === "object" && input !== null && (input as { schema?: unknown }).schema === "codex.session.v0"
-  },
   normalize: normalizeCodexSessionOutput,
 }
