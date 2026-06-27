@@ -1,0 +1,206 @@
+{
+  "schema": "receiptos.evidence_capsule.v0",
+  "action": {
+    "summary": "Portable ReceiptOS evidence core sample",
+    "source_fields": [
+      "task.title",
+      "task.prompt",
+      "commands"
+    ]
+  },
+  "evidence": {
+    "summary": "1 changed file(s); diff count 1.",
+    "source_fields": [
+      "changes.files_changed",
+      "changes.diff_sha256",
+      "metadata.diff_count",
+      "metadata.message_count"
+    ],
+    "status": "present"
+  },
+  "receipt_root": {
+    "stored": "0x687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc",
+    "computed": "0x687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc",
+    "match": true,
+    "status": "verified"
+  },
+  "proof_refs": {
+    "merkle": {
+      "present": false,
+      "status": "missing"
+    },
+    "anchor": {
+      "status": "missing"
+    }
+  },
+  "verifier_result": {
+    "ok": true,
+    "status": "verified"
+  },
+  "capsule": {
+    "sections": [
+      {
+        "id": "payload",
+        "label": "Payload / Action",
+        "status": "present",
+        "summary": "Portable ReceiptOS evidence core sample",
+        "sourceFields": [
+          "task.title",
+          "task.prompt",
+          "commands"
+        ]
+      },
+      {
+        "id": "policy_boundary",
+        "label": "Policy Boundary",
+        "status": "present",
+        "summary": "Scope lease missing in mode read_only.",
+        "sourceFields": [
+          "scope.permission",
+          "scope.lease"
+        ]
+      },
+      {
+        "id": "authorization",
+        "label": "Authorization",
+        "status": "present",
+        "summary": "0 allowed action rule(s).",
+        "sourceFields": [
+          "authorization.allowed_actions",
+          "authorization.authorization_state_hash",
+          "authorization.authorized_at_execution"
+        ]
+      },
+      {
+        "id": "decision_trace",
+        "label": "Decision Trace",
+        "status": "present",
+        "summary": "Decision trace recorded via title: Portable ReceiptOS evidence core sample, prompt present, 1 command(s), 1 execution step(s).",
+        "sourceFields": [
+          "task.title",
+          "task.prompt",
+          "commands",
+          "execution",
+          "authorization.authorized_at_execution"
+        ]
+      },
+      {
+        "id": "execution",
+        "label": "Execution",
+        "status": "present",
+        "summary": "1 execution record(s); 1 completed, 0 error.",
+        "sourceFields": [
+          "execution",
+          "commands"
+        ]
+      },
+      {
+        "id": "evidence",
+        "label": "Evidence Record",
+        "status": "present",
+        "summary": "1 changed file(s); diff count 1.",
+        "sourceFields": [
+          "changes.files_changed",
+          "changes.diff_sha256",
+          "metadata.diff_count",
+          "metadata.message_count"
+        ]
+      },
+      {
+        "id": "counterfactual",
+        "label": "Counterfactual / Denied Action",
+        "status": "missing",
+        "summary": "No explicit denied-action / counterfactual evidence is recorded in the current receipt schema.",
+        "sourceFields": [
+          "authorization.allowed_actions",
+          "execution.status",
+          "commands.exit_code"
+        ]
+      },
+      {
+        "id": "result",
+        "label": "Result",
+        "status": "present",
+        "summary": "Recorded result data is internally consistent.",
+        "sourceFields": [
+          "commands.exit_code",
+          "commands.stdout_summary"
+        ]
+      },
+      {
+        "id": "receipt_root",
+        "label": "Receipt Root",
+        "status": "valid",
+        "summary": "Stored receipt_root matches recomputed canonical root.",
+        "sourceFields": [
+          "anchor.receipt_root"
+        ]
+      },
+      {
+        "id": "merkle",
+        "label": "Merkle Proof",
+        "status": "pending",
+        "summary": "No local Merkle proof attached yet.",
+        "sourceFields": [
+          "anchor.merkle_proof_status",
+          "anchor.merkle_root",
+          "anchor.merkle_leaf_index",
+          "anchor.merkle_proof"
+        ]
+      },
+      {
+        "id": "anchor",
+        "label": "Anchor",
+        "status": "missing",
+        "summary": "No external anchor recorded.",
+        "sourceFields": [
+          "anchor.onchain_anchor_status",
+          "anchor.network",
+          "anchor.contract",
+          "anchor.tx_hash"
+        ]
+      },
+      {
+        "id": "replay_manifest",
+        "label": "Replay Manifest",
+        "status": "present",
+        "summary": "Replay inputs include session/task context, 1 command(s), diff hash state, and 1 anchor reference(s).",
+        "sourceFields": [
+          "session_id",
+          "directory",
+          "task",
+          "commands",
+          "changes.diff_sha256",
+          "anchor.receipt_root",
+          "anchor.merkle_root",
+          "anchor.tx_hash",
+          "metadata.generated_by"
+        ]
+      },
+      {
+        "id": "verifier",
+        "label": "Verifier",
+        "status": "verified",
+        "summary": "Portable verifier confirmed the receipt root.",
+        "sourceFields": [
+          "anchor.verifier_status",
+          "anchor.receipt_root"
+        ]
+      }
+    ]
+  },
+  "replay_manifest": {
+    "summary": "Replay inputs include session/task context, 1 command(s), diff hash state, and 1 anchor reference(s).",
+    "source_fields": [
+      "session_id",
+      "directory",
+      "task",
+      "commands",
+      "changes.diff_sha256",
+      "anchor.receipt_root",
+      "anchor.merkle_root",
+      "anchor.tx_hash",
+      "metadata.generated_by"
+    ]
+  }
+}
