@@ -3,6 +3,7 @@
   "notes": [
     "The committed Viewer example index now includes both proof-state examples and producer-specific ReceiptOS bundles.",
     "Producer-specific entries point only to real committed assets generated from existing fixtures and import paths.",
+    "Cursor and Codex entries currently demonstrate ReceiptOS capsule-boundary compatibility only; they are not yet verified against stable, documented real producer session formats.",
     "Entries without visualPath still load in the Viewer and fall back to the default crystal surface while exposing real proof artifacts."
   ],
   "examples": [
