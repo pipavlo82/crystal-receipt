@@ -1,0 +1,132 @@
+{
+  "schema": "stealth.session.evidence.v1",
+  "session_id": "claude-code-session-001",
+  "directory": "/repo/crystal-receipt",
+  "task": {
+    "title": "Add ReceiptOS adapter test",
+    "prompt": "Add and validate a ReceiptOS producer adapter without changing proof semantics."
+  },
+  "agent": {
+    "id": "claude-code",
+    "runtime": "claude/code"
+  },
+  "scope": {
+    "permission": null,
+    "lease": {
+      "id": "claude-code-session-001:scoped-lease:v1",
+      "mode": "edit",
+      "target": "/repo/crystal-receipt",
+      "allowed_actions": [
+        {
+          "permission": "read",
+          "pattern": "/repo/crystal-receipt",
+          "action": "read"
+        },
+        {
+          "permission": "write",
+          "pattern": "/repo/crystal-receipt",
+          "action": "write"
+        },
+        {
+          "permission": "exec",
+          "pattern": "/repo/crystal-receipt",
+          "action": "exec"
+        }
+      ],
+      "issued_at": null,
+      "expires_at": null,
+      "status": "missing"
+    }
+  },
+  "authorization": {
+    "delegation_ref": null,
+    "delegator": null,
+    "agent_operator": "claude-code",
+    "target": "/repo/crystal-receipt",
+    "allowed_actions": [
+      {
+        "permission": "read",
+        "pattern": "/repo/crystal-receipt",
+        "action": "read"
+      },
+      {
+        "permission": "write",
+        "pattern": "/repo/crystal-receipt",
+        "action": "write"
+      },
+      {
+        "permission": "exec",
+        "pattern": "/repo/crystal-receipt",
+        "action": "exec"
+      }
+    ],
+    "authorization_valid_from": null,
+    "authorization_expiry": null,
+    "authorization_checked_at": 0,
+    "authorization_state_hash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "authorized_at_execution": null
+  },
+  "execution": [
+    {
+      "call_id": "claude-code-session-001:tool-001",
+      "tool": "read",
+      "action_performed": "src/receiptos/adapters/registry.ts",
+      "target": "src/receiptos/adapters/registry.ts",
+      "execution_timestamp": 0,
+      "completed_timestamp": 0,
+      "status": "completed",
+      "scope_match": null
+    },
+    {
+      "call_id": "claude-code-session-001:tool-002",
+      "tool": "edit",
+      "action_performed": "src/receiptos/adapters/claude-code-session.ts",
+      "target": "src/receiptos/adapters/claude-code-session.ts",
+      "execution_timestamp": 0,
+      "completed_timestamp": 0,
+      "status": "completed",
+      "scope_match": null
+    },
+    {
+      "call_id": "claude-code-session-001:tool-003",
+      "tool": "exec",
+      "action_performed": "bun test tests/receiptos",
+      "target": "/repo/crystal-receipt",
+      "execution_timestamp": 0,
+      "completed_timestamp": 0,
+      "status": "completed",
+      "scope_match": null
+    }
+  ],
+  "commands": [
+    {
+      "command": "bun test tests/receiptos",
+      "exit_code": 0,
+      "stdout_summary": "ReceiptOS tests passed."
+    }
+  ],
+  "changes": {
+    "files_changed": [
+      "src/receiptos/adapters/claude-code-session.ts",
+      "tests/receiptos/claude-code-session-import-cli.test.ts"
+    ],
+    "diff_sha256": "0x0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "metadata": {
+    "message_count": 1,
+    "diff_count": 1,
+    "generated_by": "claude.code.session.v0"
+  },
+  "anchor": {
+    "receipt_root": "0x9aebe5ca7d720d20338c4fce0199beb1ec976dbc485a49dde5bb9ed7076b8776",
+    "merkle_proof_status": "not attached",
+    "merkle_root": null,
+    "merkle_leaf_index": null,
+    "merkle_proof": [],
+    "onchain_anchor_status": "not anchored",
+    "network": "local/off-chain",
+    "contract": null,
+    "tx_hash": null,
+    "verifier_status": "not verified"
+  }
+}
