@@ -106,8 +106,5 @@ export function normalizeGenericProducerOutput(source: GenericProducerOutput): H
 export const genericAdapter: ProducerAdapter<GenericProducerOutput> = {
   id: "generic",
   sourceSchema: null,
-  matches(input: unknown): boolean {
-    return typeof input === "object" && input !== null && (input as { producer?: unknown }).producer === "generic"
-  },
   normalize: normalizeGenericProducerOutput,
 }

@@ -13,8 +13,5 @@ export function normalizeStealthHandoffOutput(source: StealthHandoffOutput): Han
 export const stealthHandoffAdapter: ProducerAdapter<StealthHandoffOutput> = {
   id: "stealth-handoff",
   sourceSchema: "stealth.session.evidence.v1",
-  matches(input: unknown): boolean {
-    return typeof input === "object" && input !== null && (input as { schema?: unknown }).schema === "stealth.session.evidence.v1"
-  },
   normalize: normalizeStealthHandoffOutput,
 }

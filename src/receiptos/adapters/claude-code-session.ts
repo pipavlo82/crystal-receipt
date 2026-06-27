@@ -360,8 +360,5 @@ export function parseClaudeCodeJsonlSession(
 export const claudeCodeSessionAdapter: ProducerAdapter<ClaudeCodeSessionOutput> = {
   id: "claude-code-session",
   sourceSchema: "claude.code.session.v0",
-  matches(input: unknown): boolean {
-    return typeof input === "object" && input !== null && (input as { schema?: unknown }).schema === "claude.code.session.v0"
-  },
   normalize: normalizeClaudeCodeSessionOutput,
 }
