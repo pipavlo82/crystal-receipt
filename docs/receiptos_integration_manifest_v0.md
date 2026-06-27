@@ -21,15 +21,18 @@ It does not mean ReceiptOS trusts a producer because that producer uses Stealth 
 
 The current repository already routes multiple producer shapes into the same ReceiptOS proof boundary.
 
-Current documented producer set:
+Current documented producer surface:
 
+### Verified against real producer data or real fixture shape
 - Stealth handoff
 - GitHub Actions
 - Claude Code session
-- Cursor session
-- Codex session
 - generic producer
 - `external.coding_run.v0`
+
+### Schema sketch / capsule-boundary compatibility only
+- Cursor session
+- Codex session
 
 Core message:
 
@@ -42,6 +45,8 @@ One portable receipt model.
 These producers may differ substantially in workflow semantics, runtime context, and source metadata.
 ReceiptOS does not give them separate proof rules.
 It ingests their evidence into the same portable proof-facing boundary.
+
+However, Cursor and Codex should currently be read more narrowly than the verified set above: the existing adapters/fixtures demonstrate ReceiptOS capsule-boundary compatibility, but are not yet verified against stable, documented real producer session formats.
 
 ## 2. Producer responsibilities
 
@@ -147,8 +152,10 @@ It ignores the top-level anchor during root computation.
 It preserves verification-oriented outputs.
 And it treats producer identity as provenance metadata rather than proof.
 
-Across Stealth handoff, GitHub Actions, Claude Code, Cursor, Codex, generic producer imports, and `external.coding_run.v0`, the architecture stays the same:
+Across Stealth handoff, GitHub Actions, Claude Code, generic producer imports, `external.coding_run.v0`, and the current Cursor/Codex boundary-compatibility sketches, the architecture stays the same:
 
 - same proof pipeline
 - different producers
 - one portable receipt model
+
+But only the verified set above should currently be presented as validated real-format integrations.

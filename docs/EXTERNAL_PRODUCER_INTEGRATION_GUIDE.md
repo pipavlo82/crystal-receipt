@@ -34,15 +34,18 @@ Those are examples of producer shapes, not special cases in the shared proof bou
 
 The current repository already demonstrates that multiple producer systems can flow into the same ReceiptOS proof boundary.
 
-Current documented producer set:
+Current documented producer surface:
 
+### Verified against real producer data or real fixture shape
 - Stealth handoff
 - GitHub Actions
 - Claude Code session
-- Cursor session
-- Codex session
 - generic producer
 - `external.coding_run.v0`
+
+### Schema sketch / capsule-boundary compatibility only
+- Cursor session
+- Codex session
 
 Core message:
 
@@ -53,7 +56,8 @@ One portable receipt model.
 ```
 
 This list should be read as current producer coverage in adapters, fixtures, tests, and demos.
-It should not be read as a claim that every producer already has a dedicated committed Viewer example bundle in the repo.
+It should not be read as a claim that every producer is already verified against stable, documented real producer output.
+In particular, Cursor and Codex currently demonstrate capsule-boundary compatibility rather than production-grade real-format integration status.
 
 ## 3. Producer → ReceiptOS flow
 
@@ -226,15 +230,15 @@ Current repo coverage already spans multiple producer shapes, including:
 - Stealth handoff evidence
 - GitHub Actions runs
 - Claude Code sessions
-- Cursor sessions
-- Codex sessions
+- Cursor session sketches
+- Codex session sketches
 - generic producer evidence
 - `external.coding_run.v0` as the first concrete external coding-agent/tool-run import example
 
 Those source shapes differ.
 The shared proof boundary does not.
 
-The committed Viewer example index is still proof-state oriented rather than producer-by-producer. Producer-specific committed Viewer bundles for GitHub Actions, Claude Code, Cursor, Codex, generic producer runs, and Stealth handoff flows are future example/documentation work, not a claim that all such folders already exist in-repo today.
+The committed Viewer example index now includes producer-specific bundles, but those Viewer bundles should be read honestly: they show that these evidence shapes can flow through the shared ReceiptOS capsule/viewer surface. They do not, by themselves, prove that Cursor or Codex are already verified against stable, documented real producer session formats.
 
 ## 9. Non-goals
 
