@@ -1,126 +1,87 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="900" height="3840" viewBox="0 0 900 3840" role="img" aria-labelledby="title desc">
-  <title id="title">Crystal Receipt Mobile Flow Diagram</title>
-  <desc id="desc">A vertical black and white scientific style diagram showing the Crystal Receipt proof-first pipeline from agent action to portable evidence, receipt root, Merkle proof, anchor reference, verifier, Evidence Capsule, replay manifest, and an optional crystal surface.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1320" viewBox="0 0 900 1320" role="img" aria-labelledby="title desc">
+  <title id="title">ReceiptOS producer-neutral proof boundary</title>
+  <desc id="desc">Many producer systems export evidence into one ReceiptOS proof boundary, which produces receipt roots, evidence capsules, provenance summaries, verifier state, and viewer/export/settlement-facing surfaces.</desc>
+
+  <style>
+    .bg { fill: #ffffff; }
+    .box { fill: #ffffff; stroke: #111111; stroke-width: 3; }
+    .soft { fill: #f7f7f7; stroke: #222222; stroke-width: 2; }
+    .core { fill: #f2f8ff; stroke: #111111; stroke-width: 4; }
+    .settle { fill: #f6fff2; stroke: #111111; stroke-width: 3; }
+    .title { font: 700 34px ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #111111; }
+    .h1 { font: 700 28px ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #111111; }
+    .h2 { font: 700 21px ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #111111; }
+    .body { font: 500 18px ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #111111; }
+    .mono { font: 600 16px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #111111; }
+    .small { font: 500 15px ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #333333; }
+    .label { font: 700 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: 1.6px; fill: #555555; }
+    .arrow { stroke: #111111; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+  </style>
+
   <defs>
-    <marker id="arrow" markerWidth="8" markerHeight="8" refX="10" refY="6" orient="auto">
-      <path d="M0,0 L12,6 L0,12 z" fill="#111111"/>
+    <marker id="arrow" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="strokeWidth">
+      <path d="M 0 0 L 14 7 L 0 14 z" fill="#111111"/>
     </marker>
-    <style>
-      .bg { fill: #ffffff; }
-      .box { fill: #ffffff; stroke: #111111; stroke-width: 3; }
-      .boxThin { fill: #ffffff; stroke: #111111; stroke-width: 2; }
-      .arrow { stroke: #111111; stroke-width: 4; fill: none; marker-end: url(#arrow); }
-      .title { font: 700 34px Inter, Segoe UI, Arial, sans-serif; fill: #111111; }
-      .subtitle { font: 500 22px Inter, Segoe UI, Arial, sans-serif; fill: #333333; }
-      .section { font: 700 30px Inter, Segoe UI, Arial, sans-serif; fill: #111111; }
-      .body { font: 500 24px Inter, Segoe UI, Arial, sans-serif; fill: #222222; }
-      .mono { font: 600 21px ui-monospace, SFMono-Regular, Consolas, monospace; fill: #111111; }
-      .note { font: 700 23px Inter, Segoe UI, Arial, sans-serif; fill: #111111; }
-    </style>
   </defs>
 
-  <rect class="bg" width="900" height="3840"/>
+  <rect class="bg" x="0" y="0" width="900" height="1320"/>
 
-  <text x="450" y="72" text-anchor="middle" class="title">CRYSTAL RECEIPT</text>
-  <text x="450" y="112" text-anchor="middle" class="subtitle">Portable receipts, proof verification, Evidence Capsule, optional visual surface</text>
+  <text class="title" x="450" y="58" text-anchor="middle">RECEIPTOS</text>
+  <text class="body" x="450" y="92" text-anchor="middle">Producer-neutral proof boundary for agent work</text>
 
-  <rect x="90" y="160" width="720" height="320" rx="22" ry="22" class="box"/>
-  <text x="130" y="215" class="section">1. Agent Action</text>
-  <text x="130" y="275" class="body">A tool call, file change, signed decision,</text>
-  <text x="130" y="313" class="body">or scoped operation occurs.</text>
-  <text x="130" y="365" class="mono">task / prompt</text>
-  <text x="130" y="405" class="mono">commands / execution</text>
-  <text x="470" y="365" class="mono">scope / authority</text>
-  <text x="470" y="405" class="mono">result / side effects</text>
+  <rect class="box" x="70" y="130" width="760" height="190" rx="24"/>
+  <text class="label" x="110" y="168">MANY PRODUCERS</text>
+  <text class="h1" x="110" y="205">Different runtimes export evidence</text>
 
-  <path d="M450 480 V550" class="arrow"/>
+  <rect class="soft" x="110" y="230" width="150" height="54" rx="14"/>
+  <text class="mono" x="185" y="264" text-anchor="middle">CYPHES / ATP</text>
 
-  <rect x="90" y="570" width="720" height="380" rx="22" ry="22" class="box"/>
-  <text x="130" y="625" class="section">2. Portable Evidence</text>
-  <text x="130" y="685" class="body">The action becomes portable receipt evidence.</text>
-  <text x="130" y="745" class="mono">session_id</text>
-  <text x="130" y="785" class="mono">task / prompt context</text>
-  <text x="130" y="825" class="mono">execution records</text>
-  <text x="130" y="865" class="mono">commands</text>
-  <text x="470" y="745" class="mono">changed files</text>
-  <text x="470" y="785" class="mono">diff_sha256</text>
-  <text x="470" y="825" class="mono">authorization state</text>
-  <text x="470" y="865" class="mono">metadata</text>
+  <rect class="soft" x="280" y="230" width="150" height="54" rx="14"/>
+  <text class="mono" x="355" y="264" text-anchor="middle">Stealth</text>
 
-  <path d="M450 950 V1020" class="arrow"/>
+  <rect class="soft" x="450" y="230" width="150" height="54" rx="14"/>
+  <text class="mono" x="525" y="264" text-anchor="middle">GitHub Actions</text>
 
-  <rect x="120" y="1040" width="660" height="250" rx="22" ry="22" class="box"/>
-  <text x="160" y="1095" class="section">3. Receipt Root</text>
-  <text x="160" y="1155" class="body">Canonical evidence is recomputed into a</text>
-  <text x="160" y="1193" class="body">deterministic root.</text>
-  <text x="160" y="1245" class="mono">canonical JSON</text>
-  <text x="160" y="1285" class="mono">receipt_root</text>
+  <rect class="soft" x="620" y="230" width="150" height="54" rx="14"/>
+  <text class="mono" x="695" y="264" text-anchor="middle">Coding agents</text>
 
-  <path d="M450 1290 V1360" class="arrow"/>
+  <text class="small" x="110" y="304">Producer systems keep their own workflow semantics.</text>
 
-  <rect x="120" y="1380" width="660" height="290" rx="22" ry="22" class="box"/>
-  <text x="160" y="1435" class="section">4. Merkle Proof</text>
-  <text x="160" y="1495" class="body">A local proof can bind the receipt root</text>
-  <text x="160" y="1533" class="body">into an anchor path.</text>
-  <text x="160" y="1585" class="mono">merkle_root</text>
-  <text x="160" y="1625" class="mono">merkle_leaf_index</text>
-  <text x="470" y="1585" class="mono">merkle_proof</text>
-  <text x="470" y="1625" class="mono">proof_status</text>
+  <path class="arrow" d="M450 325 L450 382"/>
 
-  <path d="M450 1670 V1740" class="arrow"/>
+  <rect class="box" x="130" y="390" width="640" height="130" rx="22"/>
+  <text class="label" x="170" y="426">EXPORTED EVIDENCE</text>
+  <text class="h2" x="170" y="462">Source evidence enters ReceiptOS through adapters</text>
+  <text class="mono" x="170" y="494">task · execution · commands · changes · verifier refs · metadata</text>
 
-  <rect x="120" y="1760" width="660" height="300" rx="22" ry="22" class="box"/>
-  <text x="160" y="1815" class="section">5. Anchor Reference</text>
-  <text x="160" y="1875" class="body">Optional external anchor references can</text>
-  <text x="160" y="1913" class="body">point to committed proof state.</text>
-  <text x="160" y="1965" class="mono">network</text>
-  <text x="160" y="2005" class="mono">contract</text>
-  <text x="470" y="1965" class="mono">tx_hash</text>
-  <text x="470" y="2005" class="mono">proof reference</text>
+  <path class="arrow" d="M450 525 L450 585"/>
 
-  <path d="M450 2060 V2130" class="arrow"/>
+  <rect class="core" x="80" y="595" width="740" height="250" rx="28"/>
+  <text class="label" x="120" y="632">ONE PROOF BOUNDARY</text>
+  <text class="h1" x="120" y="672">ReceiptOS proof substrate</text>
+  <text class="body" x="120" y="707">Normalize evidence without importing producer-specific business logic.</text>
 
-  <rect x="120" y="2150" width="660" height="250" rx="22" ry="22" class="box"/>
-  <text x="160" y="2205" class="section">6. Verifier</text>
-  <text x="160" y="2265" class="body">The verifier recomputes and checks</text>
-  <text x="160" y="2303" class="body">anchored facts.</text>
-  <text x="160" y="2355" class="mono">receipt_root check</text>
-  <text x="470" y="2355" class="mono">Merkle / anchor check</text>
+  <rect class="soft" x="120" y="735" width="300" height="76" rx="16"/>
+  <text class="h2" x="150" y="765">receipt_root</text>
+  <text class="small" x="150" y="792">recomputable · anchor-independent</text>
 
-  <path d="M450 2400 V2470" class="arrow"/>
+  <rect class="soft" x="480" y="735" width="300" height="76" rx="16"/>
+  <text class="h2" x="510" y="765">verifier state</text>
+  <text class="small" x="510" y="792">valid · mismatch · missing · anchored</text>
 
-  <rect x="90" y="2490" width="720" height="350" rx="22" ry="22" class="box"/>
-  <text x="130" y="2545" class="section">7. Evidence Capsule</text>
-  <text x="130" y="2605" class="body">The proof state becomes a non-breaking</text>
-  <text x="130" y="2643" class="body">interpretive capsule.</text>
-  <text x="130" y="2695" class="mono">payload</text>
-  <text x="130" y="2735" class="mono">authorization</text>
-  <text x="130" y="2775" class="mono">decision_trace</text>
-  <text x="470" y="2695" class="mono">evidence</text>
-  <text x="470" y="2735" class="mono">counterfactual</text>
-  <text x="470" y="2775" class="mono">verifier</text>
+  <path class="arrow" d="M450 850 L450 905"/>
 
-  <path d="M450 2840 V2910" class="arrow"/>
+  <rect class="box" x="90" y="915" width="720" height="150" rx="24"/>
+  <text class="label" x="130" y="952">SHARED ARTIFACTS</text>
+  <text class="h2" x="130" y="990">Stable outputs across producers</text>
+  <text class="mono" x="130" y="1022">receiptos.evidence_capsule.v0</text>
+  <text class="mono" x="470" y="1022">receiptos.provenance_summary.v0</text>
+  <text class="small" x="130" y="1048">proof_refs · replay_refs · anchor_refs · viewer-ready summaries</text>
 
-  <rect x="120" y="2930" width="660" height="250" rx="22" ry="22" class="box"/>
-  <text x="160" y="2985" class="section">8. Replay Manifest</text>
-  <text x="160" y="3045" class="body">Replay-relevant inputs are made</text>
-  <text x="160" y="3083" class="body">inspectable and portable.</text>
-  <text x="160" y="3135" class="mono">session / task / commands / diff / roots</text>
+  <path class="arrow" d="M450 1072 L450 1130"/>
 
-  <path d="M450 3180 V3250" class="arrow"/>
-
-  <rect x="90" y="3270" width="720" height="290" rx="22" ry="22" class="box"/>
-  <text x="130" y="3325" class="section">9. Optional Crystal Surface</text>
-  <text x="130" y="3385" class="body">A deterministic crystal artifact can render</text>
-  <text x="130" y="3423" class="body">the verified receipt as a secondary visual layer.</text>
-
-  <rect x="620" y="3360" width="120" height="120" fill="#ffffff" stroke="#111111" stroke-width="3"/>
-  <rect x="645" y="3385" width="70" height="70" fill="#ffffff" stroke="#111111" stroke-width="2.3"/>
-  <rect x="665" y="3405" width="30" height="30" fill="#ffffff" stroke="#111111" stroke-width="2"/>
-
-  <rect x="90" y="3590" width="720" height="190" rx="22" ry="22" class="box"/>
-  <text x="130" y="3650" class="note">- proof first, visual second</text>
-  <text x="130" y="3700" class="note">- same evidence -&gt; same verified capsule / optional artifact</text>
-  <text x="130" y="3750" class="note">- verifier is the source of truth</text>
+  <rect class="settle" x="80" y="1140" width="740" height="130" rx="24"/>
+  <text class="label" x="120" y="1177">DOWNSTREAM USE</text>
+  <text class="h2" x="120" y="1215">Viewer / export / settlement-facing references</text>
+  <text class="small" x="120" y="1248">ReceiptOS packages proof evidence. CYPHES / ATP decides workflow, credits, and settlement.</text>
 </svg>
