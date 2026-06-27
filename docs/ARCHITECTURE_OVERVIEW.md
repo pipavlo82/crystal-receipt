@@ -1,5 +1,7 @@
 # Crystal Receipt Architecture Overview
 
+> **Scope note:** this document describes the optional visual/crystal rendering layer specifically. For the current overall ReceiptOS architecture — many producers normalizing into one proof boundary, receipt_root, verifier, Evidence Capsule, and downstream viewer/export/crystal — see [`receiptos_producer_neutral_architecture.svg`](./receiptos_producer_neutral_architecture.svg) and `docs/EXECUTION_PROVENANCE_FRAMING.md`. Crystal rendering is a secondary, optional presentation layer on top of that substrate, not every receipt's destination.
+
 Crystal Receipt turns execution receipt evidence into a deterministic bismuth-inspired visual artifact.
 
 It exists because receipts are important but hard for humans to read at a glance.
@@ -8,14 +10,13 @@ Crystal Receipt gives that evidence a stable visual form without pretending that
 
 ## Short product framing
 
-Every important action gets a receipt.
-Every receipt gets a crystal.
-Every crystal can be shared, scanned, and independently verified.
+Some receipts can optionally get a crystal rendering.
+Every crystal can be shared, scanned, and independently verified against its source receipt.
 
-That is the product shape:
+That is the product shape for this layer specifically:
 
 - receipts carry evidence
-- crystals make that evidence visible
+- crystals make that evidence visible, when rendering is used
 - metadata preserves deterministic provenance
 - verification remains separate
 
@@ -252,11 +253,17 @@ This separation is the whole point:
 
 ## Visual diagram
 
-The architecture diagrams live here:
+### Current overall architecture (producer-neutral ReceiptOS substrate)
+
+![ReceiptOS producer-neutral architecture](./receiptos_producer_neutral_architecture.svg)
+
+### Crystal rendering layer (this document's specific scope)
+
+The diagrams below describe only the optional visual rendering pipeline (receipt → canonical hash → seeds → traits → crystal artifact), not the overall ReceiptOS proof boundary.
 
 - [Black-and-white scientific diagram](./crystal_receipt_architecture_bw.svg)
-- [Detailed architecture draft](./crystal_receipt_architecture.svg)
+- [Detailed crystal rendering pipeline draft](./crystal_receipt_architecture.svg)
 
 If your Markdown viewer supports inline SVG rendering, you can also view the detailed draft below:
 
-![Crystal Receipt architecture diagram](./crystal_receipt_architecture.svg)
+![Crystal rendering pipeline diagram](./crystal_receipt_architecture.svg)
