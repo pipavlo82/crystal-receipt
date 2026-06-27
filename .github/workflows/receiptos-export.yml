@@ -2,6 +2,8 @@ name: ReceiptOS Export
 
 on:
   workflow_dispatch:
+  push:
+  pull_request:
 
 permissions:
   contents: read
@@ -16,6 +18,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -23,6 +30,9 @@ jobs:
 
       - name: Record start timestamp
         run: echo "RECEIPTOS_JOB_STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+
+      - name: Run Python tests
+        run: python -m unittest discover -s tests -p "test_*.py"
 
       - name: Run ReceiptOS tests
         run: bun test tests/receiptos
@@ -39,8 +49,8 @@ jobs:
           --workflow-name "ReceiptOS Export"
           --job-name "receiptos-export"
           --conclusion "${{ job.status == 'success' && 'success' || 'failure' }}"
-          --artifact-summary "ReceiptOS test suite completed in CI."
-          --command-summary "bun test tests/receiptos"
+          --artifact-summary "ReceiptOS test suites completed in CI."
+          --command-summary "python -m unittest discover -s tests -p test_*.py && bun test tests/receiptos"
 
       - name: Generate ReceiptOS artifacts
         if: always()
