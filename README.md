@@ -525,9 +525,10 @@ Crystal Receipt now spans both:
 The proof layer handles evidence interpretation, root verification, Merkle state, anchor state, and capsule summaries.
 The image remains the human-facing fingerprint.
 
+- `docs/receiptos_producer_neutral_architecture.svg` — current overall architecture: producers → proof boundary → receipt_root → verifier → Evidence Capsule → viewer/export/crystal
 - `docs/ARCHITECTURE_OVERVIEW.md`
 - `docs/crystal_receipt_mobile_flow.svg` — mobile-friendly README hero diagram
-- `docs/crystal_receipt_architecture.svg` — Detailed architecture diagram
+- `docs/crystal_receipt_architecture.svg` — crystal rendering pipeline diagram (visual layer only, secondary to the substrate above)
 
 ## Related docs
 
