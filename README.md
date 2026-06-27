@@ -1,6 +1,19 @@
 # crystal-receipt
 
-![Crystal Receipt architecture hero](docs/crystal_receipt_mobile_flow.svg)
+## ReceiptOS
+
+**Tamper-evident receipts for AI agents, tools, workflows, and autonomous systems.**
+
+```text
+Agent / Tool → Evidence Capsule → Receipt Root → Portable Proof Object
+```
+
+## What you get
+
+- Portable execution receipts
+- Recomputable receipt roots
+- Evidence Capsules
+- Verifier-facing proof summaries
 
 Crystal Receipt is a portable receipt and evidence surface for agent actions.
 It consumes verifiable execution evidence, preserves ReceiptOS-compatible proof semantics, and can present that evidence as an Evidence Capsule, a replayable proof summary, and optionally a deterministic visual artifact.
@@ -10,6 +23,74 @@ In the current architecture:
 - **ReceiptOS** is the stable proof substrate
 - **producers** are systems that emit execution evidence into that substrate
 - **Crystal Receipt** is the visualization / inspection layer built around that proof boundary
+
+## External producer quick start
+
+- Read `docs/receiptos_integration_manifest_v0.md`
+- Read `docs/EXTERNAL_PRODUCER_INTEGRATION_GUIDE.md`
+- Run `bun scripts/demo-external-producer-e2e.ts`
+
+## Producer coverage
+
+ReceiptOS uses the same proof pipeline across different producer systems.
+
+Core message:
+
+```text
+Same proof pipeline.
+Different producers.
+One portable receipt model.
+```
+
+The current documented producer surface is best understood in two categories:
+
+### Verified against real producer data or real fixture shape
+- Stealth handoff
+- GitHub Actions
+- Claude Code session
+- generic producer
+- `external.coding_run.v0`
+
+### Schema sketch / capsule-boundary compatibility only
+- Cursor session
+- Codex session
+
+All of these paths are aimed at the same ReceiptOS capsule/proof boundary.
+But Cursor and Codex should currently be read more narrowly: they demonstrate ReceiptOS boundary compatibility and adapter shape, not a fully verified stable integration against documented real producer session formats.
+
+These producers differ in runtime, workflow shape, and source semantics.
+They do not get separate proof semantics.
+They normalize into the same ReceiptOS proof boundary and produce the same core proof-facing artifacts:
+
+- recomputable `receipt_root`
+- `receiptos.evidence_capsule.v0`
+- `receiptos.provenance_summary.v0`
+- verifier-facing proof state
+- replay-oriented evidence summaries
+
+For the current support matrix, see `docs/PRODUCER_SUPPORT_MATRIX.md`.
+
+## What this is
+
+Crystal Receipt is no longer just a visual experiment.
+Its current direction is:
+
+- portable execution receipts
+- Evidence Capsule interpretation
+- ReceiptOS-compatible verification
+- receipt root recomputation
+- local Merkle proof attachment and checking
+- external anchor import / anchor-path support
+- optional visual rendering as a secondary presentation layer
+
+The core idea is simple:
+- an agent action produces evidence
+- the evidence can be verified and replayed
+- the evidence can be summarized into an Evidence Capsule
+- the same evidence can optionally be rendered into a deterministic crystal artifact
+
+The goal is **not** to replace cryptographic verification.
+The goal is to make execution evidence portable, inspectable, verifiable, and human-readable.
 
 ## Execution Provenance
 
@@ -56,73 +137,7 @@ See:
 - `docs/CYPHES_RECEIPTOS_INTEGRATION_STATUS.md`
 - `scripts/demo-external-producer-e2e.ts`
 
-## Producer coverage
-
-ReceiptOS uses the same proof pipeline across different producer systems.
-
-Core message:
-
-```text
-Same proof pipeline.
-Different producers.
-One portable receipt model.
-```
-
-The current documented producer surface is best understood in two categories:
-
-### Verified against real producer data or real fixture shape
-- Stealth handoff
-- GitHub Actions
-- Claude Code session
-- generic producer
-- `external.coding_run.v0`
-
-### Schema sketch / capsule-boundary compatibility only
-- Cursor session
-- Codex session
-
-All of these paths are aimed at the same ReceiptOS capsule/proof boundary.
-But Cursor and Codex should currently be read more narrowly: they demonstrate ReceiptOS boundary compatibility and adapter shape, not a fully verified stable integration against documented real producer session formats.
-
-These producers differ in runtime, workflow shape, and source semantics.
-They do not get separate proof semantics.
-They normalize into the same ReceiptOS proof boundary and produce the same core proof-facing artifacts:
-
-- recomputable `receipt_root`
-- `receiptos.evidence_capsule.v0`
-- `receiptos.provenance_summary.v0`
-- verifier-facing proof state
-- replay-oriented evidence summaries
-
-For the current support matrix, see `docs/PRODUCER_SUPPORT_MATRIX.md`.
-
-## External producer quick start
-
-- Read `docs/receiptos_integration_manifest_v0.md`
-- Read `docs/EXTERNAL_PRODUCER_INTEGRATION_GUIDE.md`
-- Run `bun scripts/demo-external-producer-e2e.ts`
-
-## What this is
-
-Crystal Receipt is no longer just a visual experiment.
-Its current direction is:
-
-- portable execution receipts
-- Evidence Capsule interpretation
-- ReceiptOS-compatible verification
-- receipt root recomputation
-- local Merkle proof attachment and checking
-- external anchor import / anchor-path support
-- optional visual rendering as a secondary presentation layer
-
-The core idea is simple:
-- an agent action produces evidence
-- the evidence can be verified and replayed
-- the evidence can be summarized into an Evidence Capsule
-- the same evidence can optionally be rendered into a deterministic crystal artifact
-
-The goal is **not** to replace cryptographic verification.
-The goal is to make execution evidence portable, inspectable, verifiable, and human-readable.
+![Crystal Receipt architecture hero](docs/crystal_receipt_mobile_flow.svg)
 
 ## Current product direction
 
