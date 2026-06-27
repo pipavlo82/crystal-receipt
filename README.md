@@ -68,15 +68,21 @@ Different producers.
 One portable receipt model.
 ```
 
-The current documented producer set is:
+The current documented producer surface is best understood in two categories:
 
+### Verified against real producer data or real fixture shape
 - Stealth handoff
 - GitHub Actions
 - Claude Code session
-- Cursor session
-- Codex session
 - generic producer
 - `external.coding_run.v0`
+
+### Schema sketch / capsule-boundary compatibility only
+- Cursor session
+- Codex session
+
+All of these paths are aimed at the same ReceiptOS capsule/proof boundary.
+But Cursor and Codex should currently be read more narrowly: they demonstrate ReceiptOS boundary compatibility and adapter shape, not a fully verified stable integration against documented real producer session formats.
 
 These producers differ in runtime, workflow shape, and source semantics.
 They do not get separate proof semantics.
@@ -182,7 +188,8 @@ Crystal Receipt does **not** redefine receipt truth.
 It consumes receipt evidence and presents it.
 
 In the current repo, this proof boundary is also producer-neutral:
-- Stealth handoff, GitHub Actions, Claude Code session, Cursor session, Codex session, generic producer, and `external.coding_run.v0` are all supported in the current adapter/fixture/test surface
+- Stealth handoff, GitHub Actions, Claude Code session, generic producer, and `external.coding_run.v0` are supported against real producer data or real fixture shape in the current adapter/fixture/test surface
+- Cursor session and Codex session currently demonstrate capsule-boundary compatibility in the adapter/fixture/test surface, but are not yet verified against stable, documented real producer session formats
 - producers may differ in workflow model, runtime, and source semantics
 - the shared Evidence Capsule / proof boundary remains stable
 - producer-specific workflow logic stays outside the shared proof substrate
