@@ -157,8 +157,5 @@ export function normalizeCursorSessionOutput(source: CursorSessionOutput): Hando
 export const cursorSessionAdapter: ProducerAdapter<CursorSessionOutput> = {
   id: "cursor-session",
   sourceSchema: "cursor.session.v0",
-  matches(input: unknown): boolean {
-    return typeof input === "object" && input !== null && (input as { schema?: unknown }).schema === "cursor.session.v0"
-  },
   normalize: normalizeCursorSessionOutput,
 }

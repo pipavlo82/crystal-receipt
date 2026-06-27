@@ -127,8 +127,5 @@ export function normalizeExternalCodingRunOutput(source: ExternalCodingRunOutput
 export const externalCodingRunAdapter: ProducerAdapter<ExternalCodingRunOutput> = {
   id: "external-coding-run",
   sourceSchema: "external.coding_run.v0",
-  matches(input: unknown): boolean {
-    return typeof input === "object" && input !== null && (input as { schema?: unknown }).schema === "external.coding_run.v0"
-  },
   normalize: normalizeExternalCodingRunOutput,
 }
