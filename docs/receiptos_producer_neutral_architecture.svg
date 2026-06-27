@@ -1,0 +1,135 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1020" viewBox="0 0 1500 1020" role="img" aria-labelledby="title desc">
+  <title id="title">ReceiptOS Producer-Neutral Architecture</title>
+  <desc id="desc">A black and white scientific style diagram showing many different producer systems normalizing into a single ReceiptOS proof boundary, which derives a receipt root, passes through a verifier, and produces an Evidence Capsule and Provenance Summary. Those proof-facing artifacts can then be inspected by a Viewer, exported, or optionally rendered as a secondary crystal visual surface.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 z" fill="#111111"/>
+    </marker>
+    <style>
+      .bg { fill: #ffffff; }
+      .box { fill: #ffffff; stroke: #111111; stroke-width: 3; }
+      .boxThin { fill: #ffffff; stroke: #111111; stroke-width: 2; }
+      .boxDashed { fill: #ffffff; stroke: #111111; stroke-width: 2; stroke-dasharray: 7 6; }
+      .substrate { fill: #ffffff; stroke: #111111; stroke-width: 4; }
+      .arrow { stroke: #111111; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+      .arrowThin { stroke: #111111; stroke-width: 2; fill: none; marker-end: url(#arrow); }
+      .title { font: 700 32px Inter, Segoe UI, Arial, sans-serif; fill: #111111; }
+      .subtitle { font: 500 19px Inter, Segoe UI, Arial, sans-serif; fill: #333333; }
+      .section { font: 700 21px Inter, Segoe UI, Arial, sans-serif; fill: #111111; }
+      .producer { font: 700 17px Inter, Segoe UI, Arial, sans-serif; fill: #111111; }
+      .body { font: 500 15px Inter, Segoe UI, Arial, sans-serif; fill: #222222; }
+      .mono { font: 600 14px ui-monospace, SFMono-Regular, Consolas, monospace; fill: #111111; }
+      .note { font: 700 16px Inter, Segoe UI, Arial, sans-serif; fill: #111111; }
+      .small { font: 500 12px Inter, Segoe UI, Arial, sans-serif; fill: #444444; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1500" height="1020"/>
+
+  <text x="750" y="46" text-anchor="middle" class="title">RECEIPTOS — PRODUCER-NEUTRAL PROOF BOUNDARY</text>
+  <text x="750" y="74" text-anchor="middle" class="subtitle">Same proof pipeline. Different producers. One portable receipt model.</text>
+
+  <!-- Row 1: producers -->
+  <text x="60" y="112" class="section">Producers (source systems)</text>
+
+  <!-- verified producers -->
+  <rect x="40" y="125" width="170" height="92" rx="14" ry="14" class="box"/>
+  <text x="125" y="158" text-anchor="middle" class="producer">Stealth</text>
+  <text x="125" y="180" text-anchor="middle" class="small">handoff evidence</text>
+  <text x="125" y="200" text-anchor="middle" class="small">verified</text>
+
+  <rect x="230" y="125" width="170" height="92" rx="14" ry="14" class="box"/>
+  <text x="315" y="158" text-anchor="middle" class="producer">GitHub Actions</text>
+  <text x="315" y="180" text-anchor="middle" class="small">CI run evidence</text>
+  <text x="315" y="200" text-anchor="middle" class="small">verified</text>
+
+  <rect x="420" y="125" width="170" height="92" rx="14" ry="14" class="box"/>
+  <text x="505" y="158" text-anchor="middle" class="producer">Claude Code</text>
+  <text x="505" y="180" text-anchor="middle" class="small">session JSONL</text>
+  <text x="505" y="200" text-anchor="middle" class="small">verified</text>
+
+  <rect x="610" y="125" width="170" height="92" rx="14" ry="14" class="box"/>
+  <text x="695" y="158" text-anchor="middle" class="producer">External coding-run</text>
+  <text x="695" y="180" text-anchor="middle" class="small">generic agent/tool run</text>
+  <text x="695" y="200" text-anchor="middle" class="small">verified</text>
+
+  <rect x="800" y="125" width="170" height="92" rx="14" ry="14" class="box"/>
+  <text x="885" y="158" text-anchor="middle" class="producer">Generic producer</text>
+  <text x="885" y="180" text-anchor="middle" class="small">minimal source shape</text>
+  <text x="885" y="200" text-anchor="middle" class="small">verified</text>
+
+  <!-- sketch-only producers, dashed -->
+  <rect x="990" y="125" width="170" height="92" rx="14" ry="14" class="boxDashed"/>
+  <text x="1075" y="158" text-anchor="middle" class="producer">Codex session</text>
+  <text x="1075" y="180" text-anchor="middle" class="small">no stable doc'd schema</text>
+  <text x="1075" y="200" text-anchor="middle" class="small">boundary sketch only</text>
+
+  <rect x="1180" y="125" width="170" height="92" rx="14" ry="14" class="boxDashed"/>
+  <text x="1265" y="158" text-anchor="middle" class="producer">Cursor session</text>
+  <text x="1265" y="180" text-anchor="middle" class="small">SQLite, undocumented</text>
+  <text x="1265" y="200" text-anchor="middle" class="small">boundary sketch only</text>
+
+  <!-- converging arrows -->
+  <path d="M125 217 L 700 300" class="arrowThin"/>
+  <path d="M315 217 L 720 300" class="arrowThin"/>
+  <path d="M505 217 L 740 300" class="arrowThin"/>
+  <path d="M695 217 L 750 300" class="arrowThin"/>
+  <path d="M885 217 L 770 300" class="arrowThin"/>
+  <path d="M1075 217 L 790 300" class="arrowThin"/>
+  <path d="M1265 217 L 810 300" class="arrowThin"/>
+
+  <!-- ReceiptOS proof boundary -->
+  <rect x="220" y="305" width="1060" height="150" rx="18" ry="18" class="substrate"/>
+  <text x="750" y="345" text-anchor="middle" class="section">ReceiptOS Proof Boundary — normalization to HandoffEvidence</text>
+  <text x="750" y="372" text-anchor="middle" class="body">Producer-specific workflow, task, and runtime semantics stay outside this boundary.</text>
+  <text x="750" y="398" text-anchor="middle" class="mono">payload · authorization · execution · changes/evidence · proof_refs · metadata</text>
+  <text x="750" y="420" text-anchor="middle" class="small">Producer identity (runtime / generated_by / source) travels as provenance metadata, not proof truth.</text>
+  <text x="750" y="442" text-anchor="middle" class="small">CYPHES workflow evidence maps into this same boundary (see CYPHES_EVIDENCE_CAPSULE_ADAPTER_V0.md) — not a separate proof model.</text>
+
+  <path d="M750 455 V 480" class="arrow"/>
+
+  <!-- receipt_root -->
+  <rect x="350" y="495" width="800" height="100" rx="16" ry="16" class="box"/>
+  <text x="750" y="528" text-anchor="middle" class="section">receipt_root</text>
+  <text x="750" y="554" text-anchor="middle" class="body">Canonical JSON (sorted keys) with the top-level anchor object stripped, then SHA-256.</text>
+  <text x="750" y="578" text-anchor="middle" class="small">receipt_root never depends on its own anchor — enforced in code, not by caller convention.</text>
+
+  <path d="M750 595 V 640" class="arrow"/>
+
+  <!-- verifier -->
+  <rect x="380" y="655" width="740" height="100" rx="16" ry="16" class="box"/>
+  <text x="750" y="688" text-anchor="middle" class="section">Verifier</text>
+  <text x="750" y="714" text-anchor="middle" class="body">Recomputes receipt_root independently; checks stored vs. computed; checks Merkle / anchor state.</text>
+  <text x="750" y="738" text-anchor="middle" class="small">The verifier remains the source of truth — capsule and viewer layers are interpretive, not authoritative.</text>
+
+  <path d="M750 755 V 800" class="arrow"/>
+
+  <!-- evidence capsule + provenance summary -->
+  <rect x="280" y="815" width="430" height="110" rx="16" ry="16" class="box"/>
+  <text x="495" y="848" text-anchor="middle" class="section">Evidence Capsule v0</text>
+  <text x="495" y="874" text-anchor="middle" class="mono">receiptos.evidence_capsule.v0</text>
+  <text x="495" y="897" text-anchor="middle" class="small">payload · authorization · execution · result</text>
+  <text x="495" y="915" text-anchor="middle" class="small">receipt_root · merkle · anchor · verifier</text>
+
+  <rect x="730" y="815" width="430" height="110" rx="16" ry="16" class="box"/>
+  <text x="945" y="848" text-anchor="middle" class="section">Provenance Summary v0</text>
+  <text x="945" y="874" text-anchor="middle" class="mono">receiptos.provenance_summary.v0</text>
+  <text x="945" y="897" text-anchor="middle" class="small">what_happened · verifier_status</text>
+  <text x="945" y="915" text-anchor="middle" class="small">warnings · risk_flags</text>
+
+  <!-- diverging arrows to downstream layers -->
+  <path d="M495 925 L 280 965" class="arrowThin"/>
+  <path d="M650 925 L 650 965" class="arrowThin"/>
+  <path d="M945 925 L 1010 965" class="arrowThin"/>
+
+  <rect x="120" y="970" width="320" height="42" rx="10" ry="10" class="boxThin"/>
+  <text x="280" y="996" text-anchor="middle" class="body">Viewer (browser-inspectable proof view)</text>
+
+  <rect x="480" y="970" width="280" height="42" rx="10" ry="10" class="boxThin"/>
+  <text x="620" y="996" text-anchor="middle" class="body">Export (file / CI artifact)</text>
+
+  <rect x="800" y="970" width="320" height="42" rx="10" ry="10" class="boxDashed"/>
+  <text x="960" y="996" text-anchor="middle" class="body">Crystal (optional, secondary visual)</text>
+
+  <text x="1180" y="996" class="note">Verifier is the source of truth.</text>
+</svg>
