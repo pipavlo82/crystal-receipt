@@ -1,5 +1,10 @@
 {
   "schema": "receiptos.example_index.v0",
+  "notes": [
+    "The GitHub Pages Viewer example index includes both proof-state examples and producer-specific ReceiptOS bundles.",
+    "Producer-specific entries point only to committed assets mirrored from the canonical examples/receipt-examples bundles.",
+    "Entries without visualPath still load in the Viewer and fall back to the default crystal surface while exposing real proof artifacts."
+  ],
   "examples": [
     {
       "id": "clean-local-proof",
@@ -23,9 +28,56 @@
       "visualPath": "../receipt-examples/anchored-proof/crystal.svg"
     },
     {
+      "id": "stealth-handoff",
+      "label": "Stealth handoff",
+      "summaryPath": "../receipt-examples/stealth-handoff/capsule-summary.json",
+      "substratePath": "../receipt-examples/stealth-handoff/evidence-capsule.v0.json",
+      "provenancePath": "../receipt-examples/stealth-handoff/provenance-summary.v0.json",
+      "normalizedPath": "../receipt-examples/stealth-handoff/normalized-evidence.json"
+    },
+    {
+      "id": "github-actions-run",
+      "label": "GitHub Actions run",
+      "summaryPath": "../receipt-examples/github-actions-run/capsule-summary.json",
+      "substratePath": "../receipt-examples/github-actions-run/evidence-capsule.v0.json",
+      "provenancePath": "../receipt-examples/github-actions-run/provenance-summary.v0.json",
+      "normalizedPath": "../receipt-examples/github-actions-run/normalized-evidence.json"
+    },
+    {
+      "id": "claude-code-session",
+      "label": "Claude Code session",
+      "summaryPath": "../receipt-examples/claude-code-session/capsule-summary.json",
+      "substratePath": "../receipt-examples/claude-code-session/evidence-capsule.v0.json",
+      "provenancePath": "../receipt-examples/claude-code-session/provenance-summary.v0.json",
+      "normalizedPath": "../receipt-examples/claude-code-session/normalized-evidence.json"
+    },
+    {
+      "id": "cursor-session",
+      "label": "Cursor session",
+      "summaryPath": "../receipt-examples/cursor-session/capsule-summary.json",
+      "substratePath": "../receipt-examples/cursor-session/evidence-capsule.v0.json",
+      "provenancePath": "../receipt-examples/cursor-session/provenance-summary.v0.json",
+      "normalizedPath": "../receipt-examples/cursor-session/normalized-evidence.json"
+    },
+    {
+      "id": "codex-session",
+      "label": "Codex session",
+      "summaryPath": "../receipt-examples/codex-session/capsule-summary.json",
+      "substratePath": "../receipt-examples/codex-session/evidence-capsule.v0.json",
+      "provenancePath": "../receipt-examples/codex-session/provenance-summary.v0.json",
+      "normalizedPath": "../receipt-examples/codex-session/normalized-evidence.json"
+    },
+    {
+      "id": "generic-producer",
+      "label": "Generic producer",
+      "summaryPath": "../receipt-examples/generic-producer/capsule-summary.json",
+      "substratePath": "../receipt-examples/generic-producer/evidence-capsule.v0.json",
+      "provenancePath": "../receipt-examples/generic-producer/provenance-summary.v0.json",
+      "normalizedPath": "../receipt-examples/generic-producer/normalized-evidence.json"
+    },
+    {
       "id": "external-coding-run",
-      "label": "External Coding Run",
-      "description": "Non-Stealth coding-agent/tool-run example showing the ReceiptOS evidence, capsule, and provenance path.",
+      "label": "External coding run",
       "summaryPath": "../receipt-examples/external-coding-run/capsule-summary.json",
       "substratePath": "../receipt-examples/external-coding-run/evidence-capsule.v0.json",
       "provenancePath": "../receipt-examples/external-coding-run/provenance-summary.v0.json",
