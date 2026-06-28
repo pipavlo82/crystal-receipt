@@ -109,9 +109,7 @@ function getSection(sections: EvidenceCapsuleSection[], id: EvidenceCapsuleSecti
   return sections.find((section) => section.id === id)
 }
 
-export async function createCapsuleSummary(evidencePath: string): Promise<CapsuleSummary> {
-  const sourcePath = resolve(evidencePath)
-  const evidence = JSON.parse(readFileSync(sourcePath, "utf8")) as HandoffEvidence
+export async function createCapsuleSummaryFromEvidence(evidence: HandoffEvidence, sourceEvidence = "inline:evidence"): Promise<CapsuleSummary> {
   const verification = await verifyHandoffReceiptRoot(evidence)
   const merkleAttachment = buildLocalMerkleAttachment(evidence)
   const merkleVerification = merkleAttachment ? verifyLocalMerkleProof(merkleAttachment) : null
@@ -122,7 +120,7 @@ export async function createCapsuleSummary(evidencePath: string): Promise<Capsul
 
   return {
     schema: "receiptos.capsule_summary.v0",
-    source_evidence: sourcePath,
+    source_evidence: sourceEvidence,
     receipt_root: evidence.anchor?.receipt_root ?? null,
     computed_receipt_root: computedReceiptRoot,
     receipt_verification: {
@@ -142,6 +140,12 @@ export async function createCapsuleSummary(evidencePath: string): Promise<Capsul
     crystal_mapping: crystalMapping,
     render_plan: renderPlan,
   }
+}
+
+export async function createCapsuleSummary(evidencePath: string): Promise<CapsuleSummary> {
+  const sourcePath = resolve(evidencePath)
+  const evidence = JSON.parse(readFileSync(sourcePath, "utf8")) as HandoffEvidence
+  return createCapsuleSummaryFromEvidence(evidence, sourcePath)
 }
 
 export function createEvidenceCapsuleV0(summary: CapsuleSummary): EvidenceCapsuleV0 {
