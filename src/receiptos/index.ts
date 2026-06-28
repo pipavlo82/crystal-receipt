@@ -17,12 +17,17 @@ export {
 } from "./capsule/evidence-capsule"
 export {
   createCapsuleSummary,
+  createCapsuleSummaryFromEvidence,
   createEvidenceCapsuleV0,
   createProvenanceSummaryV0,
   type CapsuleSummary,
   type EvidenceCapsuleV0,
   type ProvenanceSummaryV0,
 } from "./capsule/evidence-capsule-v0"
+export {
+  createPortableProofObjectV0,
+  type PortableProofObjectV0,
+} from "./capsule/portable-proof-object-v0"
 export { buildCrystalReceiptMapping, type CrystalReceiptMapping } from "./capsule/crystal-mapping"
 export {
   buildRenderPlan,
