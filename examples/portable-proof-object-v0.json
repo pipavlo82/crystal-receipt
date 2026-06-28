@@ -8,6 +8,9 @@
   "anchor_ref": null,
   "created_at": "2024-06-18T02:00:21.000Z",
   "relation_type": "imported",
+  "project_refs": [
+    "workspace"
+  ],
   "source_evidence_ref": "example://stealth-handoff/normalized-evidence.json",
   "producer": {
     "runtime": "Stealth",
@@ -18,7 +21,8 @@
   "metadata": {
     "label": "Portable ReceiptOS evidence core sample",
     "session_id": "session-demo-001",
-    "directory": "C:/demo/workspace"
+    "directory": "C:/demo/workspace",
+    "position_id": "workspace"
   },
   "evidence_capsule": {
     "schema": "receiptos.evidence_capsule.v0",
