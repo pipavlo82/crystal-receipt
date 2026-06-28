@@ -18,6 +18,7 @@ export type PortableProofObjectV0 = {
   anchor_ref: string | null
   created_at: string
   relation_type: "imported"
+  project_refs: string[]
   source_evidence_ref: string
   producer: {
     runtime: string
@@ -29,6 +30,7 @@ export type PortableProofObjectV0 = {
     label: string
     session_id: string
     directory: string
+    position_id: string
   }
   evidence_capsule: EvidenceCapsuleV0
   provenance_summary: ProvenanceSummaryV0
@@ -66,6 +68,12 @@ function deriveAnchorRef(evidence: HandoffEvidence) {
   return evidence.anchor.tx_hash ? `receiptos://anchor/${encodeURIComponent(evidence.anchor.tx_hash)}` : null
 }
 
+function deriveProjectRef(evidence: HandoffEvidence) {
+  const raw = basename(evidence.directory || evidence.session_id || "unpositioned").trim().toLowerCase()
+  const normalized = raw.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")
+  return normalized || "unpositioned"
+}
+
 export async function createPortableProofObjectV0(
   evidence: HandoffEvidence,
   options?: { sourceEvidenceRef?: string },
@@ -80,6 +88,7 @@ export async function createPortableProofObjectV0(
   const evidenceCapsule = createEvidenceCapsuleV0(summary)
   const provenanceSummary = createProvenanceSummaryV0(evidenceCapsule)
   const proofObjectId = deriveProofObjectId(summary.receipt_root)
+  const projectRef = deriveProjectRef(evidence)
 
   return {
     schema: "receiptos.portable_proof_object.v0",
@@ -91,6 +100,7 @@ export async function createPortableProofObjectV0(
     anchor_ref: deriveAnchorRef(evidence),
     created_at: deriveCreatedAt(evidence),
     relation_type: "imported",
+    project_refs: [projectRef],
     source_evidence_ref: sourceEvidenceRef,
     producer: {
       runtime: evidence.agent.runtime,
@@ -102,6 +112,7 @@ export async function createPortableProofObjectV0(
       label: deriveLabel(evidence),
       session_id: evidence.session_id,
       directory: evidence.directory,
+      position_id: projectRef,
     },
     evidence_capsule: evidenceCapsule,
     provenance_summary: provenanceSummary,

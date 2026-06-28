@@ -39,6 +39,8 @@ describe("portable proof object v0", () => {
     expect(portableProofObject.proof_object_id).toMatch(/^proofobj-/)
     expect(portableProofObject.receipt_root).toMatch(/^0x[0-9a-f]{64}$/)
     expect(typeof portableProofObject.proof_ref).toBe("string")
+    expect(portableProofObject.project_refs).toEqual(["workspace"])
+    expect(portableProofObject.metadata.position_id).toBe("workspace")
     expect(portableProofObject.evidence_capsule.schema).toBe("receiptos.evidence_capsule.v0")
     expect(portableProofObject.provenance_summary.schema).toBe("receiptos.provenance_summary.v0")
   })
