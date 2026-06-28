@@ -2,27 +2,51 @@
 
 ## ReceiptOS
 
-**Tamper-evident receipts for AI agents, tools, workflows, and autonomous systems.**
+**Portable proof objects for AI agents, tools, workflows, and autonomous systems.**
 
 ```text
-Agent / Tool → Evidence Capsule → Receipt Root → Portable Proof Object
+Execution Evidence → Receipt Root → Evidence Capsule / Provenance Summary → Portable Proof Object → Chronicle History
 ```
 
 ## What you get
 
 - Portable execution receipts
-- Recomputable receipt roots
+- Recomputable `receipt_root`
 - Evidence Capsules
+- Provenance Summaries
 - Verifier-facing proof summaries
+- Portable proof objects for downstream history systems
 
-Crystal Receipt is a portable receipt and evidence surface for agent actions.
-It consumes verifiable execution evidence, preserves ReceiptOS-compatible proof semantics, and can present that evidence as an Evidence Capsule, a replayable proof summary, and optionally a deterministic visual artifact.
+Crystal Receipt / ReceiptOS is the proof layer in the broader execution → receipt → history ecosystem.
+It consumes execution evidence, preserves ReceiptOS-compatible proof semantics, derives canonical `receipt_root`, produces Evidence Capsules and Provenance Summaries, and emits portable proof objects for downstream use.
 The repository is organized into two layers: a producer-neutral ReceiptOS proof core and an optional crystal rendering layer built on top of it.
+
+## Ecosystem role
+
+Upstream:
+- Stealth captures execution evidence from agent/tool/action workflows.
+
+Crystal Receipt / ReceiptOS:
+- normalizes evidence
+- derives `receipt_root`
+- produces Evidence Capsules / Provenance Summaries
+- emits portable proof objects
+
+Downstream:
+- Chronicle consumes portable proof objects and turns them into durable history and continuity.
+
+In short:
+
+```text
+Stealth executes. ReceiptOS proves. Chronicle explains.
+```
 
 In the current architecture:
 - **ReceiptOS** is the stable proof substrate
 - **producers** are systems that emit execution evidence into that substrate
-- **Crystal Receipt** is the visualization / inspection layer built around that proof boundary
+- **Crystal Receipt** is the proof-facing packaging / inspection layer built around that boundary
+
+Visual receipt language remains downstream presentation, not the core identity of the repo.
 
 ## External producer quick start
 
