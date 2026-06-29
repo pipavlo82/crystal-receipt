@@ -7,9 +7,8 @@ import { type Platform, PlatformProvider } from "@/context/platform"
 import { dict as en } from "@/i18n/en"
 import { dict as zh } from "@/i18n/zh"
 import { handleNotificationClick } from "@/utils/notification-click"
-import { authFromToken } from "@/utils/server"
 import pkg from "../package.json"
-import { ServerConnection } from "./context/server"
+import { ProofHome } from "./proof-home"
 
 const DEFAULT_SERVER_URL_KEY = "opencode.settings.dat:defaultServerUrl"
 
@@ -99,19 +98,6 @@ if (!(root instanceof HTMLElement) && import.meta.env.DEV) {
   throw new Error(getRootNotFoundError())
 }
 
-const getCurrentUrl = () => {
-  if (location.hostname.includes("opencode.ai")) return "http://localhost:4096"
-  if (import.meta.env.DEV)
-    return `http://${import.meta.env.VITE_OPENCODE_SERVER_HOST ?? "localhost"}:${import.meta.env.VITE_OPENCODE_SERVER_PORT ?? "4096"}`
-  return location.origin
-}
-
-const getDefaultUrl = () => {
-  const lsDefault = readDefaultServerUrl()
-  if (lsDefault) return lsDefault
-  return getCurrentUrl()
-}
-
 const clearAuthToken = () => {
   const params = new URLSearchParams(location.search)
   if (!params.has("auth_token")) return
@@ -129,11 +115,8 @@ const platform: Platform = {
   forward,
   restart,
   notify,
-  getDefaultServer: async () => {
-    const stored = readDefaultServerUrl()
-    return stored ? ServerConnection.Key.make(stored) : null
-  },
-  setDefaultServer: writeDefaultServerUrl,
+  getDefaultServer: async () => null,
+  setDefaultServer: () => {},
 }
 
 if (import.meta.env.VITE_SENTRY_DSN) {
@@ -156,32 +139,12 @@ if (import.meta.env.VITE_SENTRY_DSN) {
 }
 
 if (root instanceof HTMLElement) {
-  const auth = authFromToken(new URLSearchParams(location.search).get("auth_token"))
   clearAuthToken()
-  const _server: ServerConnection.Http = {
-    type: "http",
-    authToken: !!auth,
-    http: {
-      url: getCurrentUrl(),
-      ...auth,
-    },
-  }
   render(
     () => (
       <PlatformProvider value={platform}>
         <AppBaseProviders>
-          <div style={{ padding: "24px", "font-family": "Inter, Arial, sans-serif", color: "white", "background-color": "#0f1115", height: "100vh", "box-sizing": "border-box" }}>
-            <h1 style={{ margin: "0 0 12px 0", "font-size": "28px", "font-weight": "700" }}>Crystal Receipt Desktop v1</h1>
-            <p style={{ margin: "0 0 12px 0", opacity: "0.85" }}>
-              First-pass desktop bootstrap from the Stealth shell.
-            </p>
-            <p style={{ margin: "0 0 8px 0", opacity: "0.8" }}>Execution/provider UI is intentionally stubbed in this pass.</p>
-            <ul style={{ margin: "12px 0 0 20px", opacity: "0.8" }}>
-              <li>ReceiptOS proof semantics unchanged</li>
-              <li>Stealth repo untouched</li>
-              <li>Chronicle repo untouched</li>
-            </ul>
-          </div>
+          <ProofHome />
         </AppBaseProviders>
       </PlatformProvider>
     ),
