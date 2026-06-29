@@ -141,10 +141,10 @@ export function createMainWindow() {
         }
       : {}),
     webPreferences: {
-      preload: join(root, "../preload/index.js"),
+      preload: join(root, "../preload/index.mjs"),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: true,
+      sandbox: false,
     },
   })
 
@@ -194,10 +194,10 @@ export function createLoadingWindow() {
         }
       : {}),
     webPreferences: {
-      preload: join(root, "../preload/index.js"),
+      preload: join(root, "../preload/index.mjs"),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: true,
+      sandbox: false,
     },
   })
 

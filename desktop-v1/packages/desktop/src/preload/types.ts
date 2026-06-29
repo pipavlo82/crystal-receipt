@@ -1,4 +1,9 @@
 import type { DesktopMenuAction } from "@opencode-ai/app/desktop-menu"
+import type {
+  EvidenceCapsuleV0,
+  PortableProofObjectV0,
+  ProvenanceSummaryV0,
+} from "../../../../../src/receiptos"
 
 export type InitStep = { phase: "server_waiting" } | { phase: "sqlite_waiting" } | { phase: "done" }
 
@@ -26,6 +31,13 @@ export type FatalRendererError = {
   version?: string
   platform: string
   os?: string
+}
+
+export type ProofPipelineResult = {
+  receipt_root: string
+  evidence_capsule: EvidenceCapsuleV0
+  provenance_summary: ProvenanceSummaryV0
+  portable_proof_object: PortableProofObjectV0
 }
 
 export type ElectronAPI = {
@@ -92,4 +104,5 @@ export type ElectronAPI = {
   setBackgroundColor: (color: string) => Promise<void>
   exportDebugLogs: () => Promise<string>
   recordFatalRendererError: (error: FatalRendererError) => Promise<void>
+  processStealthEvidenceToProof: (raw: unknown, sourceEvidenceRef: string) => Promise<ProofPipelineResult>
 }

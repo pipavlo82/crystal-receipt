@@ -1,14 +1,5 @@
-import { createSignal, Match, Show, Switch } from "solid-js"
-import {
-  createCapsuleSummaryFromEvidence,
-  createEvidenceCapsuleV0,
-  createPortableProofObjectV0,
-  createProvenanceSummaryV0,
-  type EvidenceCapsuleV0,
-  type PortableProofObjectV0,
-  type ProvenanceSummaryV0,
-} from "../../../../src/receiptos"
-import { normalizeStealthHandoffOutput } from "../../../../src/receiptos/adapters/stealth-handoff"
+import { createSignal, Match, Switch } from "solid-js"
+import type { EvidenceCapsuleV0, PortableProofObjectV0, ProvenanceSummaryV0 } from "../../../../src/receiptos"
 
 type LoadState = "idle" | "loading" | "loaded" | "error"
 
@@ -41,19 +32,13 @@ export function ProofHome() {
 
     try {
       const raw = JSON.parse(await file.text())
-      const normalized = normalizeStealthHandoffOutput(raw)
-      const summary = await createCapsuleSummaryFromEvidence(normalized, file.name)
-      const nextCapsule = createEvidenceCapsuleV0(summary)
-      const nextProvenance = createProvenanceSummaryV0(nextCapsule)
-      const nextProofObject = await createPortableProofObjectV0(normalized, {
-        sourceEvidenceRef: file.name,
-      })
+      const result = await window.api.processStealthEvidenceToProof(raw, file.name)
 
       setSourceName(file.name)
-      setReceiptRoot(nextProofObject.receipt_root)
-      setCapsule(nextCapsule)
-      setProvenance(nextProvenance)
-      setProofObject(nextProofObject)
+      setReceiptRoot(result.receipt_root)
+      setCapsule(result.evidence_capsule)
+      setProvenance(result.provenance_summary)
+      setProofObject(result.portable_proof_object)
       setState("loaded")
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause))

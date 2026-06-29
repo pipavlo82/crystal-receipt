@@ -2,6 +2,7 @@ import { sentryVitePlugin } from "@sentry/vite-plugin"
 import { defineConfig } from "electron-vite"
 import appPlugin from "@opencode-ai/app/vite"
 import * as fs from "node:fs/promises"
+import path from "node:path"
 
 const OPENCODE_SERVER_DIST = "../opencode/dist/node"
 
@@ -15,6 +16,7 @@ const channel = (() => {
 const targetPlatform = process.env.ELECTRON_TARGET_PLATFORM ?? process.env.npm_config_platform ?? process.platform
 const targetArch = process.env.ELECTRON_TARGET_ARCH ?? process.env.npm_config_arch ?? process.arch
 const nodePtyPkg = `@lydell/node-pty-${targetPlatform}-${targetArch}`
+const receiptosRoot = path.resolve(__dirname, "../../../src/receiptos")
 
 const sentry =
   process.env.SENTRY_AUTH_TOKEN && process.env.SENTRY_ORG && process.env.SENTRY_PROJECT
@@ -35,6 +37,11 @@ const sentry =
 
 export default defineConfig({
   main: {
+    resolve: {
+      alias: {
+        "@receiptos": receiptosRoot,
+      },
+    },
     define: {
       "import.meta.env.OPENCODE_CHANNEL": JSON.stringify(channel),
     },
@@ -71,12 +78,18 @@ export default defineConfig({
     ],
   },
   preload: {
+    resolve: {
+      alias: {
+        "@receiptos": receiptosRoot,
+      },
+    },
     build: {
       rollupOptions: {
         input: { index: "src/preload/index.ts" },
         output: {
-          format: "cjs",
-          entryFileNames: "[name].js",
+          format: "es",
+          entryFileNames: "[name].mjs",
+          chunkFileNames: "chunks/[name]-[hash].mjs",
         },
       },
     },
