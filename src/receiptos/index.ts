@@ -28,6 +28,17 @@ export {
   createPortableProofObjectV0,
   type PortableProofObjectV0,
 } from "./capsule/portable-proof-object-v0"
+export {
+  createChronicleEntryV0,
+  deriveCollectionRefsFromChronicleEntry,
+  sortCollectionRefs,
+  computeChroniclePortfolioRoot,
+  createChroniclePortfolioV0,
+  verifyChroniclePortfolioV0,
+  type ChronicleEntryV0,
+  type ChroniclePortfolioV0,
+  type ChroniclePortfolioVerification,
+} from "./capsule/chronicle-portfolio-v0"
 export { buildCrystalReceiptMapping, type CrystalReceiptMapping } from "./capsule/crystal-mapping"
 export {
   buildRenderPlan,

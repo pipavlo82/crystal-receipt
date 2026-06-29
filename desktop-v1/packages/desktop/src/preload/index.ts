@@ -1,9 +1,12 @@
 import { contextBridge, ipcRenderer } from "electron"
 import {
   createCapsuleSummaryFromEvidence,
+  createChronicleEntryV0,
+  createChroniclePortfolioV0,
   createEvidenceCapsuleV0,
   createPortableProofObjectV0,
   createProvenanceSummaryV0,
+  verifyChroniclePortfolioV0,
 } from "@receiptos"
 import { normalizeStealthHandoffOutput } from "@receiptos/adapters/stealth-handoff"
 import type { ElectronAPI, InitStep, SqliteMigrationProgress } from "./types"
@@ -102,8 +105,11 @@ const api: ElectronAPI = {
       evidence_capsule: evidenceCapsule,
       provenance_summary: provenanceSummary,
       portable_proof_object: portableProofObject,
+      chronicle_entry: createChronicleEntryV0(portableProofObject),
     }
   },
+  createChroniclePortfolio: async (entry) => createChroniclePortfolioV0(entry),
+  verifyChroniclePortfolio: async (portfolio) => verifyChroniclePortfolioV0(portfolio),
 }
 
 contextBridge.exposeInMainWorld("api", api)

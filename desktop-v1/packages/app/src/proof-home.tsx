@@ -1,33 +1,16 @@
 import { createSignal, Match, Switch } from "solid-js"
-import type { EvidenceCapsuleV0, PortableProofObjectV0, ProvenanceSummaryV0 } from "../../../../src/receiptos"
+import type {
+  ChronicleEntryV0,
+  ChroniclePortfolioV0,
+  ChroniclePortfolioVerification,
+  EvidenceCapsuleV0,
+  PortableProofObjectV0,
+  ProvenanceSummaryV0,
+} from "../../../../src/receiptos"
 
 type LoadState = "idle" | "loading" | "loaded" | "error"
 type BadgeTone = "verified" | "present" | "missing" | "failed"
-
-type ChronicleEntryV0 = {
-  schema: "chronicle_entry.v0"
-  entry_id: string
-  created_at: string
-  relation_type: string
-  project_refs: string[]
-  proof_object_refs: Array<{
-    proof_object_id: string
-    proof_system: string
-    receipt_root: string
-    proof_ref: string
-    replay_ref: string | null
-    anchor_ref: string | null
-  }>
-  metadata: {
-    label: string
-    session_id: string
-    position_id: string
-    directory: string
-    source_evidence_ref: string
-    producer_runtime: string
-    source_schema: string
-  }
-}
+type PortfolioStatus = "Not created" | "Created" | "Verified" | "Failed"
 
 function downloadJson(filename: string, value: unknown) {
   const blob = new Blob([JSON.stringify(value, null, 2) + "\n"], { type: "application/json" })
@@ -80,35 +63,6 @@ function LayerCard(props: { title: string, body: string }) {
   )
 }
 
-function createChronicleEntryV0(proofObject: PortableProofObjectV0): ChronicleEntryV0 {
-  return {
-    schema: "chronicle_entry.v0",
-    entry_id: `entry-${proofObject.proof_object_id}`,
-    created_at: proofObject.created_at,
-    relation_type: proofObject.relation_type,
-    project_refs: proofObject.project_refs,
-    proof_object_refs: [
-      {
-        proof_object_id: proofObject.proof_object_id,
-        proof_system: proofObject.proof_system,
-        receipt_root: proofObject.receipt_root,
-        proof_ref: proofObject.proof_ref,
-        replay_ref: proofObject.replay_ref,
-        anchor_ref: proofObject.anchor_ref,
-      },
-    ],
-    metadata: {
-      label: proofObject.metadata.label,
-      session_id: proofObject.metadata.session_id,
-      position_id: proofObject.metadata.position_id,
-      directory: proofObject.metadata.directory,
-      source_evidence_ref: proofObject.source_evidence_ref,
-      producer_runtime: proofObject.producer.runtime,
-      source_schema: proofObject.producer.source_schema,
-    },
-  }
-}
-
 function copyValue(value: string, onDone: () => void) {
   navigator.clipboard.writeText(value).then(onDone)
 }
@@ -121,6 +75,8 @@ export function ProofHome() {
   const [provenance, setProvenance] = createSignal<ProvenanceSummaryV0 | null>(null)
   const [proofObject, setProofObject] = createSignal<PortableProofObjectV0 | null>(null)
   const [chronicleEntry, setChronicleEntry] = createSignal<ChronicleEntryV0 | null>(null)
+  const [portfolio, setPortfolio] = createSignal<ChroniclePortfolioV0 | null>(null)
+  const [portfolioVerification, setPortfolioVerification] = createSignal<ChroniclePortfolioVerification | null>(null)
   const [error, setError] = createSignal<string>("")
   const [copiedField, setCopiedField] = createSignal<string>("")
 
@@ -136,14 +92,15 @@ export function ProofHome() {
     try {
       const raw = JSON.parse(await file.text())
       const result = await window.api.processStealthEvidenceToProof(raw, file.name)
-      const nextChronicleEntry = createChronicleEntryV0(result.portable_proof_object)
 
       setSourceName(file.name)
       setReceiptRoot(result.receipt_root)
       setCapsule(result.evidence_capsule)
       setProvenance(result.provenance_summary)
       setProofObject(result.portable_proof_object)
-      setChronicleEntry(nextChronicleEntry)
+      setChronicleEntry(result.chronicle_entry)
+      setPortfolio(null)
+      setPortfolioVerification(null)
       setState("loaded")
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause))
@@ -165,14 +122,46 @@ export function ProofHome() {
     downloadJson("chronicle-entry-v0.json", current)
   }
 
-  const capsuleStatus = () => capsule() ? "present" : "missing"
-  const provenanceStatus = () => provenance() ? (provenance()?.verifier_status === "verified" ? "verified" : "present") : "missing"
-  const exportStatus = () => proofObject() ? "present" : "missing"
-  const chronicleStatus = () => chronicleEntry() ? "present" : "missing"
+  const createPortfolio = async () => {
+    const entry = chronicleEntry()
+    if (!entry) return
+    const nextPortfolio = await window.api.createChroniclePortfolio(entry)
+    setPortfolio(nextPortfolio)
+    setPortfolioVerification(null)
+  }
+
+  const verifyPortfolio = async () => {
+    const current = portfolio()
+    if (!current) return
+    setPortfolioVerification(await window.api.verifyChroniclePortfolio(current))
+  }
+
+  const exportPortfolio = () => {
+    const current = portfolio()
+    if (!current) return
+    downloadJson("chronicle_portfolio.v0.json", current)
+  }
+
+  const capsuleStatus = () => (capsule() ? "present" : "missing")
+  const provenanceStatus = () => (provenance() ? (provenance()?.verifier_status === "verified" ? "verified" : "present") : "missing")
+  const exportStatus = () => (proofObject() ? "present" : "missing")
+  const chronicleStatus = () => (chronicleEntry() ? "present" : "missing")
   const verificationStatus = () => {
     const current = proofObject()
     if (!current || !receiptRoot()) return "missing"
     return current.receipt_root === receiptRoot() ? "verified" : "failed"
+  }
+  const portfolioStatus = (): PortfolioStatus => {
+    if (!portfolio()) return "Not created"
+    if (!portfolioVerification()) return "Created"
+    return portfolioVerification()!.ok ? "Verified" : "Failed"
+  }
+  const portfolioStatusTone = (): BadgeTone => {
+    const status = portfolioStatus()
+    if (status === "Verified") return "verified"
+    if (status === "Failed") return "failed"
+    if (status === "Created") return "present"
+    return "missing"
   }
 
   const markCopied = (field: string) => {
@@ -194,8 +183,8 @@ export function ProofHome() {
                 Stealth executes. ReceiptOS proves. Crystal Receipt exports. Chronicle records history.
               </p>
               <p style={{ margin: "0", color: "#94a3b8", "font-size": "14px" }}>
-                <strong>identifier → history → reputation</strong><br />
-                History records facts. Reputation interprets them.
+                <strong>portable proof → portable history</strong><br />
+                History records facts. Reputation interprets them later.
               </p>
             </div>
 
@@ -219,7 +208,8 @@ export function ProofHome() {
         <section style={{ display: "grid", gap: "16px", "grid-template-columns": "repeat(auto-fit, minmax(240px, 1fr))" }}>
           <LayerCard title="Stealth Evidence" body="Execution trace imported from Stealth." />
           <LayerCard title="ReceiptOS Proof" body="Recomputable proof artifacts: receipt_root, Evidence Capsule, Provenance Summary." />
-          <LayerCard title="Chronicle History" body="Portable proof object ready to be recorded as neutral history." />
+          <LayerCard title="Chronicle Entry" body="Portable proof object recorded as a neutral Chronicle history entry." />
+          <LayerCard title="Chronicle Portfolio" body="Minimal aggregate layer above Chronicle entries or collections with a locally verifiable portfolio_root." />
         </section>
 
         <Switch>
@@ -259,8 +249,12 @@ export function ProofHome() {
                   <div><StatusBadge label={exportStatus()} tone={exportStatus() as BadgeTone} /></div>
                 </div>
                 <div style={{ padding: "18px", background: "#111827", "border-radius": "16px", border: "1px solid #1f2937" }}>
-                  <div style={{ color: "#94a3b8", "font-size": "12px", "text-transform": "uppercase", "letter-spacing": "0.12em", margin: "0 0 8px 0" }}>Chronicle export</div>
+                  <div style={{ color: "#94a3b8", "font-size": "12px", "text-transform": "uppercase", "letter-spacing": "0.12em", margin: "0 0 8px 0" }}>Chronicle entry</div>
                   <div><StatusBadge label={chronicleStatus()} tone={chronicleStatus() as BadgeTone} /></div>
+                </div>
+                <div style={{ padding: "18px", background: "#111827", "border-radius": "16px", border: "1px solid #1f2937" }}>
+                  <div style={{ color: "#94a3b8", "font-size": "12px", "text-transform": "uppercase", "letter-spacing": "0.12em", margin: "0 0 8px 0" }}>Chronicle portfolio</div>
+                  <div><StatusBadge label={portfolioStatus()} tone={portfolioStatusTone()} /></div>
                 </div>
               </div>
 
@@ -304,16 +298,81 @@ export function ProofHome() {
                 </div>
               </div>
 
+              <section style={{ padding: "20px", background: "rgba(15, 23, 42, 0.92)", "border-radius": "18px", border: "1px solid #1f2937" }}>
+                <div style={{ display: "flex", "justify-content": "space-between", gap: "16px", "align-items": "flex-start", "flex-wrap": "wrap", margin: "0 0 16px 0" }}>
+                  <div>
+                    <div style={{ "font-size": "18px", "font-weight": "800", margin: "0 0 6px 0" }}>Chronicle Portfolio</div>
+                    <div style={{ color: "#cbd5e1", "line-height": "1.6", "font-size": "14px" }}>
+                      A simple, visible aggregate above Chronicle entry export.
+                    </div>
+                  </div>
+                  <div><StatusBadge label={portfolioStatus()} tone={portfolioStatusTone()} /></div>
+                </div>
+
+                <div style={{ padding: "16px", background: "#111827", "border-radius": "16px", border: "1px solid #1f2937", margin: "0 0 16px 0" }}>
+                  <div style={{ color: "#94a3b8", "font-size": "12px", "text-transform": "uppercase", "letter-spacing": "0.12em", margin: "0 0 10px 0" }}>Portfolio chain preview</div>
+                  <div style={{ "font-size": "15px", "line-height": "1.9", color: "#e2e8f0" }}>
+                    Stealth evidence<br />
+                    ↓<br />
+                    ReceiptOS proof<br />
+                    ↓<br />
+                    Chronicle entry<br />
+                    ↓<br />
+                    Chronicle portfolio
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: "12px", "flex-wrap": "wrap", margin: "0 0 16px 0" }}>
+                  <button type="button" disabled={!chronicleEntry()} onClick={() => void createPortfolio()} style={{ padding: "12px 16px", "border-radius": "12px", border: "1px solid #334155", background: chronicleEntry() ? "#0f172a" : "#1e293b", color: "white", cursor: chronicleEntry() ? "pointer" : "not-allowed", "font-weight": "700" }}>
+                    Create Portfolio
+                  </button>
+                  <button type="button" disabled={!portfolio()} onClick={() => void verifyPortfolio()} style={{ padding: "12px 16px", "border-radius": "12px", border: "1px solid #334155", background: portfolio() ? "#0f172a" : "#1e293b", color: "white", cursor: portfolio() ? "pointer" : "not-allowed", "font-weight": "700" }}>
+                    Verify Portfolio
+                  </button>
+                  <button type="button" disabled={!portfolio()} onClick={exportPortfolio} style={{ padding: "12px 16px", "border-radius": "12px", border: "1px solid #334155", background: portfolio() ? "#0f172a" : "#1e293b", color: "white", cursor: portfolio() ? "pointer" : "not-allowed", "font-weight": "700" }}>
+                    Export Portfolio JSON
+                  </button>
+                  <button type="button" disabled={!portfolio()?.portfolio_root} onClick={() => portfolio()?.portfolio_root && copyValue(portfolio()!.portfolio_root, () => markCopied("portfolio_root"))} style={{ padding: "12px 16px", "border-radius": "12px", border: "1px solid #334155", background: portfolio()?.portfolio_root ? "#0f172a" : "#1e293b", color: "white", cursor: portfolio()?.portfolio_root ? "pointer" : "not-allowed", "font-weight": "700" }}>
+                    {copiedField() === "portfolio_root" ? "Copied" : "Copy portfolio_root"}
+                  </button>
+                </div>
+
+                <div style={{ display: "grid", gap: "16px", "grid-template-columns": "repeat(auto-fit, minmax(260px, 1fr))" }}>
+                  <div style={{ padding: "16px", background: "#111827", "border-radius": "16px", border: "1px solid #1f2937" }}>
+                    <div style={{ color: "#94a3b8", "font-size": "12px", "text-transform": "uppercase", "letter-spacing": "0.12em", margin: "0 0 8px 0" }}>portfolio_id</div>
+                    <div style={{ "font-size": "13px", color: "#e2e8f0", "word-break": "break-word" }}>{portfolio()?.portfolio_id ?? "n/a"}</div>
+                  </div>
+                  <div style={{ padding: "16px", background: "#111827", "border-radius": "16px", border: "1px solid #1f2937" }}>
+                    <div style={{ color: "#94a3b8", "font-size": "12px", "text-transform": "uppercase", "letter-spacing": "0.12em", margin: "0 0 8px 0" }}>collection_refs count</div>
+                    <div style={{ "font-size": "13px", color: "#e2e8f0" }}>{portfolio()?.collection_refs.length ?? 0}</div>
+                  </div>
+                  <div style={{ padding: "16px", background: "#111827", "border-radius": "16px", border: "1px solid #1f2937" }}>
+                    <div style={{ color: "#94a3b8", "font-size": "12px", "text-transform": "uppercase", "letter-spacing": "0.12em", margin: "0 0 8px 0" }}>portfolio_root</div>
+                    <div style={{ "font-size": "13px", color: "#e2e8f0", "word-break": "break-word" }}>{portfolio()?.portfolio_root ?? "n/a"}</div>
+                  </div>
+                  <div style={{ padding: "16px", background: "#111827", "border-radius": "16px", border: "1px solid #1f2937" }}>
+                    <div style={{ color: "#94a3b8", "font-size": "12px", "text-transform": "uppercase", "letter-spacing": "0.12em", margin: "0 0 8px 0" }}>recomputed_portfolio_root</div>
+                    <div style={{ "font-size": "13px", color: "#e2e8f0", "word-break": "break-word" }}>{portfolioVerification()?.recomputed_portfolio_root ?? "n/a"}</div>
+                  </div>
+                  <div style={{ padding: "16px", background: "#111827", "border-radius": "16px", border: "1px solid #1f2937" }}>
+                    <div style={{ color: "#94a3b8", "font-size": "12px", "text-transform": "uppercase", "letter-spacing": "0.12em", margin: "0 0 8px 0" }}>verify result</div>
+                    <div style={{ "font-size": "13px", color: "#e2e8f0" }}>{portfolioVerification() ? String(portfolioVerification()!.ok) : "n/a"}</div>
+                  </div>
+                </div>
+              </section>
+
               <JsonSection title="Evidence Capsule v0" value={capsule()} open />
               <JsonSection title="Provenance Summary v0" value={provenance()} open />
               <JsonSection title="portable_proof_object.v0" value={proofObject()} />
               <JsonSection title="chronicle_entry.v0" value={chronicleEntry()} />
+              <JsonSection title="chronicle_portfolio.v0" value={portfolio()} />
+              <JsonSection title="chronicle_portfolio.verify" value={portfolioVerification()} />
             </section>
           </Match>
         </Switch>
 
         <footer style={{ padding: "18px 22px", background: "rgba(15, 23, 42, 0.88)", "border-radius": "18px", border: "1px solid #1f2937", color: "#cbd5e1", "line-height": "1.75" }}>
-          <strong>No scoring.</strong> No reputation baked in. No ownership or NFT logic. Facts first. Interpretation later.
+          <strong>No scoring.</strong> No reputation baked in. No certification, ownership, NFT, or blockchain requirement. Facts first. Interpretation later.
         </footer>
       </div>
     </div>

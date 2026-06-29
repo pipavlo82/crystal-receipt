@@ -1,0 +1,8 @@
+{
+  "portfolio_version": "chronicle_portfolio.v0",
+  "portfolio_id": "portfolio-619ee96c13314ac78fd82cc9",
+  "collection_refs": [
+    "chronicle://collection/receipt-root/0x687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc"
+  ],
+  "portfolio_root": "0xd8e22181f65c7a2c239062333f980283011377304b8161c22dd0b4250dd8ccc4"
+}
