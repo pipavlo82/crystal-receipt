@@ -2,7 +2,6 @@
 
 import * as Sentry from "@sentry/solid"
 import { render } from "solid-js/web"
-import { AppBaseProviders } from "@/app"
 import { type Platform, PlatformProvider } from "@/context/platform"
 import { dict as en } from "@/i18n/en"
 import { dict as zh } from "@/i18n/zh"
@@ -143,9 +142,7 @@ if (root instanceof HTMLElement) {
   render(
     () => (
       <PlatformProvider value={platform}>
-        <AppBaseProviders>
-          <ProofHome />
-        </AppBaseProviders>
+        <ProofHome />
       </PlatformProvider>
     ),
     root,
