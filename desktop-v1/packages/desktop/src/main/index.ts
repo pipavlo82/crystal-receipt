@@ -50,6 +50,7 @@ const APP_IDS: Record<string, string> = {
   prod: "network.cyphes.crystal-receipt",
 }
 const TEST_ONBOARDING = process.env.OPENCODE_TEST_ONBOARDING === "1"
+const CRYSTAL_RECEIPT_BOOTSTRAP = true
 const jsCallStackFeature = "DocumentPolicyIncludeJSCallStacksInCrashReports"
 
 let logger: ReturnType<typeof initLogging>
@@ -262,11 +263,28 @@ const main = Effect.gen(function* () {
 
   yield* Effect.promise(() => app.whenReady())
 
+  registerRendererProtocol()
+  setDockIcon()
+
+  if (CRYSTAL_RECEIPT_BOOTSTRAP) {
+    setInitStep({ phase: "done" })
+    mainWindow = createMainWindow()
+    if (mainWindow) {
+      createMenu({
+        trigger: () => {},
+        checkForUpdates: () => {},
+        relaunch: () => {
+          app.relaunch()
+          app.exit(0)
+        },
+      })
+    }
+    return
+  }
+
   if (!TEST_ONBOARDING) migrate()
   app.setAsDefaultProtocolClient("stealth")
   app.setAsDefaultProtocolClient("opencode")
-  registerRendererProtocol()
-  setDockIcon()
   setupAutoUpdater()
   yield* Effect.promise(() => startNetLog()).pipe(
     Effect.catch((error) =>
