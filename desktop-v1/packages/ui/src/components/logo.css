@@ -1,0 +1,6 @@
+[data-component="logo-mark"] {
+  width: 24px;
+  aspect-ratio: 1;
+  color: var(--icon-strong-base);
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--icon-strong-base) 35%, transparent));
+}
