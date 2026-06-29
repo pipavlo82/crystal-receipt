@@ -1,4 +1,11 @@
 import { contextBridge, ipcRenderer } from "electron"
+import {
+  createCapsuleSummaryFromEvidence,
+  createEvidenceCapsuleV0,
+  createPortableProofObjectV0,
+  createProvenanceSummaryV0,
+} from "@receiptos"
+import { normalizeStealthHandoffOutput } from "@receiptos/adapters/stealth-handoff"
 import type { ElectronAPI, InitStep, SqliteMigrationProgress } from "./types"
 
 const api: ElectronAPI = {
@@ -81,6 +88,22 @@ const api: ElectronAPI = {
   setBackgroundColor: (color: string) => ipcRenderer.invoke("set-background-color", color),
   exportDebugLogs: () => ipcRenderer.invoke("export-debug-logs"),
   recordFatalRendererError: (error) => ipcRenderer.invoke("record-fatal-renderer-error", error),
+  processStealthEvidenceToProof: async (raw, sourceEvidenceRef) => {
+    const normalized = normalizeStealthHandoffOutput(raw)
+    const summary = await createCapsuleSummaryFromEvidence(normalized, sourceEvidenceRef)
+    const evidenceCapsule = createEvidenceCapsuleV0(summary)
+    const provenanceSummary = createProvenanceSummaryV0(evidenceCapsule)
+    const portableProofObject = await createPortableProofObjectV0(normalized, {
+      sourceEvidenceRef,
+    })
+
+    return {
+      receipt_root: portableProofObject.receipt_root,
+      evidence_capsule: evidenceCapsule,
+      provenance_summary: provenanceSummary,
+      portable_proof_object: portableProofObject,
+    }
+  },
 }
 
 contextBridge.exposeInMainWorld("api", api)
