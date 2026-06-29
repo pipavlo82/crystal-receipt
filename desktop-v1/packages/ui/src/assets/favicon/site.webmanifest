@@ -1,0 +1,19 @@
+{
+  "name": "Stealth",
+  "short_name": "Stealth",
+  "icons": [
+    {
+      "src": "/favicon-96x96-v3.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon-v3.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#020303",
+  "background_color": "#020303",
+  "display": "standalone"
+}
