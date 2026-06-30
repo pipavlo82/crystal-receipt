@@ -2,8 +2,10 @@ import { describe, expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import {
+  createChronicleCollectionV0,
   createChronicleEntryV0,
   createChroniclePortfolioV0,
+  deriveCollectionRefFromChronicleCollection,
   verifyChroniclePortfolioV0,
   type ChronicleEntryV0,
   type ChroniclePortfolioV0,
@@ -19,15 +21,15 @@ function readJson<T>(path: string): T {
   return JSON.parse(readFileSync(path, "utf8")) as T
 }
 
-function demoEntry(): ChronicleEntryV0 {
+function demoEntry(id = "entry-demo"): ChronicleEntryV0 {
   return {
     schema: "chronicle_entry.v0",
-    entry_id: "entry-demo",
+    entry_id: id,
     source_system: "ReceiptOS",
     receipt_root: "0x" + "a".repeat(64),
-    proof_object_ref: "receiptos://portable-proof-object/proofobj-demo",
-    evidence_capsule_ref: "embedded:proofobj-demo:evidence_capsule",
-    provenance_summary_ref: "embedded:proofobj-demo:provenance_summary",
+    proof_object_ref: `receiptos://portable-proof-object/${id}`,
+    evidence_capsule_ref: `embedded:${id}:evidence_capsule`,
+    provenance_summary_ref: `embedded:${id}:provenance_summary`,
     created_from: "example://demo.json",
     labels: [],
     notes: null,
@@ -36,9 +38,13 @@ function demoEntry(): ChronicleEntryV0 {
 
 describe("chronicle portfolio v0", () => {
   test("includes canonical Chronicle schema field", () => {
-    const portfolio = createChroniclePortfolioV0(demoEntry(), {
+    const collection = createChronicleCollectionV0(demoEntry(), {
+      collectionId: "collection-demo",
+      artifactRefs: ["entry-demo"],
+    })
+    const portfolio = createChroniclePortfolioV0(collection, {
       portfolioId: "portfolio-demo",
-      collectionRefs: ["entry-demo"],
+      collectionRefs: [deriveCollectionRefFromChronicleCollection(collection)],
     })
 
     expect(portfolio.schema).toBe("chronicle_portfolio.v0")
@@ -46,36 +52,40 @@ describe("chronicle portfolio v0", () => {
   })
 
   test("portfolio_root is stable when collection_refs order changes", () => {
-    const a = createChroniclePortfolioV0(demoEntry(), {
+    const portfolioA = createChroniclePortfolioV0(createChronicleCollectionV0(demoEntry("entry-a"), { collectionId: "collection-a", artifactRefs: ["entry-a"] }), {
       portfolioId: "portfolio-demo",
-      collectionRefs: ["entry-b", "entry-a"],
+      collectionRefs: ["/collection/collection-b", "/collection/collection-a"],
     })
-    const b = createChroniclePortfolioV0(demoEntry(), {
+    const portfolioB = createChroniclePortfolioV0(createChronicleCollectionV0(demoEntry("entry-a"), { collectionId: "collection-a", artifactRefs: ["entry-a"] }), {
       portfolioId: "portfolio-demo",
-      collectionRefs: ["entry-a", "entry-b"],
+      collectionRefs: ["/collection/collection-a", "/collection/collection-b"],
     })
 
-    expect(a.portfolio_root).toBe(b.portfolio_root)
+    expect(portfolioA.portfolio_root).toBe(portfolioB.portfolio_root)
   })
 
   test("portfolio_root changes when portfolio_id changes", () => {
-    const a = createChroniclePortfolioV0(demoEntry(), { portfolioId: "portfolio-a", collectionRefs: ["entry-a"] })
-    const b = createChroniclePortfolioV0(demoEntry(), { portfolioId: "portfolio-b", collectionRefs: ["entry-a"] })
+    const collection = createChronicleCollectionV0(demoEntry(), { collectionId: "collection-a", artifactRefs: ["entry-a"] })
+    const ref = deriveCollectionRefFromChronicleCollection(collection)
+    const a = createChroniclePortfolioV0(collection, { portfolioId: "portfolio-a", collectionRefs: [ref] })
+    const b = createChroniclePortfolioV0(collection, { portfolioId: "portfolio-b", collectionRefs: [ref] })
 
     expect(a.portfolio_root).not.toBe(b.portfolio_root)
   })
 
   test("portfolio_root changes when collection_refs change", () => {
-    const a = createChroniclePortfolioV0(demoEntry(), { portfolioId: "portfolio-demo", collectionRefs: ["entry-a"] })
-    const b = createChroniclePortfolioV0(demoEntry(), { portfolioId: "portfolio-demo", collectionRefs: ["entry-b"] })
+    const collection = createChronicleCollectionV0(demoEntry(), { collectionId: "collection-a", artifactRefs: ["entry-a"] })
+    const a = createChroniclePortfolioV0(collection, { portfolioId: "portfolio-demo", collectionRefs: ["/collection/collection-a"] })
+    const b = createChroniclePortfolioV0(collection, { portfolioId: "portfolio-demo", collectionRefs: ["/collection/collection-b"] })
 
     expect(a.portfolio_root).not.toBe(b.portfolio_root)
   })
 
   test("portfolio_root does not change when non-root metadata/render fields change", () => {
-    const portfolio = createChroniclePortfolioV0(demoEntry(), {
+    const collection = createChronicleCollectionV0(demoEntry(), { collectionId: "collection-a", artifactRefs: ["entry-a"] })
+    const portfolio = createChroniclePortfolioV0(collection, {
       portfolioId: "portfolio-demo",
-      collectionRefs: ["entry-a", "entry-b"],
+      collectionRefs: ["/collection/collection-a", "/collection/collection-b"],
     })
 
     const changed = {
@@ -95,9 +105,10 @@ describe("chronicle portfolio v0", () => {
   })
 
   test("Chronicle-native roots use sha256:<hex> encoding", () => {
-    const portfolio = createChroniclePortfolioV0(demoEntry(), {
+    const collection = createChronicleCollectionV0(demoEntry(), { collectionId: "collection-a", artifactRefs: ["entry-a"] })
+    const portfolio = createChroniclePortfolioV0(collection, {
       portfolioId: "portfolio-demo",
-      collectionRefs: ["entry-a"],
+      collectionRefs: ["/collection/collection-a"],
     })
 
     expect(portfolio.portfolio_root).toMatch(/^sha256:[0-9a-f]{64}$/)
@@ -109,7 +120,8 @@ describe("chronicle portfolio v0", () => {
       sourceEvidenceRef: "example://stealth-handoff/normalized-evidence.json",
     })
     const entry = createChronicleEntryV0(proof)
-    const portfolio = createChroniclePortfolioV0(entry)
+    const collection = createChronicleCollectionV0(entry)
+    const portfolio = createChroniclePortfolioV0(collection)
 
     expect(verifyChroniclePortfolioV0(portfolio)).toEqual({
       ok: true,
@@ -124,7 +136,8 @@ describe("chronicle portfolio v0", () => {
       sourceEvidenceRef: "example://stealth-handoff/normalized-evidence.json",
     })
     const entry = createChronicleEntryV0(proof)
-    const portfolio = createChroniclePortfolioV0(entry)
+    const collection = createChronicleCollectionV0(entry)
+    const portfolio = createChroniclePortfolioV0(collection)
     const tampered = {
       ...portfolio,
       portfolio_root: `sha256:${"f".repeat(64)}`,
@@ -136,14 +149,15 @@ describe("chronicle portfolio v0", () => {
     expect(result.recomputed_portfolio_root).toBe(portfolio.portfolio_root)
   })
 
-  test("current pre-collection bridge still derives collection_refs from entry_id", async () => {
+  test("portfolio collection_refs reference real collection objects", async () => {
     const evidence = readJson<HandoffEvidence>(fixturePath("session-evidence.sample.json"))
     const proof = await createPortableProofObjectV0(evidence, {
       sourceEvidenceRef: "example://stealth-handoff/normalized-evidence.json",
     })
     const entry = createChronicleEntryV0(proof)
-    const portfolio = createChroniclePortfolioV0(entry)
+    const collection = createChronicleCollectionV0(entry)
+    const portfolio = createChroniclePortfolioV0(collection)
 
-    expect(portfolio.collection_refs).toEqual([entry.entry_id])
+    expect(portfolio.collection_refs).toEqual([deriveCollectionRefFromChronicleCollection(collection)])
   })
 })

@@ -3,6 +3,7 @@ import { sha256 } from "../canon/receipt-root"
 import type { PortableProofObjectV0 } from "./portable-proof-object-v0"
 
 export const CHRONICLE_ENTRY_VERSION_V0 = "chronicle_entry.v0"
+export const CHRONICLE_COLLECTION_VERSION_V0 = "chronicle.collection.v0"
 export const CHRONICLE_PORTFOLIO_VERSION_V0 = "chronicle_portfolio.v0"
 
 export type ChronicleEntryV0 = {
@@ -18,6 +19,15 @@ export type ChronicleEntryV0 = {
   notes: string | null
 }
 
+export type ChronicleCollectionV0 = {
+  schema: typeof CHRONICLE_COLLECTION_VERSION_V0
+  collection_version: typeof CHRONICLE_COLLECTION_VERSION_V0
+  collection_id: string
+  artifact_refs: string[]
+  collection_root: string
+  metadata?: Record<string, unknown>
+}
+
 export type ChroniclePortfolioV0 = {
   schema: typeof CHRONICLE_PORTFOLIO_VERSION_V0
   portfolio_version: typeof CHRONICLE_PORTFOLIO_VERSION_V0
@@ -25,6 +35,12 @@ export type ChroniclePortfolioV0 = {
   collection_refs: string[]
   portfolio_root: string
   metadata?: Record<string, unknown>
+}
+
+export type ChronicleCollectionVerification = {
+  ok: boolean
+  collection_root: string
+  recomputed_collection_root: string
 }
 
 export type ChroniclePortfolioVerification = {
@@ -62,8 +78,24 @@ export function sortCollectionRefs(collectionRefs: string[]): string[] {
   return [...collectionRefs].sort((a, b) => a.localeCompare(b))
 }
 
-export function deriveCollectionRefsFromChronicleEntry(entry: ChronicleEntryV0): string[] {
-  return Array.from(new Set(sortCollectionRefs([entry.entry_id])))
+export function sortArtifactRefs(artifactRefs: string[]): string[] {
+  return [...artifactRefs].sort((a, b) => a.localeCompare(b))
+}
+
+export function deriveArtifactRefsFromChronicleEntry(entry: ChronicleEntryV0): string[] {
+  return Array.from(new Set(sortArtifactRefs([entry.entry_id])))
+}
+
+export function deriveCollectionRefFromChronicleCollection(collection: ChronicleCollectionV0): string {
+  return `/collection/${encodeURIComponent(collection.collection_id)}`
+}
+
+function deriveCollectionId(artifactRefs: string[]): string {
+  const seed = canonicalize({
+    collection_version: CHRONICLE_COLLECTION_VERSION_V0,
+    artifact_refs: sortArtifactRefs(artifactRefs),
+  })
+  return `collection-${sha256(seed).slice(0, 24)}`
 }
 
 function derivePortfolioId(collectionRefs: string[]): string {
@@ -74,6 +106,14 @@ function derivePortfolioId(collectionRefs: string[]): string {
   return `portfolio-${sha256(seed).slice(0, 24)}`
 }
 
+export function computeChronicleCollectionRoot(input: Pick<ChronicleCollectionV0, "collection_version" | "collection_id" | "artifact_refs">): string {
+  return `sha256:${sha256(canonicalize({
+    collection_version: input.collection_version,
+    collection_id: input.collection_id,
+    artifact_refs: sortArtifactRefs(input.artifact_refs),
+  }))}`
+}
+
 export function computeChroniclePortfolioRoot(input: Pick<ChroniclePortfolioV0, "portfolio_version" | "portfolio_id" | "collection_refs">): string {
   return `sha256:${sha256(canonicalize({
     portfolio_version: input.portfolio_version,
@@ -82,16 +122,55 @@ export function computeChroniclePortfolioRoot(input: Pick<ChroniclePortfolioV0, 
   }))}`
 }
 
-export function createChroniclePortfolioV0(
+export function createChronicleCollectionV0(
   entryOrEntries: ChronicleEntryV0 | ChronicleEntryV0[],
-  options?: { portfolioId?: string; collectionRefs?: string[] },
-): ChroniclePortfolioV0 {
+  options?: { collectionId?: string; artifactRefs?: string[] },
+): ChronicleCollectionV0 {
   const entries = Array.isArray(entryOrEntries) ? entryOrEntries : [entryOrEntries]
   if (entries.length === 0) {
-    throw new Error("createChroniclePortfolioV0 requires one or more chronicle entries")
+    throw new Error("createChronicleCollectionV0 requires one or more chronicle entries")
   }
 
-  const collectionRefs = sortCollectionRefs(options?.collectionRefs ?? entries.flatMap(deriveCollectionRefsFromChronicleEntry))
+  const artifactRefs = sortArtifactRefs(options?.artifactRefs ?? entries.flatMap(deriveArtifactRefsFromChronicleEntry))
+  const collectionId = options?.collectionId ?? deriveCollectionId(artifactRefs)
+
+  return {
+    schema: CHRONICLE_COLLECTION_VERSION_V0,
+    collection_version: CHRONICLE_COLLECTION_VERSION_V0,
+    collection_id: collectionId,
+    artifact_refs: artifactRefs,
+    collection_root: computeChronicleCollectionRoot({
+      collection_version: CHRONICLE_COLLECTION_VERSION_V0,
+      collection_id: collectionId,
+      artifact_refs: artifactRefs,
+    }),
+  }
+}
+
+export function verifyChronicleCollectionV0(collection: ChronicleCollectionV0): ChronicleCollectionVerification {
+  const recomputedCollectionRoot = computeChronicleCollectionRoot({
+    collection_version: collection.collection_version,
+    collection_id: collection.collection_id,
+    artifact_refs: collection.artifact_refs,
+  })
+
+  return {
+    ok: collection.collection_root === recomputedCollectionRoot,
+    collection_root: collection.collection_root,
+    recomputed_collection_root: recomputedCollectionRoot,
+  }
+}
+
+export function createChroniclePortfolioV0(
+  collectionOrCollections: ChronicleCollectionV0 | ChronicleCollectionV0[],
+  options?: { portfolioId?: string; collectionRefs?: string[] },
+): ChroniclePortfolioV0 {
+  const collections = Array.isArray(collectionOrCollections) ? collectionOrCollections : [collectionOrCollections]
+  if (collections.length === 0) {
+    throw new Error("createChroniclePortfolioV0 requires one or more chronicle collections")
+  }
+
+  const collectionRefs = sortCollectionRefs(options?.collectionRefs ?? collections.map(deriveCollectionRefFromChronicleCollection))
   const portfolioId = options?.portfolioId ?? derivePortfolioId(collectionRefs)
 
   return {
