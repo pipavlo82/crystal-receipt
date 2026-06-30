@@ -2,10 +2,15 @@
 
 ## ReceiptOS
 
-**Portable proof objects for AI agents, tools, workflows, and autonomous systems.**
+**Portable proof and history artifacts for AI agents, tools, workflows, and autonomous systems.**
 
 ```text
-Execution Evidence → Receipt Root → Evidence Capsule / Provenance Summary → Portable Proof Object → Chronicle History
+evidence
+→ proof
+→ portable_proof_object.v0
+→ chronicle_entry.v0
+→ chronicle_portfolio.v0
+→ portfolio_root verification
 ```
 
 ## What you get
@@ -14,37 +19,45 @@ Execution Evidence → Receipt Root → Evidence Capsule / Provenance Summary �
 - Recomputable `receipt_root`
 - Evidence Capsules
 - Provenance Summaries
-- Verifier-facing proof summaries
-- Portable proof objects for downstream history systems
+- `portable_proof_object.v0`
+- `chronicle_entry.v0`
+- `chronicle_portfolio.v0`
+- local `portfolio_root` verification
 
-Crystal Receipt / ReceiptOS is the proof layer in the broader execution → receipt → history ecosystem.
-It consumes execution evidence, preserves ReceiptOS-compatible proof semantics, derives canonical `receipt_root`, produces Evidence Capsules and Provenance Summaries, and emits portable proof objects for downstream use.
+Crystal Receipt is a producer-neutral proof packaging and export layer.
+It imports evidence and proof inputs, preserves ReceiptOS-compatible proof semantics, derives canonical `receipt_root`, produces Evidence Capsules and Provenance Summaries, and exports portable proof/history artifacts for downstream systems.
 The repository is organized into two layers: a producer-neutral ReceiptOS proof core and an optional crystal rendering layer built on top of it.
 
 ## Ecosystem role
 
 Upstream:
-- Stealth captures execution evidence from agent/tool/action workflows.
+- producer systems emit portable execution evidence or proof inputs
 
 Crystal Receipt / ReceiptOS:
 - normalizes evidence
-- derives `receipt_root`
+- derives and verifies `receipt_root`
 - produces Evidence Capsules / Provenance Summaries
-- emits portable proof objects
+- emits `portable_proof_object.v0`
+- emits `chronicle_entry.v0`
+- emits `chronicle_portfolio.v0`
+- verifies `portfolio_root`
 
 Downstream:
-- Chronicle consumes portable proof objects and turns them into durable history and continuity.
+- Chronicle and other history systems can consume those portable artifacts as neutral history layers
 
 In short:
 
 ```text
-Stealth executes. ReceiptOS proves. Chronicle explains.
+Evidence in. Proof out. History exported.
 ```
 
 In the current architecture:
 - **ReceiptOS** is the stable proof substrate
 - **producers** are systems that emit execution evidence into that substrate
-- **Crystal Receipt** is the proof-facing packaging / inspection layer built around that boundary
+- **Crystal Receipt** is the proof-facing packaging / inspection / export layer built around that boundary
+
+Crystal Receipt is **not** a Stealth frontend.
+Stealth is one current supported evidence producer, alongside other producer inputs already documented in this repo.
 
 Visual receipt language remains downstream presentation, not the core identity of the repo.
 
@@ -63,10 +76,11 @@ Core message:
 ```text
 Same proof pipeline.
 Different producers.
-One portable receipt model.
+One portable proof/history model.
 ```
 
-The current documented producer surface is best understood in two categories:
+The current documented producer surface is best understood in two categories.
+Stealth is one supported producer here, not the definition of the product.
 
 ### Verified against real producer data or real fixture shape
 - Stealth handoff
@@ -102,19 +116,42 @@ Its current direction is:
 - portable execution receipts
 - Evidence Capsule interpretation
 - ReceiptOS-compatible verification
-- receipt root recomputation
+- `receipt_root` recomputation
+- `portable_proof_object.v0` export
+- `chronicle_entry.v0` export
+- `chronicle_portfolio.v0` creation/export
+- local `portfolio_root` verification
 - local Merkle proof attachment and checking
 - external anchor import / anchor-path support
 - optional visual rendering as a secondary presentation layer
 
 The core idea is simple:
-- an agent action produces evidence
+- a producer emits evidence
 - the evidence can be verified and replayed
 - the evidence can be summarized into an Evidence Capsule
+- the evidence can be exported into portable proof/history artifacts
 - the same evidence can optionally be rendered into a deterministic crystal artifact
 
 The goal is **not** to replace cryptographic verification.
 The goal is to make execution evidence portable, inspectable, verifiable, and human-readable.
+
+For the current generic product flow:
+
+```text
+evidence
+-> proof
+-> portable_proof_object.v0
+-> chronicle_entry.v0
+-> chronicle_portfolio.v0
+-> portfolio_root verification
+```
+
+`portfolio_root` is derived only from:
+- `portfolio_version`
+- `portfolio_id`
+- sorted `collection_refs`
+
+It does not include scoring, reputation, certification, ownership, NFT logic, blockchain requirements, timestamps, or UI/render-only metadata.
 
 ## Execution Provenance
 
@@ -473,9 +510,13 @@ Crystal Receipt is not:
 
 - a blockchain verifier
 - a replacement for ReceiptOS verification
-- a replacement for Stealth receipt checks
+- a replacement for producer-side verification
 - a trust oracle
 - a security proof by image
+- a scoring or reputation engine
+- a certification system
+- an ownership registry
+- an NFT product
 - “AI art with metadata”
 
 It is a portable receipt/presentation layer with an optional deterministic visual grammar.
@@ -534,7 +575,10 @@ That separation is the key:
 ## Notes
 
 - No blockchain submit path here
-- No NFT minting code yet
+- No NFT minting code here
+- No scoring or reputation layer here
+- No ownership or certification layer here
+- Stealth is a supported producer, not the product boundary
 - No producer-specific runtime integration SDK yet
 - No external paid APIs
 - Visual generator remains available
