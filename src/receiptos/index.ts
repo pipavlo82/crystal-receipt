@@ -30,12 +30,19 @@ export {
 } from "./capsule/portable-proof-object-v0"
 export {
   createChronicleEntryV0,
-  deriveCollectionRefsFromChronicleEntry,
+  sortArtifactRefs,
+  deriveArtifactRefsFromChronicleEntry,
+  computeChronicleCollectionRoot,
+  createChronicleCollectionV0,
+  verifyChronicleCollectionV0,
+  deriveCollectionRefFromChronicleCollection,
   sortCollectionRefs,
   computeChroniclePortfolioRoot,
   createChroniclePortfolioV0,
   verifyChroniclePortfolioV0,
   type ChronicleEntryV0,
+  type ChronicleCollectionV0,
+  type ChronicleCollectionVerification,
   type ChroniclePortfolioV0,
   type ChroniclePortfolioVerification,
 } from "./capsule/chronicle-portfolio-v0"
