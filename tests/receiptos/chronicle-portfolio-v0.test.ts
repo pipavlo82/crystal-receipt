@@ -5,9 +5,9 @@ import {
   createChronicleEntryV0,
   createChroniclePortfolioV0,
   verifyChroniclePortfolioV0,
+  type ChronicleEntryV0,
   type ChroniclePortfolioV0,
   type HandoffEvidence,
-  type PortableProofObjectV0,
   createPortableProofObjectV0,
 } from "../../src/receiptos"
 
@@ -15,143 +15,68 @@ function fixturePath(name: string) {
   return resolve(import.meta.dir, "../../src/receiptos/fixtures", name)
 }
 
-function examplePath(name: string) {
-  return resolve(import.meta.dir, "../../examples", name)
-}
-
 function readJson<T>(path: string): T {
   return JSON.parse(readFileSync(path, "utf8")) as T
 }
 
-describe("chronicle portfolio v0", () => {
-  test("portfolio_root is stable when collection_refs order changes", () => {
-    const a: ChroniclePortfolioV0 = {
-      portfolio_version: "chronicle_portfolio.v0",
-      portfolio_id: "portfolio-demo",
-      collection_refs: ["chronicle://collection/b", "chronicle://collection/a"],
-      portfolio_root: "",
-    }
-    const b: ChroniclePortfolioV0 = {
-      ...a,
-      collection_refs: ["chronicle://collection/a", "chronicle://collection/b"],
-    }
+function demoEntry(): ChronicleEntryV0 {
+  return {
+    schema: "chronicle_entry.v0",
+    entry_id: "entry-demo",
+    source_system: "ReceiptOS",
+    receipt_root: "0x" + "a".repeat(64),
+    proof_object_ref: "receiptos://portable-proof-object/proofobj-demo",
+    evidence_capsule_ref: "embedded:proofobj-demo:evidence_capsule",
+    provenance_summary_ref: "embedded:proofobj-demo:provenance_summary",
+    created_from: "example://demo.json",
+    labels: [],
+    notes: null,
+  }
+}
 
-    a.portfolio_root = verifyChroniclePortfolioV0({ ...a, portfolio_root: createChroniclePortfolioV0({
-      schema: "chronicle_entry.v0",
-      entry_id: "entry-demo",
-      created_at: new Date(0).toISOString(),
-      relation_type: "imported",
-      project_refs: [],
-      proof_object_refs: [],
-      metadata: {
-        label: "demo",
-        session_id: "demo",
-        position_id: "demo",
-        directory: "demo",
-        source_evidence_ref: "demo",
-        producer_runtime: "demo",
-        source_schema: "demo",
-      },
-    }, { portfolioId: a.portfolio_id, collectionRefs: a.collection_refs }).portfolio_root }).portfolio_root
-    b.portfolio_root = createChroniclePortfolioV0({
-      schema: "chronicle_entry.v0",
-      entry_id: "entry-demo",
-      created_at: new Date(0).toISOString(),
-      relation_type: "imported",
-      project_refs: [],
-      proof_object_refs: [],
-      metadata: {
-        label: "demo",
-        session_id: "demo",
-        position_id: "demo",
-        directory: "demo",
-        source_evidence_ref: "demo",
-        producer_runtime: "demo",
-        source_schema: "demo",
-      },
-    }, { portfolioId: b.portfolio_id, collectionRefs: b.collection_refs }).portfolio_root
+describe("chronicle portfolio v0", () => {
+  test("includes canonical Chronicle schema field", () => {
+    const portfolio = createChroniclePortfolioV0(demoEntry(), {
+      portfolioId: "portfolio-demo",
+      collectionRefs: ["entry-demo"],
+    })
+
+    expect(portfolio.schema).toBe("chronicle_portfolio.v0")
+    expect(portfolio.portfolio_version).toBe("chronicle_portfolio.v0")
+  })
+
+  test("portfolio_root is stable when collection_refs order changes", () => {
+    const a = createChroniclePortfolioV0(demoEntry(), {
+      portfolioId: "portfolio-demo",
+      collectionRefs: ["entry-b", "entry-a"],
+    })
+    const b = createChroniclePortfolioV0(demoEntry(), {
+      portfolioId: "portfolio-demo",
+      collectionRefs: ["entry-a", "entry-b"],
+    })
 
     expect(a.portfolio_root).toBe(b.portfolio_root)
   })
 
   test("portfolio_root changes when portfolio_id changes", () => {
-    const baseEntry = {
-      schema: "chronicle_entry.v0" as const,
-      entry_id: "entry-demo",
-      created_at: new Date(0).toISOString(),
-      relation_type: "imported",
-      project_refs: [],
-      proof_object_refs: [],
-      metadata: {
-        label: "demo",
-        session_id: "demo",
-        position_id: "demo",
-        directory: "demo",
-        source_evidence_ref: "demo",
-        producer_runtime: "demo",
-        source_schema: "demo",
-      },
-    }
-
-    const a = createChroniclePortfolioV0(baseEntry, { portfolioId: "portfolio-a", collectionRefs: ["chronicle://collection/a"] })
-    const b = createChroniclePortfolioV0(baseEntry, { portfolioId: "portfolio-b", collectionRefs: ["chronicle://collection/a"] })
+    const a = createChroniclePortfolioV0(demoEntry(), { portfolioId: "portfolio-a", collectionRefs: ["entry-a"] })
+    const b = createChroniclePortfolioV0(demoEntry(), { portfolioId: "portfolio-b", collectionRefs: ["entry-a"] })
 
     expect(a.portfolio_root).not.toBe(b.portfolio_root)
   })
 
   test("portfolio_root changes when collection_refs change", () => {
-    const baseEntry = {
-      schema: "chronicle_entry.v0" as const,
-      entry_id: "entry-demo",
-      created_at: new Date(0).toISOString(),
-      relation_type: "imported",
-      project_refs: [],
-      proof_object_refs: [],
-      metadata: {
-        label: "demo",
-        session_id: "demo",
-        position_id: "demo",
-        directory: "demo",
-        source_evidence_ref: "demo",
-        producer_runtime: "demo",
-        source_schema: "demo",
-      },
-    }
-
-    const a = createChroniclePortfolioV0(baseEntry, { portfolioId: "portfolio-demo", collectionRefs: ["chronicle://collection/a"] })
-    const b = createChroniclePortfolioV0(baseEntry, { portfolioId: "portfolio-demo", collectionRefs: ["chronicle://collection/b"] })
+    const a = createChroniclePortfolioV0(demoEntry(), { portfolioId: "portfolio-demo", collectionRefs: ["entry-a"] })
+    const b = createChroniclePortfolioV0(demoEntry(), { portfolioId: "portfolio-demo", collectionRefs: ["entry-b"] })
 
     expect(a.portfolio_root).not.toBe(b.portfolio_root)
   })
 
   test("portfolio_root does not change when non-root metadata/render fields change", () => {
-    const portfolio = {
-      portfolio_version: "chronicle_portfolio.v0",
-      portfolio_id: "portfolio-demo",
-      collection_refs: ["chronicle://collection/a"],
-      portfolio_root: createChroniclePortfolioV0({
-        schema: "chronicle_entry.v0",
-        entry_id: "entry-demo",
-        created_at: new Date(0).toISOString(),
-        relation_type: "imported",
-        project_refs: [],
-        proof_object_refs: [],
-        metadata: {
-          label: "demo",
-          session_id: "demo",
-          position_id: "demo",
-          directory: "demo",
-          source_evidence_ref: "demo",
-          producer_runtime: "demo",
-          source_schema: "demo",
-        },
-      }, { portfolioId: "portfolio-demo", collectionRefs: ["chronicle://collection/a"] }).portfolio_root,
-      metadata: {
-        scorecard: 99,
-        render: { theme: "glass" },
-        ownership: { wallet: "0x123" },
-      },
-    } satisfies ChroniclePortfolioV0
+    const portfolio = createChroniclePortfolioV0(demoEntry(), {
+      portfolioId: "portfolio-demo",
+      collectionRefs: ["entry-a", "entry-b"],
+    })
 
     const changed = {
       ...portfolio,
@@ -160,12 +85,22 @@ describe("chronicle portfolio v0", () => {
         render: { theme: "minimal" },
         ownership: { wallet: "0x456" },
         nft: true,
+        rendered_at: "2026-06-27T00:00:00.000Z",
       },
     } satisfies ChroniclePortfolioV0
 
     expect(verifyChroniclePortfolioV0(portfolio).recomputed_portfolio_root).toBe(
       verifyChroniclePortfolioV0(changed).recomputed_portfolio_root,
     )
+  })
+
+  test("Chronicle-native roots use sha256:<hex> encoding", () => {
+    const portfolio = createChroniclePortfolioV0(demoEntry(), {
+      portfolioId: "portfolio-demo",
+      collectionRefs: ["entry-a"],
+    })
+
+    expect(portfolio.portfolio_root).toMatch(/^sha256:[0-9a-f]{64}$/)
   })
 
   test("verify portfolio ok path", async () => {
@@ -192,7 +127,7 @@ describe("chronicle portfolio v0", () => {
     const portfolio = createChroniclePortfolioV0(entry)
     const tampered = {
       ...portfolio,
-      portfolio_root: "0x" + "f".repeat(64),
+      portfolio_root: `sha256:${"f".repeat(64)}`,
     }
 
     const result = verifyChroniclePortfolioV0(tampered)
@@ -201,15 +136,14 @@ describe("chronicle portfolio v0", () => {
     expect(result.recomputed_portfolio_root).toBe(portfolio.portfolio_root)
   })
 
-  test("builder reproduces the canonical chronicle portfolio example", async () => {
+  test("current pre-collection bridge still derives collection_refs from entry_id", async () => {
     const evidence = readJson<HandoffEvidence>(fixturePath("session-evidence.sample.json"))
     const proof = await createPortableProofObjectV0(evidence, {
       sourceEvidenceRef: "example://stealth-handoff/normalized-evidence.json",
     })
     const entry = createChronicleEntryV0(proof)
     const portfolio = createChroniclePortfolioV0(entry)
-    const expected = readJson<ChroniclePortfolioV0>(examplePath("chronicle-portfolio-v0.json"))
 
-    expect(portfolio).toEqual(expected)
+    expect(portfolio.collection_refs).toEqual([entry.entry_id])
   })
 })

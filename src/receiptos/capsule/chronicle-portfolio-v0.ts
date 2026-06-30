@@ -2,33 +2,25 @@ import { canonicalize } from "../canon/canonicalize"
 import { sha256 } from "../canon/receipt-root"
 import type { PortableProofObjectV0 } from "./portable-proof-object-v0"
 
+export const CHRONICLE_ENTRY_VERSION_V0 = "chronicle_entry.v0"
+export const CHRONICLE_PORTFOLIO_VERSION_V0 = "chronicle_portfolio.v0"
+
 export type ChronicleEntryV0 = {
-  schema: "chronicle_entry.v0"
+  schema: typeof CHRONICLE_ENTRY_VERSION_V0
   entry_id: string
-  created_at: string
-  relation_type: string
-  project_refs: string[]
-  proof_object_refs: Array<{
-    proof_object_id: string
-    proof_system: string
-    receipt_root: string
-    proof_ref: string
-    replay_ref: string | null
-    anchor_ref: string | null
-  }>
-  metadata: {
-    label: string
-    session_id: string
-    position_id: string
-    directory: string
-    source_evidence_ref: string
-    producer_runtime: string
-    source_schema: string
-  }
+  source_system: string
+  receipt_root: string
+  proof_object_ref: string
+  evidence_capsule_ref: string
+  provenance_summary_ref: string
+  created_from: string | null
+  labels: string[]
+  notes: string | null
 }
 
 export type ChroniclePortfolioV0 = {
-  portfolio_version: "chronicle_portfolio.v0"
+  schema: typeof CHRONICLE_PORTFOLIO_VERSION_V0
+  portfolio_version: typeof CHRONICLE_PORTFOLIO_VERSION_V0
   portfolio_id: string
   collection_refs: string[]
   portfolio_root: string
@@ -41,32 +33,28 @@ export type ChroniclePortfolioVerification = {
   recomputed_portfolio_root: string
 }
 
-export function createChronicleEntryV0(proofObject: PortableProofObjectV0): ChronicleEntryV0 {
+export function createChronicleEntryV0(
+  proofObject: PortableProofObjectV0,
+  options?: {
+    entryId?: string
+    evidenceCapsuleRef?: string
+    provenanceSummaryRef?: string
+    createdFrom?: string | null
+    labels?: string[]
+    notes?: string | null
+  },
+): ChronicleEntryV0 {
   return {
-    schema: "chronicle_entry.v0",
-    entry_id: `entry-${proofObject.proof_object_id}`,
-    created_at: proofObject.created_at,
-    relation_type: proofObject.relation_type,
-    project_refs: proofObject.project_refs,
-    proof_object_refs: [
-      {
-        proof_object_id: proofObject.proof_object_id,
-        proof_system: proofObject.proof_system,
-        receipt_root: proofObject.receipt_root,
-        proof_ref: proofObject.proof_ref,
-        replay_ref: proofObject.replay_ref,
-        anchor_ref: proofObject.anchor_ref,
-      },
-    ],
-    metadata: {
-      label: proofObject.metadata.label,
-      session_id: proofObject.metadata.session_id,
-      position_id: proofObject.metadata.position_id,
-      directory: proofObject.metadata.directory,
-      source_evidence_ref: proofObject.source_evidence_ref,
-      producer_runtime: proofObject.producer.runtime,
-      source_schema: proofObject.producer.source_schema,
-    },
+    schema: CHRONICLE_ENTRY_VERSION_V0,
+    entry_id: options?.entryId ?? `entry-${proofObject.proof_object_id}`,
+    source_system: proofObject.proof_system,
+    receipt_root: proofObject.receipt_root,
+    proof_object_ref: proofObject.proof_ref,
+    evidence_capsule_ref: options?.evidenceCapsuleRef ?? `embedded:${proofObject.proof_object_id}:evidence_capsule`,
+    provenance_summary_ref: options?.provenanceSummaryRef ?? `embedded:${proofObject.proof_object_id}:provenance_summary`,
+    created_from: options?.createdFrom ?? proofObject.source_evidence_ref ?? null,
+    labels: Array.isArray(options?.labels) ? options!.labels.filter((value): value is string => typeof value === "string") : [],
+    notes: typeof options?.notes === "string" ? options.notes : null,
   }
 }
 
@@ -75,36 +63,44 @@ export function sortCollectionRefs(collectionRefs: string[]): string[] {
 }
 
 export function deriveCollectionRefsFromChronicleEntry(entry: ChronicleEntryV0): string[] {
-  const refs = entry.proof_object_refs.map((proof) => `chronicle://collection/receipt-root/${proof.receipt_root}`)
-  return Array.from(new Set(sortCollectionRefs(refs)))
+  return Array.from(new Set(sortCollectionRefs([entry.entry_id])))
 }
 
 function derivePortfolioId(collectionRefs: string[]): string {
   const seed = canonicalize({
-    portfolio_version: "chronicle_portfolio.v0",
+    portfolio_version: CHRONICLE_PORTFOLIO_VERSION_V0,
     collection_refs: sortCollectionRefs(collectionRefs),
   })
   return `portfolio-${sha256(seed).slice(0, 24)}`
 }
 
 export function computeChroniclePortfolioRoot(input: Pick<ChroniclePortfolioV0, "portfolio_version" | "portfolio_id" | "collection_refs">): string {
-  return `0x${sha256(canonicalize({
+  return `sha256:${sha256(canonicalize({
     portfolio_version: input.portfolio_version,
     portfolio_id: input.portfolio_id,
     collection_refs: sortCollectionRefs(input.collection_refs),
   }))}`
 }
 
-export function createChroniclePortfolioV0(entry: ChronicleEntryV0, options?: { portfolioId?: string; collectionRefs?: string[] }): ChroniclePortfolioV0 {
-  const collectionRefs = sortCollectionRefs(options?.collectionRefs ?? deriveCollectionRefsFromChronicleEntry(entry))
+export function createChroniclePortfolioV0(
+  entryOrEntries: ChronicleEntryV0 | ChronicleEntryV0[],
+  options?: { portfolioId?: string; collectionRefs?: string[] },
+): ChroniclePortfolioV0 {
+  const entries = Array.isArray(entryOrEntries) ? entryOrEntries : [entryOrEntries]
+  if (entries.length === 0) {
+    throw new Error("createChroniclePortfolioV0 requires one or more chronicle entries")
+  }
+
+  const collectionRefs = sortCollectionRefs(options?.collectionRefs ?? entries.flatMap(deriveCollectionRefsFromChronicleEntry))
   const portfolioId = options?.portfolioId ?? derivePortfolioId(collectionRefs)
 
   return {
-    portfolio_version: "chronicle_portfolio.v0",
+    schema: CHRONICLE_PORTFOLIO_VERSION_V0,
+    portfolio_version: CHRONICLE_PORTFOLIO_VERSION_V0,
     portfolio_id: portfolioId,
     collection_refs: collectionRefs,
     portfolio_root: computeChroniclePortfolioRoot({
-      portfolio_version: "chronicle_portfolio.v0",
+      portfolio_version: CHRONICLE_PORTFOLIO_VERSION_V0,
       portfolio_id: portfolioId,
       collection_refs: collectionRefs,
     }),
