@@ -1,5 +1,7 @@
 import type { DesktopMenuAction } from "@opencode-ai/app/desktop-menu"
 import type {
+  ChronicleCollectionV0,
+  ChronicleCollectionVerification,
   ChronicleEntryV0,
   ChroniclePortfolioV0,
   ChroniclePortfolioVerification,
@@ -42,6 +44,7 @@ export type ProofPipelineResult = {
   provenance_summary: ProvenanceSummaryV0
   portable_proof_object: PortableProofObjectV0
   chronicle_entry: ChronicleEntryV0
+  chronicle_collection: ChronicleCollectionV0
 }
 
 export type ElectronAPI = {
@@ -109,6 +112,8 @@ export type ElectronAPI = {
   exportDebugLogs: () => Promise<string>
   recordFatalRendererError: (error: FatalRendererError) => Promise<void>
   processStealthEvidenceToProof: (raw: unknown, sourceEvidenceRef: string) => Promise<ProofPipelineResult>
-  createChroniclePortfolio: (entry: ChronicleEntryV0) => Promise<ChroniclePortfolioV0>
+  createChronicleCollection: (entry: ChronicleEntryV0) => Promise<ChronicleCollectionV0>
+  verifyChronicleCollection: (collection: ChronicleCollectionV0) => Promise<ChronicleCollectionVerification>
+  createChroniclePortfolio: (collection: ChronicleCollectionV0) => Promise<ChroniclePortfolioV0>
   verifyChroniclePortfolio: (portfolio: ChroniclePortfolioV0) => Promise<ChroniclePortfolioVerification>
 }

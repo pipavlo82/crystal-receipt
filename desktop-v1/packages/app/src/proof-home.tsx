@@ -1,5 +1,7 @@
 import { createSignal, Match, Switch } from "solid-js"
 import type {
+  ChronicleCollectionV0,
+  ChronicleCollectionVerification,
   ChronicleEntryV0,
   ChroniclePortfolioV0,
   ChroniclePortfolioVerification,
@@ -10,6 +12,7 @@ import type {
 
 type LoadState = "idle" | "loading" | "loaded" | "error"
 type BadgeTone = "verified" | "present" | "missing" | "failed"
+type CollectionStatus = "Not created" | "Created" | "Verified" | "Failed"
 type PortfolioStatus = "Not created" | "Created" | "Verified" | "Failed"
 
 function downloadJson(filename: string, value: unknown) {
@@ -75,6 +78,8 @@ export function ProofHome() {
   const [provenance, setProvenance] = createSignal<ProvenanceSummaryV0 | null>(null)
   const [proofObject, setProofObject] = createSignal<PortableProofObjectV0 | null>(null)
   const [chronicleEntry, setChronicleEntry] = createSignal<ChronicleEntryV0 | null>(null)
+  const [chronicleCollection, setChronicleCollection] = createSignal<ChronicleCollectionV0 | null>(null)
+  const [collectionVerification, setCollectionVerification] = createSignal<ChronicleCollectionVerification | null>(null)
   const [portfolio, setPortfolio] = createSignal<ChroniclePortfolioV0 | null>(null)
   const [portfolioVerification, setPortfolioVerification] = createSignal<ChroniclePortfolioVerification | null>(null)
   const [error, setError] = createSignal<string>("")
@@ -99,6 +104,8 @@ export function ProofHome() {
       setProvenance(result.provenance_summary)
       setProofObject(result.portable_proof_object)
       setChronicleEntry(result.chronicle_entry)
+      setChronicleCollection(result.chronicle_collection)
+      setCollectionVerification(null)
       setPortfolio(null)
       setPortfolioVerification(null)
       setState("loaded")
@@ -122,10 +129,32 @@ export function ProofHome() {
     downloadJson("chronicle-entry-v0.json", current)
   }
 
-  const createPortfolio = async () => {
+  const exportChronicleCollection = () => {
+    const current = chronicleCollection()
+    if (!current) return
+    downloadJson("chronicle.collection.v0.json", current)
+  }
+
+  const createCollection = async () => {
     const entry = chronicleEntry()
     if (!entry) return
-    const nextPortfolio = await window.api.createChroniclePortfolio(entry)
+    const nextCollection = await window.api.createChronicleCollection(entry)
+    setChronicleCollection(nextCollection)
+    setCollectionVerification(null)
+    setPortfolio(null)
+    setPortfolioVerification(null)
+  }
+
+  const verifyCollection = async () => {
+    const current = chronicleCollection()
+    if (!current) return
+    setCollectionVerification(await window.api.verifyChronicleCollection(current))
+  }
+
+  const createPortfolio = async () => {
+    const collection = chronicleCollection()
+    if (!collection) return
+    const nextPortfolio = await window.api.createChroniclePortfolio(collection)
     setPortfolio(nextPortfolio)
     setPortfolioVerification(null)
   }
@@ -146,6 +175,18 @@ export function ProofHome() {
   const provenanceStatus = () => (provenance() ? (provenance()?.verifier_status === "verified" ? "verified" : "present") : "missing")
   const exportStatus = () => (proofObject() ? "present" : "missing")
   const chronicleStatus = () => (chronicleEntry() ? "present" : "missing")
+  const collectionStatus = (): CollectionStatus => {
+    if (!chronicleCollection()) return "Not created"
+    if (!collectionVerification()) return "Created"
+    return collectionVerification()!.ok ? "Verified" : "Failed"
+  }
+  const collectionStatusTone = (): BadgeTone => {
+    const status = collectionStatus()
+    if (status === "Verified") return "verified"
+    if (status === "Failed") return "failed"
+    if (status === "Created") return "present"
+    return "missing"
+  }
   const verificationStatus = () => {
     const current = proofObject()
     if (!current || !receiptRoot()) return "missing"
@@ -209,7 +250,8 @@ export function ProofHome() {
           <LayerCard title="Stealth Evidence" body="Execution trace imported from Stealth." />
           <LayerCard title="ReceiptOS Proof" body="Recomputable proof artifacts: receipt_root, Evidence Capsule, Provenance Summary." />
           <LayerCard title="Chronicle Entry" body="Portable proof object recorded as a neutral Chronicle history entry." />
-          <LayerCard title="Chronicle Portfolio" body="Minimal aggregate layer above Chronicle entries or collections with a locally verifiable portfolio_root." />
+          <LayerCard title="Chronicle Collection" body="Canonical collection artifact above Chronicle entries with a recomputable collection_root." />
+          <LayerCard title="Chronicle Portfolio" body="Minimal aggregate layer above Chronicle collections with a locally verifiable portfolio_root." />
         </section>
 
         <Switch>
@@ -251,6 +293,10 @@ export function ProofHome() {
                 <div style={{ padding: "18px", background: "#111827", "border-radius": "16px", border: "1px solid #1f2937" }}>
                   <div style={{ color: "#94a3b8", "font-size": "12px", "text-transform": "uppercase", "letter-spacing": "0.12em", margin: "0 0 8px 0" }}>Chronicle entry</div>
                   <div><StatusBadge label={chronicleStatus()} tone={chronicleStatus() as BadgeTone} /></div>
+                </div>
+                <div style={{ padding: "18px", background: "#111827", "border-radius": "16px", border: "1px solid #1f2937" }}>
+                  <div style={{ color: "#94a3b8", "font-size": "12px", "text-transform": "uppercase", "letter-spacing": "0.12em", margin: "0 0 8px 0" }}>Chronicle collection</div>
+                  <div><StatusBadge label={collectionStatus()} tone={collectionStatusTone()} /></div>
                 </div>
                 <div style={{ padding: "18px", background: "#111827", "border-radius": "16px", border: "1px solid #1f2937" }}>
                   <div style={{ color: "#94a3b8", "font-size": "12px", "text-transform": "uppercase", "letter-spacing": "0.12em", margin: "0 0 8px 0" }}>Chronicle portfolio</div>
@@ -301,9 +347,59 @@ export function ProofHome() {
               <section style={{ padding: "20px", background: "rgba(15, 23, 42, 0.92)", "border-radius": "18px", border: "1px solid #1f2937" }}>
                 <div style={{ display: "flex", "justify-content": "space-between", gap: "16px", "align-items": "flex-start", "flex-wrap": "wrap", margin: "0 0 16px 0" }}>
                   <div>
+                    <div style={{ "font-size": "18px", "font-weight": "800", margin: "0 0 6px 0" }}>Chronicle Collection</div>
+                    <div style={{ color: "#cbd5e1", "line-height": "1.6", "font-size": "14px" }}>
+                      Canonical collection artifact above Chronicle entry export.
+                    </div>
+                  </div>
+                  <div><StatusBadge label={collectionStatus()} tone={collectionStatusTone()} /></div>
+                </div>
+
+                <div style={{ display: "flex", gap: "12px", "flex-wrap": "wrap", margin: "0 0 16px 0" }}>
+                  <button type="button" disabled={!chronicleEntry()} onClick={() => void createCollection()} style={{ padding: "12px 16px", "border-radius": "12px", border: "1px solid #334155", background: chronicleEntry() ? "#0f172a" : "#1e293b", color: "white", cursor: chronicleEntry() ? "pointer" : "not-allowed", "font-weight": "700" }}>
+                    Create Collection
+                  </button>
+                  <button type="button" disabled={!chronicleCollection()} onClick={() => void verifyCollection()} style={{ padding: "12px 16px", "border-radius": "12px", border: "1px solid #334155", background: chronicleCollection() ? "#0f172a" : "#1e293b", color: "white", cursor: chronicleCollection() ? "pointer" : "not-allowed", "font-weight": "700" }}>
+                    Verify Collection
+                  </button>
+                  <button type="button" disabled={!chronicleCollection()} onClick={exportChronicleCollection} style={{ padding: "12px 16px", "border-radius": "12px", border: "1px solid #334155", background: chronicleCollection() ? "#0f172a" : "#1e293b", color: "white", cursor: chronicleCollection() ? "pointer" : "not-allowed", "font-weight": "700" }}>
+                    Export Collection JSON
+                  </button>
+                  <button type="button" disabled={!chronicleCollection()?.collection_root} onClick={() => chronicleCollection()?.collection_root && copyValue(chronicleCollection()!.collection_root, () => markCopied("collection_root"))} style={{ padding: "12px 16px", "border-radius": "12px", border: "1px solid #334155", background: chronicleCollection()?.collection_root ? "#0f172a" : "#1e293b", color: "white", cursor: chronicleCollection()?.collection_root ? "pointer" : "not-allowed", "font-weight": "700" }}>
+                    {copiedField() === "collection_root" ? "Copied" : "Copy collection_root"}
+                  </button>
+                </div>
+
+                <div style={{ display: "grid", gap: "16px", "grid-template-columns": "repeat(auto-fit, minmax(260px, 1fr))" }}>
+                  <div style={{ padding: "16px", background: "#111827", "border-radius": "16px", border: "1px solid #1f2937" }}>
+                    <div style={{ color: "#94a3b8", "font-size": "12px", "text-transform": "uppercase", "letter-spacing": "0.12em", margin: "0 0 8px 0" }}>collection_id</div>
+                    <div style={{ "font-size": "13px", color: "#e2e8f0", "word-break": "break-word" }}>{chronicleCollection()?.collection_id ?? "n/a"}</div>
+                  </div>
+                  <div style={{ padding: "16px", background: "#111827", "border-radius": "16px", border: "1px solid #1f2937" }}>
+                    <div style={{ color: "#94a3b8", "font-size": "12px", "text-transform": "uppercase", "letter-spacing": "0.12em", margin: "0 0 8px 0" }}>artifact_refs count</div>
+                    <div style={{ "font-size": "13px", color: "#e2e8f0" }}>{chronicleCollection()?.artifact_refs.length ?? 0}</div>
+                  </div>
+                  <div style={{ padding: "16px", background: "#111827", "border-radius": "16px", border: "1px solid #1f2937" }}>
+                    <div style={{ color: "#94a3b8", "font-size": "12px", "text-transform": "uppercase", "letter-spacing": "0.12em", margin: "0 0 8px 0" }}>collection_root</div>
+                    <div style={{ "font-size": "13px", color: "#e2e8f0", "word-break": "break-word" }}>{chronicleCollection()?.collection_root ?? "n/a"}</div>
+                  </div>
+                  <div style={{ padding: "16px", background: "#111827", "border-radius": "16px", border: "1px solid #1f2937" }}>
+                    <div style={{ color: "#94a3b8", "font-size": "12px", "text-transform": "uppercase", "letter-spacing": "0.12em", margin: "0 0 8px 0" }}>recomputed_collection_root</div>
+                    <div style={{ "font-size": "13px", color: "#e2e8f0", "word-break": "break-word" }}>{collectionVerification()?.recomputed_collection_root ?? "n/a"}</div>
+                  </div>
+                  <div style={{ padding: "16px", background: "#111827", "border-radius": "16px", border: "1px solid #1f2937" }}>
+                    <div style={{ color: "#94a3b8", "font-size": "12px", "text-transform": "uppercase", "letter-spacing": "0.12em", margin: "0 0 8px 0" }}>verify result</div>
+                    <div style={{ "font-size": "13px", color: "#e2e8f0" }}>{collectionVerification() ? String(collectionVerification()!.ok) : "n/a"}</div>
+                  </div>
+                </div>
+              </section>
+
+              <section style={{ padding: "20px", background: "rgba(15, 23, 42, 0.92)", "border-radius": "18px", border: "1px solid #1f2937" }}>
+                <div style={{ display: "flex", "justify-content": "space-between", gap: "16px", "align-items": "flex-start", "flex-wrap": "wrap", margin: "0 0 16px 0" }}>
+                  <div>
                     <div style={{ "font-size": "18px", "font-weight": "800", margin: "0 0 6px 0" }}>Chronicle Portfolio</div>
                     <div style={{ color: "#cbd5e1", "line-height": "1.6", "font-size": "14px" }}>
-                      A simple, visible aggregate above Chronicle entry export.
+                      A simple, visible aggregate above Chronicle collection export.
                     </div>
                   </div>
                   <div><StatusBadge label={portfolioStatus()} tone={portfolioStatusTone()} /></div>
@@ -318,12 +414,14 @@ export function ProofHome() {
                     ↓<br />
                     Chronicle entry<br />
                     ↓<br />
+                    Chronicle collection<br />
+                    ↓<br />
                     Chronicle portfolio
                   </div>
                 </div>
 
                 <div style={{ display: "flex", gap: "12px", "flex-wrap": "wrap", margin: "0 0 16px 0" }}>
-                  <button type="button" disabled={!chronicleEntry()} onClick={() => void createPortfolio()} style={{ padding: "12px 16px", "border-radius": "12px", border: "1px solid #334155", background: chronicleEntry() ? "#0f172a" : "#1e293b", color: "white", cursor: chronicleEntry() ? "pointer" : "not-allowed", "font-weight": "700" }}>
+                  <button type="button" disabled={!chronicleCollection()} onClick={() => void createPortfolio()} style={{ padding: "12px 16px", "border-radius": "12px", border: "1px solid #334155", background: chronicleCollection() ? "#0f172a" : "#1e293b", color: "white", cursor: chronicleCollection() ? "pointer" : "not-allowed", "font-weight": "700" }}>
                     Create Portfolio
                   </button>
                   <button type="button" disabled={!portfolio()} onClick={() => void verifyPortfolio()} style={{ padding: "12px 16px", "border-radius": "12px", border: "1px solid #334155", background: portfolio() ? "#0f172a" : "#1e293b", color: "white", cursor: portfolio() ? "pointer" : "not-allowed", "font-weight": "700" }}>
@@ -365,6 +463,8 @@ export function ProofHome() {
               <JsonSection title="Provenance Summary v0" value={provenance()} open />
               <JsonSection title="portable_proof_object.v0" value={proofObject()} />
               <JsonSection title="chronicle_entry.v0" value={chronicleEntry()} />
+              <JsonSection title="chronicle.collection.v0" value={chronicleCollection()} />
+              <JsonSection title="chronicle.collection.verify" value={collectionVerification()} />
               <JsonSection title="chronicle_portfolio.v0" value={portfolio()} />
               <JsonSection title="chronicle_portfolio.verify" value={portfolioVerification()} />
             </section>
