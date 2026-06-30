@@ -1,11 +1,13 @@
 import { contextBridge, ipcRenderer } from "electron"
 import {
   createCapsuleSummaryFromEvidence,
+  createChronicleCollectionV0,
   createChronicleEntryV0,
   createChroniclePortfolioV0,
   createEvidenceCapsuleV0,
   createPortableProofObjectV0,
   createProvenanceSummaryV0,
+  verifyChronicleCollectionV0,
   verifyChroniclePortfolioV0,
 } from "@receiptos"
 import { normalizeStealthHandoffOutput } from "@receiptos/adapters/stealth-handoff"
@@ -100,15 +102,21 @@ const api: ElectronAPI = {
       sourceEvidenceRef,
     })
 
+    const chronicleEntry = createChronicleEntryV0(portableProofObject)
+    const chronicleCollection = createChronicleCollectionV0(chronicleEntry)
+
     return {
       receipt_root: portableProofObject.receipt_root,
       evidence_capsule: evidenceCapsule,
       provenance_summary: provenanceSummary,
       portable_proof_object: portableProofObject,
-      chronicle_entry: createChronicleEntryV0(portableProofObject),
+      chronicle_entry: chronicleEntry,
+      chronicle_collection: chronicleCollection,
     }
   },
-  createChroniclePortfolio: async (entry) => createChroniclePortfolioV0(entry),
+  createChronicleCollection: async (entry) => createChronicleCollectionV0(entry),
+  verifyChronicleCollection: async (collection) => verifyChronicleCollectionV0(collection),
+  createChroniclePortfolio: async (collection) => createChroniclePortfolioV0(collection),
   verifyChroniclePortfolio: async (portfolio) => verifyChroniclePortfolioV0(portfolio),
 }
 
