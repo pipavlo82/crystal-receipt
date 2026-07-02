@@ -90,6 +90,26 @@
     },
     "replay_manifest": {
       "$ref": "#/$defs/summaryNode"
+    },
+    "input_commitment": {
+      "type": "object",
+      "description": "WYRIWE slice, checkable in isolation. Pinned in the EM ReceiptOS thread; conformance vector green across three implementations.",
+      "properties": {
+        "raw_input_hash": { "type": "string", "pattern": "^0x[0-9a-f]{64}$" },
+        "sanitization_pipeline_hash": { "type": "string", "pattern": "^0x[0-9a-f]{64}$" },
+        "requires": { "type": "string", "const": "erc-8299" }
+      },
+      "required": ["raw_input_hash", "sanitization_pipeline_hash", "requires"],
+      "additionalProperties": false
+    },
+    "sig_pq": {
+      "type": "object",
+      "description": "Scheme-agnostic post-quantum attestation slot. Shape of signerHashed deferred to the ERC-8313 author; slot reserved per pq-receipt-profile. Structure intentionally open until pinned.",
+      "properties": {
+        "type": { "type": "string" },
+        "signerHashed": { "type": "string" }
+      },
+      "additionalProperties": true
     }
   },
   "$defs": {
