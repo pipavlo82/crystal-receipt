@@ -253,6 +253,8 @@ payload
 
 ## ReceiptOS compatibility
 
+Core formulations: see [Canonical Principles](docs/CANONICAL_PRINCIPLES.md).
+
 Crystal Receipt is designed to stay compatible with ReceiptOS-style proof flows.
 
 That means:
