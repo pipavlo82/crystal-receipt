@@ -61,6 +61,8 @@ Stealth is one current supported evidence producer, alongside other producer inp
 
 Visual receipt language remains downstream presentation, not the core identity of the repo.
 
+Post-quantum considerations for receipt longevity: see [pq-receipt-profile](https://github.com/pipavlo82/pq-receipt-profile).
+
 ## External producer quick start
 
 - Read `docs/receiptos_integration_manifest_v0.md`
