@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Receipt Verifier — ReceiptOS</title>
+<style>
+ @import url('https://cdnjs.cloudflare.com/ajax/libs/jetbrains-mono/2.304/JetBrainsMono-Regular.woff2');
+ * { box-sizing: border-box; margin: 0; padding: 0; }
+
+ :root {
+ --bg: #0B0E14;
+ --panel: #12161F;
+ --panel-raised: #171C28;
+ --border: #232938;
+ --text: #E4E7EE;
+ --muted: #7C8496;
+ --dim: #4A5162;
+ --ok: #3ED9A0;
+ --ok-dim: #1E4A3D;
+ --fail: #FF6B5E;
+ --fail-dim: #4A2622;
+ --pending: #E8B54D;
+ --pending-dim: #4A3D1E;
+ --mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+ --sans: -apple-system, 'Inter', 'Segoe UI', sans-serif;
+ }
+
+ body {
+ background: var(--bg);
+ color: var(--text);
+ font-family: var(--sans);
+ min-height: 100vh;
+ line-height: 1.5;
+ }
+
+ .wrap {
+ max-width: 1180px;
+ margin: 0 auto;
+ padding: 40px 24px 80px;
+ }
+
+ header {
+ display: flex;
+ justify-content: space-between;
+ align-items: flex-end;
+ margin-bottom: 32px;
+ padding-bottom: 24px;
+ border-bottom: 1px solid var(--border);
+ flex-wrap: wrap;
+ gap: 16px;
+ }
+
+ .brand {
+ display: flex;
+ align-items: baseline;
+ gap: 14px;
+ }
+
+ .brand .mark {
+ font-family: var(--mono);
+ font-size: 13px;
+ color: var(--ok);
+ border: 1px solid var(--ok-dim);
+ background: rgba(62, 217, 160, 0.06);
+ padding: 3px 8px;
+ border-radius: 3px;
+ letter-spacing: 0.04em;
+ }
+
+ h1 {
+ font-size: 22px;
+ font-weight: 600;
+ letter-spacing: -0.01em;
+ }
+
+ .tagline {
+ color: var(--muted);
+ font-size: 14px;
+ max-width: 480px;
+ }
+
+ .grid {
+ display: grid;
+ grid-template-columns: 380px 1fr;
+ gap: 20px;
+ }
+
+ @media (max-width: 860px) {
+ .grid { grid-template-columns: 1fr; }
+ }
+
+ .panel {
+ background: var(--panel);
+ border: 1px solid var(--border);
+ border-radius: 8px;
+ padding: 20px;
+ }
+
+ .panel-title {
+ font-size: 11px;
+ text-transform: uppercase;
+ letter-spacing: 0.08em;
+ color: var(--muted);
+ margin-bottom: 14px;
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ }
+
+ textarea {
+ width: 100%;
+ height: 340px;
+ background: var(--bg);
+ border: 1px solid var(--border);
+ border-radius: 6px;
+ color: var(--text);
+ font-family: var(--mono);
+ font-size: 12px;
+ line-height: 1.6;
+ padding: 14px;
+ resize: vertical;
+ }
+ textarea:focus { outline: 1px solid var(--ok-dim); border-color: var(--ok-dim); }
+
+ .sample-row {
+ display: flex;
+ gap: 8px;
+ margin-top: 12px;
+ flex-wrap: wrap;
+ }
+
+ button {
+ font-family: var(--sans);
+ font-size: 13px;
+ font-weight: 500;
+ border-radius: 6px;
+ border: 1px solid var(--border);
+ background: var(--panel-raised);
+ color: var(--text);
+ padding: 9px 14px;
+ cursor: pointer;
+ transition: border-color 0.15s ease;
+ }
+ button:hover { border-color: var(--dim); }
+ button:focus-visible { outline: 2px solid var(--ok); outline-offset: 2px; }
+
+ .btn-primary {
+ background: var(--ok);
+ color: #06110D;
+ border-color: var(--ok);
+ font-weight: 600;
+ width: 100%;
+ margin-top: 14px;
+ padding: 12px;
+ }
+ .btn-primary:hover { background: #34C793; }
+ .btn-primary:disabled { background: var(--dim); color: var(--muted); cursor: not-allowed; }
+
+ .ladder {
+ display: flex;
+ flex-direction: column;
+ gap: 10px;
+ }
+
+ .step {
+ background: var(--panel-raised);
+ border: 1px solid var(--border);
+ border-radius: 6px;
+ padding: 14px 16px;
+ opacity: 0.35;
+ transform: translateX(-4px);
+ transition: opacity 0.4s ease, transform 0.4s ease, border-color 0.3s ease;
+ }
+ .step.active { opacity: 1; transform: translateX(0); }
+ .step.pass { border-color: var(--ok-dim); }
+ .step.fail { border-color: var(--fail-dim); }
+
+ .step-head {
+ display: flex;
+ align-items: center;
+ gap: 10px;
+ font-size: 13px;
+ }.step-num {
+ font-family: var(--mono);
+ font-size: 11px;
+ color: var(--dim);
+ width: 20px;
+ }
+ .step.active .step-num { color: var(--muted); }
+
+ .step-icon {
+ width: 16px; height: 16px;
+ border-radius: 50%;
+ border: 1.5px solid var(--dim);
+ flex-shrink: 0;
+ display: flex; align-items: center; justify-content: center;
+ font-size: 10px;
+ }
+ .step.pass .step-icon { border-color: var(--ok); color: var(--ok); }
+ .step.fail .step-icon { border-color: var(--fail); color: var(--fail); }
+
+ .step-label { font-weight: 500; }
+ .step-detail {
+ font-family: var(--mono);
+ font-size: 11px;
+ color: var(--muted);
+ margin-top: 8px;
+ padding-left: 30px;
+ word-break: break-all;
+ display: none;
+ }
+ .step.active .step-detail { display: block; }
+ .step-detail .row { display: flex; gap: 8px; margin-bottom: 2px; }
+ .step-detail .k { color: var(--dim); min-width: 72px; flex-shrink: 0; }
+ .val-ok { color: var(--ok); }
+ .val-fail { color: var(--fail); }
+
+ .verdict {
+ margin-top: 18px;
+ border-radius: 8px;
+ padding: 20px;
+ text-align: center;
+ border: 1.5px dashed var(--border);
+ transition: all 0.4s ease;
+ }
+ .verdict .cls {
+ font-family: var(--mono);
+ font-size: 28px;
+ font-weight: 700;
+ letter-spacing: 0.02em;
+ }
+ .verdict .claim {
+ font-size: 12.5px;
+ color: var(--muted);
+ margin-top: 8px;
+ max-width: 420px;
+ margin-left: auto;
+ margin-right: auto;
+ }
+ .verdict.pass { border-color: var(--ok); background: rgba(62,217,160,0.05); }
+ .verdict.pass .cls { color: var(--ok); }
+ .verdict.fail { border-color: var(--fail); background: rgba(255,107,94,0.05); }
+ .verdict.fail .cls { color: var(--fail); }
+
+ .footnote {
+ margin-top: 24px;
+ font-size: 11.5px;
+ color: var(--dim);
+ line-height: 1.6;
+ border-top: 1px solid var(--border);
+ padding-top: 16px;
+ }
+ .footnote b { color: var(--muted); }
+
+ .idle-msg {
+ color: var(--muted);
+ font-size: 13px;
+ text-align: center;
+ padding: 60px 20px;
+ }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+ <header>
+ <div class="brand">
+ <h1>Receipt Verifier</h1>
+ <span class="mark">RECOMPUTE, NOT TRUST</span>
+ </div>
+ <div class="tagline">Independently recomputable evidence for ReceiptOS-shaped receipts — every step below runs in your browser, not on a server.</div>
+ </header>
+
+ <div class="grid">
+ <div class="panel">
+ <div class="panel-title">
+ <span>Input</span>
+ </div>
+ <textarea id="input" spellcheck="false"></textarea>
+ <div class="sample-row">
+ <button onclick="loadSample('genesis')">Load genesis (1-leaf)</button>
+ <button onclick="loadSample('twoleaf')">Load 2-leaf</button>
+ <button onclick="loadSample('tampered')">Load tampered</button>
+ </div>
+ <button class="btn-primary" id="runBtn" onclick="runVerification()">Run verification ▶</button>
+ </div>
+
+ <div class="panel">
+ <div class="panel-title"><span>Verification ladder</span></div>
+ <div class="ladder" id="ladder">
+ <div class="idle-msg">Paste a receipt or load a sample, then run verification.</div>
+ </div>
+ <div id="verdictBox"></div>
+ </div>
+ </div>
+
+ <div class="footnote">
+ <b>What this checks:</b> canonicalization + recompute of <code>receipt_root</code>, Merkle-path closure to the declared <code>merkle_root</code>, and presence of PQ signer metadata. Canonicalization here is a reference implementation (sorted-key JSON → UTF-8 → SHA-256) for demonstration — it is not guaranteed byte-identical to the authoritative <code>crystal-receipt</code> canonicalizer. A receipt only earns <b>PROOF</b> class when root and Merkle path both verify; <code>sig_pq</code> is carried as signer/provenance metadata and does not by itself upgrade the class.
+ </div>
+
+</div>
+
+<script>
+const enc = new TextEncoder();async function sha256Hex(str) {
+ const buf = await crypto.subtle.digest('SHA-256', enc.encode(str));
+ return '0x' + Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+function canonicalize(obj) {
+ const sortKeys = (o) => {
+ if (Array.isArray(o)) return o.map(sortKeys);
+ if (o && typeof o === 'object') {
+ return Object.keys(o).sort().reduce((acc,k) => { acc[k] = sortKeys(o[k]); return acc; }, {});
+ }
+ return o;
+ };
+ return JSON.stringify(sortKeys(obj));
+}
+
+async function combine(a, b) {
+ // sorted-pair hashing (OpenZeppelin MerkleProof convention)
+ const [x,y] = [a,b].sort();
+ return sha256Hex(x + y);
+}
+
+const SAMPLES = {
+ genesis: {
+ evidence_body: { session: "demo-genesis", action: "receipt.compose", ts: "2026-07-01T00:00:00Z" },
+ receipt_root: { stored: null },
+ merkle_proof: { merkle_root: null, leaf_index: 0, siblings: [] },
+ sig_pq: { type: "fips-204/ml-dsa-65", signerHashed: "0x4e7bb6a3f4c36d9f0f6d7d4ab1b7c2ec7e297d51f6039f0a2f9d4e8c67ab3c10" }
+ },
+ twoleaf: {
+ evidence_body: { session: "demo-two-leaf", action: "receipt.compose", ts: "2026-07-02T00:00:00Z" },
+ receipt_root: { stored: null },
+ merkle_proof: { merkle_root: null, leaf_index: 0, siblings: [null] },
+ sig_pq: { type: "fips-204/ml-dsa-65", signerHashed: "0x4e7bb6a3f4c36d9f0f6d7d4ab1b7c2ec7e297d51f6039f0a2f9d4e8c67ab3c10" }
+ },
+ tampered: {
+ evidence_body: { session: "demo-tampered", action: "receipt.compose", ts: "2026-07-03T00:00:00Z" },
+ receipt_root: { stored: "0xdeadbeef00000000000000000000000000000000000000000000000000000000" },
+ merkle_proof: { merkle_root: "0xdeadbeef00000000000000000000000000000000000000000000000000000000", leaf_index: 0, siblings: [] },
+ sig_pq: { type: "fips-204/ml-dsa-65", signerHashed: "0x4e7bb6a3f4c36d9f0f6d7d4ab1b7c2ec7e297d51f6039f0a2f9d4e8c67ab3c10" }
+ }
+};
+
+async function loadSample(kind) {
+ const s = JSON.parse(JSON.stringify(SAMPLES[kind]));
+ if (kind !== 'tampered') {
+ const root = await sha256Hex(canonicalize(s.evidence_body));
+ s.receipt_root.stored = root;
+ if (kind === 'genesis') {
+ s.merkle_proof.merkle_root = root; // one-leaf: root == leaf
+ } else {
+ const sibling = await sha256Hex('sibling-leaf-demo-data');
+ s.merkle_proof.siblings = [sibling];
+ s.merkle_proof.merkle_root = await combine(root, sibling);
+ }
+ }
+ document.getElementById('input').value = JSON.stringify(s, null, 2);
+}
+
+function stepHtml(n, label) {
+ return `<div class="step" id="step${n}">
+ <div class="step-head">
+ <span class="step-num">${String(n).padStart(2,'0')}</span>
+ <span class="step-icon" id="icon${n}">·</span>
+ <span class="step-label">${label}</span>
+ </div>
+ <div class="step-detail" id="detail${n}"></div>
+ </div>`;
+}
+
+function setStep(n, state, detailHtml) {
+ const el = document.getElementById('step'+n);
+ const icon = document.getElementById('icon'+n);
+ el.classList.add('active');
+ if (state === 'pass') { el.classList.add('pass'); icon.textContent = '✓'; }
+ if (state === 'fail') { el.classList.add('fail'); icon.textContent = '✕'; }
+ document.getElementById('detail'+n).innerHTML = detailHtml || '';
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+function short(h) { return h ? h.slice(0,10) + '…' + h.slice(-6) : '—'; }
+
+async function runVerification() {
+ const btn = document.getElementById('runBtn');
+ btn.disabled = true;
+ const ladder = document.getElementById('ladder');
+ ladder.innerHTML = [1,2,3,4].map(n => stepHtml(n, {
+ 1: 'Canonicalize evidence body',
+ 2: 'Recompute receipt_root',
+ 3: 'Verify Merkle path to merkle_root',
+ 4: 'Check sig_pq signer metadata'
+ }[n])).join('');
+ document.getElementById('verdictBox').innerHTML = '';
+
+ let data;
+ try {
+ data = JSON.parse(document.getElementById('input').value);
+ } catch(e) {
+ setStep(1, 'fail', `<div class="row"><span class="k">error</span><span class="val-fail">invalid JSON: ${e.message}</span></div>`);
+ btn.disabled = false;
+ return;
+ }
+await sleep(200);
+ const canon = canonicalize(data.evidence_body || {});
+ setStep(1, 'pass', `<div class="row"><span class="k">canonical</span><span>${canon.length} bytes, sorted keys</span></div>`);
+
+ await sleep(350);
+ const computed = await sha256Hex(canon);
+ const stored = (data.receipt_root && data.receipt_root.stored) || '';
+ const rootMatch = computed === stored;
+ setStep(2, rootMatch ? 'pass' : 'fail', `
+ <div class="row"><span class="k">stored</span><span>${short(stored)}</span></div>
+ <div class="row"><span class="k">computed</span><span>${short(computed)}</span></div>
+ <div class="row"><span class="k">result</span><span class="${rootMatch?'val-ok':'val-fail'}">${rootMatch ? 'MATCH' : 'MISMATCH'}</span></div>
+ `);
+
+ await sleep(350);
+ let merkleOk = false;
+ let derivedRoot = computed;
+ const mp = data.merkle_proof || {};
+ const siblings = mp.siblings || [];
+ if (rootMatch) {
+ derivedRoot = computed;
+ for (const sib of siblings) {
+ derivedRoot = await combine(derivedRoot, sib);
+ }
+ merkleOk = derivedRoot === mp.merkle_root;
+ }
+ setStep(3, (rootMatch && merkleOk) ? 'pass' : 'fail', `
+ <div class="row"><span class="k">leaf_index</span><span>${mp.leaf_index ?? '—'}</span></div>
+ <div class="row"><span class="k">siblings</span><span>${siblings.length} sibling(s)</span></div>
+ <div class="row"><span class="k">derived</span><span>${short(derivedRoot)}</span></div>
+ <div class="row"><span class="k">declared</span><span>${short(mp.merkle_root)}</span></div>
+ <div class="row"><span class="k">result</span><span class="${(rootMatch&&merkleOk)?'val-ok':'val-fail'}">${!rootMatch ? 'SKIPPED (root failed)' : (merkleOk ? 'PATH CLOSES' : 'PATH BROKEN')}</span></div>
+ `);
+
+ await sleep(350);
+ const sig = data.sig_pq || {};
+ const hasSig = !!(sig.type && sig.signerHashed);
+ setStep(4, hasSig ? 'pass' : 'fail', `
+ <div class="row"><span class="k">type</span><span>${sig.type || '—'}</span></div>
+ <div class="row"><span class="k">signerHashed</span><span>${short(sig.signerHashed)}</span></div>
+ <div class="row"><span class="k">note</span><span>provenance metadata only — does not upgrade class</span></div>
+ `);
+
+ await sleep(250);
+ const box = document.getElementById('verdictBox');
+ const proof = rootMatch && merkleOk;
+ box.innerHTML = `<div class="verdict ${proof ? 'pass':'fail'}">
+ <div class="cls">${proof ? 'PROOF' : 'NOT ADMISSIBLE'}</div>
+ <div class="claim">${proof
+ ? 'Narrow claim proved: this receipt body recomputes exactly and is correctly committed under the stated Merkle root. Does not by itself prove any downstream obligation was satisfied.'
+ : 'Recompute or Merkle-path verification failed — this item cannot be classified above the point of failure. Check the stored root and sibling order.'}</div>
+ </div>`;
+
+ btn.disabled = false;
+}
+</script>
+</body>
+</html>
