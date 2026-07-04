@@ -161,9 +161,12 @@ A compliant Evidence Envelope consumer should verify the item in this order:
 7. If the path fails: classify below PROOF and stop.
 8. Verify `sig_pq` metadata / signature material according to the
    ML-DSA-65 profile in force.
-9. If steps 1–8 succeed, the envelope entry is admissible as `PROOF` for the
-   narrow claim: **this receipt body recomputes and belongs to this committed
-   Merkle root**.
+9. If steps 1–8 succeed, the envelope entry is a candidate `PROOF`-class item
+   for the narrow claim: **this receipt body recomputes and belongs to this
+   committed Merkle root**.
+10. The RAILS consumer should classify it as `PROOF` only when its envelope
+    policy treats this replayable cryptographic artifact as a proof item rather
+    than as a generic receipt-verifier input.
 
 The narrow claim matters. The entry proves receipt correctness / commitment
 binding. It does **not** by itself prove that the broader obligation was
@@ -225,5 +228,6 @@ object merely as “an external receipt,” it should **not** be classified as
 
 This mapping stays sound only if the ReceiptOS item is treated as a
 **cryptographic proof artifact with a deterministic verification procedure**,
-not as a generic receipt-verifier input.
+not as a generic receipt-verifier input. That is why step 9 above is phrased as
+a classification condition, not an automatic upgrade rule.
 
