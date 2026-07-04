@@ -109,3 +109,54 @@ Merkle path closes.
   - that a Clearing Decision should release funds
   - that a Settlement Instruction should execute
 
+## Non-trivial Merkle vector (≥2 leaves)
+
+To avoid overfitting the mapping to the one-leaf genesis case, the same ReceiptOS
+claim can be projected into a non-trivial Merkle proof with at least two leaves.
+
+Example 2-leaf tree:
+
+- `leaf_0 = receipt_root_a`
+- `leaf_1 = receipt_root_b`
+- `merkle_leaf_index = 0`
+- `merkle_proof = [receipt_root_b]`
+- `merkle_root = H(receipt_root_a || receipt_root_b)`
+
+Illustrative envelope entry:
+
+```json
+{
+  "kind": "receiptos.proof_entry.v0",
+  "receipt_root": {
+    "stored": "0x1111111111111111111111111111111111111111111111111111111111111111",
+    "computed": "0x1111111111111111111111111111111111111111111111111111111111111111",
+    "match": true,
+    "status": "verified"
+  },
+  "merkle_proof": {
+    "merkle_root": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "leaf_index": 0,
+    "siblings": [
+      "0x2222222222222222222222222222222222222222222222222222222222222222"
+    ]
+  },
+  "sig_pq": {
+    "type": "fips-204/ml-dsa-65",
+    "signerHashed": "0x4e7bb6a3f4c36d9f0f6d7d4ab1b7c2ec7e297d51f6039f0a2f9d4e8c67ab3c10"
+  },
+  "verification_procedure": [
+    "canonicalize the ReceiptOS evidence body",
+    "recompute receipt_root_a",
+    "require stored == computed",
+    "hash leaf_0 with sibling leaf_1 in canonical Merkle order",
+    "require derived merkle_root == stated merkle_root",
+    "verify ML-DSA-65 signer metadata / signature material under the active pq-receipt-profile"
+  ]
+}
+```
+
+This second vector matters because the PROOF claim should survive a real
+membership proof, not only the degenerate one-leaf case. The admissibility claim
+is the same narrow claim as above: the receipt body recomputes correctly and is
+correctly committed under the stated Merkle root.
+
