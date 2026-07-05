@@ -255,6 +255,7 @@ payload
 
 Core formulations: see [Canonical Principles](docs/CANONICAL_PRINCIPLES.md).
 Schema at a glance: see [Schema Overview](docs/SCHEMA_OVERVIEW.md).
+ReceiptOS follows a simple rule: correctness must remain independently re-derivable. In that sense, it is closer to DNA proofreading and mismatch repair than to a reputation system: what is preserved is not trust in the producer, but the ability to re-establish correctness through independent verification. See: [Natural Precedent — DNA Proofreading](docs/natural-precedent-dna-proofreading.md).
 
 Crystal Receipt is designed to stay compatible with ReceiptOS-style proof flows.
 
