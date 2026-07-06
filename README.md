@@ -1,5 +1,9 @@
 # crystal-receipt
 
+## Neutrality and design partnership
+
+The reference implementation was developed in design partnership with Stealth (CYPHES), whose adapter and integration documentation are the deepest in this repository, alongside adapters for unaffiliated runtimes. The neutrality of ReceiptOS is structural, not sociological: no adapter participates in receipt_root derivation. Full adapter index and the two invariants: docs/ADAPTERS.md.
+
 ## ReceiptOS
 
 **Portable proof and history artifacts for AI agents, tools, workflows, and autonomous systems.**
