@@ -20,6 +20,7 @@ A pre-post gate or recompute-and-diff tool should treat this file as the corpus 
 positive coverage = canonicalization + anchor-stripping + one-leaf rows from main, plus the three-case composed vector from the recompute-kit;
 negative coverage = fixtures/invalid/ plus the chain-tamper leg of the composed vector.
 Draft-scoped rows are opt-in and must be labeled as such in any conformance claim.
+The adapter layer is documented separately in ADAPTERS.md and is by definition outside conformance scope: adapters shape what enters the evidence object, while conformance is defined over what happens after canonicalization. A gate never needs adapter awareness.
 
 ## Sync discipline
 
