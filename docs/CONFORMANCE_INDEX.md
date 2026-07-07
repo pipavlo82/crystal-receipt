@@ -11,7 +11,7 @@ This table mirrors the conformance vector table in the ReceiptOS preprint (§7.4
 | One-leaf Merkle | this repo, main | Current | leaf_index=0, proof=[], merkle_root=receipt_root is valid membership |
 | Three-case composed vector (genesis · linked · chain-tamper) | TMerlini recompute-kit, conformance row receiptos-wyriwe-composed + composed-vector gist | Current, cross-repo | Contributed by Pavlo Tvardovskyi (@pipavlo82); genesis encoding: sha256(utf8(decision_hex + "|" + prev_hex)), prev_hex = "" at genesis, delimiter always retained. Canonical home is the recompute-kit; this repo points, does not mirror |
 | input_commitment seam | branch feat/reserved-slots-v0next — src/receiptos/fixtures/session-evidence.with-input-commitment.sample.json | Draft-scoped | Merges after ERC-8313 pins the sig_pq.signerHashed shape; do not treat as locked conformance evidence until re-verified on main |
-| Tamper / missing-field negatives | this repo, main — src/receiptos/fixtures/invalid/ | Current | Five negative cases (malformed anchor result, mismatched root, wrong chain-id, wrong network, malformed txhash); agreement is on rejection semantics |
+| Tamper / missing-field negatives | this repo, main — src/receiptos/fixtures/invalid/ | Current | Five negative cases (malformed anchor result, mismatched root, wrong chain-id, wrong network, malformed txhash); agreement is on rejection semantics; expected rejection semantics pinned in fixtures/invalid/EXPECTED.md |
 | Multi-leaf Merkle | — | Planned | Non-trivial path semantics; not yet locked conformance evidence |
 
 ## For tooling authors
