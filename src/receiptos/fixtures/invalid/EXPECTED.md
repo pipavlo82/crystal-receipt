@@ -28,9 +28,10 @@ Rule zero: undetermined never maps to admit.
 | wrong-chainid-anchor-result | chainId ≠ 11155111 | reject |
 | wrong-network-anchor-result | network ≠ "sepolia" | reject |
 | mismatched-root-anchor-result | imported receiptRoot ≠ capsule's anchor.merkle_root | reject |
+| missing-anchor-result-field | required field absent: procedure cannot evaluate | undetermined |
 
 Classification note: malformed-format cases are classified as reject, not undetermined — validation is a check that ran and returned a definitive answer. undetermined is reserved for cases where the procedure could not be evaluated at all.
 
-Gap, stated honestly: no current fixture exemplifies undetermined. A sixth fixture pinning that state canonically (absent required anchor-result field) is proposed; until it lands, undetermined has a definition but no exemplar in this corpus.
+The sixth fixture (missing-anchor-result-field) is the canonical undetermined exemplar: a required field is absent, so the verification procedure cannot run at all — as distinct from running and returning a definitive negative. Proposed by pipavlo82, shape confirmed by babyblueviper1 before landing.
 
-Status: draft pending pressure-test by babyblueviper1 against the gate's actual outputs; becomes locked when both sides re-run and agree.
+Status: LOCKED 2026-07-07 — babyblueviper1 ran all five fixtures against the gate (anchor_recompute.py): 5/5 agreement, zero divergence. Notable: wrong-network was verified against the actual fixture (network 'mainnet' is a known network with expected chainId 1, claimed 11155111 → definite mismatch → reject), not assumed.

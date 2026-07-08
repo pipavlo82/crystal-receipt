@@ -1,0 +1,13 @@
+{
+  "network": "sepolia",
+  "chainId": "11155111",
+  "contractAddress": "0x461e60fa7D2Bd9512DE1B043A3e8d206462D34f5",
+  "receiptRoot": "0x687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc",
+  "metadataURI": "ipfs://stealth/manual-sepolia-anchor-demo",
+  "event": {
+    "name": "ReceiptAnchored",
+    "receiptRoot": "0x687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc",
+    "metadataURI": "ipfs://stealth/manual-sepolia-anchor-demo",
+    "publisher": "0x980E541abbCd6382CD50DE2c35A2Ff0DdC1F3d29"
+  }
+}
