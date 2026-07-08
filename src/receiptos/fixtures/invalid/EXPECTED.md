@@ -35,3 +35,9 @@ Classification note: malformed-format cases are classified as reject, not undete
 The sixth fixture (missing-anchor-result-field) is the canonical undetermined exemplar: a required field is absent, so the verification procedure cannot run at all — as distinct from running and returning a definitive negative. Proposed by pipavlo82, shape confirmed by babyblueviper1 before landing.
 
 Status: LOCKED 2026-07-07 — babyblueviper1 ran all five fixtures against the gate (anchor_recompute.py): 5/5 agreement, zero divergence. Notable: wrong-network was verified against the actual fixture (network 'mainnet' is a known network with expected chainId 1, claimed 11155111 → definite mismatch → reject), not assumed.
+
+### Paired artifact
+
+This section pairs with the Eligibility ↔ Verification Verdict — Correspondence Note (canonical home: https://gist.github.com/TMerlini/0f5f426e400197a670874f17c4451c99), three-way locked 2026-07-08 by TMerlini, pipavlo82, and babyblueviper1. The note joins three vocabularies over the same semantics: recompute-kit tri-state exits · verification-gate admit/reject/undetermined · ReceiptOS binary admissibility (Def. 4 / §4.2, preprint v0.4). Each document cites the other's pinned ref so neither can drift.
+
+Two facts recorded at lock time: (1) the third leg's pressure-test surfaced and fixed a real implementation gap — the gate had been collapsing absent-field and malformed-value into one bucket; after the fix, fixture six returns UNDETERMINED with the canonical exemplar message verbatim, four reject fixtures with zero regression. (2) Exit codes are implementation-specific (kit: 2 = unverifiable; gate: 3 = undetermined, 2 being reserved for usage errors); the verdict vocabulary is what is normative, not the numerics.
