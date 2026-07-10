@@ -54,3 +54,17 @@ Also open:
 ## 5. Failure mode (why sidecar fails)
 
 If version sits only next to the claim hash, a later ruleset revision can reinterpret an old claim as if it always meant the new thing. Nothing in the commitment itself says, "this hash was produced under the old rules," so the semantic substitution can happen silently. The committed copy is what makes that reinterpretation visible: the old claim reproduces only under the old ruleset label, and a new ruleset yields a different commitment instead of a quietly reused one. This is not hypothetical in the abstract; it tracks a real class of failure Fede reported seeing live in a peer contract, where sidecar versioning left room for reinterpretation after the fact.
+
+## 6. Three-case vector sketch
+
+Structure only for now; values remain TBD with Merlini.
+
+- **(a) same record + same `ruleset_version`** → reproduces.
+- **(b) same record + bumped `ruleset_version`** → different commitment, surfaced explicitly as “different claim.”
+- **(c) sidecar tamper** → version label altered post-hoc while commitment remains unchanged; detected because the committed copy disagrees.
+
+This mirrors the WYRIWE-style genesis / linked / tamper pattern: one stable positive case, one version-shift case that must move the commitment visibly, and one post-hoc metadata-tamper case that must fail legibility-vs-commitment consistency.
+
+## 7. Side-note for the kit
+
+Outside this note’s direct scope but worth recording: `trustless-ai/recompute-kit` `conformance/README.md:51` still says “a fourth implementation.” That wording predates the agreed down-count to three independently authored implementations, because the browser verifier and script path are surfaces of the reference rather than separate authored implementations under the current `crystal-receipt` `docs/CONFORMANCE_INDEX.md` reading. This is just a note to keep the adjacent kit wording aligned when convenient.
