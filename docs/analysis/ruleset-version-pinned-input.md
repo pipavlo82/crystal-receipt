@@ -1,6 +1,6 @@
 # ruleset_version as pinned input in recompute trace
 
-**Status:** DRAFT for discussion — analysis only, no kit changes proposed here.  
+**Status:** DRAFT for discussion — analysis only, no kit changes proposed here. Carrier resolved 2026-07-11 (see §4).  
 **Origin:** General thread 2026-07-10 (Fede's catch, Pavlo's spec, Merlini's invariants).  
 **Findings verified against:** `trustless-ai/recompute-kit` clone, 2026-07-10.
 
@@ -36,20 +36,15 @@ There is precedent for this shape in the ReceiptOS reference. In `crystal-receip
 
 A companion move is worth flagging, though not decided here: closing the open field-set by defining an enumerated legitimate-key schema per recipe would solve pinning and field discipline in one gesture. That is an option to surface explicitly, not a conclusion forced in this note.
 
-## 4. Version carrier — the main open question, stated not answered
+## 4. Version carrier — RESOLVED (Merlini, 2026-07-11)
 
-The main open design question is what exactly `ruleset_version` should carry.
+Decision: hybrid, with the inversion that makes it safe. The recipe/ruleset definition declares its own semver internally (`version: <semver>` inside the definition); `ruleset_version` — the committed, top-level unsigned key — is the content-hash taken over that definition: `ruleset_version = sha256(canon(recipe_definition))`. The semver is thereby covered by the hash — legible (a lens reads it off the recipe at that hash and renders "verified under receiptos-c14n-v0 / vX") but unalterable without moving the hash. Rationale kept verbatim: "A semver label is a promise; a content-hash is a proof. The committed copy is the hash, full stop." Model precedent: git — the commit sha binds, the tag reads; proven prior art plus exactly one rule.
 
-Candidate (a): a content-hash of the recipe file. That is stronger and self-verifying: the label itself is recomputable.
+How this collapses the §6 cases: (a) same → same hash; (b) bump → recipe content changes → different hash → visibly a different claim; (c) sidecar tamper becomes unforgeable — the label cannot change without moving the hash, and an edited display copy disagrees with the committed hash's declared semver → caught on legibility-vs-commitment consistency.
 
-Candidate (b): a declared semver. That is more readable, but it needs governance and cannot self-authenticate on its own.
+Sub-open 1 resolved — note vs kit versioning: independent, composed at commit time. The correspondence note (verdict vocabulary) and kit recipes revise on their own cadence, each carrying its own content-hash; a verdict's `ruleset_version` is the hash of the effective ruleset it actually ran under — if that bundles the note's vocabulary, its hash folds in.
 
-A hybrid worth discussing is: content-hash as the load-bearing value inside the commitment, semver as a display alias around it.
-
-Also open:
-
-- whether the eligibility↔verdict correspondence note versions independently of the kit;
-- what the migration story is for existing conformance rows, all of which are currently version-less, including `receiptos-wyriwe-composed`.
+Sub-open 2 resolved — migration for version-less rows (incl. `receiptos-wyriwe-composed`): backfill each row with the content-hash of the ruleset as it was at the commit that produced it — pin to history, don't retro-relabel. Where the historical ruleset is ambiguous, mark the row unverifiable/legacy until re-run under a pinned version. Principle recorded verbatim: "Honest over tidy."
 
 ## 5. Failure mode (why sidecar fails)
 
@@ -65,6 +60,12 @@ Structure only for now; values remain TBD with Merlini.
 
 This mirrors the WYRIWE-style genesis / linked / tamper pattern: one stable positive case, one version-shift case that must move the commitment visibly, and one post-hoc metadata-tamper case that must fail legibility-vs-commitment consistency.
 
+## 6a. First adopter-in-waiting
+
+`trustless-ai/recompute-kit` commit `4e72169` added recipe `receiptos/canonicalize` (profile `receiptos-c14n-v0`: JCS RFC 8785 by reference, top-level anchor-strip the sole delta) with the §2.8 π vector as its golden vector (45 bytes ≠ 44 chars, the literal-UTF-8 tripwire); the kit is thereby a conforming `receiptos-c14n-v0` implementation per Definition 6. The recipe is deliberately version-less and slated as the first adopter of `ruleset_version` under the migration path above.
+
 ## 7. Side-note for the kit
 
 Outside this note’s direct scope but worth recording: `trustless-ai/recompute-kit` `conformance/README.md:51` still says “a fourth implementation.” That wording predates the agreed down-count to three independently authored implementations, because the browser verifier and script path are surfaces of the reference rather than separate authored implementations under the current `crystal-receipt` `docs/CONFORMANCE_INDEX.md` reading. This is just a note to keep the adjacent kit wording aligned when convenient.
+
+Update 2026-07-11: Merlini has taken this fix (the line is his) — aligning to the three-independently-authored reading.
