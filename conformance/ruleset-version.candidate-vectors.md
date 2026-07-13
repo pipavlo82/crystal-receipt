@@ -59,3 +59,13 @@ Placement: `ruleset_version` is a required top-level key of the unsigned object,
 ## 6. Control
 
 The unpinned §2.8 vector is unchanged: `0xe61c9a9eed9e1d7eb5107acd9bb71d53cee9fcdae806444f4dc93b2f9694c2ae`. Pinning is additive; it does not disturb the golden vector.
+
+## 7. Promotion criteria (how these stop being candidates)
+
+Reproduced byte-exact by:
+
+1. `trustless-ai/recompute-kit`
+2. `trustless-ai/recompute-lens`
+3. an independent from-spec implementation
+
+On three independent landings, move the rows into the conformance index and mark canonical.
