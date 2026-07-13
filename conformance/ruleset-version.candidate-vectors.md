@@ -1,6 +1,6 @@
 # ruleset_version candidate vectors
 
-**Status:** CANDIDATE — computed by the reference author only (two independent implementations, same party). NOT canonical until reproduced by the recompute-kit, the recompute-lens, and ideally a from-spec pass. A value becomes canonical when other people's tooling lands on the same bytes, not when the author's does.  
+**Status:** CANONICAL — all three promotion criteria (§7) met 2026-07-13. Independently reproduced byte-exact by `trustless-ai/recompute-kit` (commit `15d7254`), `trustless-ai/recompute-lens` (commit `c7da42a`), and a from-scratch Python canonicalizer written directly from the §1/§2 spec text above (no code shared with either port). All four values — RV1, RV2, Ca, Cb — matched across all three, including the isolation property `Cb ≠ Ca`. Verified by `babyblueviper1`, outside any of the three implementations' own harnesses.
 **Origin:** General thread 2026-07-10/12 — Fede's catch, Pavlo's spec, Merlini's carrier design.  
 **Spec:** `docs/analysis/ruleset-version-pinned-input.md`
 
@@ -64,8 +64,8 @@ The unpinned §2.8 vector is unchanged: `0xe61c9a9eed9e1d7eb5107acd9bb71d53cee9f
 
 Reproduced byte-exact by:
 
-1. `trustless-ai/recompute-kit`
-2. `trustless-ai/recompute-lens`
-3. an independent from-spec implementation
+1. `trustless-ai/recompute-kit` ✓ (`15d7254`)
+2. `trustless-ai/recompute-lens` ✓ (`c7da42a`)
+3. an independent from-spec implementation ✓ (Python, hand-rolled per §1/§2, no shared code)
 
-On three independent landings, move the rows into the conformance index and mark canonical.
+All three landings confirmed 2026-07-13 — promoted to CANONICAL (§Status above).
