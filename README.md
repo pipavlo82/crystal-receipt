@@ -1,5 +1,7 @@
 # crystal-receipt
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21402444.svg)](https://doi.org/10.5281/zenodo.21402444)
+
 ## Neutrality and design partnership
 
 The reference implementation was developed in design partnership with Stealth (CYPHES), whose adapter and integration documentation are the deepest in this repository, alongside adapters for unaffiliated runtimes. The neutrality of ReceiptOS is structural, not sociological: no adapter participates in receipt_root derivation. Full adapter index and the two invariants: docs/ADAPTERS.md.
@@ -623,3 +625,30 @@ The image remains the human-facing fingerprint.
 python -m unittest discover -s tests -p "test_*.py"
 bun test tests/receiptos
 ```
+
+## Citation
+
+The ReceiptOS specification is published as a citable preprint:
+
+> Tvardovskyi, P. (2026). *ReceiptOS: A Portable, Recomputable Evidence
+> Substrate for Verifiable Agent Execution.* Zenodo.
+> https://doi.org/10.5281/zenodo.21402444
+
+BibTeX:
+
+```bibtex
+@misc{tvardovskyi2026receiptos,
+ author = {Tvardovskyi, Pavlo},
+ title = {{ReceiptOS: A Portable, Recomputable Evidence
+ Substrate for Verifiable Agent Execution}},
+ year = {2026},
+ publisher = {Zenodo},
+ doi = {10.5281/zenodo.21402444},
+ url = {https://doi.org/10.5281/zenodo.21402444}
+}
+```
+
+The paper's normative canonicalization profile (receiptos-c14n-v0, §2.8)
+and its byte-exact test vector are the ones implemented here; the
+conformance rows in docs/CONFORMANCE_INDEX.md point at this DOI as the
+spec reference.

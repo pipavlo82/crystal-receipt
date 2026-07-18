@@ -164,7 +164,7 @@ receipt first.
 - Artifact layer (`entry` / `collection` / `portfolio` + roots + golden
   vectors): **implemented in this repository.**
 - Layer specification: preprint §10.7 (continuity layer); this document is
-  its repo-resident form.
+  its repo-resident form. https://doi.org/10.5281/zenodo.21402444
 - Open, deliberately: retention/pruning profiles, epoch batching for
   high-volume producers, portfolio-root anchoring profile. Each follows the
   pinned-input discipline established for `ruleset_version` — declared inside
