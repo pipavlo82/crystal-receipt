@@ -47,6 +47,18 @@ A minimal summary of execution evidence state, again with source field reference
 ### `receipt_root`
 The stored root, recomputed root, and whether they match.
 
+### Normative distinction: validity vs observation
+
+A timing or observation state **MUST NOT** collapse into a validity state.
+
+`receipt_root.status` **MUST** report the result of receipt-root recomputation.
+
+`verifier_result.status` **MUST** report the result produced by the independent ReceiptOS verifier, including local independent recomputation. It does **not** mean that a producer-supplied or externally recorded verifier result was observed.
+
+The source evidence field `anchor.verifier_status` is a source observation fact and **MUST NOT** override, weaken, or be treated as equivalent to `verifier_result.status`.
+
+When a future exported field represents whether a source/external verifier result was observed, it **MUST** use a separate observation axis. Absence of such an observation **MUST NOT** be represented as `mismatch`, `rejected`, or any other validity judgment.
+
 ### `proof_refs`
 References to proof-adjacent substrate such as local Merkle state and anchor state.
 
