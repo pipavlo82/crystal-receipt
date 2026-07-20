@@ -31,6 +31,7 @@ export {
 export {
   createChronicleEntryV0,
   sortArtifactRefs,
+  sortEntryRefs,
   deriveArtifactRefsFromChronicleEntry,
   computeChronicleCollectionRoot,
   createChronicleCollectionV0,
@@ -40,11 +41,16 @@ export {
   computeChroniclePortfolioRoot,
   createChroniclePortfolioV0,
   verifyChroniclePortfolioV0,
+  computeChronicleCheckpointRoot,
+  createChronicleCheckpointV0,
+  verifyChronicleCheckpointV0,
   type ChronicleEntryV0,
   type ChronicleCollectionV0,
   type ChronicleCollectionVerification,
   type ChroniclePortfolioV0,
   type ChroniclePortfolioVerification,
+  type ChronicleCheckpointV0,
+  type ChronicleCheckpointVerification,
 } from "./capsule/chronicle-portfolio-v0"
 export { buildCrystalReceiptMapping, type CrystalReceiptMapping } from "./capsule/crystal-mapping"
 export {

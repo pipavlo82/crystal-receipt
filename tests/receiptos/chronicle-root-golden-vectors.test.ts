@@ -1,13 +1,17 @@
 import { describe, expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
-import { canonicalize, sha256, computeChronicleCollectionRoot, computeChroniclePortfolioRoot } from "../../src/receiptos"
+import { canonicalize, sha256, computeChronicleCheckpointRoot, computeChronicleCollectionRoot, computeChroniclePortfolioRoot } from "../../src/receiptos"
 
 type RootVector = { name: string; input: Record<string, unknown>; expected_root: string }
-type RootFixture = { artifact: RootVector[]; collection: RootVector[]; portfolio: RootVector[] }
+type RootFixture = { artifact: RootVector[]; collection: RootVector[]; portfolio: RootVector[]; checkpoint: RootVector[] }
 
 const fixturePath = resolve(import.meta.dir, "../fixtures/chronicle-root-golden-vectors.json")
 const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as RootFixture
+
+if (!Array.isArray(fixture.checkpoint) || fixture.checkpoint.length === 0) {
+  throw new Error("chronicle root golden vectors fixture must include a non-empty checkpoint section")
+}
 
 function computeArtifactRootForGoldenVector(input: Record<string, unknown>) {
   return `sha256:${sha256(canonicalize({
@@ -20,6 +24,18 @@ function computeArtifactRootForGoldenVector(input: Record<string, unknown>) {
 }
 
 describe("chronicle root golden vectors", () => {
+  test("existing collection and portfolio vector refs sort identically under localeCompare and codepoint ordering", () => {
+    const compareCodepoint = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
+    for (const vector of fixture.collection) {
+      const refs = (vector.input.artifact_refs as string[] | undefined) ?? []
+      expect([...refs].sort((a, b) => a.localeCompare(b))).toEqual([...refs].sort(compareCodepoint))
+    }
+    for (const vector of fixture.portfolio) {
+      const refs = (vector.input.collection_refs as string[] | undefined) ?? []
+      expect([...refs].sort((a, b) => a.localeCompare(b))).toEqual([...refs].sort(compareCodepoint))
+    }
+  })
+
   for (const vector of fixture.collection) {
     test(`collection ${vector.name}`, () => {
       expect(computeChronicleCollectionRoot(vector.input as any)).toBe(vector.expected_root)
@@ -29,6 +45,12 @@ describe("chronicle root golden vectors", () => {
   for (const vector of fixture.portfolio) {
     test(`portfolio ${vector.name}`, () => {
       expect(computeChroniclePortfolioRoot(vector.input as any)).toBe(vector.expected_root)
+    })
+  }
+
+  for (const vector of fixture.checkpoint) {
+    test(`checkpoint ${vector.name}`, () => {
+      expect(computeChronicleCheckpointRoot(vector.input as any)).toBe(vector.expected_root)
     })
   }
 
