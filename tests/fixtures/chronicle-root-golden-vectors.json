@@ -190,5 +190,55 @@
       },
       "expected_root": "sha256:7ddd55f59ea424fda079e3b5d5a3a1497bffe460ef1339ecbbc350888bc48124"
     }
+  ],
+  "checkpoint": [
+    {
+      "name": "empty-refs",
+      "input": {
+        "schema": "chronicle_checkpoint.v0",
+        "checkpoint_id": "empty",
+        "collection_ref": "/collection/empty",
+        "entry_refs": [],
+        "prev_checkpoint": null,
+        "sequence": 0
+      },
+      "expected_root": "sha256:c92cfb65eb33d6c63bbdea7a5fd6b9183316b8c497b905afa35bb6f9b9f7f2ce"
+    },
+    {
+      "name": "single-ref",
+      "input": {
+        "schema": "chronicle_checkpoint.v0",
+        "checkpoint_id": "single",
+        "collection_ref": "/collection/demo",
+        "entry_refs": ["entry-alpha"],
+        "prev_checkpoint": null,
+        "sequence": 0
+      },
+      "expected_root": "sha256:ab9d6573475afd3eb566a75b83a8a2f73ef3bcc2c7071e4ba7908ad48347c179"
+    },
+    {
+      "name": "multiple-unsorted",
+      "input": {
+        "schema": "chronicle_checkpoint.v0",
+        "checkpoint_id": "multi",
+        "collection_ref": "/collection/demo",
+        "entry_refs": ["entry-gamma", "entry-alpha", "entry-beta"],
+        "prev_checkpoint": "sha256:prev-demo",
+        "sequence": 3
+      },
+      "expected_root": "sha256:fc9a125887d65cc28a0c0a6552d625d7be171d2efc0c74fd39137c82606a8d4f"
+    },
+    {
+      "name": "unicode-id",
+      "input": {
+        "schema": "chronicle_checkpoint.v0",
+        "checkpoint_id": "workspace-дані-🧪",
+        "collection_ref": "/collection/workspace",
+        "entry_refs": ["entry-beta", "entry-alpha"],
+        "prev_checkpoint": null,
+        "sequence": 0
+      },
+      "expected_root": "sha256:0abced72404c0c61d756dd5d3c6a4b22c652992453347f15b854755c4ed997a9"
+    }
   ]
 }
