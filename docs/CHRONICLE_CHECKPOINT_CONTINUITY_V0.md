@@ -80,15 +80,18 @@ type ChronicleCheckpointContinuityResultV0 = {
 
 ## Normative evaluation order
 
-1. Validate current checkpoint shape.
-2. Run the existing local `verifyChronicleCheckpointV0` semantics on current.
-3. If current is `sequence = 0` with `prev_checkpoint = null`, return valid genesis.
-4. For `sequence > 0`, require a resolved predecessor candidate.
-5. Validate predecessor shape.
-6. Run the existing local `verifyChronicleCheckpointV0` semantics on predecessor.
-7. Compare `current.prev_checkpoint` with `predecessor.checkpoint_root`.
-8. Compare `predecessor.sequence` with `current.sequence`.
-9. Return the pairwise continuity result.
+The evaluator MUST perform pairwise continuity classification in the following order:
+
+1. validate current checkpoint shape;
+2. verify current checkpoint locally;
+3. classify genesis;
+4. if non-genesis, resolve the predecessor candidate;
+5. validate predecessor shape;
+6. verify predecessor locally;
+7. compare `current.prev_checkpoint` with `predecessor.checkpoint_root`;
+8. classify the sequence relation.
+
+Evaluation stops at the first applicable outcome. Later checks MUST NOT override an earlier `malformed`, `unverifiable`, or `not_evaluated` result.
 
 The predecessor reference comparison MUST occur before sequence classification.
 
@@ -104,6 +107,13 @@ This profile adopts the existing checkpoint shape rules already enforced at crea
 A checkpoint that fails those rules is malformed for this profile.
 
 ## Exact outcomes
+
+The following pairwise distinctions are normative and not merely fixture examples:
+
+- If the supplied predecessor candidate is locally verified, `current.prev_checkpoint` equals `predecessor.checkpoint_root`, and `predecessor.sequence = current.sequence - 1`, the result is the valid direct-successor outcome.
+- If the supplied predecessor candidate is locally verified and has `predecessor.sequence = current.sequence - 1`, but `current.prev_checkpoint != predecessor.checkpoint_root`, the result is `predecessor_ref_mismatch`, not a successor result and not a sequence-classification result.
+- If the supplied predecessor candidate is locally verified, `current.prev_checkpoint` equals `predecessor.checkpoint_root`, and `predecessor.sequence = current.sequence`, the result is `predecessor_same_sequence`.
+
 
 ### Current shape malformed
 

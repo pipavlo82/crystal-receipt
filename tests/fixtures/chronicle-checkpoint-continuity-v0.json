@@ -24,6 +24,37 @@
       }
     },
     {
+      "name": "valid_genesis_with_supplied_predecessor_candidate",
+      "current": {
+        "schema": "chronicle_checkpoint.v0",
+        "checkpoint_id": "genesis-with-candidate",
+        "collection_ref": "/collection/demo",
+        "entry_refs": [
+          "entry-alpha"
+        ],
+        "prev_checkpoint": null,
+        "sequence": 0,
+        "checkpoint_root": "sha256:29881c2a858bb782d7e284c5b9c466ec2fa92dc1bafecac8e36674646a506768"
+      },
+      "predecessor": {
+        "schema": "chronicle_checkpoint.v0",
+        "checkpoint_id": "genesis-supplied-predecessor",
+        "collection_ref": "/collection/demo",
+        "entry_refs": [
+          "entry-zeta"
+        ],
+        "prev_checkpoint": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "sequence": 7,
+        "checkpoint_root": "sha256:e2c1d941ca932054d8a2a62a7b4931f01c53d66155958e01d78a28cefed5acca"
+      },
+      "expected": {
+        "evaluation_state": "evaluated",
+        "verdict": "valid",
+        "relation": "genesis",
+        "reason_code": "genesis"
+      }
+    },
+    {
       "name": "valid_successor",
       "current": {
         "schema": "chronicle_checkpoint.v0",
@@ -418,6 +449,39 @@
         "verdict": null,
         "relation": null,
         "reason_code": "predecessor_shape_malformed"
+      }
+    },
+    {
+      "name": "current_shape_malformed_would_otherwise_be_sequence_gap",
+      "current": {
+        "schema": "chronicle_checkpoint.v0",
+        "checkpoint_id": "current-malformed-would-gap",
+        "collection_ref": "/collection/demo",
+        "entry_refs": [
+          "entry-alpha",
+          "entry-beta",
+          "entry-gamma"
+        ],
+        "prev_checkpoint": "sha256:60794c4853423bc6eb72bc9816884db71445a378d5116f5d4e92b19f18999957",
+        "sequence": 4.5,
+        "checkpoint_root": "sha256:253a3d76b4baf0c409883fda775df9907fce110b27c36a03ac9b2f9887eba022"
+      },
+      "predecessor": {
+        "schema": "chronicle_checkpoint.v0",
+        "checkpoint_id": "checkpoint-gap-predecessor",
+        "collection_ref": "/collection/demo",
+        "entry_refs": [
+          "entry-alpha"
+        ],
+        "prev_checkpoint": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "sequence": 1,
+        "checkpoint_root": "sha256:60794c4853423bc6eb72bc9816884db71445a378d5116f5d4e92b19f18999957"
+      },
+      "expected": {
+        "evaluation_state": "malformed",
+        "verdict": null,
+        "relation": null,
+        "reason_code": "current_shape_malformed"
       }
     }
   ]
