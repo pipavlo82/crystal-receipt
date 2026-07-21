@@ -5,6 +5,7 @@ import type { PortableProofObjectV0 } from "./portable-proof-object-v0"
 export const CHRONICLE_ENTRY_VERSION_V0 = "chronicle_entry.v0"
 export const CHRONICLE_COLLECTION_VERSION_V0 = "chronicle.collection.v0"
 export const CHRONICLE_PORTFOLIO_VERSION_V0 = "chronicle_portfolio.v0"
+export const CHRONICLE_CHECKPOINT_VERSION_V0 = "chronicle_checkpoint.v0"
 
 export type ChronicleEntryV0 = {
   schema: typeof CHRONICLE_ENTRY_VERSION_V0
@@ -37,6 +38,16 @@ export type ChroniclePortfolioV0 = {
   metadata?: Record<string, unknown>
 }
 
+export type ChronicleCheckpointV0 = {
+  schema: typeof CHRONICLE_CHECKPOINT_VERSION_V0
+  checkpoint_id: string
+  collection_ref: string
+  entry_refs: string[]
+  prev_checkpoint: string | null
+  sequence: number
+  checkpoint_root: string
+}
+
 export type ChronicleCollectionVerification = {
   ok: boolean
   collection_root: string
@@ -47,6 +58,12 @@ export type ChroniclePortfolioVerification = {
   ok: boolean
   portfolio_root: string
   recomputed_portfolio_root: string
+}
+
+export type ChronicleCheckpointVerification = {
+  ok: boolean
+  checkpoint_root: string
+  recomputed_checkpoint_root: string
 }
 
 export function createChronicleEntryV0(
@@ -80,6 +97,10 @@ export function sortCollectionRefs(collectionRefs: string[]): string[] {
 
 export function sortArtifactRefs(artifactRefs: string[]): string[] {
   return [...artifactRefs].sort((a, b) => a.localeCompare(b))
+}
+
+export function sortEntryRefs(entryRefs: string[]): string[] {
+  return [...entryRefs].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
 }
 
 export function deriveArtifactRefsFromChronicleEntry(entry: ChronicleEntryV0): string[] {
@@ -120,6 +141,47 @@ export function computeChroniclePortfolioRoot(input: Pick<ChroniclePortfolioV0, 
     portfolio_id: input.portfolio_id,
     collection_refs: sortCollectionRefs(input.collection_refs),
   }))}`
+}
+
+export function computeChronicleCheckpointRoot(input: Pick<ChronicleCheckpointV0, "schema" | "checkpoint_id" | "collection_ref" | "entry_refs" | "prev_checkpoint" | "sequence">): string {
+  return `sha256:${sha256(canonicalize({
+    schema: input.schema,
+    checkpoint_id: input.checkpoint_id,
+    collection_ref: input.collection_ref,
+    entry_refs: sortEntryRefs(input.entry_refs),
+    prev_checkpoint: input.prev_checkpoint,
+    sequence: input.sequence,
+  }))}`
+}
+
+function computeChronicleCheckpointRootFromStoredOrder(input: Pick<ChronicleCheckpointV0, "schema" | "checkpoint_id" | "collection_ref" | "entry_refs" | "prev_checkpoint" | "sequence">): string {
+  return `sha256:${sha256(canonicalize({
+    schema: input.schema,
+    checkpoint_id: input.checkpoint_id,
+    collection_ref: input.collection_ref,
+    entry_refs: [...input.entry_refs],
+    prev_checkpoint: input.prev_checkpoint,
+    sequence: input.sequence,
+  }))}`
+}
+
+function validateChronicleCheckpointShape(input: {
+  prevCheckpoint?: string | null
+  sequence: number
+}) {
+  if (!Number.isInteger(input.sequence)) {
+    throw new Error("chronicle_checkpoint.v0 sequence must be an integer")
+  }
+  if (input.sequence < 0) {
+    throw new Error("chronicle_checkpoint.v0 sequence must be >= 0")
+  }
+  const prevCheckpoint = input.prevCheckpoint ?? null
+  if (input.sequence === 0 && prevCheckpoint !== null) {
+    throw new Error("chronicle_checkpoint.v0 sequence 0 requires prev_checkpoint = null")
+  }
+  if (input.sequence > 0 && prevCheckpoint === null) {
+    throw new Error("chronicle_checkpoint.v0 sequence > 0 requires prev_checkpoint")
+  }
 }
 
 export function createChronicleCollectionV0(
@@ -197,5 +259,56 @@ export function verifyChroniclePortfolioV0(portfolio: ChroniclePortfolioV0): Chr
     ok: portfolio.portfolio_root === recomputedPortfolioRoot,
     portfolio_root: portfolio.portfolio_root,
     recomputed_portfolio_root: recomputedPortfolioRoot,
+  }
+}
+
+export function createChronicleCheckpointV0(
+  input: {
+    checkpointId: string
+    collectionRef: string
+    entryRefs: string[]
+    prevCheckpoint?: string | null
+    sequence: number
+  },
+): ChronicleCheckpointV0 {
+  validateChronicleCheckpointShape(input)
+  const entryRefs = sortEntryRefs(input.entryRefs)
+  const prevCheckpoint = input.prevCheckpoint ?? null
+
+  return {
+    schema: CHRONICLE_CHECKPOINT_VERSION_V0,
+    checkpoint_id: input.checkpointId,
+    collection_ref: input.collectionRef,
+    entry_refs: entryRefs,
+    prev_checkpoint: prevCheckpoint,
+    sequence: input.sequence,
+    checkpoint_root: computeChronicleCheckpointRoot({
+      schema: CHRONICLE_CHECKPOINT_VERSION_V0,
+      checkpoint_id: input.checkpointId,
+      collection_ref: input.collectionRef,
+      entry_refs: entryRefs,
+      prev_checkpoint: prevCheckpoint,
+      sequence: input.sequence,
+    }),
+  }
+}
+
+export function verifyChronicleCheckpointV0(checkpoint: ChronicleCheckpointV0): ChronicleCheckpointVerification {
+  const recomputedCheckpointRoot = computeChronicleCheckpointRootFromStoredOrder({
+    schema: checkpoint.schema,
+    checkpoint_id: checkpoint.checkpoint_id,
+    collection_ref: checkpoint.collection_ref,
+    entry_refs: checkpoint.entry_refs,
+    prev_checkpoint: checkpoint.prev_checkpoint,
+    sequence: checkpoint.sequence,
+  })
+  const canonicalEntryRefs = sortEntryRefs(checkpoint.entry_refs)
+  const entryRefsAreCanonical = checkpoint.entry_refs.length === canonicalEntryRefs.length
+    && checkpoint.entry_refs.every((value, index) => value === canonicalEntryRefs[index])
+
+  return {
+    ok: checkpoint.checkpoint_root === recomputedCheckpointRoot && entryRefsAreCanonical,
+    checkpoint_root: checkpoint.checkpoint_root,
+    recomputed_checkpoint_root: recomputedCheckpointRoot,
   }
 }
