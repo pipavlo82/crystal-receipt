@@ -123,6 +123,11 @@ Open question, deliberately deferred: checkpoint creation policy, cadence, and
 monotonicity enforcement between successive checkpoints are not part of the v0
 artifact contract in this repository.
 
+Pairwise cross-checkpoint continuity semantics are specified separately in
+[CHRONICLE_CHECKPOINT_CONTINUITY_V0.md](./CHRONICLE_CHECKPOINT_CONTINUITY_V0.md).
+That profile does not change `chronicle_checkpoint.v0`, checkpoint root
+derivation, or existing local `verify*` behavior.
+
 Deferred v1 direction — omission detectability. A future witness sidecar may bind a verdict commitment at compute time, before publication or curation, to `as_of { checkpoint_root, sequence }` and to a separate monotonic `issuance_sequence`, then obtain an independent witness signature or counter-increment. This targets detectability of omission, not completeness or correctness. It does not provide completeness on its own; any completeness claim would at minimum require prior witness sequence states to be externally observable. The sidecar is not part of `chronicle_checkpoint.v0`; if implemented here, Crystal Receipt would import and verify it as a separate versioned artifact rather than generate it as its own claim.
 
 ### Verification scope (v0)
