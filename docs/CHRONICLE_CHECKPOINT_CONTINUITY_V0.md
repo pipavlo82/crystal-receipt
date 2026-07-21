@@ -135,7 +135,7 @@ Return:
 
 ### Valid genesis
 
-If current is locally verified and has:
+If current has passed shape validation and local verification, and has:
 
 - `sequence = 0`
 - `prev_checkpoint = null`
@@ -147,7 +147,7 @@ Return:
 - `relation: "genesis"`
 - `reason_code: "genesis"`
 
-Genesis is not a successor claim.
+Any supplied predecessor candidate is ignored. The supplied candidate MUST NOT be examined, shape-validated, locally verified, reference-compared, or sequence-classified.
 
 ### Required predecessor unavailable
 
