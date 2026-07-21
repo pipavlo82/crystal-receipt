@@ -1,0 +1,26 @@
+{
+  "profile": "chronicle_checkpoint_continuity_output_comparison.v0",
+  "fixture_sha256": "c369bd3924f5ce053c698c903345e3859e75a4daabffed1720d11351f81def93",
+  "reference_repository": "pipavlo82/crystal-receipt",
+  "reference_commit": "13187b29",
+  "reference_evaluator": "evaluateChronicleCheckpointContinuityV0",
+  "external_repository": "trustless-ai/recompute-kit",
+  "external_commit": "090b8db",
+  "external_artifact_path": "conformance/chronicle-checkpoint-continuity-v0/tmerlini-evaluator-results-20.json",
+  "external_artifact_sha256": "62a95d899d421d737a1f7e6fd50d7143c34c88b2e76659ccbab520b8b374b89c",
+  "reference_artifact_path": "conformance/chronicle-checkpoint-continuity-v0/pipavlo82-reference-evaluator-results-20.json",
+  "reference_artifact_sha256": "a3bcfbfc69c6867b741991ec199baffbe8090c89e8ffdde8aa32359de6ef1412",
+  "reference_results_canonical_sha256": "57bff04495650787f72c290433f8264310455e3ae0083c91e5e4dc50750847c4",
+  "external_results_canonical_sha256": "57bff04495650787f72c290433f8264310455e3ae0083c91e5e4dc50750847c4",
+  "vector_count": 20,
+  "compared_fields": [
+    "evaluation_state",
+    "verdict",
+    "relation",
+    "reason_code"
+  ],
+  "missing_in_reference": [],
+  "missing_in_external": [],
+  "deltas": [],
+  "canonical_results_byte_equal": true
+}
