@@ -64,6 +64,7 @@ Chronicle v0 is not a proposal. The artifact layer is implemented here:
 | Entry | `chronicle_entry.v0` | `src/receiptos/capsule/chronicle-portfolio-v0.ts` |
 | Collection | `chronicle.collection.v0` | same |
 | Portfolio | `chronicle_portfolio.v0` | same |
+| Checkpoint | `chronicle_checkpoint.v0` | same |
 | Position artifact | `chronicle.position_artifact.v0` | golden vectors |
 
 ### `chronicle_entry.v0`
@@ -103,6 +104,21 @@ Sorting is part of the derivation: the same set of refs in any input order
 yields the same root (see the `multiple-unsorted` golden vector). Verification
 is local and total: `verify*` recomputes the root from the artifact's own
 fields and compares — `ok` is byte-equality, nothing else.
+
+### `chronicle_checkpoint.v0`
+
+Collections are sets and therefore do not express a view in time. A checkpoint
+is the addressable committed view: it binds one collection ref, the exact set
+of entry refs present at the snapshot, an explicit `sequence`, and a
+`prev_checkpoint` link that forms the checkpoint chain.
+
+A decision or write carries `as_of { checkpoint_root, sequence }`, and a
+verifier resolves **that** checkpoint, never the current one. Unknown or
+missing `as_of` is `unverifiable`, never treated as agreement.
+
+Open question, deliberately deferred: checkpoint creation policy, cadence, and
+monotonicity enforcement between successive checkpoints are not part of the v0
+artifact contract in this repository.
 
 ### Conformance
 
