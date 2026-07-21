@@ -101,9 +101,12 @@ root = "sha256:" + sha256(canonicalize({
 ```
 
 Sorting is part of the derivation: the same set of refs in any input order
-yields the same root (see the `multiple-unsorted` golden vector). Verification
-is local and total: `verify*` recomputes the root from the artifact's own
-fields and compares — `ok` is byte-equality, nothing else.
+yields the same root (see the `multiple-unsorted` golden vector).
+
+Collection and portfolio verification recompute the root from the artifact's
+own fields; `ok` is byte-equality of the stored and recomputed roots.
+Checkpoint verification additionally requires stored `entry_refs` to already
+be in canonical order.
 
 ### `chronicle_checkpoint.v0`
 
@@ -120,12 +123,33 @@ Open question, deliberately deferred: checkpoint creation policy, cadence, and
 monotonicity enforcement between successive checkpoints are not part of the v0
 artifact contract in this repository.
 
+### Verification scope (v0)
+
+`verify*` answers exactly one question: does recomputation over the stored
+content in canonical form yield the stored root?
+
+It does not perform artifact-shape validation. A value with a negative or
+non-integer sequence, or with `prev_checkpoint` inconsistent with `sequence`,
+may still carry a correctly derived root and therefore verify with `ok: true`.
+Shape validation is enforced by `create*` and remains the consumer's
+responsibility at ingest.
+
+Consumers MUST validate artifact shape before interpreting a `verify*` result.
+
+Open question (v1): a shape-malformed value is not an invalid artifact; it is
+not a valid instance of that artifact type at all. Reporting malformed input as
+`ok: false` would collapse a shape state into a validity state. The intended
+resolution is a distinct `malformed` outcome applied consistently across all
+Chronicle `verify*` functions, rather than extending one boolean verifier in
+isolation.
+
 ### Conformance
 
 Golden vectors: `tests/fixtures/chronicle-root-golden-vectors.json`
 (empty-refs, single-ref, multiple-unsorted, unicode-id).
 Tests: `tests/receiptos/chronicle-entry-v0.test.ts`,
 `chronicle-collection-v0.test.ts`, `chronicle-portfolio-v0.test.ts`,
+`chronicle-checkpoint-v0.test.ts`,
 `chronicle-root-golden-vectors.test.ts`.
 End-to-end import path: [runnable_ecosystem_e2e_status_v0.md](./runnable_ecosystem_e2e_status_v0.md).
 
@@ -177,12 +201,11 @@ receipt first.
 
 ## Status
 
-- Artifact layer (`entry` / `collection` / `portfolio` + roots + golden
-  vectors): **implemented in this repository.**
+- Artifact layer (`entry` / `collection` / `portfolio` / `checkpoint` + roots
+  + golden vectors): **implemented in this repository.**
 - Layer specification: preprint §10.7 (continuity layer); this document is
   its repo-resident form. https://doi.org/10.5281/zenodo.21402444
 - Open, deliberately: retention/pruning profiles, epoch batching for
   high-volume producers, portfolio-root anchoring profile. Each follows the
   pinned-input discipline established for `ruleset_version` — declared inside
   the definition, hashed over the definition.
-  
