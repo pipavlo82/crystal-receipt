@@ -16,8 +16,8 @@ type ContinuityFixture = { profile: string; description: string; vectors: Contin
 const fixturePath = resolve(import.meta.dir, "../fixtures/chronicle-checkpoint-continuity-v0.json")
 const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as ContinuityFixture
 
-if (!Array.isArray(fixture.vectors) || fixture.vectors.length !== 19) {
-  throw new Error(`chronicle checkpoint continuity fixture must include exactly 19 vectors, found ${fixture.vectors?.length ?? 0}`)
+if (!Array.isArray(fixture.vectors) || fixture.vectors.length !== 20) {
+  throw new Error(`chronicle checkpoint continuity fixture must include exactly 20 vectors, found ${fixture.vectors?.length ?? 0}`)
 }
 
 describe("chronicle checkpoint continuity v0 conformance vectors", () => {
