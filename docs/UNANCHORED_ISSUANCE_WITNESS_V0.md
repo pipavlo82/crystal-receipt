@@ -48,10 +48,13 @@ A stable identifier for the entity that owns the issuance stream and is responsi
 A stable identifier for the logical scope within which issuance ordering, continuity, and coverage are evaluated.
 
 ### coverage_profile_ref
-A stable identifier for the exact coverage profile whose rules define owed events, timing windows, and completeness conditions for the stream.
+A stable identifier for the exact stored coverage profile artifact whose rules define owed events, timing windows, and completeness conditions for the stream. In v0 it refers exactly to `coverage_profile_root`.
 
 ### coverage_event_ref
 A stable identifier for one concrete event whose inclusion in the declared coverage path may require either an issuance intent or a skip record.
+
+### inclusion_predicate_ref
+A `sha256:<64 lowercase hex>` content reference to the exact predicate definition used to decide which trigger-source events become owed events.
 
 ### trigger_source_ref
 A stable identifier for the concrete source from which coverage-triggering events are derived.
@@ -109,6 +112,58 @@ A post-computation record binding the exact witnessed issuance intent to a resul
 
 ### witness receipt
 The witness-generated acceptance proof for a record entering the witness path.
+
+The witness receipt is a first-class stored artifact.
+
+Its exact root body is:
+
+```text
+{
+  "schema": "witness_receipt.v0",
+  "witness_ref": "...",
+  "log_id": "...",
+  "accepted_record_schema": "...",
+  "accepted_record_ref": "sha256:<64 lowercase hex>",
+  "witness_position": <non-negative safe integer>,
+  "witness_epoch": <non-negative safe integer>
+}
+```
+
+Define:
+
+```text
+witness_receipt_root =
+"sha256:" +
+lowercase_hex(
+  SHA-256(
+    UTF8(
+      receiptos_c14n_v0(exact_witness_receipt_body)
+    )
+  )
+)
+```
+
+Define the stored artifact as the exact body plus:
+
+- `witness_receipt_root`
+- `witness_signature`
+
+Normative statements:
+
+- `witness_receipt_root` MUST equal recomputation over the exact body;
+- `witness_receipt_root` and `witness_signature` MUST NOT be root fields;
+- `witness_signature` MUST authenticate the exact `witness_receipt_root`;
+- the signed receipt therefore binds the accepted record reference, witness, log, position, and epoch;
+- the only allowed `accepted_record_schema` values in v0 are `issuance_record.v0` and `issuance_result_commitment.v0`;
+- when `accepted_record_schema = issuance_record.v0`, `accepted_record_ref` MUST equal the stored artifact's `issuance_root`;
+- when `accepted_record_schema = issuance_result_commitment.v0`, `accepted_record_ref` MUST equal the stored artifact's `issuance_result_root`;
+- no other `accepted_record_schema` value is conformant in v0;
+- `accepted_record_schema` disambiguates the artifact family but is not a substitute for validating the referenced artifact and recomputing its root;
+- an intent witness receipt MUST be issued before computation begins;
+- witness receipt validity means recomputing the receipt root, validating the witness signature, and confirming that `accepted_record_ref` identifies the exact artifact under evaluation;
+- position and epoch MUST NOT be accepted from an unsigned side channel.
+
+The signature profile and concrete signature-field schema MUST be pinned before implementation.
 
 ### witness_ref
 A stable identifier for the witness authority that signs witness receipts and witness-log checkpoints.
@@ -219,7 +274,17 @@ function receiptos_c14n_v0(value):
   return "{" + join(",", entries) + "}"
 ```
 
-Root-bearing v0 bodies MUST use only values representable by this profile. `sequence` and all basis positions MUST be non-negative safe integers.
+Root-bearing v0 bodies MUST use only values representable by this profile. Every field described as a safe integer has the inclusive range `0` through `9007199254740991`, except fields explicitly requiring a positive value, whose minimum is `1`.
+
+JSON Schema draft 2020-12 can structurally enforce:
+
+- required predecessor-key presence;
+- `sequence === 0` iff predecessor is explicit `null`;
+- positive sequence requiring a SHA-256 predecessor reference;
+- intent/skip tagged-union exclusivity;
+- safe-integer bounds.
+
+Cross-artifact recomputation, signatures, continuity, timing, coverage completeness, append-only consistency, and findings precedence remain verifier/vector rules.
 
 The issuance-intent body is defined conceptually with the following fields:
 
@@ -243,6 +308,8 @@ The signed body MUST NOT contain:
 - result commitment
 - result reason
 - any field derived from the computation result
+
+Clarify that the exact intent and skip objects listed below are the `issuance_record.v0` root bodies.
 
 Define `issuance_record.v0` root bodies exactly.
 
@@ -294,12 +361,21 @@ lowercase_hex(
 )
 ```
 
+Define the stored `issuance_record.v0` artifact as:
+
+- exact kind-specific root body
+- plus required field: `"issuance_root": "sha256:<64 lowercase hex>"`
+
 Normative statements:
 
 - `schema` is the in-body domain separator;
 - no out-of-band separator bytes are used;
-- witness signature and witness receipt are not root fields;
-- `issuance_root` itself is not a root field;
+- every stored `issuance_record.v0` MUST contain `issuance_root`;
+- `issuance_root` MUST equal recomputation over the exact kind-specific root body;
+- `issuance_root` itself MUST NOT be included in recomputation;
+- witness signature and witness receipt MUST NOT be included in recomputation;
+- a schema for the stored artifact MUST require `issuance_root`;
+- forbidding `issuance_root` from the stored artifact would be non-conformant;
 - intent-only fields MUST be absent from skip;
 - skip-only fields MUST be absent from intent;
 - absence MUST NOT be normalized to `null`;
@@ -354,20 +430,78 @@ Genesis rules mirror `chronicle_checkpoint.v0`:
 
 ## 4. Coverage profile
 
-Define `issuance_coverage_profile.v0` conceptually with visible fields for:
+Define the exact root body of `issuance_coverage_profile.v0` as:
 
-- profile identifier / version
-- inclusion predicate
-- trigger_source_ref
-- coverage_source_authority
-- required cardinality
-- ordering_basis_ref
-- liveness_basis_ref
-- skip window
-- resolution window
-- publication window
-- checkpoint cadence
-- maximum checkpoint delay
+```text
+{
+  "schema": "issuance_coverage_profile.v0",
+  "profile_id": "...",
+  "inclusion_predicate_ref": "sha256:<64 lowercase hex>",
+  "trigger_source_ref": "...",
+  "coverage_source_authority": "...",
+  "required_cardinality": "exactly_one",
+  "ordering_basis_ref": "...",
+  "liveness_basis_ref": "...",
+  "skip_window": {
+    "basis_ref": "...",
+    "length": <non-negative safe integer>
+  },
+  "resolution_window": {
+    "basis_ref": "...",
+    "length": <non-negative safe integer>
+  },
+  "publication_window": {
+    "basis_ref": "...",
+    "length": <non-negative safe integer>
+  },
+  "checkpoint_cadence": {
+    "basis_ref": "...",
+    "origin": <non-negative safe integer>,
+    "interval": <positive safe integer>,
+    "max_delay": <non-negative safe integer>
+  }
+}
+```
+
+Define:
+
+```text
+coverage_profile_root =
+"sha256:" +
+lowercase_hex(
+  SHA-256(
+    UTF8(
+      receiptos_c14n_v0(exact_issuance_coverage_profile_body)
+    )
+  )
+)
+```
+
+Define the stored artifact as the exact body plus:
+
+- `"coverage_profile_root": "sha256:<64 lowercase hex>"`
+
+Normative statements:
+
+- `schema` is the in-body domain separator;
+- no bytes are prepended or appended outside the canonicalized body;
+- every stored `issuance_coverage_profile.v0` MUST contain `coverage_profile_root`;
+- `coverage_profile_root` MUST equal recomputation over the exact body;
+- `coverage_profile_root` MUST NOT be included in its own recomputation;
+- `coverage_profile_ref` MUST equal the exact stored `coverage_profile_root`;
+- changing any rooted profile field MUST produce a different `coverage_profile_root` and therefore a different `issuance_stream_id`;
+- an implementation MUST NOT resolve `coverage_profile_ref` through a mutable identifier whose content can change without changing the ref;
+- `required_cardinality` is exactly the literal `exactly_one` in v0;
+- `checkpoint_cadence.basis_ref` MUST equal `liveness_basis_ref`;
+- the profile contains no signature field in v0.
+
+An `inclusion_predicate_ref` is a `sha256:<64 lowercase hex>` content reference to the exact predicate definition used to decide which trigger-source events become owed events.
+
+Normative statements:
+
+- the predicate definition itself is outside this artifact;
+- changing the predicate definition MUST change `inclusion_predicate_ref`;
+- a mutable name or URL without a pinned content hash MUST NOT satisfy this field.
 
 Every skip, resolution, and publication window is defined conceptually as:
 
@@ -520,14 +654,39 @@ These are continuity/admission failures, not predicate verdicts.
 
 Every accepted intent, skip, and terminal record MUST enter a public append-only witness log.
 
-Define `witness_log_checkpoint.v0` conceptually with:
+Expand the exact checkpoint root body to:
 
-- `witness_ref`
-- `log_id`
-- `epoch`
-- `log_size`
-- `log_root`
-- `prev_checkpoint`
+```text
+{
+  "schema": "witness_log_checkpoint.v0",
+  "witness_ref": "...",
+  "log_id": "...",
+  "checkpoint_sequence": <non-negative safe integer>,
+  "epoch": <non-negative safe integer>,
+  "log_size": <non-negative safe integer>,
+  "log_root": "sha256:<64 lowercase hex>",
+  "prev_checkpoint": null | "sha256:<64 lowercase hex>"
+}
+```
+
+Define:
+
+```text
+witness_checkpoint_root =
+"sha256:" +
+lowercase_hex(
+  SHA-256(
+    UTF8(
+      receiptos_c14n_v0(exact_witness_checkpoint_body)
+    )
+  )
+)
+```
+
+Define the stored artifact as the exact body plus:
+
+- `witness_checkpoint_root`
+- `witness_signature`
 
 A checkpoint MUST be:
 
@@ -535,6 +694,25 @@ A checkpoint MUST be:
 - hash-chained;
 - published on declared cadence;
 - independently retained or consistency-observed.
+
+Normative statements:
+
+- `witness_checkpoint_root` MUST equal recomputation over the exact body;
+- `witness_checkpoint_root` and `witness_signature` MUST NOT be root fields;
+- `witness_signature` MUST authenticate the exact `witness_checkpoint_root`;
+- `witness_checkpoint_ref` MUST refer to `witness_checkpoint_root`;
+- `prev_checkpoint` MUST refer to the preceding stored `witness_checkpoint_root`;
+- `checkpoint_sequence === 0` iff `prev_checkpoint === null`;
+- `checkpoint_sequence > 0` requires a non-null `prev_checkpoint`;
+- omitted `prev_checkpoint` MUST NOT be treated as explicit `null`;
+- a successor checkpoint MUST have `checkpoint_sequence = predecessor.checkpoint_sequence + 1`;
+- checkpoint predecessor continuity remains a verifier/vector rule, not merely a shape rule.
+
+Clarifications:
+
+- `log_root` is the commitment to the witness log state at `log_size`;
+- this amendment pins its field format and checkpoint binding;
+- the concrete append-only log construction and consistency-proof algorithm remain profile-defined and MUST be pinned before implementation.
 
 A signed chain plus a periodically updated head hosted only on a mutable, witness-controlled endpoint is insufficient.
 
@@ -548,6 +726,15 @@ Allowed anti-equivocation / publication modes may include:
 Consensus anchoring is optional, not mandatory.
 
 ## 9. Observation stages
+
+Signature-boundary rules:
+
+- issuance records and result commitments do not embed witness signatures;
+- acceptance signatures live in `witness_receipt.v0`;
+- witness checkpoints carry their own checkpoint signature;
+- all signature fields are excluded from deterministic artifact-root recomputation;
+- a mutable unsigned position, epoch, checkpoint, or publication claim MUST NOT satisfy witness receipt or checkpoint validity.
+
 
 Distinguish:
 
@@ -618,10 +805,45 @@ Normative statements:
 
 ## 11. Terminal commitment
 
-Define `issuance_result_commitment.v0` conceptually with:
+Define the exact root body of `issuance_result_commitment.v0` as:
 
-- `issuance_intent_root`
-- `verdict_commitment`
+```text
+{
+  "schema": "issuance_result_commitment.v0",
+  "issuance_intent_root": "...",
+  "verdict_commitment": "..."
+}
+```
+
+Define:
+
+```text
+issuance_result_root =
+"sha256:" +
+lowercase_hex(
+  SHA-256(
+    UTF8(
+      receiptos_c14n_v0(exact_issuance_result_commitment_body)
+    )
+  )
+)
+```
+
+Define the stored artifact as the exact root body plus:
+
+- `"issuance_result_root": "sha256:<64 lowercase hex>"`
+
+Normative statements:
+
+- `schema` is the in-body domain separator;
+- no out-of-band bytes are prepended or appended;
+- `issuance_result_root` MUST equal recomputation over the exact body;
+- `issuance_result_root` MUST NOT be included in its own recomputation;
+- `issuance_intent_root` MUST match the exact stored intent artifact being resolved;
+- `verdict_commitment` MUST be a `sha256:<64 lowercase hex>` commitment;
+- the terminal record entering the witness log is the stored `issuance_result_commitment.v0` artifact;
+- timing and witness metadata MUST NOT be added to its root body;
+- timing and witness observation belong to witness receipts, log inclusion, checkpoints, and admission evaluation.
 
 The terminal commitment MUST bind to the exact witnessed intent.
 
@@ -922,14 +1144,16 @@ Current liveness MUST NOT collapse into historical validity.
 
 List, but do not create:
 
-- `issuance_record.v0` schema
-- `issuance_coverage_profile.v0` schema
-- `witness_log_checkpoint.v0` schema
-- `admission_result.v0` schema
+- `issuance-record-v0.schema.json`
+- `issuance-coverage-profile-v0.schema.json`
+- `issuance-result-commitment-v0.schema.json`
+- `witness-receipt-v0.schema.json`
+- `witness-log-checkpoint-v0.schema.json`
+- `admission-result-v0.schema.json`
 - normative single-condition vectors
 - normative co-occurrence vectors
 
-A reference implementation MUST NOT be written before the specification, schemas, and normative vectors are pinned.
+A reference implementation MUST NOT be written before the specification, all required schemas, and normative vectors are pinned.
 
 A second implementation SHOULD be built independently from the pinned artifacts without reading the reference implementation.
 
