@@ -52,6 +52,10 @@ export {
   type ChronicleCheckpointV0,
   type ChronicleCheckpointVerification,
 } from "./capsule/chronicle-portfolio-v0"
+export {
+  evaluateChronicleCheckpointContinuityV0,
+  type ChronicleCheckpointContinuityResultV0,
+} from "./capsule/chronicle-checkpoint-continuity-v0"
 export { buildCrystalReceiptMapping, type CrystalReceiptMapping } from "./capsule/crystal-mapping"
 export {
   buildRenderPlan,
