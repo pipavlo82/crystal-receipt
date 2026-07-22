@@ -1,0 +1,247 @@
+# Witness Signature Profile v0
+
+This document pins the concrete v0 witness-signature profile shared by:
+
+- `witness_receipt.v0`
+- `witness_log_checkpoint.v0`
+
+Profile identifier:
+
+- `receiptos-witness-ed25519-v0`
+
+This profile is the baseline v0 witness profile.
+
+It does not replace or absorb:
+
+- `sig_pq`
+- ML-DSA
+- PQ composition profiles
+- ReceiptOS PQ Lab extensions
+
+A future PQ witness profile MUST use a different profile literal and a separate normative revision.
+
+## 1. Algorithm
+
+The signature algorithm is pure Ed25519 as defined by RFC 8032.
+
+Rules:
+
+- no Ed25519ph
+- no Ed25519ctx
+- no external prehash
+- verification operates on the exact message bytes defined below
+
+## 2. witness_ref
+
+For this profile, `witness_ref` is the exact verification-key identity.
+
+Its form is:
+
+```text
+ed25519-pub:<64 lowercase hexadecimal characters>
+```
+
+Rules:
+
+- the suffix decodes to exactly 32 raw Ed25519 public-key bytes
+- no `0x` prefix is allowed
+- uppercase hexadecimal is invalid
+- malformed length is invalid
+- non-hexadecimal content is invalid
+- `witness_ref` identifies the cryptographic key, not a mutable human, organization, URL, or registry alias
+
+This makes signature verification self-contained and avoids introducing an unresolved key registry into v0.
+
+## 3. witness_signature stored field
+
+`witness_signature` is a closed stored object containing exactly:
+
+```json
+{
+  "profile": "receiptos-witness-ed25519-v0",
+  "signature": "ed25519-sig:<128 lowercase hexadecimal characters>"
+}
+```
+
+Rules:
+
+- both fields are required
+- no additional field is allowed
+- `profile` is the exact literal `receiptos-witness-ed25519-v0`
+- the signature suffix decodes to exactly 64 raw Ed25519 signature bytes
+- no `0x` prefix is allowed
+- uppercase hexadecimal is invalid
+- malformed length is invalid
+- non-hexadecimal content is invalid
+- no public key is duplicated inside `witness_signature`
+- the verification key is obtained exclusively from `witness_ref`
+
+The entire `witness_signature` object is stored but excluded from deterministic root recomputation.
+
+## 4. Exact signed message bytes
+
+The signed message is the exact UTF-8 byte concatenation:
+
+```text
+UTF8("receiptos-witness-ed25519-v0")
+|| 0x0A
+|| UTF8(artifact_schema)
+|| 0x0A
+|| UTF8(root_ref)
+```
+
+There is:
+
+- no BOM
+- no NUL separator
+- no whitespace normalization
+- no trailing line feed
+- no JSON envelope
+- no JCS pass at the signature layer
+- no raw-digest decoding before signing
+
+All three components contain ASCII-only characters in v0, so their UTF-8 encoding is byte-exact.
+
+For `witness_receipt.v0`:
+
+- `artifact_schema` is exactly `witness_receipt.v0`
+- `root_ref` is the exact stored `witness_receipt_root`
+
+For `witness_log_checkpoint.v0`:
+
+- `artifact_schema` is exactly `witness_log_checkpoint.v0`
+- `root_ref` is the exact stored `witness_checkpoint_root`
+
+The `root_ref` is signed as its exact lowercase ASCII string:
+
+```text
+sha256:<64 lowercase hexadecimal characters>
+```
+
+Do not sign the decoded 32-byte SHA-256 digest.
+
+The artifact-schema line provides artifact-level domain separation.
+The profile line provides protocol/profile-level domain separation.
+
+## 5. Verification procedure
+
+Verification order is:
+
+1. Validate the stored artifact against its JSON Schema.
+2. Recompute its deterministic root with `receiptos-c14n-v0`.
+3. Require the recomputed root to equal the stored root.
+4. Parse `witness_ref` into exactly 32 public-key bytes.
+5. Require `witness_signature.profile` to equal `receiptos-witness-ed25519-v0`.
+6. Parse `witness_signature.signature` into exactly 64 signature bytes.
+7. Construct the exact signed message bytes.
+8. Verify pure Ed25519 with:
+   - public key from `witness_ref`
+   - parsed signature bytes
+   - exact signed message bytes
+9. Only after cryptographic verification may downstream witness continuity, publication, liveness, and admission rules be evaluated.
+
+A valid signature does not by itself prove:
+
+- append-only log consistency
+- publication
+- external observation
+- liveness
+- completeness
+- admission
+- predicate validity
+
+## 6. Strict verification semantics
+
+Use these definitions:
+
+- `A` is the 32-byte public-key encoding decoded from `witness_ref`
+- the 64-byte signature is split exactly into:
+  - `R`: first 32 bytes
+  - `S`: final 32 bytes
+- `M` is the exact signed-message byte sequence already defined by this profile
+
+Verification acceptance semantics are:
+
+1. Decode `A` using canonical RFC 8032 compressed Edwards-point decoding.
+2. Decode `R` using canonical RFC 8032 compressed Edwards-point decoding.
+3. Reject any non-canonical point encoding.
+4. Interpret `S` as a 32-byte little-endian integer and require `0 <= S < L`, where `L` is the Ed25519 prime subgroup order defined by RFC 8032.
+5. Require `A` to be a non-identity point in the prime-order subgroup generated by the Ed25519 base point.
+6. Require `R` to decode to a point in that prime-order subgroup.
+7. Compute the pure Ed25519 challenge exactly as defined by RFC 8032 over `R || A || M`.
+8. Verify using the uncofactored equation `[S]B = R + [k]A`.
+9. Do not use:
+   - ZIP-215 acceptance semantics
+   - permissive non-canonical point decoding
+   - implementation-specific signature normalization
+   - reduction of an out-of-range `S`
+   - Ed25519ph
+   - Ed25519ctx
+   - an external prehash
+   - a different verification equation accepted only for compatibility
+
+A verifier MUST produce the same result independently of its chosen crypto library.
+A library that cannot enforce these exact acceptance rules is not conformant to `receiptos-witness-ed25519-v0`.
+
+## 7. Malformed versus invalid
+
+Use these distinctions:
+
+### unsupported_witness_signature_profile
+
+The profile literal is not supported by the verifier.
+
+### malformed_witness_signature
+
+Any of the following:
+
+- the signature object has the wrong shape
+- a required field is missing
+- an additional field is present
+- `witness_ref` has invalid prefix, length, case, or hexadecimal encoding
+- `signature` text has invalid prefix, length, case, or hexadecimal encoding
+- non-canonical `A` encoding
+- non-canonical `R` encoding
+- failure to decode `A`
+- failure to decode `R`
+- `A` is the identity
+- `A` is outside the prime-order subgroup
+- `R` is outside the prime-order subgroup
+- `S >= L`
+
+### invalid_witness_signature
+
+All of the following hold:
+
+- the profile and text encodings are well formed
+- point encodings, subgroup checks, and scalar range checks succeeded
+- root recomputation succeeded
+- the exact Ed25519 verification equation returned false
+
+`unsupported_witness_signature_profile`, `malformed_witness_signature`, and `invalid_witness_signature` are closed findings of the witness-signature verification profile.
+They are not, by this amendment alone, the complete closed reason-code enum for `admission_result.v0`.
+The mapping and ordering of these findings inside `admission_result.v0` remain part of the explicitly deferred admission reason-code and normative-vector work.
+
+Malformed input MUST NOT be collapsed into cryptographic invalidity.
+An invalid signature MUST NOT be collapsed into a predicate verdict.
+These are signature/admission findings, not timing states.
+
+## 8. Key rotation and log identity
+
+Minimal v0 rule:
+
+- `witness_ref` is immutable within one witness log
+- every successor checkpoint in one `log_id` chain MUST preserve both:
+  - `witness_ref`
+  - `log_id`
+- changing the Ed25519 key changes `witness_ref`
+- key rotation therefore starts a new witness log
+- the new log MUST use:
+  - a new `log_id`
+  - `checkpoint_sequence = 0`
+  - `prev_checkpoint = null`
+- v0 does not define an in-chain key-rotation certificate
+- old receipts and checkpoints remain verifiable under their original `witness_ref`
+- later key rotation does not retroactively invalidate historical artifacts
+
+The equality of `witness_ref` and `log_id` across checkpoint successors remains a verifier/vector rule because ordinary JSON Schema cannot compare separate artifacts.
