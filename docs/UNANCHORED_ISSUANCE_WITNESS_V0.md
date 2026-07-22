@@ -163,10 +163,74 @@ Normative statements:
 - witness receipt validity means recomputing the receipt root, validating the witness signature, and confirming that `accepted_record_ref` identifies the exact artifact under evaluation;
 - position and epoch MUST NOT be accepted from an unsigned side channel.
 
-The signature profile and concrete signature-field schema MUST be pinned before implementation.
+The concrete v0 signature profile for both `witness_receipt.v0` and `witness_log_checkpoint.v0` is pinned by `docs/WITNESS_SIGNATURE_PROFILE_V0.md`.
+
+For v0, `witness_signature` is the exact closed stored object:
+
+```json
+{
+  "profile": "receiptos-witness-ed25519-v0",
+  "signature": "ed25519-sig:<128 lowercase hexadecimal characters>"
+}
+```
+
+Rules:
+
+- both fields are required;
+- no additional field is allowed;
+- `profile` MUST equal the exact literal `receiptos-witness-ed25519-v0`;
+- the `signature` suffix MUST decode to exactly 64 raw Ed25519 signature bytes;
+- no `0x` prefix is allowed;
+- uppercase hexadecimal is invalid;
+- malformed length or non-hexadecimal content is invalid;
+- the entire `witness_signature` object is stored but excluded from deterministic root recomputation.
+
+For this profile, the exact signed message bytes are:
+
+```text
+UTF8("receiptos-witness-ed25519-v0")
+|| 0x0A
+|| UTF8("witness_receipt.v0")
+|| 0x0A
+|| UTF8(witness_receipt_root)
+```
+
+The signature authenticates the exact stored lowercase ASCII root string and MUST NOT sign the decoded 32-byte SHA-256 digest.
+
+Both `witness_receipt.v0` and `witness_log_checkpoint.v0` MUST use the strict Ed25519 acceptance semantics defined in `docs/WITNESS_SIGNATURE_PROFILE_V0.md`, including canonical RFC 8032 point decoding, the explicit `S < L` scalar-range requirement, the prime-order subgroup requirement for both `A` and `R`, the uncofactored verification equation, and the rule that ZIP-215-style or otherwise permissive verification is non-conformant.
+
+Use these signature findings:
+
+- `unsupported_witness_signature_profile`
+- `malformed_witness_signature`
+- `invalid_witness_signature`
+
+These are closed findings of the witness-signature verification profile defined by `docs/WITNESS_SIGNATURE_PROFILE_V0.md`. They are not, by this amendment alone, the complete closed reason-code enum for `admission_result.v0`. The mapping and ordering of these findings inside `admission_result.v0` remain part of the explicitly deferred admission reason-code and normative-vector work.
+
+`unsupported_witness_signature_profile` means the profile literal is not supported by the verifier.
+
+`malformed_witness_signature` means the signature object has the wrong shape, a required field is missing, an additional field is present, `witness_ref` has invalid prefix, length, case, or hexadecimal encoding, `signature` text has invalid prefix, length, case, or hexadecimal encoding, point decoding fails, a point encoding is non-canonical, `A` is the identity, `A` is outside the prime-order subgroup, `R` is outside the prime-order subgroup, or `S >= L` under the strict Ed25519 acceptance rules pinned by `docs/WITNESS_SIGNATURE_PROFILE_V0.md`.
+
+`invalid_witness_signature` means the profile, text encodings, point encodings, subgroup checks, and scalar range checks are well formed, root recomputation succeeded, and the exact Ed25519 verification equation returned false.
+
+Malformed input MUST NOT be collapsed into cryptographic invalidity. Invalid signatures MUST NOT be collapsed into predicate verdicts. These are signature/admission findings, not timing states.
 
 ### witness_ref
 A stable identifier for the witness authority that signs witness receipts and witness-log checkpoints.
+
+For the pinned v0 witness profile, `witness_ref` is the exact verification-key identity and MUST have the form:
+
+```text
+ed25519-pub:<64 lowercase hexadecimal characters>
+```
+
+Rules:
+
+- the suffix decodes to exactly 32 raw Ed25519 public-key bytes;
+- no `0x` prefix is allowed;
+- uppercase hexadecimal is invalid;
+- malformed length or non-hexadecimal content is invalid;
+- `witness_ref` identifies the cryptographic key, not a mutable human, organization, URL, or registry alias.
 
 ### witness position
 The ordered append position assigned by the witness within the witness log.
@@ -700,6 +764,34 @@ Normative statements:
 - `witness_checkpoint_root` MUST equal recomputation over the exact body;
 - `witness_checkpoint_root` and `witness_signature` MUST NOT be root fields;
 - `witness_signature` MUST authenticate the exact `witness_checkpoint_root`;
+- for v0, `witness_signature` MUST use the same concrete profile pinned by `docs/WITNESS_SIGNATURE_PROFILE_V0.md`;
+- the exact closed stored object shape is:
+
+```json
+{
+  "profile": "receiptos-witness-ed25519-v0",
+  "signature": "ed25519-sig:<128 lowercase hexadecimal characters>"
+}
+```
+
+- both fields are required;
+- no additional field is allowed;
+- `profile` MUST equal the exact literal `receiptos-witness-ed25519-v0`;
+- the `signature` suffix MUST decode to exactly 64 raw Ed25519 signature bytes;
+- no `0x` prefix is allowed;
+- uppercase hexadecimal is invalid;
+- malformed length or non-hexadecimal content is invalid;
+- the exact signed message bytes are:
+
+```text
+UTF8("receiptos-witness-ed25519-v0")
+|| 0x0A
+|| UTF8("witness_log_checkpoint.v0")
+|| 0x0A
+|| UTF8(witness_checkpoint_root)
+```
+
+- the signature authenticates the exact stored lowercase ASCII root string and MUST NOT sign the decoded 32-byte SHA-256 digest;
 - `witness_checkpoint_ref` MUST refer to `witness_checkpoint_root`;
 - `prev_checkpoint` MUST refer to the preceding stored `witness_checkpoint_root`;
 - `checkpoint_sequence === 0` iff `prev_checkpoint === null`;
@@ -707,6 +799,13 @@ Normative statements:
 - omitted `prev_checkpoint` MUST NOT be treated as explicit `null`;
 - a successor checkpoint MUST have `checkpoint_sequence = predecessor.checkpoint_sequence + 1`;
 - checkpoint predecessor continuity remains a verifier/vector rule, not merely a shape rule.
+- every successor checkpoint in one `log_id` chain MUST preserve both `witness_ref` and `log_id`;
+- changing the Ed25519 verification key changes `witness_ref`;
+- key rotation therefore starts a new witness log with a new `log_id`, `checkpoint_sequence = 0`, and `prev_checkpoint = null`;
+- v0 does not define an in-chain key-rotation certificate;
+- old receipts and checkpoints remain verifiable under their original `witness_ref`;
+- later key rotation does not retroactively invalidate historical artifacts;
+- equality of `witness_ref` and `log_id` across checkpoint successors remains a verifier/vector rule because ordinary JSON Schema cannot compare separate artifacts.
 
 Clarifications:
 
