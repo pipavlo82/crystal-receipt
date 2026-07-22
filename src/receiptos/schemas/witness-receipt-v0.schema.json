@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://crystal-receipt.local/schemas/witness-receipt-v0.schema.json",
+  "title": "ReceiptOS Witness Receipt v0",
+  "description": "Stored witness_receipt.v0 artifact for unanchored issuance-time witness v0. witness_receipt_root is required on the stored artifact and is excluded from its own deterministic recomputation. The entire witness_signature object is excluded from deterministic root recomputation. JSON Schema cannot verify root recomputation or root equality. JSON Schema cannot verify the Ed25519 signature equation. The exact signed-message bytes and strict Ed25519 acceptance rules are defined by receiptos-witness-ed25519-v0. The exact deterministic root body contains only schema, witness_ref, log_id, accepted_record_schema, accepted_record_ref, witness_position, and witness_epoch. The stored artifact additionally contains witness_receipt_root and witness_signature. Cross-artifact existence and type checks remain verifier/vector rules. A structurally valid receipt does not prove publication, external observation, append-only consistency, liveness, completeness, admission, or predicate validity.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "witness_ref",
+    "log_id",
+    "accepted_record_schema",
+    "accepted_record_ref",
+    "witness_position",
+    "witness_epoch",
+    "witness_receipt_root",
+    "witness_signature"
+  ],
+  "properties": {
+    "schema": {
+      "$ref": "#/$defs/schemaLiteral"
+    },
+    "witness_ref": {
+      "$ref": "#/$defs/witnessRef"
+    },
+    "log_id": {
+      "$ref": "#/$defs/logId"
+    },
+    "accepted_record_schema": {
+      "$ref": "#/$defs/acceptedRecordSchema"
+    },
+    "accepted_record_ref": {
+      "$ref": "#/$defs/acceptedRecordRef"
+    },
+    "witness_position": {
+      "$ref": "#/$defs/witnessPosition"
+    },
+    "witness_epoch": {
+      "$ref": "#/$defs/witnessEpoch"
+    },
+    "witness_receipt_root": {
+      "$ref": "#/$defs/witnessReceiptRoot"
+    },
+    "witness_signature": {
+      "$ref": "#/$defs/witnessSignature"
+    }
+  },
+  "$defs": {
+    "schemaLiteral": {
+      "const": "witness_receipt.v0"
+    },
+    "sha256Ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "safeInteger": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "witnessRef": {
+      "type": "string",
+      "pattern": "^ed25519-pub:[0-9a-f]{64}$"
+    },
+    "logId": {
+      "type": "string"
+    },
+    "acceptedRecordSchema": {
+      "type": "string",
+      "enum": [
+        "issuance_record.v0",
+        "issuance_result_commitment.v0"
+      ]
+    },
+    "acceptedRecordRef": {
+      "$ref": "#/$defs/sha256Ref"
+    },
+    "witnessPosition": {
+      "$ref": "#/$defs/safeInteger"
+    },
+    "witnessEpoch": {
+      "$ref": "#/$defs/safeInteger"
+    },
+    "witnessReceiptRoot": {
+      "$ref": "#/$defs/sha256Ref"
+    },
+    "signatureProfileLiteral": {
+      "const": "receiptos-witness-ed25519-v0"
+    },
+    "signatureText": {
+      "type": "string",
+      "pattern": "^ed25519-sig:[0-9a-f]{128}$"
+    },
+    "witnessSignature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "signature"
+      ],
+      "properties": {
+        "profile": {
+          "$ref": "#/$defs/signatureProfileLiteral"
+        },
+        "signature": {
+          "$ref": "#/$defs/signatureText"
+        }
+      }
+    }
+  }
+}
