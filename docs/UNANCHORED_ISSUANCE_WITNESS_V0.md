@@ -205,7 +205,12 @@ Use these signature findings:
 - `malformed_witness_signature`
 - `invalid_witness_signature`
 
-These are closed findings of the witness-signature verification profile defined by `docs/WITNESS_SIGNATURE_PROFILE_V0.md`. They are not, by this amendment alone, the complete closed reason-code enum for `admission_result.v0`. The mapping and ordering of these findings inside `admission_result.v0` remain part of the explicitly deferred admission reason-code and normative-vector work.
+These are closed findings of the witness-signature verification profile defined by `docs/WITNESS_SIGNATURE_PROFILE_V0.md`.
+Their exact deterministic admission mapping is pinned by `docs/WITNESS_SIGNATURE_PROFILE_V0.md`.
+Receipt-context mappings enter admission check 3.
+Checkpoint-context mappings enter admission check 11.
+The generic profile finding remains the profile-level result.
+`admission_result.v0` stores only the mapped context-specific code.
 
 `unsupported_witness_signature_profile` means the profile literal is not supported by the verifier.
 
@@ -657,11 +662,11 @@ Normative timing rules:
 
 - `event_position <= deadline` means `on_time`;
 - `event_position > deadline` means `late`;
-- no event and `as_of_position <= deadline` means `not_due`;
-- no event and `as_of_position > deadline` means `overdue` only when the complete interval through `as_of` is proven;
-- otherwise timing is `unverifiable`;
+- no relevant event by an `as_of_position` that has not passed the deadline uses `resolution_timing = not_started`;
+- this timing state does not establish a valid or invalid verdict;
+- `resolution_timing = overdue` is used only when deadline passage and the complete comparable interval are proven;
 - positions from different basis refs MUST NOT be compared;
-- missing or incomparable basis evidence produces `unverifiable`, not `invalid`.
+- missing or incomparable basis evidence affects evaluation state, not a separate timing literal.
 
 ## 6. Coverage cardinality
 
@@ -838,7 +843,7 @@ Signature-boundary rules:
 Distinguish:
 
 - `accepted_by_witness`
-- `published_by_witness`
+- `published`
 - `externally_observed`
 
 Only `externally_observed` MUST establish an externally fixed historical state.
@@ -953,31 +958,37 @@ Separate:
 `resolution_progress`
 - `pending`
 - `resolved`
+- `skipped`
+
+This is the complete closed v0 domain for `resolution_progress`.
 
 `resolution_timing`
-- `not_due`
+- `not_started`
 - `on_time`
-- `overdue`
 - `late`
-- `unverifiable`
+- `overdue`
+
+This is the complete closed v0 domain for `resolution_timing`.
 
 `publication_progress`
 - `not_started`
 - `accepted_by_witness`
-- `published_by_witness`
+- `published`
 - `externally_observed`
+
+This is the complete closed v0 domain for `publication_progress`.
 
 `publication_timing`
 - `not_started`
-- `not_due`
 - `on_time`
-- `overdue`
 - `late`
-- `unverifiable`
+- `overdue`
+
+This is the complete closed v0 domain for `publication_timing`.
 
 `not_started` means no terminal commitment has yet entered the witness path.
 `accepted_by_witness` means the terminal commitment was accepted by the witness but has not yet been published in a witness checkpoint.
-`published_by_witness` means it appears in a published witness checkpoint but that checkpoint is not yet externally observed.
+`published` means it appears in a published witness checkpoint but that checkpoint is not yet externally observed.
 `externally_observed` means the relevant checkpoint has satisfied the declared independent observation rule.
 
 Observation progress and publication timing are separate axes.
@@ -995,11 +1006,10 @@ Normative timing rules:
 
 - `event_position <= deadline` means `on_time`;
 - `event_position > deadline` means `late`;
-- no event and `as_of_position <= deadline` means `not_due`;
+- no event after evaluation begins and before a proven deadline failure remains within the closed `not_started` / progress state vocabulary until the separate admission and matrix rules classify the case;
 - no event and `as_of_position > deadline` means `overdue` only when the complete interval through `as_of` is proven;
-- otherwise timing is `unverifiable`;
 - positions from different basis refs MUST NOT be compared;
-- missing or incomparable basis evidence produces `unverifiable`, not `invalid`.
+- missing or incomparable basis evidence affects evaluation state, not the closed timing-domain literals.
 
 A terminal that actually arrives after deadline MUST remain:
 
@@ -1019,7 +1029,7 @@ If no terminal exists and the resolution deadline has passed, with the complete 
 - `predicate_verdict = null`
 - finding `resolution_overdue`
 
-If absence of a terminal cannot be proven because the witness interval is incomplete, the result MUST be `unverifiable` rather than `overdue`.
+If absence of a terminal cannot be proven because the witness interval is incomplete, the result MUST use the separate evaluation-state machinery rather than introducing a non-domain timing literal.
 
 A later terminal MUST NOT erase the earlier overdue interval.
 
@@ -1032,7 +1042,78 @@ A later external observation MUST NOT erase the earlier overdue interval.
 
 ## 12. Predicate vs admission
 
-Define separate result dimensions:
+### 12.1 admission_result.v0 stored artifact
+
+`admission_result.v0` is a deterministic recomputable evaluation view.
+
+It is not an identity-bearing artifact.
+
+It has no deterministic root and no signature in v0.
+
+The following fields are forbidden:
+
+- `admission_result_root`
+- `witness_signature`
+
+Adding deterministic identity or a signature requires a future schema version.
+
+The complete stored artifact contains exactly these 17 required top-level fields, with no optional top-level fields:
+
+1. `schema`
+2. `coverage_profile_ref`
+3. `accepted_record_schema`
+4. `accepted_record_ref`
+5. `witness_receipt_ref`
+6. `as_of`
+7. `predicate_evaluation_state`
+8. `predicate_verdict`
+9. `admission_evaluation_state`
+10. `admission_verdict`
+11. `resolution_progress`
+12. `resolution_timing`
+13. `publication_progress`
+14. `publication_timing`
+15. `findings`
+16. `primary_reason_code`
+17. `unverifiable_checks`
+
+Pin these exact structural forms:
+
+- `schema` MUST equal `admission_result.v0`.
+- `coverage_profile_ref` MUST be a lowercase `sha256:<64 lowercase hexadecimal characters>` reference.
+- `accepted_record_schema` MUST equal exactly one of:
+  - `issuance_record.v0`
+  - `issuance_result_commitment.v0`
+- `accepted_record_ref` MUST be a lowercase `sha256:<64 lowercase hexadecimal characters>` reference.
+- `witness_receipt_ref` MUST be a lowercase `sha256:<64 lowercase hexadecimal characters>` reference.
+
+The detailed array constraints for `findings`, `primary_reason_code`, and `unverifiable_checks` are pinned by sections 13.1 through 13.3.
+
+`as_of` is a required closed object containing exactly:
+
+- `checkpoint_ref`
+- `log_size`
+
+Pin:
+
+- `checkpoint_ref` MUST be a lowercase `sha256:<64 lowercase hexadecimal characters>` reference;
+- `log_size` MUST be a non-negative safe integer from `0` through `9007199254740991`;
+- neither field may be omitted;
+- no additional `as_of` field is conformant in v0.
+
+The following equality and historical-consistency relations are verifier/vector rules, not JSON Schema checks:
+
+- `coverage_profile_ref` equals the evaluated stored `coverage_profile_root`;
+- when `accepted_record_schema = issuance_record.v0`, `accepted_record_ref` equals the evaluated stored `issuance_root`;
+- when `accepted_record_schema = issuance_result_commitment.v0`, `accepted_record_ref` equals the evaluated stored `issuance_result_root`;
+- `witness_receipt_ref` equals the evaluated stored `witness_receipt_root`;
+- `as_of.checkpoint_ref` equals the stored `witness_checkpoint_root` used for evaluation;
+- `as_of.log_size` equals that checkpoint's stored `log_size`;
+- later checkpoints, later loss of liveness, and later key rotation do not mutate the historical result computed at this exact `as_of`.
+
+### 12.2 Closed result domains and orthogonality
+
+Define separate result dimensions.
 
 `predicate_evaluation_state`
 - `evaluated`
@@ -1040,10 +1121,14 @@ Define separate result dimensions:
 - `malformed`
 - `not_evaluated`
 
+This is the complete closed v0 domain for `predicate_evaluation_state`.
+
 `predicate_verdict`
 - `valid`
 - `invalid`
 - `null`
+
+This is the complete closed v0 domain for `predicate_verdict`.
 
 `admission_evaluation_state`
 - `evaluated`
@@ -1051,12 +1136,62 @@ Define separate result dimensions:
 - `malformed`
 - `not_evaluated`
 
+This is the complete closed v0 domain for `admission_evaluation_state`.
+
 `admission_verdict`
 - `valid`
 - `invalid`
 - `null`
 
-State:
+This is the complete closed v0 domain for `admission_verdict`.
+
+`resolution_progress`
+- `pending`
+- `resolved`
+- `skipped`
+
+This is the complete closed v0 domain for `resolution_progress`.
+
+`resolution_timing`
+- `not_started`
+- `on_time`
+- `late`
+- `overdue`
+
+This is the complete closed v0 domain for `resolution_timing`.
+
+`publication_progress`
+- `not_started`
+- `accepted_by_witness`
+- `published`
+- `externally_observed`
+
+This is the complete closed v0 domain for `publication_progress`.
+
+`publication_timing`
+- `not_started`
+- `on_time`
+- `late`
+- `overdue`
+
+This is the complete closed v0 domain for `publication_timing`.
+
+Evaluation state, verdict, progress, and timing are orthogonal dimensions.
+A timing state MUST NOT collapse into a validity or admission verdict.
+Publication or observation progress MUST NOT collapse into a validity or admission verdict.
+`unverifiable` MUST NOT be represented as `invalid`.
+`malformed` MUST NOT be represented as `invalid`.
+`not_evaluated` MUST NOT be represented as `invalid`.
+
+Independently for predicate and admission:
+
+- evaluation state `evaluated` requires verdict `valid` or `invalid`;
+- evaluation state `unverifiable` requires verdict `null`;
+- evaluation state `malformed` requires verdict `null`;
+- evaluation state `not_evaluated` requires verdict `null`;
+- verdict `valid` or `invalid` requires evaluation state `evaluated`.
+
+Observation absence, timing delay, and inability to evaluate are not proven violations merely because they are observed states.
 
 A consumer may rely on `predicate_verdict = valid` only when:
 
@@ -1069,7 +1204,9 @@ Admission MUST NOT be represented as the same boolean as predicate validity.
 
 ## 13. Admission checks
 
-Admission evaluation uses the following normative ordered checklist:
+Admission evaluation uses the following normative ordered checklist.
+The checklist order is normative.
+Checks MUST be evaluated in this order.
 
 1. profile and artifact shape;
 2. issuance intent shape;
@@ -1077,142 +1214,449 @@ Admission evaluation uses the following normative ordered checklist:
 4. coverage-event inclusion;
 5. coverage-source authority;
 6. coverage cardinality and window completeness;
-7. issuance sequence and prev linkage;
-8. sequence-to-witness-position monotonicity;
-9. witness-log inclusion;
-10. checkpoint consistency;
-11. external observation;
-12. equivocation status;
-13. terminal-to-intent binding;
-14. resolution timing;
-15. publication timing;
-16. explicit `as_of` scope.
+7. independent completeness when admission relies on non-suppression or complete enumeration of the coverage-event stream;
+8. issuance sequence and prev linkage;
+9. sequence-to-witness-position monotonicity;
+10. witness-log inclusion;
+11. checkpoint consistency;
+12. external observation;
+13. equivocation status;
+14. terminal-to-intent binding;
+15. resolution timing;
+16. publication timing;
+17. explicit `as_of` scope.
 
-Admission evaluation MUST return all proven violations, not only the first.
+Renumbering preserves the prior meanings of former checks 7 through 16.
+All proven violations MUST be returned, not only the first.
+Operator-controlled coverage or witness authority may support continuity.
+Operator control alone cannot prove independent completeness.
+When admission requires independent non-suppression or enumeration and that property is proven unavailable, check 7 fails.
+When available evidence cannot determine independent completeness, check 7 is unverifiable rather than proven false.
 
-Define conceptually:
+### 13.1 `unverifiable_checks`
 
-- `findings`: all proven violations;
-- `findings` MUST be sorted by normative check order;
-- `primary_reason_code` MUST equal the first finding after sorting;
-- an unverifiable check MUST NOT be emitted as a proven violation.
+`unverifiable_checks` is a required array:
 
-If no violation is proven but a required check is unverifiable, admission MUST NOT be valid.
+- containing only integers from 1 through 17;
+- containing no duplicates;
+- sorted in strictly increasing numeric order;
+- empty when no required check is unverifiable.
 
-Co-occurrence vectors MUST pin the complete findings list and its order.
+Pin:
 
-The currently required reason codes, without claiming that the enum is complete, are:
+- a check enters `unverifiable_checks` only when it cannot be evaluated from evidence available at the stored `as_of`;
+- an unverifiable check MUST NOT emit a finding for that same check;
+- absence of evidence is not automatically a proven violation;
+- endpoint unavailability alone is not a proven violation;
+- `findings = []` with non-empty `unverifiable_checks` is conformant;
+- do not create reason codes merely to encode unverifiability.
 
-- `late_skip`
+### 13.2 `findings`
+
+`findings` is a required array:
+
+- containing only strings from the closed v0 admission reason-code enum pinned below;
+- containing no duplicate value;
+- empty when no proven admission violation exists;
+- containing every proven violation rather than stopping after the first.
+
+Deterministic ordering:
+
+1. sort first by admission-check ordinal;
+2. within one check, use the exact reason-code order listed under that check below.
+
+State:
+
+- a finding represents a proven violation;
+- an observed timing/progress state alone is not a finding;
+- an unverifiable check is not a finding;
+- predicate verdicts are not admission findings;
+- multiple proven failures MUST all be returned.
+
+### 13.3 `primary_reason_code`
+
+`primary_reason_code` is required:
+
+- either explicit `null` or one value from the closed reason-code enum;
+- `null` if and only if `findings` is empty;
+- exactly equal to `findings[0]` whenever `findings` is non-empty.
+
+Omission is not equivalent to explicit `null`.
+
+### 13.4 Closed v0 admission reason-code enum
+
+The closed v0 admission reason-code enum contains exactly these 34 literals.
+No other admission reason code is conformant in v0.
+Reason-code order below is normative.
+Every original 13 reason-code literal remains unchanged.
+Generic witness-signature profile findings are not directly stored in `admission_result.v0`.
+Their deterministic receipt/checkpoint contextual mapping is pinned in `docs/WITNESS_SIGNATURE_PROFILE_V0.md`.
+Malformed, mismatch, unsupported-profile, and cryptographic-invalid findings remain distinct.
+Timing findings remain distinct from validity, malformed input, continuity, observation, and completeness findings.
+
+Check 1 — profile and artifact shape:
+
+- `profile_or_artifact_malformed`
+
+Check 2 — issuance intent shape:
+
+- `issuance_intent_malformed`
+
+Check 3 — witness receipt validity:
+
+- `witness_receipt_root_malformed`
+- `witness_receipt_root_mismatch`
+- `unsupported_witness_receipt_signature_profile`
+- `malformed_witness_receipt_signature`
+- `invalid_witness_receipt_signature`
+- `accepted_record_ref_mismatch`
+
+Check 4 — coverage-event inclusion:
+
 - `missing_coverage_binding`
+
+Check 5 — coverage-source authority:
+
+- `coverage_source_authority_not_allowed`
+
+This code applies only when the selected profile explicitly disallows the proven authority class.
+Operator-controlled authority alone does not emit this finding merely because it cannot prove independent completeness.
+
+Check 6 — coverage cardinality and window completeness:
+
 - `duplicate_coverage_binding`
-- `issuance_position_inversion`
+
+`missing_coverage_binding` belongs to check 4.
+`duplicate_coverage_binding` belongs to check 6.
+
+Check 7 — independent completeness:
+
+- `independent_completeness_unproven`
+
+This is a proven finding only when the evaluated authority/source facts prove that required independent completeness cannot hold.
+Insufficient evidence belongs in `unverifiable_checks`, not in this finding.
+
+Check 8 — issuance sequence and prev linkage:
+
 - `issuance_stream_fork`
 - `sequence_gap`
 - `predecessor_ref_mismatch`
-- `resolution_overdue`
-- `late_resolution`
-- `publication_overdue`
-- `late_publication`
+
+Check 9 — sequence-to-witness-position monotonicity:
+
+- `issuance_position_inversion`
+
+Check 10 — witness-log inclusion:
+
+- `accepted_record_not_in_witness_log`
+
+Check 11 — checkpoint consistency:
+
+- `witness_checkpoint_root_malformed`
+- `witness_checkpoint_root_mismatch`
+- `unsupported_witness_checkpoint_signature_profile`
+- `malformed_witness_checkpoint_signature`
+- `invalid_witness_checkpoint_signature`
+- `witness_checkpoint_chain_discontinuous`
+- `witness_append_only_consistency_unproven`
+
+Check 12 — external observation:
+
 - `witness_stalled`
+
+`witness_stalled` is emitted only when the declared external liveness basis and a complete comparable interval prove a missed checkpoint cadence.
+Endpoint unavailability by itself MUST NOT emit `witness_stalled`.
+
+Check 13 — equivocation status:
+
 - `witness_equivocation`
 
-The closed v0 reason-code enum MUST be pinned in `admission_result.v0` and the normative vectors before implementation.
+Check 14 — terminal-to-intent binding:
+
+- `terminal_to_intent_mismatch`
+
+Check 15 — resolution timing:
+
+- `late_skip`
+- `resolution_overdue`
+- `late_resolution`
+
+`late_skip` remains the finding for a late skip.
+`resolution_overdue` remains the finding for no terminal after a proven complete deadline interval.
+`late_resolution` remains the finding for a terminal arriving after deadline.
+
+Check 16 — publication timing:
+
+- `publication_overdue`
+- `late_publication`
+
+`publication_overdue` and `late_publication` preserve their existing meanings.
+
+Check 17 — explicit `as_of` scope:
+
+- `as_of_scope_malformed`
+- `as_of_scope_mismatch`
+
+Malformed object shape, missing required field, invalid reference text, or unsafe integer uses `as_of_scope_malformed`.
+Well-formed `as_of` whose `checkpoint_ref` or `log_size` does not equal the checkpoint used for evaluation uses `as_of_scope_mismatch`.
+
+### 13.5 Check-to-code boundaries
+
+One reason code belongs to exactly one admission-check ordinal in v0.
+Findings order is therefore deterministic.
+Codes from a later check cannot precede codes from an earlier check.
+Within check 3 and check 11:
+
+- malformed root precedes root mismatch;
+- unsupported signature profile precedes malformed signature;
+- malformed signature precedes cryptographically invalid signature.
+
+`witness_equivocation` remains distinct from append-only consistency being unproven.
+`witness_stalled` remains distinct from publication timing.
+`independent_completeness_unproven` remains distinct from `coverage_source_authority_not_allowed`.
+
+### 13.6 Admission evaluation-state / verdict consistency
+
+A. `admission_evaluation_state = evaluated` and `admission_verdict = valid` requires:
+
+- `findings = []`;
+- `unverifiable_checks = []`;
+- `primary_reason_code = null`;
+- all required admission checks passed.
+
+B. `admission_evaluation_state = evaluated` and `admission_verdict = invalid` requires:
+
+- `findings` is non-empty;
+- `primary_reason_code = findings[0]`;
+- `unverifiable_checks` may be empty or non-empty;
+- proven violations remain findings even if another check is unverifiable.
+
+C. `admission_evaluation_state = unverifiable` and `admission_verdict = null` requires:
+
+- `findings = []`;
+- `primary_reason_code = null`;
+- `unverifiable_checks` is non-empty.
+
+D. `admission_evaluation_state = malformed` and `admission_verdict = null` requires:
+
+- `findings` is non-empty;
+- `primary_reason_code = findings[0]`;
+- at least one finding is one of:
+  - `profile_or_artifact_malformed`
+  - `issuance_intent_malformed`
+  - `witness_receipt_root_malformed`
+  - `malformed_witness_receipt_signature`
+  - `witness_checkpoint_root_malformed`
+  - `malformed_witness_checkpoint_signature`
+  - `as_of_scope_malformed`;
+- malformed input MUST NOT be represented as cryptographically invalid.
+
+E. `admission_evaluation_state = not_evaluated` and `admission_verdict = null` requires:
+
+- `findings = []`;
+- `unverifiable_checks = []`;
+- `primary_reason_code = null`.
+
+No other evaluation-state/verdict/array relation is conformant in v0.
+Predicate state/verdict remains independently governed by section 12.2 and does not use admission findings.
+
+### 13.7 Deferred vectors only
+
+Normative single-condition vectors are still future work.
+Normative co-occurrence vectors are still future work.
+Vectors MUST test complete findings lists and deterministic ordering.
+Implementation remains blocked until schemas and vectors are pinned.
 
 ## 14. Normative state matrix
 
+Every matrix case below describes an `admission_result.v0` evaluation view.
+Every stored result contains all 17 required fields from section 12.1.
+Every result contains an explicit closed `as_of` object.
+Omitted narrative values are not permission to omit stored fields.
+Evaluation state, verdict, progress, timing, findings, and `unverifiable_checks` remain orthogonal.
+Observation absence MUST NOT be converted into an invalid verdict unless a corresponding violation is proven.
+All `findings` arrays below use the normative ordering from section 13.
+All `unverifiable_checks` arrays below use the renumbered 1-through-17 checklist.
+Normative vectors must cover every exact case and every stated subcase.
+Use only the closed literals pinned by sections 12 and 13.
+
 ### A. Pending, witness live, deadline not reached
 
+- `predicate_evaluation_state = not_evaluated`
+- `predicate_verdict = null`
 - `admission_evaluation_state = not_evaluated`
 - `admission_verdict = null`
-- `predicate_evaluation_state = not_evaluated`
-- `predicate_verdict = null`
 - `resolution_progress = pending`
-- `resolution_timing = not_due`
+- `resolution_timing = not_started`
 - `publication_progress = not_started`
 - `publication_timing = not_started`
 - `findings = []`
 - `primary_reason_code = null`
-- explicit `as_of` position included when applicable
+- `unverifiable_checks = []`
+- explicit `as_of` is required
 
-### B. Pending, witness stalled, external deadline passed with complete comparable interval proven
+The fact that a deadline has not yet elapsed is a timing/observation state, not a valid or invalid admission judgment.
 
-- `resolution_progress = pending`
-- `resolution_timing = overdue`
+### B. Pending, witness stalled, resolution deadline passed, complete comparable interval proven
+
+- `predicate_evaluation_state = not_evaluated`
+- `predicate_verdict = null`
 - `admission_evaluation_state = evaluated`
 - `admission_verdict = invalid`
+- `resolution_progress = pending`
+- `resolution_timing = overdue`
+- `publication_progress = not_started`
+- `publication_timing = not_started`
+- `findings = [witness_stalled, resolution_overdue]`
+- `primary_reason_code = witness_stalled`
+- `unverifiable_checks = []`
+- explicit `as_of` is required
+
+`witness_stalled` belongs to check 12.
+`resolution_overdue` belongs to check 15.
+Therefore `witness_stalled` precedes `resolution_overdue`.
+This case applies only when both failures are independently proven from complete comparable evidence.
+Endpoint unavailability alone does not satisfy this case.
+
+### C. Pending with insufficient comparable evidence to determine the resolution deadline state
+
 - `predicate_evaluation_state = not_evaluated`
 - `predicate_verdict = null`
-- `findings` include `resolution_overdue` and any separately proven `witness_stalled` finding in normative check order
-- `primary_reason_code` equals the first proven finding
-- explicit `as_of` position included when applicable
-
-### C. Pending with insufficient external evidence to determine deadline
-
-- `resolution_progress = pending`
-- `resolution_timing = unverifiable`
 - `admission_evaluation_state = unverifiable`
 - `admission_verdict = null`
-- `predicate_evaluation_state = not_evaluated`
-- `predicate_verdict = null`
+- `resolution_progress = pending`
+- `resolution_timing = not_started`
 - `publication_progress = not_started`
 - `publication_timing = not_started`
 - `findings = []`
 - `primary_reason_code = null`
-- explicit `as_of` position included when applicable
+- `unverifiable_checks = [15]`
+- explicit `as_of` is required
+
+Check 15 is resolution timing under the renumbered checklist.
+Incomplete or incomparable timing evidence does not emit `resolution_overdue`.
+Inability to determine timing is represented by evaluation state and `unverifiable_checks`, not by an extra timing literal and not by an invalid verdict.
 
 ### D. Terminal resolved on time and externally observed
 
+- `predicate_evaluation_state = evaluated`
+- `predicate_verdict = valid`
+- `admission_evaluation_state = evaluated`
+- `admission_verdict = valid`
 - `resolution_progress = resolved`
 - `resolution_timing = on_time`
 - `publication_progress = externally_observed`
-- `publication_timing = on_time` when published within the declared window on a comparable basis
-- eligible for admission evaluation
-- explicit `as_of` position included when applicable
+- `publication_timing = on_time`
+- `findings = []`
+- `primary_reason_code = null`
+- `unverifiable_checks = []`
+- explicit `as_of` is required
+
+Every required admission check passed at this exact `as_of`.
 
 ### E. Terminal resolved late
 
-- `resolution_progress = resolved`
-- `resolution_timing = late`
-- `predicate_evaluation_state` MAY still be `evaluated` independently
+- `predicate_evaluation_state = evaluated`
+- `predicate_verdict = valid`
 - `admission_evaluation_state = evaluated`
 - `admission_verdict = invalid`
-- `findings` include `late_resolution`
+- `resolution_progress = resolved`
+- `resolution_timing = late`
+- `publication_progress = not_started`
+- `publication_timing = not_started`
+- `findings = [late_resolution]`
 - `primary_reason_code = late_resolution`
-- explicit `as_of` position included when applicable
+- `unverifiable_checks = []`
+- explicit `as_of` is required
+
+Predicate validity remains independent.
+Late resolution is a proven check-15 violation.
+Timing does not rewrite predicate validity.
 
 ### F. Published but not externally observed
 
-- `publication_progress = published_by_witness`
-- `publication_timing` is evaluated separately from publication progress
-- `admission_evaluation_state = not_evaluated` until publication window expires or another rule proves invalidity or unverifiability
-- explicit `as_of` position included when applicable
+- `predicate_evaluation_state = evaluated`
+- `predicate_verdict = valid`
+- `admission_evaluation_state = unverifiable`
+- `admission_verdict = null`
+- `resolution_progress = resolved`
+- `resolution_timing = on_time`
+- `publication_progress = published`
+- `publication_timing = not_started`
+- `findings = []`
+- `primary_reason_code = null`
+- `unverifiable_checks = [12]`
+- explicit `as_of` is required
 
-### G. Publication deadline passed with no external observation and complete comparable interval proven
+Check 12 is external observation.
+The accepted record has reached a published witness checkpoint.
+Required external observation has not yet been proven.
+Without a complete comparable interval proving a violation, observation remains unverifiable.
+Absence of external observation MUST NOT collapse into invalid admission.
+No `witness_stalled`, `publication_overdue`, or other finding is emitted merely because observation is absent.
 
-- `publication_progress` remains `accepted_by_witness` or `published_by_witness`, according to the latest proven stage
-- `publication_timing = overdue`
+### G. Publication deadline passed with no external observation and a complete comparable interval proven
+
+Both subcases require complete comparable evidence through `as_of`.
+`publication_overdue` is a proven check-16 violation.
+Vectors MUST cover G1 and G2 separately.
+Progress remains independent from timing and verdict.
+
+#### G1. Accepted by witness but not checkpoint-published
+
+- `predicate_evaluation_state = evaluated`
+- `predicate_verdict = valid`
 - `admission_evaluation_state = evaluated`
 - `admission_verdict = invalid`
-- `findings` include `publication_overdue`
+- `resolution_progress = resolved`
+- `resolution_timing = on_time`
+- `publication_progress = accepted_by_witness`
+- `publication_timing = overdue`
+- `findings = [publication_overdue]`
 - `primary_reason_code = publication_overdue`
-- explicit `as_of` position included when applicable
+- `unverifiable_checks = []`
+- explicit `as_of` is required
 
-### H. External observation occurs after the publication deadline
+#### G2. Published but not externally observed
 
+- `predicate_evaluation_state = evaluated`
+- `predicate_verdict = valid`
+- `admission_evaluation_state = evaluated`
+- `admission_verdict = invalid`
+- `resolution_progress = resolved`
+- `resolution_timing = on_time`
+- `publication_progress = published`
+- `publication_timing = overdue`
+- `findings = [publication_overdue]`
+- `primary_reason_code = publication_overdue`
+- `unverifiable_checks = []`
+- explicit `as_of` is required
+
+### H. External observation occurs late
+
+- `predicate_evaluation_state = evaluated`
+- `predicate_verdict = valid`
+- `admission_evaluation_state = evaluated`
+- `admission_verdict = invalid`
+- `resolution_progress = resolved`
+- `resolution_timing = on_time`
 - `publication_progress = externally_observed`
 - `publication_timing = late`
-- `admission_evaluation_state = evaluated`
-- `admission_verdict = invalid`
-- `findings` include `late_publication`
+- `findings = [late_publication]`
 - `primary_reason_code = late_publication`
-- explicit `as_of` position included when applicable
+- `unverifiable_checks = []`
+- explicit `as_of` is required
 
-### I. Witness currently unavailable after earlier externally observed admission
+Later observation changes progress from `published` to `externally_observed`, but it does not erase the proven `late_publication` finding.
 
-- historical admission remains valid `as_of` the earlier checkpoint
-- freshness and completeness after the last checkpoint are `unverifiable`
-- current liveness does not retroactively rewrite the earlier admission verdict
+### I. Historical result after current witness unavailability
+
+A previously stored valid `admission_result.v0` remains valid when recomputed against its exact historical `as_of`.
+All stored result fields remain those derived at that historical `as_of`.
+Current witness unavailability, later checkpoints, and later key rotation do not append findings to or mutate the historical result.
+A current evaluation, when required, MUST create a separate result with a new `as_of`.
+Current liveness may be unverifiable without rewriting historical validity.
+Do not assign new findings to the historical result.
 
 ### J. Equivocation
 
@@ -1220,16 +1664,51 @@ Define an incompatible checkpoint pair conceptually as two signed checkpoints fo
 
 The admissible prefix MUST end at the latest independently retained checkpoint that has valid consistency from the preceding externally observed checkpoint and precedes the incompatible pair.
 
-- only that exact prefix may retain prior admission status;
-- the divergent suffix MUST produce `admission_evaluation_state = evaluated` and `admission_verdict = invalid` with finding `witness_equivocation`;
-- `predicate_verdict` MUST NOT be changed automatically;
-- the concrete equivocation-proof artifact shape MAY be deferred to schemas and vectors before implementation.
+- `admission_evaluation_state = evaluated`
+- `admission_verdict = invalid`
+- `findings = [witness_equivocation]`
+- `primary_reason_code = witness_equivocation`
+- `unverifiable_checks = []`
+- explicit `as_of` is required
 
-### K. Operator-controlled coverage or witness
+`witness_equivocation` is a proven check-13 violation.
+Predicate evaluation state and predicate verdict remain independently derived.
+Resolution and publication progress/timing remain independently derived and MUST NOT be overwritten by the equivocation finding.
+Vectors must supply exact values for those independent fields.
+Equivocation MUST NOT be relabeled as a predicate verdict.
+Append-only consistency being merely unproven is distinct from proven equivocation.
 
-- concrete record continuity MAY be checked
-- independent completeness is `unverifiable`
-- no-omission admission cannot be `valid`
+### K. Operator-controlled authority and independent completeness
+
+#### K1. Operator control is proven and independent completeness is required
+
+- `admission_evaluation_state = evaluated`
+- `admission_verdict = invalid`
+- `findings = [independent_completeness_unproven]`
+- `primary_reason_code = independent_completeness_unproven`
+- `unverifiable_checks = []`
+- explicit `as_of` is required
+
+This is a proven check-7 violation.
+Continuity may still independently pass.
+Predicate evaluation and verdict remain independently derived.
+Resolution and publication fields remain independently derived.
+Operator control is not itself malformed.
+The failure is specifically inability of the proven authority model to establish required independent completeness.
+
+#### K2. Authority/completeness evidence is insufficient
+
+- `admission_evaluation_state = unverifiable`
+- `admission_verdict = null`
+- `findings = []`
+- `primary_reason_code = null`
+- `unverifiable_checks = [7]`
+- explicit `as_of` is required
+
+Insufficient authority/completeness evidence is not the same as proving that independent completeness cannot hold.
+K2 MUST NOT emit `independent_completeness_unproven`.
+Predicate and all progress/timing fields remain independently derived.
+Vectors must cover K1 and K2 separately.
 
 ## 15. Historical invariant
 

@@ -219,12 +219,56 @@ All of the following hold:
 - the exact Ed25519 verification equation returned false
 
 `unsupported_witness_signature_profile`, `malformed_witness_signature`, and `invalid_witness_signature` are closed findings of the witness-signature verification profile.
-They are not, by this amendment alone, the complete closed reason-code enum for `admission_result.v0`.
-The mapping and ordering of these findings inside `admission_result.v0` remain part of the explicitly deferred admission reason-code and normative-vector work.
+The generic findings remain outputs of the witness-signature verification profile.
+They are not directly stored in `admission_result.v0`.
+
+### Contextual mapping into `admission_result.v0`
+
+For verification of artifact schema `witness_receipt.v0`, the only conformant v0 receipt-context mappings are:
+
+- `unsupported_witness_signature_profile` maps to `unsupported_witness_receipt_signature_profile`
+- `malformed_witness_signature` maps to `malformed_witness_receipt_signature`
+- `invalid_witness_signature` maps to `invalid_witness_receipt_signature`
+
+These mapped codes belong to admission check 3.
+The generic profile finding is produced first.
+Admission evaluation then maps it according to the signed artifact context.
+A receipt-context failure MUST NOT map to a checkpoint-context code.
+
+For verification of artifact schema `witness_log_checkpoint.v0`, the only conformant v0 checkpoint-context mappings are:
+
+- `unsupported_witness_signature_profile` maps to `unsupported_witness_checkpoint_signature_profile`
+- `malformed_witness_signature` maps to `malformed_witness_checkpoint_signature`
+- `invalid_witness_signature` maps to `invalid_witness_checkpoint_signature`
+
+These mapped codes belong to admission check 11.
+A checkpoint-context failure MUST NOT map to a receipt-context code.
+
+Mapping algorithm:
+
+1. determine the signed artifact schema;
+2. run the generic witness-signature profile;
+3. obtain exactly one of:
+   - no signature finding;
+   - `unsupported_witness_signature_profile`;
+   - `malformed_witness_signature`;
+   - `invalid_witness_signature`;
+4. when admission evaluation consumes a generic finding, map it using the exact artifact-schema table above;
+5. store only the mapped context-specific admission code in `admission_result.v0`;
+6. preserve the generic profile result in the lower-level signature-verification result when that result is separately retained.
+
+The mapping is deterministic and one-to-one.
+One generic finding produces exactly one contextual admission finding.
+Mapping does not change malformed into invalid.
+Mapping does not change unsupported profile into malformed or invalid.
+Mapping introduces no new signature-validity semantics.
+Mapping only supplies admission context and check ordering.
+Within each context, unsupported profile precedes malformed signature, and malformed signature precedes cryptographically invalid signature.
 
 Malformed input MUST NOT be collapsed into cryptographic invalidity.
 An invalid signature MUST NOT be collapsed into a predicate verdict.
-These are signature/admission findings, not timing states.
+Signature findings are admission findings, not predicate verdicts.
+Signature findings are not progress or timing states.
 
 ## 8. Key rotation and log identity
 
