@@ -1,0 +1,224 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://crystal-receipt.local/schemas/issuance-record-v0.schema.json",
+  "title": "ReceiptOS Issuance Record v0",
+  "description": "Stored issuance_record.v0 artifact for unanchored issuance-time witness v0. issuance_root is required on the stored artifact, excluded from its own deterministic recomputation, cannot have root equality proven by JSON Schema alone, and must instead be recomputed over the exact kind-specific body by verifier/vector rules. Supports exactly two mutually exclusive forms: kind=intent and kind=skip.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/intentRecord"
+    },
+    {
+      "$ref": "#/$defs/skipRecord"
+    }
+  ],
+  "$defs": {
+    "sha256Ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "safeInteger": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "schemaLiteral": {
+      "const": "issuance_record.v0"
+    },
+    "opaqueJobId": {
+      "type": "string"
+    },
+    "issuerRef": {
+      "type": "string"
+    },
+    "scopeRef": {
+      "type": "string"
+    },
+    "coverageProfileRef": {
+      "$ref": "#/$defs/sha256Ref"
+    },
+    "coverageEventRef": {
+      "type": "string"
+    },
+    "issuanceStreamId": {
+      "$ref": "#/$defs/sha256Ref"
+    },
+    "asOfCheckpoint": {
+      "type": "string"
+    },
+    "requestCommitment": {
+      "type": "string"
+    },
+    "skipReasonCode": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sequence": {
+      "$ref": "#/$defs/safeInteger"
+    },
+    "prevIssuance": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/sha256Ref"
+        }
+      ]
+    },
+    "issuanceRoot": {
+      "$ref": "#/$defs/sha256Ref"
+    },
+    "sequencePrevIssuanceConstraint": {
+      "if": {
+        "properties": {
+          "sequence": {
+            "const": 0
+          }
+        },
+        "required": [
+          "sequence"
+        ]
+      },
+      "then": {
+        "properties": {
+          "prev_issuance": {
+            "type": "null"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "sequence": {
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "prev_issuance": {
+            "$ref": "#/$defs/sha256Ref"
+          }
+        }
+      }
+    },
+    "intentRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "$ref": "#/$defs/schemaLiteral"
+        },
+        "kind": {
+          "const": "intent"
+        },
+        "opaque_job_id": {
+          "$ref": "#/$defs/opaqueJobId"
+        },
+        "issuer_ref": {
+          "$ref": "#/$defs/issuerRef"
+        },
+        "scope_ref": {
+          "$ref": "#/$defs/scopeRef"
+        },
+        "coverage_profile_ref": {
+          "$ref": "#/$defs/coverageProfileRef"
+        },
+        "coverage_event_ref": {
+          "$ref": "#/$defs/coverageEventRef"
+        },
+        "issuance_stream_id": {
+          "$ref": "#/$defs/issuanceStreamId"
+        },
+        "as_of_checkpoint": {
+          "$ref": "#/$defs/asOfCheckpoint"
+        },
+        "request_commitment": {
+          "$ref": "#/$defs/requestCommitment"
+        },
+        "sequence": {
+          "$ref": "#/$defs/sequence"
+        },
+        "prev_issuance": {
+          "$ref": "#/$defs/prevIssuance"
+        },
+        "issuance_root": {
+          "$ref": "#/$defs/issuanceRoot"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "opaque_job_id",
+        "issuer_ref",
+        "scope_ref",
+        "coverage_profile_ref",
+        "coverage_event_ref",
+        "issuance_stream_id",
+        "as_of_checkpoint",
+        "request_commitment",
+        "sequence",
+        "prev_issuance",
+        "issuance_root"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/sequencePrevIssuanceConstraint"
+        }
+      ]
+    },
+    "skipRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "$ref": "#/$defs/schemaLiteral"
+        },
+        "kind": {
+          "const": "skip"
+        },
+        "issuer_ref": {
+          "$ref": "#/$defs/issuerRef"
+        },
+        "scope_ref": {
+          "$ref": "#/$defs/scopeRef"
+        },
+        "coverage_profile_ref": {
+          "$ref": "#/$defs/coverageProfileRef"
+        },
+        "coverage_event_ref": {
+          "$ref": "#/$defs/coverageEventRef"
+        },
+        "issuance_stream_id": {
+          "$ref": "#/$defs/issuanceStreamId"
+        },
+        "skip_reason_code": {
+          "$ref": "#/$defs/skipReasonCode"
+        },
+        "sequence": {
+          "$ref": "#/$defs/sequence"
+        },
+        "prev_issuance": {
+          "$ref": "#/$defs/prevIssuance"
+        },
+        "issuance_root": {
+          "$ref": "#/$defs/issuanceRoot"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "issuer_ref",
+        "scope_ref",
+        "coverage_profile_ref",
+        "coverage_event_ref",
+        "issuance_stream_id",
+        "skip_reason_code",
+        "sequence",
+        "prev_issuance",
+        "issuance_root"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/sequencePrevIssuanceConstraint"
+        }
+      ]
+    }
+  }
+}
