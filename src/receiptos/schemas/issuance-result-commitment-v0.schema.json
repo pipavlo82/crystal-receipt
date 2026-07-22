@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://crystal-receipt.local/schemas/issuance-result-commitment-v0.schema.json",
+  "title": "ReceiptOS Issuance Result Commitment v0",
+  "description": "Stored issuance_result_commitment.v0 artifact for unanchored issuance-time witness v0. issuance_result_root is required on the stored artifact and is excluded from its own deterministic recomputation. JSON Schema cannot verify root recomputation or root equality. Recomputation uses the exact three-field root body consisting only of schema, issuance_intent_root, and verdict_commitment. issuance_intent_root must refer to an intent-kind issuance_record.v0, but cross-artifact kind and equality checks remain verifier/vector rules. No timing, witness, admission, scoring, or verdict-interpretation field belongs in this artifact.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "issuance_intent_root",
+    "verdict_commitment",
+    "issuance_result_root"
+  ],
+  "properties": {
+    "schema": {
+      "$ref": "#/$defs/schemaLiteral"
+    },
+    "issuance_intent_root": {
+      "$ref": "#/$defs/issuanceIntentRoot"
+    },
+    "verdict_commitment": {
+      "$ref": "#/$defs/verdictCommitment"
+    },
+    "issuance_result_root": {
+      "$ref": "#/$defs/issuanceResultRoot"
+    }
+  },
+  "$defs": {
+    "schemaLiteral": {
+      "const": "issuance_result_commitment.v0"
+    },
+    "sha256Ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "issuanceIntentRoot": {
+      "$ref": "#/$defs/sha256Ref"
+    },
+    "verdictCommitment": {
+      "$ref": "#/$defs/sha256Ref"
+    },
+    "issuanceResultRoot": {
+      "$ref": "#/$defs/sha256Ref"
+    }
+  }
+}
