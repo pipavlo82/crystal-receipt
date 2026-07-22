@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://crystal-receipt.local/schemas/witness-log-checkpoint-v0.schema.json",
+  "title": "ReceiptOS Witness Log Checkpoint v0",
+  "description": "Stored witness_log_checkpoint.v0 artifact for unanchored issuance-time witness v0. witness_checkpoint_root is required on the stored artifact and is excluded from its own deterministic recomputation. The entire witness_signature object is excluded from root recomputation. JSON Schema cannot verify root recomputation or equality. JSON Schema cannot verify the Ed25519 equation. Strict signature semantics come from receiptos-witness-ed25519-v0. The exact deterministic root body contains only schema, witness_ref, log_id, checkpoint_sequence, epoch, log_size, log_root, and prev_checkpoint. The stored artifact additionally contains witness_checkpoint_root and witness_signature. Predecessor resolution and successor continuity remain verifier/vector rules. Append-only log construction and consistency-proof verification remain separately deferred profile rules. Structural validity does not prove publication, external observation, liveness, completeness, admission, predicate validity, or append-only consistency.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "witness_ref",
+    "log_id",
+    "checkpoint_sequence",
+    "epoch",
+    "log_size",
+    "log_root",
+    "prev_checkpoint",
+    "witness_checkpoint_root",
+    "witness_signature"
+  ],
+  "properties": {
+    "schema": {
+      "$ref": "#/$defs/schemaLiteral"
+    },
+    "witness_ref": {
+      "$ref": "#/$defs/witnessRef"
+    },
+    "log_id": {
+      "$ref": "#/$defs/logId"
+    },
+    "checkpoint_sequence": {
+      "$ref": "#/$defs/checkpointSequence"
+    },
+    "epoch": {
+      "$ref": "#/$defs/epoch"
+    },
+    "log_size": {
+      "$ref": "#/$defs/logSize"
+    },
+    "log_root": {
+      "$ref": "#/$defs/logRoot"
+    },
+    "prev_checkpoint": {
+      "$ref": "#/$defs/prevCheckpoint"
+    },
+    "witness_checkpoint_root": {
+      "$ref": "#/$defs/witnessCheckpointRoot"
+    },
+    "witness_signature": {
+      "$ref": "#/$defs/witnessSignature"
+    }
+  },
+  "$defs": {
+    "schemaLiteral": {
+      "const": "witness_log_checkpoint.v0"
+    },
+    "sha256Ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "safeInteger": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "witnessRef": {
+      "type": "string",
+      "pattern": "^ed25519-pub:[0-9a-f]{64}$"
+    },
+    "logId": {
+      "type": "string"
+    },
+    "checkpointSequence": {
+      "$ref": "#/$defs/safeInteger"
+    },
+    "epoch": {
+      "$ref": "#/$defs/safeInteger"
+    },
+    "logSize": {
+      "$ref": "#/$defs/safeInteger"
+    },
+    "logRoot": {
+      "$ref": "#/$defs/sha256Ref"
+    },
+    "prevCheckpoint": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/sha256Ref"
+        }
+      ]
+    },
+    "witnessCheckpointRoot": {
+      "$ref": "#/$defs/sha256Ref"
+    },
+    "signatureProfileLiteral": {
+      "const": "receiptos-witness-ed25519-v0"
+    },
+    "signatureText": {
+      "type": "string",
+      "pattern": "^ed25519-sig:[0-9a-f]{128}$"
+    },
+    "witnessSignature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "signature"
+      ],
+      "properties": {
+        "profile": {
+          "$ref": "#/$defs/signatureProfileLiteral"
+        },
+        "signature": {
+          "$ref": "#/$defs/signatureText"
+        }
+      }
+    },
+    "sequencePrevCheckpointConstraint": {
+      "if": {
+        "properties": {
+          "checkpoint_sequence": {
+            "const": 0
+          }
+        },
+        "required": [
+          "checkpoint_sequence"
+        ]
+      },
+      "then": {
+        "properties": {
+          "prev_checkpoint": {
+            "type": "null"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "checkpoint_sequence": {
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "prev_checkpoint": {
+            "$ref": "#/$defs/sha256Ref"
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "#/$defs/sequencePrevCheckpointConstraint"
+    }
+  ]
+}
