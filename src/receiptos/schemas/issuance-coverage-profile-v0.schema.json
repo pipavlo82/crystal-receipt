@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://crystal-receipt.local/schemas/issuance-coverage-profile-v0.schema.json",
+  "title": "ReceiptOS Issuance Coverage Profile v0",
+  "description": "Stored issuance_coverage_profile.v0 artifact for unanchored issuance-time witness v0. coverage_profile_root is required on the stored artifact, excluded from its own deterministic recomputation, and recomputation uses the exact root body defined by the specification. JSON Schema cannot verify root equality. Changing any rooted profile field changes the recomputed coverage_profile_root. coverage_profile_ref elsewhere must equal this stored coverage_profile_root, but that cross-artifact equality is not enforceable by this schema. checkpoint_cadence.basis_ref must equal liveness_basis_ref, but that value equality is a verifier/vector rule and cannot be enforced by ordinary draft-2020-12 JSON Schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "profile_id",
+    "inclusion_predicate_ref",
+    "trigger_source_ref",
+    "coverage_source_authority",
+    "required_cardinality",
+    "ordering_basis_ref",
+    "liveness_basis_ref",
+    "skip_window",
+    "resolution_window",
+    "publication_window",
+    "checkpoint_cadence",
+    "coverage_profile_root"
+  ],
+  "properties": {
+    "schema": {
+      "$ref": "#/$defs/schemaLiteral"
+    },
+    "profile_id": {
+      "$ref": "#/$defs/profileId"
+    },
+    "inclusion_predicate_ref": {
+      "$ref": "#/$defs/sha256Ref"
+    },
+    "trigger_source_ref": {
+      "$ref": "#/$defs/triggerSourceRef"
+    },
+    "coverage_source_authority": {
+      "$ref": "#/$defs/coverageSourceAuthority"
+    },
+    "required_cardinality": {
+      "$ref": "#/$defs/requiredCardinalityLiteral"
+    },
+    "ordering_basis_ref": {
+      "$ref": "#/$defs/orderingBasisRef"
+    },
+    "liveness_basis_ref": {
+      "$ref": "#/$defs/livenessBasisRef"
+    },
+    "skip_window": {
+      "$ref": "#/$defs/window"
+    },
+    "resolution_window": {
+      "$ref": "#/$defs/window"
+    },
+    "publication_window": {
+      "$ref": "#/$defs/window"
+    },
+    "checkpoint_cadence": {
+      "$ref": "#/$defs/checkpointCadence"
+    },
+    "coverage_profile_root": {
+      "$ref": "#/$defs/sha256Ref"
+    }
+  },
+  "$defs": {
+    "schemaLiteral": {
+      "const": "issuance_coverage_profile.v0"
+    },
+    "requiredCardinalityLiteral": {
+      "const": "exactly_one"
+    },
+    "sha256Ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "safeInteger": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "positiveSafeInteger": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "profileId": {
+      "type": "string"
+    },
+    "triggerSourceRef": {
+      "type": "string"
+    },
+    "coverageSourceAuthority": {
+      "type": "string",
+      "enum": [
+        "operator_controlled",
+        "third_party",
+        "consensus_anchored"
+      ]
+    },
+    "orderingBasisRef": {
+      "type": "string"
+    },
+    "livenessBasisRef": {
+      "type": "string"
+    },
+    "basisRef": {
+      "type": "string"
+    },
+    "window": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "basis_ref",
+        "length"
+      ],
+      "properties": {
+        "basis_ref": {
+          "$ref": "#/$defs/basisRef"
+        },
+        "length": {
+          "$ref": "#/$defs/safeInteger"
+        }
+      }
+    },
+    "checkpointCadence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "basis_ref",
+        "origin",
+        "interval",
+        "max_delay"
+      ],
+      "properties": {
+        "basis_ref": {
+          "$ref": "#/$defs/basisRef"
+        },
+        "origin": {
+          "$ref": "#/$defs/safeInteger"
+        },
+        "interval": {
+          "$ref": "#/$defs/positiveSafeInteger"
+        },
+        "max_delay": {
+          "$ref": "#/$defs/safeInteger"
+        }
+      }
+    }
+  }
+}
