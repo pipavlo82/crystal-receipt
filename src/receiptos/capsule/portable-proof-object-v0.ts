@@ -56,8 +56,12 @@ function deriveLabel(evidence: HandoffEvidence) {
     || `Portable proof object for ${evidence.session_id}`
 }
 
-function deriveProofObjectId(receiptRoot: string) {
+export function deriveProofObjectId(receiptRoot: string): string {
   return `proofobj-${receiptRoot.replace(/^0x/, "")}`
+}
+
+export function deriveProofRef(proofObjectId: string): string {
+  return `receiptos://portable-proof-object/${proofObjectId}`
 }
 
 function deriveReplayRef(evidence: HandoffEvidence) {
@@ -95,7 +99,7 @@ export async function createPortableProofObjectV0(
     proof_object_id: proofObjectId,
     proof_system: "ReceiptOS",
     receipt_root: summary.receipt_root,
-    proof_ref: `receiptos://portable-proof-object/${proofObjectId}`,
+    proof_ref: deriveProofRef(proofObjectId),
     replay_ref: deriveReplayRef(evidence),
     anchor_ref: deriveAnchorRef(evidence),
     created_at: deriveCreatedAt(evidence),

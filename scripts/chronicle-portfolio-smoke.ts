@@ -16,7 +16,7 @@ const receiptVerification = verifyHandoffReceiptRoot(evidence)
 const proofObject = await createPortableProofObjectV0(evidence, {
   sourceEvidenceRef: "fixture://session-evidence.sample.json",
 })
-const chronicleEntry = createChronicleEntryV0(proofObject)
+const chronicleEntry = createChronicleEntryV0(evidence, proofObject)
 const portfolio = createChroniclePortfolioV0(chronicleEntry)
 const portfolioVerification = verifyChroniclePortfolioV0(portfolio)
 
