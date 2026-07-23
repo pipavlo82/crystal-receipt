@@ -102,7 +102,7 @@ const api: ElectronAPI = {
       sourceEvidenceRef,
     })
 
-    const chronicleEntry = createChronicleEntryV0(portableProofObject)
+    const chronicleEntry = createChronicleEntryV0(normalized, portableProofObject)
     const chronicleCollection = createChronicleCollectionV0(chronicleEntry)
 
     return {

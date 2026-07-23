@@ -1,5 +1,7 @@
 import { canonicalize } from "../canon/canonicalize"
-import { sha256 } from "../canon/receipt-root"
+import { computeReceiptRoot, sha256 } from "../canon/receipt-root"
+import type { HandoffEvidence } from "../schema/types"
+import { deriveProofObjectId, deriveProofRef } from "./portable-proof-object-v0"
 import type { PortableProofObjectV0 } from "./portable-proof-object-v0"
 
 export const CHRONICLE_ENTRY_VERSION_V0 = "chronicle_entry.v0"
@@ -67,6 +69,7 @@ export type ChronicleCheckpointVerification = {
 }
 
 export function createChronicleEntryV0(
+  evidence: HandoffEvidence,
   proofObject: PortableProofObjectV0,
   options?: {
     entryId?: string
@@ -77,6 +80,57 @@ export function createChronicleEntryV0(
     notes?: string | null
   },
 ): ChronicleEntryV0 {
+  // Admission gate: chronicle_entry.v0 MUST NOT be produced from evidence_capsule
+  // status/match/ok labels alone (they are consistency signals, not source of
+  // truth). The receipt_root is independently recomputed here from the raw
+  // evidence using the same canonicalization the capsule/verifier already use.
+  const storedRoot = evidence.anchor?.receipt_root ?? null
+  if (!storedRoot) {
+    throw new Error("createChronicleEntryV0 requires evidence.anchor.receipt_root to be present")
+  }
+
+  const recomputedRoot = computeReceiptRoot(evidence)
+  if (storedRoot.toLowerCase() !== recomputedRoot.toLowerCase()) {
+    throw new Error("createChronicleEntryV0 requires the stored receipt_root to independently recompute (mismatch)")
+  }
+
+  if (proofObject.receipt_root.toLowerCase() !== storedRoot.toLowerCase()) {
+    throw new Error("createChronicleEntryV0 requires proofObject.receipt_root to equal the verified stored/recomputed receipt_root")
+  }
+
+  const verifiedRoot = storedRoot
+
+  // Cross-object consistency: the embedded evidence_capsule must not merely
+  // exist -- it must agree with the root we just independently verified.
+  // These are consistency assertions layered on top of the independent
+  // recomputation above, never a replacement for it.
+  const capsuleReceiptRoot = proofObject.evidence_capsule.receipt_root
+  if (capsuleReceiptRoot.stored.toLowerCase() !== verifiedRoot.toLowerCase()) {
+    throw new Error("createChronicleEntryV0 requires evidence_capsule.receipt_root.stored to equal the verified receipt_root")
+  }
+  if (capsuleReceiptRoot.computed.toLowerCase() !== recomputedRoot.toLowerCase()) {
+    throw new Error("createChronicleEntryV0 requires evidence_capsule.receipt_root.computed to equal the independently recomputed receipt_root")
+  }
+  if (capsuleReceiptRoot.match !== true || capsuleReceiptRoot.status !== "verified") {
+    throw new Error("createChronicleEntryV0 requires evidence_capsule.receipt_root.match/status to be internally consistent with the verified root")
+  }
+
+  const verifierResult = proofObject.evidence_capsule.verifier_result
+  if (verifierResult.ok !== true || verifierResult.status !== "verified") {
+    throw new Error("createChronicleEntryV0 requires evidence_capsule.verifier_result to be internally consistent with a successful independent recomputation")
+  }
+
+  // Identity binding: proof_object_id/proof_ref are normatively derived from
+  // the verified receipt_root. Reuse the existing derivation helpers rather
+  // than a second rule, so this can never drift from createPortableProofObjectV0.
+  const expectedProofObjectId = deriveProofObjectId(verifiedRoot)
+  if (proofObject.proof_object_id !== expectedProofObjectId) {
+    throw new Error("createChronicleEntryV0 requires proofObject.proof_object_id to be the canonical derivation of the verified receipt_root")
+  }
+  if (proofObject.proof_ref !== deriveProofRef(expectedProofObjectId)) {
+    throw new Error("createChronicleEntryV0 requires proofObject.proof_ref to be the canonical derivation of proof_object_id")
+  }
+
   return {
     schema: CHRONICLE_ENTRY_VERSION_V0,
     entry_id: options?.entryId ?? `entry-${proofObject.proof_object_id}`,

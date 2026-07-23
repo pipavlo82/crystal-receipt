@@ -104,7 +104,7 @@ describe("chronicle collection v0", () => {
     const proof = await createPortableProofObjectV0(evidence, {
       sourceEvidenceRef: "example://stealth-handoff/normalized-evidence.json",
     })
-    const entry = createChronicleEntryV0(proof)
+    const entry = createChronicleEntryV0(evidence, proof)
     const collection = createChronicleCollectionV0(entry)
 
     expect(verifyChronicleCollectionV0(collection)).toEqual({
@@ -119,7 +119,7 @@ describe("chronicle collection v0", () => {
     const proof = await createPortableProofObjectV0(evidence, {
       sourceEvidenceRef: "example://stealth-handoff/normalized-evidence.json",
     })
-    const entry = createChronicleEntryV0(proof)
+    const entry = createChronicleEntryV0(evidence, proof)
     const collection = createChronicleCollectionV0(entry)
     const tampered = {
       ...collection,
@@ -137,7 +137,7 @@ describe("chronicle collection v0", () => {
     const proof = await createPortableProofObjectV0(evidence, {
       sourceEvidenceRef: "example://stealth-handoff/normalized-evidence.json",
     })
-    const entry = createChronicleEntryV0(proof)
+    const entry = createChronicleEntryV0(evidence, proof)
     const collection = createChronicleCollectionV0(entry)
 
     expect(deriveCollectionRefFromChronicleCollection(collection)).toBe(`/collection/${encodeURIComponent(collection.collection_id)}`)
