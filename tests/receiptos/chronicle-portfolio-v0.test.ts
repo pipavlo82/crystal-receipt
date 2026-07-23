@@ -119,7 +119,7 @@ describe("chronicle portfolio v0", () => {
     const proof = await createPortableProofObjectV0(evidence, {
       sourceEvidenceRef: "example://stealth-handoff/normalized-evidence.json",
     })
-    const entry = createChronicleEntryV0(proof)
+    const entry = createChronicleEntryV0(evidence, proof)
     const collection = createChronicleCollectionV0(entry)
     const portfolio = createChroniclePortfolioV0(collection)
 
@@ -135,7 +135,7 @@ describe("chronicle portfolio v0", () => {
     const proof = await createPortableProofObjectV0(evidence, {
       sourceEvidenceRef: "example://stealth-handoff/normalized-evidence.json",
     })
-    const entry = createChronicleEntryV0(proof)
+    const entry = createChronicleEntryV0(evidence, proof)
     const collection = createChronicleCollectionV0(entry)
     const portfolio = createChroniclePortfolioV0(collection)
     const tampered = {
@@ -154,7 +154,7 @@ describe("chronicle portfolio v0", () => {
     const proof = await createPortableProofObjectV0(evidence, {
       sourceEvidenceRef: "example://stealth-handoff/normalized-evidence.json",
     })
-    const entry = createChronicleEntryV0(proof)
+    const entry = createChronicleEntryV0(evidence, proof)
     const collection = createChronicleCollectionV0(entry)
     const portfolio = createChroniclePortfolioV0(collection)
 
