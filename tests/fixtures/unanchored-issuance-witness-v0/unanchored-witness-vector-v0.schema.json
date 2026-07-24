@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://crystal-receipt.local/schemas/unanchored-witness-vector-v0.schema.json",
+  "title": "Unanchored Issuance Witness Normative Vector v0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "case_id", "classification", "title", "specification", "input", "expected"],
+  "properties": {
+    "schema": { "const": "unanchored_issuance_witness_vector.v0" },
+    "case_id": { "type": "string", "minLength": 1 },
+    "classification": { "enum": ["matrix", "co_occurrence"] },
+    "title": { "type": "string", "minLength": 1 },
+    "specification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "const": "docs/UNANCHORED_ISSUANCE_WITNESS_V0.md" },
+        "sha256": { "const": "24fdf071008638c5c0198dc80d94be4ae3a8e31f072b41009ded71ea7d49ffa4" }
+      }
+    },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifacts", "evaluation_point", "evidence"],
+      "properties": {
+        "artifacts": {
+          "type": "object",
+          "required": [
+            "coverage_profile",
+            "issuance_intent",
+            "terminal_commitment",
+            "witness_receipts",
+            "witness_checkpoints"
+          ]
+        },
+        "evaluation_point": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["basis_ref", "position", "as_of"],
+          "properties": {
+            "basis_ref": { "type": "string" },
+            "position": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+            "as_of": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["checkpoint_ref", "log_size"],
+              "properties": {
+                "checkpoint_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+                "log_size": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 }
+              }
+            }
+          }
+        },
+        "evidence": { "type": "object" }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["admission_result", "assertions"],
+      "properties": {
+        "admission_result": { "type": "object" },
+        "assertions": { "type": "object" }
+      }
+    }
+  }
+}

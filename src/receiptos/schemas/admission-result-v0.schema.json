@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://crystal-receipt.local/schemas/admission-result-v0.schema.json",
+  "title": "ReceiptOS Admission Result v0",
+  "description": "Deterministic, non-identity-bearing evaluation view pinned by UNANCHORED_ISSUANCE_WITNESS_V0 sections 12 and 13. This object has no root and no signature.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "coverage_profile_ref",
+    "accepted_record_schema",
+    "accepted_record_ref",
+    "witness_receipt_ref",
+    "as_of",
+    "predicate_evaluation_state",
+    "predicate_verdict",
+    "admission_evaluation_state",
+    "admission_verdict",
+    "resolution_progress",
+    "resolution_timing",
+    "publication_progress",
+    "publication_timing",
+    "findings",
+    "primary_reason_code",
+    "unverifiable_checks"
+  ],
+  "properties": {
+    "schema": { "const": "admission_result.v0" },
+    "coverage_profile_ref": { "$ref": "#/$defs/sha256Ref" },
+    "accepted_record_schema": {
+      "enum": ["issuance_record.v0", "issuance_result_commitment.v0"]
+    },
+    "accepted_record_ref": { "$ref": "#/$defs/sha256Ref" },
+    "witness_receipt_ref": { "$ref": "#/$defs/sha256Ref" },
+    "as_of": { "$ref": "#/$defs/asOf" },
+    "predicate_evaluation_state": { "$ref": "#/$defs/evaluationState" },
+    "predicate_verdict": { "$ref": "#/$defs/verdict" },
+    "admission_evaluation_state": { "$ref": "#/$defs/evaluationState" },
+    "admission_verdict": { "$ref": "#/$defs/verdict" },
+    "resolution_progress": {
+      "enum": ["pending", "resolved", "skipped"]
+    },
+    "resolution_timing": {
+      "enum": ["not_started", "on_time", "late", "overdue"]
+    },
+    "publication_progress": {
+      "enum": ["not_started", "accepted_by_witness", "published", "externally_observed"]
+    },
+    "publication_timing": {
+      "enum": ["not_started", "on_time", "late", "overdue"]
+    },
+    "findings": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/reasonCode" }
+    },
+    "primary_reason_code": {
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/reasonCode" }
+      ]
+    },
+    "unverifiable_checks": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 17
+      }
+    }
+  },
+  "$defs": {
+    "sha256Ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "safeInteger": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "asOf": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["checkpoint_ref", "log_size"],
+      "properties": {
+        "checkpoint_ref": { "$ref": "#/$defs/sha256Ref" },
+        "log_size": { "$ref": "#/$defs/safeInteger" }
+      }
+    },
+    "evaluationState": {
+      "enum": ["evaluated", "unverifiable", "malformed", "not_evaluated"]
+    },
+    "verdict": {
+      "enum": ["valid", "invalid", null]
+    },
+    "reasonCode": {
+      "enum": [
+        "profile_or_artifact_malformed",
+        "issuance_intent_malformed",
+        "witness_receipt_root_malformed",
+        "witness_receipt_root_mismatch",
+        "unsupported_witness_receipt_signature_profile",
+        "malformed_witness_receipt_signature",
+        "invalid_witness_receipt_signature",
+        "accepted_record_ref_mismatch",
+        "missing_coverage_binding",
+        "coverage_source_authority_not_allowed",
+        "duplicate_coverage_binding",
+        "independent_completeness_unproven",
+        "issuance_stream_fork",
+        "sequence_gap",
+        "predecessor_ref_mismatch",
+        "issuance_position_inversion",
+        "accepted_record_not_in_witness_log",
+        "witness_checkpoint_root_malformed",
+        "witness_checkpoint_root_mismatch",
+        "unsupported_witness_checkpoint_signature_profile",
+        "malformed_witness_checkpoint_signature",
+        "invalid_witness_checkpoint_signature",
+        "witness_checkpoint_chain_discontinuous",
+        "witness_append_only_consistency_unproven",
+        "witness_stalled",
+        "witness_equivocation",
+        "terminal_to_intent_mismatch",
+        "late_skip",
+        "resolution_overdue",
+        "late_resolution",
+        "publication_overdue",
+        "late_publication",
+        "as_of_scope_malformed",
+        "as_of_scope_mismatch"
+      ]
+    }
+  }
+}
