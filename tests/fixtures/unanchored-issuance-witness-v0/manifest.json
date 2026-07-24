@@ -1,0 +1,102 @@
+{
+  "schema": "unanchored_issuance_witness_fixture_manifest.v0",
+  "specification": {
+    "path": "docs/UNANCHORED_ISSUANCE_WITNESS_V0.md",
+    "sha256": "24fdf071008638c5c0198dc80d94be4ae3a8e31f072b41009ded71ea7d49ffa4"
+  },
+  "files": [
+    {
+      "path": "src/receiptos/schemas/admission-result-v0.schema.json",
+      "sha256": "2c56884b1c340f824ff5700e0e7e19a16a029da98d63ea7aa7238db618ef4fc7"
+    },
+    {
+      "path": "src/receiptos/schemas/issuance-coverage-profile-v0.schema.json",
+      "sha256": "756b540873b616f33b2078c61d682eb34189607202ed4210d8bec11681411e66"
+    },
+    {
+      "path": "src/receiptos/schemas/issuance-record-v0.schema.json",
+      "sha256": "5d386f21e13b859416f1a960aaefe20557255f83238038c11924bffa75cf0d32"
+    },
+    {
+      "path": "src/receiptos/schemas/issuance-result-commitment-v0.schema.json",
+      "sha256": "7862b66aadcbf42e17e52e1c8f7b81515d1d5f50f4450396bb6980d3cbf6c91f"
+    },
+    {
+      "path": "src/receiptos/schemas/witness-log-checkpoint-v0.schema.json",
+      "sha256": "52f384810f600c2f16fc8ba7987c7a367d421436b7671d19d9d5602ff426b4c6"
+    },
+    {
+      "path": "src/receiptos/schemas/witness-receipt-v0.schema.json",
+      "sha256": "53296c155b6a406c45b9b664d1142304ac4935b3a5f6fe4887eba92a8826999e"
+    },
+    {
+      "path": "tests/fixtures/unanchored-issuance-witness-v0/unanchored-witness-vector-v0.schema.json",
+      "sha256": "1ca6cf015534cb25b42f41462405cb778796606493d1af5939e7c34c68e8e4d0"
+    },
+    {
+      "path": "tests/fixtures/unanchored-issuance-witness-v0/vectors/a.json",
+      "sha256": "a1fe8d817ed880ad3f86a85f1a584ef2751c2f96eeff9ba7fe3440c1ab8e3072"
+    },
+    {
+      "path": "tests/fixtures/unanchored-issuance-witness-v0/vectors/b.json",
+      "sha256": "9860a409de1922d1d95299d8b74583d06d92df0cc81ce0bab161343f916fd2f8"
+    },
+    {
+      "path": "tests/fixtures/unanchored-issuance-witness-v0/vectors/c.json",
+      "sha256": "eeb145dc527d6c687a0ed66acea87aa57798e41ba3b6345dc13d428bb09d05e8"
+    },
+    {
+      "path": "tests/fixtures/unanchored-issuance-witness-v0/vectors/co-equivocation-prefix.json",
+      "sha256": "3940fbccacf14dac618f6623142f6c4f23d61cb1fb001f37ed30160c88497c62"
+    },
+    {
+      "path": "tests/fixtures/unanchored-issuance-witness-v0/vectors/co-late-terminal-after-overdue.json",
+      "sha256": "a90aa309ca82c1888f34f2cbadcd8839176877bfe36287fb6ecc6678a54669a4"
+    },
+    {
+      "path": "tests/fixtures/unanchored-issuance-witness-v0/vectors/co-multiple-violations.json",
+      "sha256": "46b5233ed9a88a1c36eb3d6189ba523f83431b404cbfa51256828bacb553415b"
+    },
+    {
+      "path": "tests/fixtures/unanchored-issuance-witness-v0/vectors/d.json",
+      "sha256": "460fdcc21873a3ef785308af501af59a9965ab8f35e29b6a684d0c688add1e43"
+    },
+    {
+      "path": "tests/fixtures/unanchored-issuance-witness-v0/vectors/e.json",
+      "sha256": "b33845291a578d3cffb6bec729fa5744944e1671b89b03e95e3280004f62dadd"
+    },
+    {
+      "path": "tests/fixtures/unanchored-issuance-witness-v0/vectors/f.json",
+      "sha256": "f6dc2ff848fbf962931385c9cfa739b43b05f93f678d868e6578b4ff2cb83a0e"
+    },
+    {
+      "path": "tests/fixtures/unanchored-issuance-witness-v0/vectors/g1.json",
+      "sha256": "94556facc6c36aaaba011f1c1061ffae6cc56e3a422f3c0b51e43b633d05d837"
+    },
+    {
+      "path": "tests/fixtures/unanchored-issuance-witness-v0/vectors/g2.json",
+      "sha256": "29492d5d7c7c96c7235aeb2d515a7b344538dd50004c39adbe0288371ff2169f"
+    },
+    {
+      "path": "tests/fixtures/unanchored-issuance-witness-v0/vectors/h.json",
+      "sha256": "82887d3bf2e2d4f910f1802eeb2f68f6009a592577f81697df28f87ea4249b9d"
+    },
+    {
+      "path": "tests/fixtures/unanchored-issuance-witness-v0/vectors/i.json",
+      "sha256": "f1e75c2d4e8afef413c9fa89458e94e7ef10d03af41ca424e5efb809ddedb8ad"
+    },
+    {
+      "path": "tests/fixtures/unanchored-issuance-witness-v0/vectors/j.json",
+      "sha256": "a2d035be5a21862951b3afabcef74ea3d838c375d7d8329f8229d23f942570bb"
+    },
+    {
+      "path": "tests/fixtures/unanchored-issuance-witness-v0/vectors/k1.json",
+      "sha256": "fa1e9841fb873df2b96e8dab658ccf7401634eee0e7025d1a04ac035bc168fc4"
+    },
+    {
+      "path": "tests/fixtures/unanchored-issuance-witness-v0/vectors/k2.json",
+      "sha256": "ae89364ae66e3e26da301fc2814390250b8078ed6f28290cfa95fc4be45c426a"
+    }
+  ],
+  "fixture_set_sha256": "cf6136a129e1657ea7e4ff61e16e7c33be377339089ec3fa6e63f55cd4a5767e"
+}

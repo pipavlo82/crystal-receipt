@@ -1,0 +1,197 @@
+{
+  "schema": "unanchored_issuance_witness_vector.v0",
+  "case_id": "E",
+  "classification": "matrix",
+  "title": "Terminal resolved late",
+  "specification": {
+    "path": "docs/UNANCHORED_ISSUANCE_WITNESS_V0.md",
+    "sha256": "24fdf071008638c5c0198dc80d94be4ae3a8e31f072b41009ded71ea7d49ffa4"
+  },
+  "input": {
+    "artifacts": {
+      "coverage_profile": {
+        "schema": "issuance_coverage_profile.v0",
+        "profile_id": "normative-unanchored-v0",
+        "inclusion_predicate_ref": "sha256:a4e53269093faa155ae6bb69f93fd3a8621c58a33accec24f879dc4105f147b8",
+        "trigger_source_ref": "fixture://coverage-events",
+        "coverage_source_authority": "third_party",
+        "required_cardinality": "exactly_one",
+        "ordering_basis_ref": "fixture-basis",
+        "liveness_basis_ref": "fixture-basis",
+        "skip_window": {
+          "basis_ref": "fixture-basis",
+          "length": 2
+        },
+        "resolution_window": {
+          "basis_ref": "fixture-basis",
+          "length": 3
+        },
+        "publication_window": {
+          "basis_ref": "fixture-basis",
+          "length": 2
+        },
+        "checkpoint_cadence": {
+          "basis_ref": "fixture-basis",
+          "origin": 0,
+          "interval": 1,
+          "max_delay": 0
+        },
+        "coverage_profile_root": "sha256:6a618d2398a32fc51ecb9427fd0185343ed631d1a7c15229d66c7f1b8d7e7fb6"
+      },
+      "issuance_intent": {
+        "schema": "issuance_record.v0",
+        "kind": "intent",
+        "opaque_job_id": "normative-job-001",
+        "issuer_ref": "issuer:normative",
+        "scope_ref": "scope:normative",
+        "coverage_profile_ref": "sha256:6a618d2398a32fc51ecb9427fd0185343ed631d1a7c15229d66c7f1b8d7e7fb6",
+        "coverage_event_ref": "event:normative-001",
+        "issuance_stream_id": "sha256:ce64da621d6d252d5dee16112572a00af8c74f5bc228e58d8a046b4db0d06c10",
+        "as_of_checkpoint": "checkpoint:issuance-0",
+        "request_commitment": "sha256:1f58b9145b24d108d7ac38887338b3ea3229833b9c1e418250343f907bfd1047",
+        "sequence": 0,
+        "prev_issuance": null,
+        "issuance_root": "sha256:127832fa590069ab395abd2b89ccf9cce6a4a84776b436f831ec8016b39d58fd"
+      },
+      "terminal_commitment": {
+        "schema": "issuance_result_commitment.v0",
+        "issuance_intent_root": "sha256:127832fa590069ab395abd2b89ccf9cce6a4a84776b436f831ec8016b39d58fd",
+        "verdict_commitment": "sha256:adc7789cf7b7bda9a9f18065e17f15db720fe25586d9d556720474e3520aa77d",
+        "issuance_result_root": "sha256:0b7de000c87b7fa7f0aa1abaf017c56b86637fef2a020a6b7461b2516ff6a0d1"
+      },
+      "witness_receipts": [
+        {
+          "schema": "witness_receipt.v0",
+          "witness_ref": "ed25519-pub:03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8",
+          "log_id": "normative-log-v0",
+          "accepted_record_schema": "issuance_record.v0",
+          "accepted_record_ref": "sha256:127832fa590069ab395abd2b89ccf9cce6a4a84776b436f831ec8016b39d58fd",
+          "witness_position": 0,
+          "witness_epoch": 0,
+          "witness_receipt_root": "sha256:812083f86ac1b8c306d940911aadca58343de341dec7b85bda1a3f28526add40",
+          "witness_signature": {
+            "profile": "receiptos-witness-ed25519-v0",
+            "signature": "ed25519-sig:3b2c60f50f7bab501b129ff7b4240ff0fa2856f7aa7e4e7499300d9e749f6783f961db8ec7fa0176e569eb6694f92006d8889e519df8471e5c044b70f5d9a501"
+          }
+        },
+        {
+          "schema": "witness_receipt.v0",
+          "witness_ref": "ed25519-pub:03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8",
+          "log_id": "normative-log-v0",
+          "accepted_record_schema": "issuance_result_commitment.v0",
+          "accepted_record_ref": "sha256:0b7de000c87b7fa7f0aa1abaf017c56b86637fef2a020a6b7461b2516ff6a0d1",
+          "witness_position": 1,
+          "witness_epoch": 0,
+          "witness_receipt_root": "sha256:365bdfa1ca81d12345ad5a0508c1add329a10c16bf864f42699023b86a11ae4c",
+          "witness_signature": {
+            "profile": "receiptos-witness-ed25519-v0",
+            "signature": "ed25519-sig:03120a4903418c8b322db077cb8fe0201d0de1b3d504f4f6327480cfa37e87188383d82478939424cc2c9682f19888c7a75e97b710ea36f03326feddac2c790e"
+          }
+        }
+      ],
+      "witness_checkpoints": [
+        {
+          "schema": "witness_log_checkpoint.v0",
+          "witness_ref": "ed25519-pub:03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8",
+          "log_id": "normative-log-v0",
+          "checkpoint_sequence": 0,
+          "epoch": 0,
+          "log_size": 1,
+          "log_root": "sha256:ff0e15b615e804f236ff02411a38c42984949815b480d65fc326498c941d4aa5",
+          "prev_checkpoint": null,
+          "witness_checkpoint_root": "sha256:43ffd208baa4e4fd08a76515947eec6696fea7ab5888e51daf122507eb787b0b",
+          "witness_signature": {
+            "profile": "receiptos-witness-ed25519-v0",
+            "signature": "ed25519-sig:f952c4f1692b2b68639f51f4207ccedc6a1bdea7a8256dcc3cfbcf247188f89b28cc6b222bc37beea484e54536d63212fc3ff1b42c7f88908a345c2dbe2dd306"
+          }
+        },
+        {
+          "schema": "witness_log_checkpoint.v0",
+          "witness_ref": "ed25519-pub:03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8",
+          "log_id": "normative-log-v0",
+          "checkpoint_sequence": 1,
+          "epoch": 0,
+          "log_size": 2,
+          "log_root": "sha256:51a21eabc63829f0447330bd8d16ba17d58c571ccd8601394f05e4650969f30d",
+          "prev_checkpoint": "sha256:43ffd208baa4e4fd08a76515947eec6696fea7ab5888e51daf122507eb787b0b",
+          "witness_checkpoint_root": "sha256:e31ab4c66edd09ed250ea45fe0a355f059161ec1cb47ea123c4307eb1008a7bb",
+          "witness_signature": {
+            "profile": "receiptos-witness-ed25519-v0",
+            "signature": "ed25519-sig:45df81f07c2feef676cba923a5143dfe53157f39082cc84f55538f4ac2c287195774947cb976647cd0742e2959971a330f2103979579f468bd759661ed231504"
+          }
+        },
+        {
+          "schema": "witness_log_checkpoint.v0",
+          "witness_ref": "ed25519-pub:03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8",
+          "log_id": "normative-log-v0",
+          "checkpoint_sequence": 2,
+          "epoch": 0,
+          "log_size": 3,
+          "log_root": "sha256:daac1d7a2f25acbe437e0d18c9921085e755cc89be135e42ef893b0b3edc5c0d",
+          "prev_checkpoint": "sha256:e31ab4c66edd09ed250ea45fe0a355f059161ec1cb47ea123c4307eb1008a7bb",
+          "witness_checkpoint_root": "sha256:bd77640b9f922108dad1c92d473c472399a9310ac1718bd7c2cad2cdb4aaac47",
+          "witness_signature": {
+            "profile": "receiptos-witness-ed25519-v0",
+            "signature": "ed25519-sig:b4e97a25c623d98e932a6182d2adb5f8ec6d949834a5b282f8ffab8a9990efd33f308ca8b8a6b15011924f85c26a915e00ad52c022d4ee4a5db6b269731e840e"
+          }
+        }
+      ]
+    },
+    "evaluation_point": {
+      "basis_ref": "fixture-basis",
+      "position": 6,
+      "as_of": {
+        "checkpoint_ref": "sha256:bd77640b9f922108dad1c92d473c472399a9310ac1718bd7c2cad2cdb4aaac47",
+        "log_size": 3
+      }
+    },
+    "evidence": {
+      "complete_comparable_interval": true,
+      "witness_live": true,
+      "external_observation": {
+        "observed": false,
+        "position": null
+      },
+      "resolution": {
+        "terminal_present": true,
+        "terminal_position": 5,
+        "deadline_position": 3
+      },
+      "publication": {
+        "checkpoint_published": false,
+        "deadline_position": 8
+      },
+      "authority": {
+        "class": "third_party",
+        "independent_completeness": "proven"
+      }
+    }
+  },
+  "expected": {
+    "admission_result": {
+      "schema": "admission_result.v0",
+      "coverage_profile_ref": "sha256:6a618d2398a32fc51ecb9427fd0185343ed631d1a7c15229d66c7f1b8d7e7fb6",
+      "accepted_record_schema": "issuance_result_commitment.v0",
+      "accepted_record_ref": "sha256:0b7de000c87b7fa7f0aa1abaf017c56b86637fef2a020a6b7461b2516ff6a0d1",
+      "witness_receipt_ref": "sha256:365bdfa1ca81d12345ad5a0508c1add329a10c16bf864f42699023b86a11ae4c",
+      "as_of": {
+        "checkpoint_ref": "sha256:bd77640b9f922108dad1c92d473c472399a9310ac1718bd7c2cad2cdb4aaac47",
+        "log_size": 3
+      },
+      "predicate_evaluation_state": "evaluated",
+      "predicate_verdict": "valid",
+      "admission_evaluation_state": "evaluated",
+      "admission_verdict": "invalid",
+      "resolution_progress": "resolved",
+      "resolution_timing": "late",
+      "publication_progress": "not_started",
+      "publication_timing": "not_started",
+      "findings": [
+        "late_resolution"
+      ],
+      "primary_reason_code": "late_resolution",
+      "unverifiable_checks": []
+    },
+    "assertions": {}
+  }
+}
