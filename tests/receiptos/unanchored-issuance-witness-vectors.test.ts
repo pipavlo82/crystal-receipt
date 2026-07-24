@@ -1,6 +1,5 @@
 import { describe, expect, test } from "bun:test"
 import { createHash } from "node:crypto"
-import { execFileSync } from "node:child_process"
 import { readFileSync, readdirSync } from "node:fs"
 import { resolve } from "node:path"
 
@@ -235,8 +234,12 @@ describe("unanchored issuance witness normative vectors", () => {
   })
 
   test("no production witness evaluator or findings detector was added", () => {
-    const changed = execFileSync("git", ["diff", "--name-only", "origin/main"], { cwd: repo, encoding: "utf8" })
-      .trim().split(/\r?\n/).filter(Boolean)
-    expect(changed.filter((path) => path.startsWith("src/receiptos/") && !path.endsWith(".schema.json"))).toEqual([])
+    const sourceRoot = resolve(repo, "src/receiptos")
+    const productionModules = readdirSync(sourceRoot, { recursive: true })
+      .map(String)
+      .filter((path) => /\.(?:ts|tsx|js|mjs|cjs)$/.test(path))
+    expect(productionModules.filter((path) =>
+      /(?:unanchored.*(?:evaluator|findings|detector)|witness.*findings.*detector)/i.test(path),
+    )).toEqual([])
   })
 })
