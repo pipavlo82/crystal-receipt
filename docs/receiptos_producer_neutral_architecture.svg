@@ -100,7 +100,7 @@
   <rect x="380" y="655" width="740" height="100" rx="16" ry="16" class="box"/>
   <text x="750" y="688" text-anchor="middle" class="section">Verifier</text>
   <text x="750" y="714" text-anchor="middle" class="body">Recomputes receipt_root independently; checks stored vs. computed; checks Merkle / anchor state.</text>
-  <text x="750" y="738" text-anchor="middle" class="small">The verifier remains the source of truth — capsule and viewer layers are interpretive, not authoritative.</text>
+  <text x="750" y="738" text-anchor="middle" class="small">Receipt truth is established by independent recomputation; capsule and viewer layers remain interpretive.</text>
 
   <path d="M750 755 V 800" class="arrow"/>
 
@@ -131,5 +131,5 @@
   <rect x="800" y="970" width="320" height="42" rx="10" ry="10" class="boxDashed"/>
   <text x="960" y="996" text-anchor="middle" class="body">Crystal (optional, secondary visual)</text>
 
-  <text x="1180" y="996" class="note">Verifier is the source of truth.</text>
+  <text x="1180" y="996" class="note">Producer claims are evidence; consumers independently recompute receipt truth.</text>
 </svg>
