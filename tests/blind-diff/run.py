@@ -8,7 +8,7 @@ derived admission_result against the vector's expected output.
 Expected: frozen-Python 15/16 (historical co-late-terminal residual),
 post-correction-Python 16/16, TypeScript 16/16.
 """
-import json, os, shutil, subprocess, tempfile
+import json, os, shutil, subprocess, sys, tempfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 VEC  = os.path.normpath(os.path.join(HERE, "..", "fixtures",
                                      "unanchored-issuance-witness-v0", "vectors"))
@@ -16,7 +16,7 @@ ORDER = ["a","b","c","d","e","f","g1","g2","h","i","j","k1","k2",
          "co-equivocation-prefix","co-late-terminal-after-overdue","co-multiple-violations"]
 
 def py(det, vec):
-    return json.loads(subprocess.check_output(["python3", os.path.join(HERE, det), vec]))
+    return json.loads(subprocess.check_output([sys.executable, os.path.join(HERE, det), vec]))
 
 def ts_all():
     if not shutil.which("bun"):

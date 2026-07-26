@@ -1,7 +1,7 @@
 --- /Users/merliniferrao/witness-blind-diff/detector.py	2026-07-26 21:42:34
 +++ /Users/merliniferrao/witness-blind-diff/detector-postcorrection.py	2026-07-26 23:36:54
 @@ -16,6 +16,18 @@
- 
+
  import json
  import sys
 +
@@ -16,7 +16,7 @@
 +# symmetric publication branch (2); (2) is present for spec-faithful symmetry and
 +# is inert on the current vectors. Not a reference or production evaluator.
 +# ---------------------------------------------------------------------------
- 
+
  # ---------------------------------------------------------------------------
  # SPEC 13.4 : closed reason-code enum, grouped by admission-check ordinal and
 @@ -182,6 +194,11 @@
