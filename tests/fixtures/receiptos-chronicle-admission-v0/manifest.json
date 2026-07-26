@@ -1,0 +1,63 @@
+{
+  "schema": "receiptos_chronicle_admission_fixture_manifest.v0",
+  "package_version": "receiptos-chronicle-admission-v0",
+  "vector_schema": {
+    "path": "receiptos-chronicle-admission-vector-v0.schema.json",
+    "sha256": "a5dfc0c41dd4e351dfd83115ab41be4bdb9f6b4f2294c59cd19a31bafc89c661"
+  },
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "64a8f40ee0bfe81c6947a2608be33f9dcf55cef124f9f208a49ab6e045bd8949"
+    },
+    {
+      "path": "receiptos-chronicle-admission-vector-v0.schema.json",
+      "sha256": "a5dfc0c41dd4e351dfd83115ab41be4bdb9f6b4f2294c59cd19a31bafc89c661"
+    },
+    {
+      "path": "vectors/01-clean-admitted.json",
+      "sha256": "2240d512c105328033bdf24c2af145d6b0067a98f3d527b39620c34adecc2a7d"
+    },
+    {
+      "path": "vectors/02-evidence-root-missing.json",
+      "sha256": "5b663774cadf8e2828d9e484863456a57930c72d665a88942749765652d6aeaa"
+    },
+    {
+      "path": "vectors/03-evidence-root-mismatch.json",
+      "sha256": "db825648d372f860aec6a9998d02619560c8a7aa29173f491a446fd3261b79bb"
+    },
+    {
+      "path": "vectors/04-proof-root-mismatch.json",
+      "sha256": "524e207d3135c8befcd7bfaac9cc2119b413e6f7a90c375e89b98c21df545247"
+    },
+    {
+      "path": "vectors/05-capsule-stored-root-mismatch.json",
+      "sha256": "1544f04c97e7066e94617332886d8c753e42109c10ecf5c196483c0e1d50ce97"
+    },
+    {
+      "path": "vectors/06-capsule-computed-root-mismatch.json",
+      "sha256": "bdc06fbf0bd1d416cbb36fd561a977d7eb5cd00ed32fcec6eff1bee1f748f066"
+    },
+    {
+      "path": "vectors/07-capsule-label-inconsistent.json",
+      "sha256": "d30a0a6be6a5e826e34e19c783f8ef073296a325b94aed9925b00262bc2ebe9f"
+    },
+    {
+      "path": "vectors/08-verifier-result-inconsistent.json",
+      "sha256": "fc174a241eda98fcde0b13498708c5e9d0815dba8eea82c683616debba70c726"
+    },
+    {
+      "path": "vectors/09-proof-object-id-invalid.json",
+      "sha256": "10bc9fa4e59bed528ab9117fe41de6fcc341da5e789f1495c35c501538221313"
+    },
+    {
+      "path": "vectors/10-proof-ref-invalid.json",
+      "sha256": "e138525fad968a967b2a2b03a46554195a089b007dafc375d8a87c8835d8261a"
+    },
+    {
+      "path": "vectors/11-proof-object-only-rejected.json",
+      "sha256": "fc7be03187c1490666fbc0113c866d3140522c77d14ff0aa2b87b4ab05a56c1b"
+    }
+  ],
+  "fixture_set_sha256": "ff35ca8ae5cef10009479d50c10e111869875f6f62fb9d6bcb00f5aa5a1b4b4f"
+}
