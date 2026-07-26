@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { createHash } from "node:crypto"
 import { readFileSync, readdirSync } from "node:fs"
 import { resolve } from "node:path"
+import { readGitIndexBytes, readGitIndexJson } from "./helpers/git-index-bytes"
 
 type JsonSchema = {
   $ref?: string
@@ -73,8 +74,8 @@ function validate(value: unknown, inputSchema: JsonSchema, root: JsonSchema, pat
   return errors
 }
 
-const manifest = readJson(resolve(fixtureRoot, "manifest.json"))
-const vectorSchema = readJson<JsonSchema>(resolve(fixtureRoot, "unanchored-witness-vector-v0.schema.json"))
+const manifest = readGitIndexJson<any>(repo, "tests/fixtures/unanchored-issuance-witness-v0/manifest.json")
+const vectorSchema = readGitIndexJson<JsonSchema>(repo, "tests/fixtures/unanchored-issuance-witness-v0/unanchored-witness-vector-v0.schema.json")
 const admissionSchema = readJson<JsonSchema>(resolve(repo, "src/receiptos/schemas/admission-result-v0.schema.json"))
 const vectorFiles = readdirSync(vectorRoot).filter((name) => name.endsWith(".json")).sort()
 const vectors = vectorFiles.map((name) => readJson(resolve(vectorRoot, name)))
@@ -118,8 +119,8 @@ const reasonOrder = [
 ]
 
 describe("unanchored issuance witness normative vectors", () => {
-  test("frozen specification hash is byte-exact", () => {
-    const bytes = readFileSync(resolve(repo, "docs/UNANCHORED_ISSUANCE_WITNESS_V0.md"))
+  test("frozen specification hash is byte-exact for Git index bytes", () => {
+    const bytes = readGitIndexBytes(repo, "docs/UNANCHORED_ISSUANCE_WITNESS_V0.md")
     expect(sha256(bytes)).toBe("34de6694e6fb28b6d521a3314c0454f4639dfaba7d29dc0fb217244970e0536a")
   })
 
@@ -210,11 +211,11 @@ describe("unanchored issuance witness normative vectors", () => {
     expect(result.primary_reason_code).toBe("witness_receipt_root_mismatch")
   })
 
-  test("manifest pins sorted byte hashes and deterministic fixture-set hash", () => {
+  test("manifest pins sorted Git index byte hashes and deterministic fixture-set hash", () => {
     const sorted = [...manifest.files].sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0)
     expect(manifest.files).toEqual(sorted)
     for (const file of manifest.files) {
-      expect(sha256(readFileSync(resolve(repo, file.path))), file.path).toBe(file.sha256)
+      expect(sha256(readGitIndexBytes(repo, file.path)), file.path).toBe(file.sha256)
     }
     const aggregate = manifest.files.map((file) => `${file.path}\t${file.sha256}\n`).join("")
     expect(sha256(aggregate)).toBe(manifest.fixture_set_sha256)
