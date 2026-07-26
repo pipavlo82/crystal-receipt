@@ -1,0 +1,47 @@
+--- /Users/merliniferrao/witness-blind-diff/detector.py	2026-07-26 21:42:34
++++ /Users/merliniferrao/witness-blind-diff/detector-postcorrection.py	2026-07-26 23:36:54
+@@ -16,6 +16,18 @@
+ 
+ import json
+ import sys
++
++# -- POST-CORRECTION VARIANT (derived, non-reference, non-production) ---------
++# Derived from the frozen blind detector (sha256
++# 02bdef9e350642cdf3bee2c7d334ec70a2a439829d7b78748df0349868faf238) with EXACTLY
++# TWO disclosed semantic deltas, both implementing the corrected SPEC 11
++# coexistence rule (crystal-receipt commit bf8b22f3 / merged main 91b94872):
++#   (1) resolution coexistence:  resolution_overdue + late_resolution
++#   (2) publication coexistence: publication_overdue + late_publication
++# The current 16-vector package EXERCISES the resolution branch (1) but NOT the
++# symmetric publication branch (2); (2) is present for spec-faithful symmetry and
++# is inert on the current vectors. Not a reference or production evaluator.
++# ---------------------------------------------------------------------------
+ 
+ # ---------------------------------------------------------------------------
+ # SPEC 13.4 : closed reason-code enum, grouped by admission-check ordinal and
+@@ -182,6 +194,11 @@
+         else:
+             resolution_timing = "late"            # SPEC 11: arrives after deadline
+             findings.append("late_resolution")    # finding late_resolution (check 15)
++            # SPEC 11 (corrected @ bf8b22f3): a late terminal retains a
++            # previously-proven overdue interval -- also emit resolution_overdue.
++            # 13.4 order (15,1)<(15,2) makes resolution_overdue primary; timing stays `late`.
++            if res.get("overdue_interval_previously_proven"):
++                findings.append("resolution_overdue")
+     else:
+         resolution_progress = "pending"
+         if complete and res_deadline is not None and P > res_deadline:
+@@ -214,6 +231,13 @@
+             else:
+                 publication_timing = "late"                # SPEC 11: late external obs
+                 findings.append("late_publication")
++                # SPEC 11 (corrected @ bf8b22f3): symmetric to resolution -- a late
++                # publication retains a previously-proven overdue interval; also emit
++                # publication_overdue. 13.4 order (16,0)<(16,1) => publication_overdue
++                # precedes late_publication; publication_timing stays `late`. NOTE: no
++                # current vector exercises this branch (documented, spec-symmetric).
++                if pub.get("overdue_interval_previously_proven"):
++                    findings.append("publication_overdue")
+         else:
+             published = pub.get("checkpoint_published", False)
+             deadline_passed = pub_deadline is not None and P > pub_deadline
