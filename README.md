@@ -193,8 +193,16 @@ Crystal Receipt packages this into portable proof-facing artifacts:
 
 This places Crystal Receipt in the broader execution provenance category: SLSA / in-toto for software supply chain, but for autonomous agent execution.
 
-The verifier remains the truth source.
-Visual artifacts, crystal surfaces, exports, and collectibles are optional downstream presentation layers. They do not prove the work by themselves.
+Receipt truth is established by independent recomputation from original
+evidence under declared canonicalization, schemas, profiles, and verification
+rules. A verifier implements those checks; it is not a trusted truth
+authority. A producer-supplied `verifier_result` is reported evidence and must
+not substitute for consumer recomputation.
+
+Visual artifacts, crystal surfaces, exports, and collectibles are optional
+downstream presentation layers. They do not prove the work by themselves.
+
+**Don't trust. Recompute.**
 
 See:
 - `docs/EXECUTION_PROVENANCE_FRAMING.md`
@@ -204,6 +212,7 @@ See:
 - `docs/PRODUCER_PROOF_CONTRACT_V0.md`
 - `docs/PRODUCER_NEUTRAL_PROOF_BOUNDARY.md`
 - `docs/CYPHES_RECEIPTOS_INTEGRATION_STATUS.md`
+- [Unanchored Issuance Witness v0 implementation status](docs/UNANCHORED_ISSUANCE_WITNESS_V0_STATUS.md) — non-normative status of published schemas, vectors, and evaluator coverage
 - `scripts/demo-external-producer-e2e.ts`
 
 ![Crystal Receipt architecture hero](docs/crystal_receipt_mobile_flow.svg)
@@ -334,14 +343,22 @@ The portable proof flow is:
 5. prepare anchor payloads or import anchor results when needed
 6. summarize the result as a capsule / proof surface
 
-The verifier remains the source of truth.
+Crystal Receipt contains deterministic verification and recomputation
+functions for the supported ReceiptOS paths. A verifier is an implementation
+of declared checks, not a privileged source of truth, and producer-reported
+verifier state must be independently recomputed by the consumer.
+
 The capsule and crystal layers are interpretive and presentational.
 Producer identity (runtime, generated_by, source metadata) is provenance metadata, not proof truth.
 
 ## Important security boundary
 
-Crystal Receipt is not the security verifier.
-It does not replace:
+These implemented checks do not establish every security property and do not
+mean that every published schema has a production evaluator. In particular,
+the Unanchored Issuance Witness schemas and normative vectors are published,
+but its complete production findings evaluator is not implemented.
+
+Crystal Receipt does not replace:
 
 - signature verification
 - hash checks
