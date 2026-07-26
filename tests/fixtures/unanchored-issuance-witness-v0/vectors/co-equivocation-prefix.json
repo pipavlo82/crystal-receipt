@@ -5,7 +5,7 @@
   "title": "Admissible prefix includes the last clean checkpoint",
   "specification": {
     "path": "docs/UNANCHORED_ISSUANCE_WITNESS_V0.md",
-    "sha256": "24fdf071008638c5c0198dc80d94be4ae3a8e31f072b41009ded71ea7d49ffa4"
+    "sha256": "34de6694e6fb28b6d521a3314c0454f4639dfaba7d29dc0fb217244970e0536a"
   },
   "input": {
     "artifacts": {
