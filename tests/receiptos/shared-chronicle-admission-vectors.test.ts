@@ -3,6 +3,7 @@ import { createHash } from "node:crypto"
 import { readdirSync, readFileSync } from "node:fs"
 import { join, resolve } from "node:path"
 import { createChronicleEntryV0 } from "../../src/receiptos"
+import { readGitIndexBytes, readGitIndexJson } from "./helpers/git-index-bytes"
 
 type SharedResult = {
   outcome: "admitted" | "rejected"
@@ -23,20 +24,21 @@ type Vector = {
   expected: SharedResult
 }
 
+const repo = resolve(import.meta.dir, "../..")
 const packageRoot = resolve(import.meta.dir, "../fixtures/receiptos-chronicle-admission-v0")
 const vectorsRoot = join(packageRoot, "vectors")
-const manifest = JSON.parse(readFileSync(join(packageRoot, "manifest.json"), "utf8")) as {
+const manifest = readGitIndexJson<{
   schema: string
   package_version: string
   vector_schema: { path: string; sha256: string }
   files: Array<{ path: string; sha256: string }>
   fixture_set_sha256: string
-}
-const schema = JSON.parse(readFileSync(join(packageRoot, manifest.vector_schema.path), "utf8")) as {
+}>(repo, "tests/fixtures/receiptos-chronicle-admission-v0/manifest.json")
+const schema = readGitIndexJson<{
   properties: {
     expected: { properties: { failure_class: { enum: string[] } } }
   }
-}
+}>(repo, `tests/fixtures/receiptos-chronicle-admission-v0/${manifest.vector_schema.path}`)
 const vectorFiles = readdirSync(vectorsRoot).filter((name) => name.endsWith(".json")).sort()
 const vectors = vectorFiles.map((name) => JSON.parse(readFileSync(join(vectorsRoot, name), "utf8")) as Vector)
 const sha256 = (value: string | Buffer) => createHash("sha256").update(value).digest("hex")
@@ -88,7 +90,7 @@ function execute(vector: Vector): SharedResult {
 }
 
 describe("shared ReceiptOS Chronicle admission vectors", () => {
-  test("package schema, inventory, and manifest are complete and hash-pinned", () => {
+  test("package schema, inventory, and manifest are complete and hash-pinned by Git index bytes", () => {
     expect(manifest.schema).toBe("receiptos_chronicle_admission_fixture_manifest.v0")
     expect(manifest.package_version).toBe("receiptos-chronicle-admission-v0")
     expect(vectorFiles).toHaveLength(11)
@@ -120,7 +122,7 @@ describe("shared ReceiptOS Chronicle admission vectors", () => {
     }
 
     const actualFiles = manifest.files.map(({ path, sha256: expectedHash }) => {
-      const bytes = readFileSync(join(packageRoot, path))
+      const bytes = readGitIndexBytes(repo, `tests/fixtures/receiptos-chronicle-admission-v0/${path}`)
       expect(sha256(bytes), path).toBe(expectedHash)
       return `${path}\t${expectedHash}\n`
     })
