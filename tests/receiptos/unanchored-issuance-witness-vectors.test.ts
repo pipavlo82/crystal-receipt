@@ -120,7 +120,7 @@ const reasonOrder = [
 describe("unanchored issuance witness normative vectors", () => {
   test("frozen specification hash is byte-exact", () => {
     const bytes = readFileSync(resolve(repo, "docs/UNANCHORED_ISSUANCE_WITNESS_V0.md"))
-    expect(sha256(bytes)).toBe("24fdf071008638c5c0198dc80d94be4ae3a8e31f072b41009ded71ea7d49ffa4")
+    expect(sha256(bytes)).toBe("34de6694e6fb28b6d521a3314c0454f4639dfaba7d29dc0fb217244970e0536a")
   })
 
   test("complete A-K matrix and required subcases exist exactly once", () => {

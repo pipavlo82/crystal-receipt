@@ -5,7 +5,7 @@
   "title": "Multiple violations use total normative ordering",
   "specification": {
     "path": "docs/UNANCHORED_ISSUANCE_WITNESS_V0.md",
-    "sha256": "24fdf071008638c5c0198dc80d94be4ae3a8e31f072b41009ded71ea7d49ffa4"
+    "sha256": "34de6694e6fb28b6d521a3314c0454f4639dfaba7d29dc0fb217244970e0536a"
   },
   "input": {
     "artifacts": {
@@ -150,16 +150,16 @@
       "witness_live": true,
       "external_observation": {
         "observed": true,
-        "position": 4
+        "position": 6
       },
       "resolution": {
         "terminal_present": true,
-        "terminal_position": 2,
+        "terminal_position": 4,
         "deadline_position": 3
       },
       "publication": {
         "checkpoint_published": true,
-        "publication_position": 3,
+        "publication_position": 6,
         "deadline_position": 5
       },
       "authority": {
@@ -172,8 +172,6 @@
         "duplicate_coverage_binding": true,
         "witness_checkpoint_root_mismatch": true,
         "witness_stalled": true,
-        "late_resolution": true,
-        "late_publication": true,
         "as_of_scope_mismatch": true
       }
     }
