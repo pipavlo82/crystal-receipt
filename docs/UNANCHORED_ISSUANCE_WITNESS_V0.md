@@ -1031,14 +1031,28 @@ If no terminal exists and the resolution deadline has passed, with the complete 
 
 If absence of a terminal cannot be proven because the witness interval is incomplete, the result MUST use the separate evaluation-state machinery rather than introducing a non-domain timing literal.
 
-A later terminal MUST NOT erase the earlier overdue interval.
+If the resolution deadline passed without a timely terminal and a terminal later appears, findings MUST contain both `resolution_overdue` and `late_resolution`.
+Their ordering MUST follow section 13.2.
+`resolution_overdue` MUST precede `late_resolution`.
+For that pair, `primary_reason_code` MUST therefore be `resolution_overdue`.
+`resolution_timing` MUST remain the single literal `late`.
+`resolution_overdue` preserves the historically proven overdue interval in findings.
+`resolution_timing = late` represents the current resolved-after-deadline timing state.
+The later terminal does not erase the historical overdue finding.
 
 Apply the same distinction to publication:
 
 - no external observation after deadline with a complete comparable interval proven yields `publication_timing = overdue` and finding `publication_overdue`;
 - later external observation after deadline yields `publication_timing = late` and finding `late_publication`.
 
-A later external observation MUST NOT erase the earlier overdue interval.
+If the publication deadline passed without timely publication and publication later occurs, findings MUST contain both `publication_overdue` and `late_publication`.
+Their ordering MUST follow section 13.2.
+`publication_overdue` MUST precede `late_publication`.
+`primary_reason_code` MUST follow the complete section 13.2 ordering across all findings.
+`publication_timing` MUST remain the single literal `late`.
+`publication_overdue` preserves the historically proven overdue interval in findings.
+`publication_timing = late` represents the current published-after-deadline timing state.
+The later publication does not erase the historical overdue finding.
 
 ## 12. Predicate vs admission
 
@@ -1384,6 +1398,10 @@ Check 15 — resolution timing:
 `late_skip` remains the finding for a late skip.
 `resolution_overdue` remains the finding for no terminal after a proven complete deadline interval.
 `late_resolution` remains the finding for a terminal arriving after deadline.
+If the resolution deadline passed without a timely terminal and a terminal later appears, findings for check 15 MUST contain both `resolution_overdue` and `late_resolution`.
+Their ordering within check 15 MUST remain `resolution_overdue` then `late_resolution`.
+`resolution_timing` remains the single literal `late` for that resolved-after-deadline state.
+The later terminal does not erase the historically proven overdue finding.
 
 Check 16 — publication timing:
 
@@ -1391,6 +1409,10 @@ Check 16 — publication timing:
 - `late_publication`
 
 `publication_overdue` and `late_publication` preserve their existing meanings.
+If the publication deadline passed without timely publication and publication later occurs, findings for check 16 MUST contain both `publication_overdue` and `late_publication`.
+Their ordering within check 16 MUST remain `publication_overdue` then `late_publication`.
+`publication_timing` remains the single literal `late` for that published-after-deadline state.
+The later publication does not erase the historically proven overdue finding.
 
 Check 17 — explicit `as_of` scope:
 
@@ -1564,13 +1586,15 @@ Every required admission check passed at this exact `as_of`.
 - `resolution_timing = late`
 - `publication_progress = not_started`
 - `publication_timing = not_started`
-- `findings = [late_resolution]`
-- `primary_reason_code = late_resolution`
+- `findings = [resolution_overdue, late_resolution]`
+- `primary_reason_code = resolution_overdue`
 - `unverifiable_checks = []`
 - explicit `as_of` is required
 
 Predicate validity remains independent.
 Late resolution is a proven check-15 violation.
+When a proven overdue interval already exists before the terminal arrives, `resolution_overdue` remains in findings and precedes `late_resolution` by the section 13.2 ordering rule.
+`resolution_timing = late` records the current resolved-after-deadline timing state; it does not erase the historical overdue finding.
 Timing does not rewrite predicate validity.
 
 ### F. Published but not externally observed
@@ -1642,12 +1666,14 @@ Progress remains independent from timing and verdict.
 - `resolution_timing = on_time`
 - `publication_progress = externally_observed`
 - `publication_timing = late`
-- `findings = [late_publication]`
-- `primary_reason_code = late_publication`
+- `findings = [publication_overdue, late_publication]`
+- `primary_reason_code = publication_overdue`
 - `unverifiable_checks = []`
 - explicit `as_of` is required
 
 Later observation changes progress from `published` to `externally_observed`, but it does not erase the proven `late_publication` finding.
+When a proven overdue interval already exists before publication occurs, `publication_overdue` remains in findings and precedes `late_publication` by the section 13.2 ordering rule.
+`publication_timing = late` records the current published-after-deadline timing state; it does not erase the historical overdue finding.
 
 ### I. Historical result after current witness unavailability
 
