@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "receiptos-chronicle-admission-vector-v0.schema.json",
+  "title": "ReceiptOS Chronicle admission vector v0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "case_id",
+    "description",
+    "input",
+    "expected"
+  ],
+  "properties": {
+    "schema": {
+      "const": "receiptos_chronicle_admission_vector.v0"
+    },
+    "case_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence",
+        "proof_object"
+      ],
+      "properties": {
+        "evidence": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "proof_object": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "options": {
+          "type": "object"
+        }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "outcome",
+        "failure_class",
+        "reason_code",
+        "chronicle_entry"
+      ],
+      "properties": {
+        "outcome": {
+          "enum": [
+            "admitted",
+            "rejected"
+          ]
+        },
+        "failure_class": {
+          "enum": [
+            "none",
+            "malformed_input",
+            "unverifiable",
+            "evidence_mismatch",
+            "cross_object_inconsistency",
+            "reported_state_inconsistency",
+            "identity_inconsistency"
+          ]
+        },
+        "reason_code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "chronicle_entry": {
+          "type": [
+            "object",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}
