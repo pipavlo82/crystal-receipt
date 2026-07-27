@@ -103,6 +103,29 @@
       "visual_effect": "layer_rhythm"
     }
   },
+  "visible_morphology": {
+    "core_family": "vault",
+    "shell_family": "buttress",
+    "capsule_tilt": -7.43,
+    "capsule_slump": 9.74,
+    "core_offset_x": 10.11,
+    "core_offset_y": 4.07,
+    "core_width_scale": 1.0018,
+    "core_height_scale": 1.0291,
+    "spine_shift": 0.0582,
+    "mass_bias": 1.1441,
+    "shoulder_bias": 0.5391,
+    "cavity_bias": 0.6879,
+    "terrace_bias": 0.6231,
+    "branch_count": 2,
+    "branch_side": -1,
+    "shelf_count": 2,
+    "lobe_count": 1,
+    "lobe_skew": 0.2568,
+    "cavity_side": 1,
+    "seal_brightness": 0.9176,
+    "trust_accent": 0.5742
+  },
   "artifact_file": "crystal.svg",
   "receipt_card": {
     "file": "receipt-card.svg",
