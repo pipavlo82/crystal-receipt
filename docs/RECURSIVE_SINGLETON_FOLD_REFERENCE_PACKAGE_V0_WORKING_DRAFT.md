@@ -882,3 +882,887 @@ scoring mechanism, or reputation concept is introduced. The RSF profile
 remains a byte-pinned, internally reviewed, non-normative working profile —
 not yet frozen — and this document remains a working draft, creating no
 package bytes.
+
+## Corrective addendum ? constructor adapter and evaluation-input closure
+
+This addendum supersedes any earlier wording in this document that would let an
+implementation treat package-level construction options or evaluator inputs as
+underspecified.
+
+### A. Chronicle construction-options adapter semantics
+
+The actual Chronicle entry constructor semantics are:
+
+```ts
+created_from: options?.createdFrom ?? proofObject.source_evidence_ref ?? null
+```
+
+For v0, the reference package pins the adapter contract as follows.
+
+#### created_from
+
+Package field shape:
+
+- `created_from` is JSON string or `null`
+
+Pinned adapter behavior:
+
+- package string value:
+  - pass the exact string as `createdFrom`
+- package `null` value:
+  - omit `createdFrom`, or pass `null` with exactly equivalent nullish semantics
+  - the resulting Chronicle field is derived as:
+    - `proofObject.source_evidence_ref ?? null`
+
+Therefore, for v0:
+
+- package `created_from: null` means constructor fallback
+- package `created_from: null` does **not** force output `null`
+- package `created_from: null` and omission are semantically equivalent
+- when `proofObject.source_evidence_ref` is non-null, v0 has no force-null representation
+- a future tagged fallback / force-null / exact-string model would be a new profile or package revision and is not introduced here
+
+#### entry_id
+
+Package field shape:
+
+- `entry_id` is JSON string or `null`
+
+Pinned adapter behavior:
+
+- string:
+  - pass exact string as `entryId`
+- `null`:
+  - omit `entryId`
+  - constructor default path applies
+- empty string:
+  - preserved exactly because empty string is non-nullish
+
+#### evidence_capsule_ref
+
+Package field shape:
+
+- `evidence_capsule_ref` is JSON string or `null`
+
+Pinned adapter behavior:
+
+- string:
+  - pass exact string as `evidenceCapsuleRef`
+- `null`:
+  - omit `evidenceCapsuleRef`
+  - constructor default path applies
+- empty string:
+  - preserved exactly because empty string is non-nullish
+
+#### provenance_summary_ref
+
+Package field shape:
+
+- `provenance_summary_ref` is JSON string or `null`
+
+Pinned adapter behavior:
+
+- string:
+  - pass exact string as `provenanceSummaryRef`
+- `null`:
+  - omit `provenanceSummaryRef`
+  - constructor default path applies
+- empty string:
+  - preserved exactly because empty string is non-nullish
+
+#### labels
+
+Package field shape:
+
+- `labels` is an array of exact string members
+
+Pinned adapter behavior:
+
+- evaluator passes a fresh array copy into construction
+- exact string members are preserved
+- exact array order is preserved
+- no normalization, deduplication, or sorting is performed by package contract
+
+#### notes
+
+Package field shape:
+
+- `notes` is JSON string or `null`
+
+Pinned adapter behavior:
+
+- string, including empty string:
+  - preserved exactly
+- `null`:
+  - produces output `null`
+- omission:
+  - also produces output `null`
+
+#### Summary of nullish semantics
+
+For all `??`-controlled constructor string options in this package:
+
+- explicit `null` and omission are equivalent where nullish-coalescing is used
+- empty string is non-nullish and is therefore preserved exactly
+
+### B. Exact evaluation-input artifact
+
+The reference package defines one closed canonical evaluation-input artifact:
+
+- `recursive_singleton_fold_evaluation_input.v0`
+
+This artifact is distinct from:
+
+- the source-admission bundle schema;
+- the evaluation output envelope schema; and
+- the final aggregate object.
+
+#### Exact top-level shape
+
+```json
+{
+  "schema": "recursive_singleton_fold_evaluation_input.v0",
+  "profile_id": "recursive-singleton-fold-profile-v0",
+  "profile_sha256": "170909acb19d28cae58c8870c5169dfde8ae1416e84a5c798a89f336bc1974c5",
+  "source_admission_bundle": {
+    "...": "complete recursive_singleton_fold_source_admission_bundle.v0"
+  },
+  "fold_policy_declaration": {
+    "...": "complete inline recursive_singleton_fold_policy.v0"
+  },
+  "comparability_class_declaration": {
+    "...": "complete inline recursive_singleton_comparability_class.v0"
+  },
+  "transition_rule_declaration": {
+    "...": "complete inline recursive_singleton_transition_rule.v0"
+  },
+  "profile_local_notes": null
+}
+```
+
+#### Exact contract
+
+This object is the sole canonical evaluator input artifact for one singleton-fold evaluation in v0.
+
+It pins, in one closed object:
+
+- source-admission bundle;
+- fold-policy declaration;
+- comparability-class declaration;
+- transition-rule declaration;
+- required profile/version identifiers;
+- permitted `profile_local_notes`;
+- canonicalization boundary for the evaluator input.
+
+#### Requiredness and nullability
+
+Pinned required top-level fields:
+
+- `schema`
+- `profile_id`
+- `profile_sha256`
+- `source_admission_bundle`
+- `fold_policy_declaration`
+- `comparability_class_declaration`
+- `transition_rule_declaration`
+- `profile_local_notes`
+
+Pinned nullability:
+
+- `profile_local_notes` may be `null`
+- other top-level fields are required and non-null
+
+#### Unknown-field policy
+
+Unknown top-level fields are malformed.
+
+Unknown fields inside embedded declarations or bundles are handled by the exact validation rules of those embedded artifacts; they are not silently ignored by the package contract.
+
+#### Canonicalization boundary
+
+The canonicalization boundary for the evaluator input is the complete
+`recursive_singleton_fold_evaluation_input.v0` object as parsed and validated.
+
+A frozen fixture package must not rely on separate function arguments as the normative reproduction surface.
+Separate function arguments may still exist inside a host implementation, but they are not sufficient as the canonical package contract for frozen fixture bytes or independent reproduction.
+
+## Corrective addendum ? evaluation-input closure, state mapping, and finding order
+
+This addendum supersedes any earlier wording in this document that leaves the
+evaluation input, evaluation state, finding vocabulary, or evaluation ordering
+open to implementation-specific interpretation.
+
+### A. Exact evaluation-input artifact
+
+The canonical parse target for one singleton-fold evaluation is the closed
+package-local input artifact:
+
+- `recursive_singleton_fold_evaluation_input.v0`
+
+It is distinct from:
+
+- the nested source-admission bundle;
+- the evaluation envelope emitted by the evaluator; and
+- the final aggregate object.
+
+#### Exact top-level shape
+
+```json
+{
+  "schema": "recursive_singleton_fold_evaluation_input.v0",
+  "profile_id": "recursive-singleton-fold-profile-v0",
+  "profile_sha256": "170909acb19d28cae58c8870c5169dfde8ae1416e84a5c798a89f336bc1974c5",
+  "source_admission_bundle": {
+    "...": "complete recursive_singleton_fold_source_admission_bundle.v0"
+  },
+  "fold_policy_declaration": {
+    "...": "complete recursive_singleton_fold_policy.v0"
+  },
+  "comparability_class_declaration": {
+    "...": "complete recursive_singleton_comparability_class.v0"
+  },
+  "transition_rule_declaration": {
+    "...": "complete recursive_singleton_transition_rule.v0"
+  },
+  "profile_local_notes": null
+}
+```
+
+#### Required fields and closed-field policy
+
+All eight top-level fields are required:
+
+- `schema`
+- `profile_id`
+- `profile_sha256`
+- `source_admission_bundle`
+- `fold_policy_declaration`
+- `comparability_class_declaration`
+- `transition_rule_declaration`
+- `profile_local_notes`
+
+Unknown top-level fields are malformed.
+
+Pinned literal requirements:
+
+- `schema` MUST equal exactly:
+  - `recursive_singleton_fold_evaluation_input.v0`
+- `profile_id` MUST equal exactly:
+  - `recursive-singleton-fold-profile-v0`
+- `profile_sha256` MUST equal exactly:
+  - `170909acb19d28cae58c8870c5169dfde8ae1416e84a5c798a89f336bc1974c5`
+
+`profile_local_notes` is required and MUST be exactly one of:
+
+- `null`
+- JSON string
+
+Empty string is permitted and is distinct from `null`.
+
+No timestamp, runtime, host, path, or UI metadata is permitted.
+No Unicode normalization is applied.
+Validation occurs before canonicalization.
+Canonicalization uses repository `canonicalize()`.
+Input canonical bytes are UTF-8 canonical JSON bytes.
+
+#### Declaration closure
+
+The declaration objects inside this evaluation input are the exact complete
+objects pinned by the RSF profile:
+
+- `recursive_singleton_fold_policy.v0`
+- `recursive_singleton_comparability_class.v0`
+- `recursive_singleton_transition_rule.v0`
+
+They are not shorthand labels and are not replaceable by partial argument lists.
+
+#### Notes application order
+
+The package pins notes application as follows:
+
+1. construct and verify the deterministic aggregate with `profile_local_notes: null`;
+2. derive all commitments and `aggregate_id`;
+3. apply the evaluation input's final `profile_local_notes`;
+4. independently validate the complete final aggregate after that value is present.
+
+Pinned future vector notes:
+
+- SF-V1 input notes are `null`
+- SF-V1B input notes are `null`
+- SF-C1 Object A notes are `null`
+- SF-C1 Object B notes are `"sf-c1"`
+
+### B. Exact four-state mapping
+
+The evaluator uses one exact exhaustive state model.
+
+#### malformed
+
+Use only for structural or literal-contract failures occurring before a
+well-typed evaluation candidate exists, including:
+
+- malformed evaluation input;
+- wrong schema/profile literals;
+- unknown or missing evaluation-input fields;
+- malformed source-admission bundle;
+- wrong pinned shared-admission dependency literals;
+- malformed construction options;
+- malformed evidence, proof object, source entry, or declarations.
+
+#### unverifiable
+
+Use only when:
+
+- the complete evaluation input is structurally valid;
+- the receipt-root admission prerequisite is unavailable;
+- no validity or eligibility judgment can be made.
+
+#### evaluated / rejected
+
+Use for structurally valid and evaluable input that fails:
+
+- integrity recomputation;
+- cross-object consistency;
+- commitment equality;
+- eligibility;
+- transition;
+- no-elevation;
+- identity derivation;
+- final complete-aggregate validation.
+
+#### evaluated / accepted
+
+Use only after all checks pass and one complete final aggregate validates.
+
+#### Envelope consequences
+
+Pinned consequences:
+
+- `evaluated / accepted` => aggregate non-null, finding null
+- every other state => aggregate null, exactly one finding
+- host exceptions never choose state or canonical code
+- no partial aggregate is emitted
+
+### C. Closed finding vocabulary update
+
+This addendum adds the following required codes.
+
+#### malformed_evaluation_input
+
+- legal only under:
+  - `evaluation_state: "malformed"`
+
+#### complete_aggregate_validation_mismatch
+
+- legal only under:
+  - `evaluation_state: "evaluated"`
+  - `profile_verdict: "rejected"`
+
+The closed vocabulary becomes:
+
+- malformed: 9 codes
+- unverifiable: 1 code
+- evaluated/rejected: 22 codes
+- total: 32 codes
+
+These remain:
+
+- **PROFILE-LOCAL ? NOT A RECEIPTOS REASON CODE**
+
+### D. Replace the 27-position order with 28 positions
+
+The high-level evaluation order is pinned exactly as follows.
+
+1. complete evaluation-input shape, unknown-field policy, schema literal, profile_id, profile_sha256, and profile_local_notes type;
+2. source-admission bundle shape and exact pinned admission dependency literals;
+3. required nested source-admission containers;
+4. source evidence object shape and literals;
+5. proof object shape and literals;
+6. source `chronicle_entry.v0` shape and literals;
+7. construction-options shape and allowed literals;
+8. fold-policy declaration shape;
+9. fold-policy commitment recomputation and equality;
+10. comparability-class declaration shape;
+11. comparability-class commitment recomputation and equality;
+12. transition-rule declaration shape;
+13. transition-rule commitment recomputation and equality;
+14. source-entry content commitment recomputation and equality;
+15. input semantic-statement construction;
+16. semantic-result commitment recomputation and equality;
+17. singleton inclusion-set shape;
+18. inclusion-set commitment recomputation and equality;
+19. pre-aggregation breakdown shape;
+20. pre-aggregation breakdown commitment recomputation and equality;
+21. policy evaluation eligibility;
+22. comparability evaluation eligibility;
+23. transition execution and semantic-result equality;
+24. deterministic `transition_result` recomputation and equality;
+25. `no_stronger_semantic_class_created` recomputation and equality;
+26. aggregate identity seed construction and `aggregate_id` derivation;
+27. complete canonical aggregate construction and cross-object equality checks;
+28. final complete-aggregate validation.
+
+#### Deterministic sub-order inside compound stages
+
+The following sub-order is mandatory and canonical:
+
+- shape/literal validation precedes commitment recomputation;
+- semantic-statement object validation precedes semantic-result commitment recomputation;
+- inclusion-set object validation precedes inclusion-set commitment recomputation;
+- breakdown object validation precedes breakdown commitment recomputation.
+
+If both subchecks could fail, the earlier subcheck in this order supplies the canonical primary finding.
+
+#### Terminal complete-aggregate validation
+
+If all earlier positions pass but final complete-aggregate validation fails:
+
+- the state is `evaluated / rejected`;
+- the exact finding is `complete_aggregate_validation_mismatch`;
+- this state is reachable and must be emitted deterministically.
+
+### E. Scope effect
+
+This addendum closes package-contract interpretation only.
+
+It does not:
+
+- change the RSF profile formula;
+- change Chronicle schemas;
+- change shared-admission v0;
+- decide shared-admission v1;
+- create schemas, evaluators, fixtures, vectors, manifests, runners, or conformance artifacts.
+
+## Corrective addendum ? final readiness closure
+
+This addendum supersedes any earlier wording in this document that leaves
+constructor adaptation, evaluation input closure, state mapping, finding
+vocabulary, evaluation order, shared-admission binding, pairwise conflict
+artifacts, or manifest identity mechanics open to implementation-specific
+interpretation.
+
+### A. Exact evaluation-input artifact
+
+The canonical parse target for one singleton-fold evaluation is the closed
+package-local input artifact:
+
+- `recursive_singleton_fold_evaluation_input.v0`
+
+It is distinct from:
+
+- the nested source-admission bundle;
+- the evaluation envelope emitted by the evaluator; and
+- the final aggregate object.
+
+#### Exact top-level shape
+
+```json
+{
+  "schema": "recursive_singleton_fold_evaluation_input.v0",
+  "profile_id": "recursive-singleton-fold-profile-v0",
+  "profile_sha256": "170909acb19d28cae58c8870c5169dfde8ae1416e84a5c798a89f336bc1974c5",
+  "source_admission_bundle": {
+    "...": "complete recursive_singleton_fold_source_admission_bundle.v0"
+  },
+  "fold_policy_declaration": {
+    "...": "complete recursive_singleton_fold_policy.v0"
+  },
+  "comparability_class_declaration": {
+    "...": "complete recursive_singleton_comparability_class.v0"
+  },
+  "transition_rule_declaration": {
+    "...": "complete recursive_singleton_transition_rule.v0"
+  },
+  "profile_local_notes": null
+}
+```
+
+All eight top-level fields are required:
+
+- `schema`
+- `profile_id`
+- `profile_sha256`
+- `source_admission_bundle`
+- `fold_policy_declaration`
+- `comparability_class_declaration`
+- `transition_rule_declaration`
+- `profile_local_notes`
+
+Pinned literals:
+
+- `schema` MUST equal exactly `recursive_singleton_fold_evaluation_input.v0`
+- `profile_id` MUST equal exactly `recursive-singleton-fold-profile-v0`
+- `profile_sha256` MUST equal exactly `170909acb19d28cae58c8870c5169dfde8ae1416e84a5c798a89f336bc1974c5`
+
+Pinned notes semantics:
+
+- `profile_local_notes` is required and MUST be exactly one of:
+  - `null`
+  - JSON string
+- empty string is permitted and is distinct from `null`
+
+Unknown top-level fields are malformed.
+
+No timestamp, runtime, host, path, or UI metadata is permitted.
+No Unicode normalization is applied.
+Validation occurs before canonicalization.
+Canonicalization uses repository `canonicalize()`.
+Input canonical bytes are UTF-8 canonical JSON bytes.
+
+The declaration objects inside this evaluation input are the exact complete
+objects pinned by the RSF profile:
+
+- `recursive_singleton_fold_policy.v0`
+- `recursive_singleton_comparability_class.v0`
+- `recursive_singleton_transition_rule.v0`
+
+They are not shorthand labels and are not replaceable by separate unstructured
+function arguments.
+
+### B. Notes application order
+
+The package pins notes application exactly as follows:
+
+1. construct and verify the deterministic aggregate with `profile_local_notes: null`;
+2. derive all commitments and `aggregate_id`;
+3. apply the evaluation input's final `profile_local_notes`;
+4. independently validate the complete final aggregate after that value is present.
+
+Pinned future vector notes:
+
+- SF-V1 input notes are `null`
+- SF-V1B input notes are `null`
+- SF-C1 Object A notes are `null`
+- SF-C1 Object B notes are `"sf-c1"`
+
+### C. Exact four-state mapping
+
+The evaluator uses one exact exhaustive state model.
+
+#### malformed
+
+Use only for structural or literal-contract failures occurring before a
+well-typed evaluation candidate exists, including:
+
+- malformed evaluation input;
+- wrong schema/profile literals;
+- unknown or missing evaluation-input fields;
+- malformed source-admission bundle;
+- wrong pinned shared-admission dependency literals;
+- malformed construction options;
+- malformed evidence, proof object, source entry, or declarations.
+
+#### unverifiable
+
+Use only when:
+
+- the complete evaluation input is structurally valid;
+- the receipt-root admission prerequisite is unavailable;
+- no validity or eligibility judgment can be made.
+
+#### evaluated / rejected
+
+Use for structurally valid and evaluable input that fails:
+
+- integrity recomputation;
+- cross-object consistency;
+- commitment equality;
+- eligibility;
+- transition;
+- no-elevation;
+- identity derivation;
+- final complete-aggregate validation.
+
+#### evaluated / accepted
+
+Use only after all checks pass and one complete final aggregate validates.
+
+Pinned envelope consequences:
+
+- `evaluated / accepted` => aggregate non-null, finding null
+- every other state => aggregate null, exactly one finding
+- host exceptions never choose state or canonical code
+- no partial aggregate is emitted
+
+### D. Closed finding vocabulary update
+
+This addendum adds the following required codes.
+
+#### malformed_evaluation_input
+
+- legal only under:
+  - `evaluation_state: "malformed"`
+
+#### complete_aggregate_validation_mismatch
+
+- legal only under:
+  - `evaluation_state: "evaluated"`
+  - `profile_verdict: "rejected"`
+
+The closed vocabulary becomes:
+
+- malformed: 9 codes
+- unverifiable: 1 code
+- evaluated/rejected: 22 codes
+- total: 32 codes
+
+These remain:
+
+- **PROFILE-LOCAL ? NOT A RECEIPTOS REASON CODE**
+
+### E. Exact 28-position evaluation order
+
+The high-level evaluation order is pinned exactly as follows.
+
+1. complete evaluation-input shape, unknown-field policy, schema literal, profile_id, profile_sha256, and profile_local_notes type;
+2. source-admission bundle shape and exact pinned admission dependency literals;
+3. required nested source-admission containers;
+4. exact source-entry construction-options shape;
+5. source evidence shape;
+6. Portable Proof Object shape;
+7. claimed source-entry shape;
+8. receipt-root prerequisite and independent recomputation;
+9. cross-object consistency;
+10. proof-object identity;
+11. proof reference;
+12. Chronicle admission gate call;
+13. reconstructed source-entry canonical-byte equality;
+14. source-entry content commitment;
+15. fold-policy declaration shape, then commitment;
+16. comparability-class declaration shape, then commitment;
+17. transition-rule declaration shape, then commitment;
+18. input semantic statement, then semantic-result commitment;
+19. inclusion set, then inclusion-set commitment;
+20. policy eligibility;
+21. comparability eligibility;
+22. transition construction and forbidden source identity reuse;
+23. output semantic statement and semantic-result preservation;
+24. transition result;
+25. no-elevation invariant;
+26. pre-aggregation breakdown, then breakdown commitment;
+27. aggregate identity;
+28. apply final profile_local_notes and independently validate the complete aggregate.
+
+Pinned exact failure codes:
+
+- position 1:
+  - `malformed_evaluation_input`
+- position 2 or 3:
+  - `malformed_source_admission_bundle`
+- position 4:
+  - `malformed_source_entry_construction_options`
+- position 8:
+  - `source_admission_prerequisite_unavailable` when absent
+  - otherwise `source_receipt_root_mismatch`
+- position 28:
+  - `complete_aggregate_validation_mismatch`
+
+Position 12 has no separate host-exception code because every recognized gate
+failure must already map to positions 8?11. An unrecognized implementation
+exception is an implementation failure, not canonical evaluator output.
+
+For every compound position, the sub-order is mandatory:
+
+- subchecks execute left-to-right exactly as written;
+- the first failing subcheck determines the one finding;
+- shape validation precedes commitment recomputation;
+- structure construction precedes structure commitment verification.
+
+### F. Shared-admission v0 portability binding
+
+The evaluator's contract literals are:
+
+- admission profile:
+  - `receiptos-chronicle-admission-v0`
+- fixture-set SHA-256:
+  - `ff35ca8ae5cef10009479d50c10e111869875f6f62fb9d6bcb00f5aa5a1b4b4f`
+
+Evaluator comparison is against these exact package-contract literals.
+The repository manifest is provenance for why those literals were selected, not mutable runtime authority.
+Future RSF package manifest must carry this exact dependency identity.
+Repository evolution must not change evaluation meaning.
+There is no silent upgrade to shared admission v1.
+Shared admission v1 remains unresolved and separate.
+
+### G. SF-V1 contract
+
+SF-V1 consumes exactly one complete `recursive_singleton_fold_evaluation_input.v0`
+with:
+
+- `profile_local_notes: null`
+
+The expected output is exactly one accepted evaluation envelope.
+All declaration objects come from the evaluation input, not separate unstructured function arguments.
+
+### H. SF-V1B package mechanics
+
+The future SF-V1B package materials are separate files:
+
+- `vectors/sf-v1b/input-a.json`
+- `vectors/sf-v1b/input-b.json`
+- `vectors/sf-v1b/expected-a.json`
+- `vectors/sf-v1b/expected-b.json`
+
+Pinned requirements:
+
+- `input-a.json` and `input-b.json` are byte-identical
+- their manifest SHA-256 values are identical
+- both are parsed independently from their own file bytes
+- each complete evaluation input contains its own complete nested source bundle and declarations
+- both use `profile_local_notes: null`
+- two separate evaluator invocations are mandatory
+- `expected-a.json` and `expected-b.json` are byte-identical accepted envelopes
+- no object instance is reused
+- this remains replay idempotency, not the independent second implementation
+
+### I. SF-C1 pairwise input and output closure
+
+The exact pairwise input schema is:
+
+- `recursive_singleton_fold_pairwise_input.v0`
+
+Exact ordered shape:
+
+```json
+{
+  "schema": "recursive_singleton_fold_pairwise_input.v0",
+  "object_a": {
+    "...": "complete recursive_singleton_aggregate.v0"
+  },
+  "object_b": {
+    "...": "complete recursive_singleton_aggregate.v0"
+  }
+}
+```
+
+Pinned requirements:
+
+- all three fields required
+- no unknown fields
+- this is an ordered pair
+- `object_a` validates before `object_b`
+- no symmetric normalization occurs in v0
+- swapping A and B creates a distinct deterministic input
+- outputs preserve the supplied A/B order
+- SF-C1 notes remain fixed:
+  - A notes = `null`
+  - B notes = `"sf-c1"`
+
+The exact output schema remains:
+
+- `recursive_singleton_fold_pairwise_conflict.v0`
+
+#### Evaluated form
+
+Pinned fields:
+
+- `conflict_state: "evaluated"`
+- `conflict_verdict: "same_identity_nonidentical_content_conflict"` or `"no_conflict"`
+- `object_a_aggregate_id`: exact validated A identity
+- `object_b_aggregate_id`: exact validated B identity
+- `finding: null`
+
+#### Malformed form
+
+Pinned fields:
+
+- `conflict_state: "malformed"`
+- `conflict_verdict: null`
+- `object_a_aggregate_id: null`
+- `object_b_aggregate_id: null`
+- exactly one finding
+
+Exact finding schema:
+
+```json
+{
+  "schema": "recursive_singleton_fold_pairwise_finding.v0",
+  "code": "malformed_object_a"
+}
+```
+
+Closed pairwise malformed codes:
+
+- `malformed_object_a`
+- `malformed_object_b`
+
+Validation order:
+
+1. pairwise input outer shape;
+2. `object_a` complete aggregate validation;
+3. `object_b` complete aggregate validation;
+4. pairwise comparison.
+
+If both objects are invalid, `malformed_object_a` wins because A is validated first.
+
+Single-fold malformed finding schemas are not reused for pairwise malformed input.
+The pairwise finding remains profile-local and outside both aggregate identities.
+
+### J. Manifest mechanics
+
+The future package manifest contract is pinned as follows.
+
+- `manifest.json` is package-carried
+- `manifest.json` MUST NOT appear in its own `files` array
+- `manifest.json` MUST NOT contribute to its own `fixture_set_sha256`
+- there is no self-hash or circular identity
+- every other package identity-bearing file appears exactly once in `files`
+- `files` paths are sorted by unsigned UTF-8 byte order of repository-relative package paths
+- `fixture_set_sha256` is SHA-256 over the exact UTF-8 concatenation:
+  - `<path><TAB><lowercase-sha256><LF>`
+  - for every entry of the sorted `files` array
+- a package README, when package-carried, is listed and contributes to `fixture_set_sha256`
+- all schemas, dependency records, evaluation inputs, pairwise inputs, expected outputs, and frozen profile/hash records are listed and contribute
+- implementation source, validators, runners, tests, diagnostics, and conformance comparison tooling are outside package identity and are not listed
+- no optional unmanifested package file is permitted
+
+This matches the actual shared-admission precedent:
+- the README is included through `manifest.files`
+- the manifest itself is not
+
+### K. Candidate path additions
+
+Candidate schema paths added:
+
+- `tests/fixtures/recursive-singleton-fold-v0/recursive-singleton-fold-evaluation-input-v0.schema.json`
+- `tests/fixtures/recursive-singleton-fold-v0/recursive-singleton-fold-pairwise-input-v0.schema.json`
+- `tests/fixtures/recursive-singleton-fold-v0/recursive-singleton-fold-pairwise-finding-v0.schema.json`
+
+Candidate vector-material paths added:
+
+- `tests/fixtures/recursive-singleton-fold-v0/vectors/sf-v1/input.json`
+- `tests/fixtures/recursive-singleton-fold-v0/vectors/sf-v1/expected.json`
+- `tests/fixtures/recursive-singleton-fold-v0/vectors/sf-v1b/input-a.json`
+- `tests/fixtures/recursive-singleton-fold-v0/vectors/sf-v1b/input-b.json`
+- `tests/fixtures/recursive-singleton-fold-v0/vectors/sf-v1b/expected-a.json`
+- `tests/fixtures/recursive-singleton-fold-v0/vectors/sf-v1b/expected-b.json`
+- `tests/fixtures/recursive-singleton-fold-v0/vectors/sf-c1/input.json`
+- `tests/fixtures/recursive-singleton-fold-v0/vectors/sf-c1/expected.json`
+
+Every path remains candidate, not canonical.
+
+### L. Boundary preservation
+
+This addendum does not change or supersede:
+
+- any RSF profile formula;
+- source-entry content commitment;
+- semantic-result commitment;
+- declaration commitments;
+- inclusion-set commitment;
+- breakdown commitment;
+- transition rule;
+- transition result;
+- no-elevation invariant;
+- aggregate identity seed;
+- aggregate-id derivation;
+- profile_local_notes semantics;
+- SF-C1 null versus `"sf-c1"` pair;
+- RAB-A1 or RAB-V2 status;
+- Chronicle schemas;
+- shared admission v0 bytes;
+- unresolved shared admission v1 status.
+
+This remains a non-normative, internally reviewed working draft.
+It is not frozen in this pass.
+
