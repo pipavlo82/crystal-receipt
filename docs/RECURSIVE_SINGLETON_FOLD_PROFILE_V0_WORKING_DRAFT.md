@@ -536,6 +536,66 @@ The candidate aggregate identity must not silently absorb:
 No identity-bearing structured object may be committed only by an unverifiable label.
 No cryptographic commitment may exist without the committed structured material being available in the future portable package.
 
+### 11.5 Exact `profile_local_notes` contract
+
+`profile_local_notes` MUST be present in every complete `recursive_singleton_aggregate.v0`.
+
+Its value MUST be exactly one of:
+
+- JSON `null`; or
+- a JSON string.
+
+The following MUST NOT appear as a `profile_local_notes` value:
+
+- field omission;
+- `undefined`;
+- a JSON number;
+- a JSON boolean;
+- a JSON array;
+- a JSON object.
+
+Deterministic profile construction, including SF-V1 and SF-V1B, MUST emit:
+
+```json
+"profile_local_notes": null
+```
+
+A non-null string is permitted only as consumer-supplied, profile-local canonical content, attached only after the profile-mandated deterministic aggregate has already been independently constructed and verified.
+
+A complete aggregate whose `profile_local_notes` is a non-null string MUST be validated as a complete aggregate at the point that value is present. It MUST NOT be described as valid merely because a prior version of the same aggregate with `profile_local_notes: null` was previously validated. Validation of the final complete aggregate MUST independently recompute and verify all identity-bearing commitments, all derived fields, and `aggregate_id`.
+
+`profile_local_notes` MUST NOT affect:
+
+- `source_entry_content_commitment`;
+- `semantic_result_commitment`;
+- `inclusion_set_commitment`;
+- `fold_policy_commitment`;
+- `comparability_class_commitment`;
+- `transition_rule_commitment`;
+- `pre_aggregation_breakdown_commitment`;
+- policy eligibility;
+- comparability eligibility;
+- `transition_result`;
+- `no_stronger_semantic_class_created`;
+- `aggregate_id`;
+- source or aggregate admission semantics;
+- interpretation of evidence, history, comparability, or reputation.
+
+It remains part of the complete canonical `recursive_singleton_aggregate.v0` content.
+
+An empty string (`""`) is a permitted `profile_local_notes` value. JSON `null` and JSON `""` are distinct canonical contents.
+
+A string value is interpreted as an exact JSON string value encoded through the profile's UTF-8 canonical JSON process. No Unicode normalization is performed or permitted implicitly; exact Unicode scalar values therefore remain significant to complete canonical aggregate bytes.
+
+`profile_local_notes` remains:
+
+- non-normative;
+- semantically inert;
+- non-identity-bearing;
+- an intentional canonical-content conflict surface, per §20.
+
+This subsection does not introduce a new commitment over `profile_local_notes` and does not add it to the aggregate identity seed defined in §12.1.
+
 ## 12. PROPOSED PROFILE-LOCAL FIELD — aggregate_id
 
 ### 12.1 Exact derivation seed
@@ -909,6 +969,14 @@ Required source inputs:
 - enough source-admission materials to independently verify the entry rather than trust `entry_id` alone;
 - exact declaration objects and bytes for policy/class/rule.
 
+The deterministic SF-V1 aggregate MUST contain exactly:
+
+```json
+"profile_local_notes": null
+```
+
+This value is part of complete canonical aggregate content but is excluded from every commitment and from `aggregate_id`, per §11.5 and §12.3.
+
 No fixture bytes are created by this document.
 
 ## 19. SF-V1B — future vector contract
@@ -923,6 +991,14 @@ This future vector must pin that two executions over byte-equivalent canonical i
 - the same commitments;
 - the same `transition_result`;
 - the same `no_stronger_semantic_class_created` invariant.
+
+Both independent evaluator invocations MUST construct complete aggregate objects containing exactly:
+
+```json
+"profile_local_notes": null
+```
+
+The two invocations are: two separately parsed byte-equivalent canonical inputs, evaluated by two separate evaluator invocations, with equality required of complete canonical aggregate bytes, all commitments, `aggregate_id`, `transition_result`, and the no-elevation result. Separate operating-system processes and separate programming languages are not required by this vector; that concern belongs to the independent second implementation described in §23, not to SF-V1B.
 
 This is:
 
@@ -944,6 +1020,21 @@ Primary valid canonical-content conflict path:
 - different permitted non-identity-bearing canonical content;
 - for example different `profile_local_notes`;
 - therefore non-identical complete canonical aggregate bytes.
+
+The future SF-C1 vector must pin exactly this pair:
+
+- Object A: `"profile_local_notes": null`
+- Object B: `"profile_local_notes": "sf-c1"`
+
+Both objects must be otherwise byte-equivalent and individually valid complete aggregate objects, with:
+
+- the same identity-bearing fields;
+- the same independently recomputed commitments;
+- the same `aggregate_id`;
+- different complete canonical aggregate bytes;
+- both complete objects independently validating.
+
+Changing `profile_local_notes` from `null` to `"sf-c1"` does not require changing or recomputing any identity-bearing value, but the final complete aggregate containing `"sf-c1"` must still pass full validation, per §11.5, at the point that value is present.
 
 Expected semantics:
 
