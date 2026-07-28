@@ -525,14 +525,14 @@ under:
 `breakdown_mismatch`, `breakdown_commitment_mismatch`, `aggregate_id_mismatch`.
 
 This is a **single deterministic primary finding** vocabulary, not an
-unordered multi-finding surface — see §10's rationale for why RSF v0's
+unordered multi-finding surface — see §12's fixed-order rationale for why RSF v0's
 strictly sequential, single-source-object pipeline (unlike the Unanchored
 Witness package's genuinely concurrent multi-artifact surface) needs at most
 one terminal finding per evaluation, never an array requiring a total order
 over co-occurring findings.
 
 The SF-C1 same-identity/non-identical-content conflict is **not** in this
-enum. §12 shows why: it is evaluated by a structurally separate operation
+enum. §15 shows why: it is evaluated by a structurally separate operation
 (the pairwise conflict evaluator), consuming two already-valid aggregates,
 never a candidate still being validated for a single fold. Overloading this
 enum with it would conflate two different operations' failure surfaces.
