@@ -26,13 +26,18 @@ vector, or manifest is created by this pass.
 
 This document is downstream of, and does not modify:
 
-- `docs/RECURSIVE_SINGLETON_FOLD_PROFILE_V0_WORKING_DRAFT.md` — the frozen
-  semantic profile this package evaluates against, including its §11.5
-  `profile_local_notes` contract, its §12 aggregate-identity formula, and its
-  §17 transition rule.
+- `docs/RECURSIVE_SINGLETON_FOLD_PROFILE_V0_WORKING_DRAFT.md` — the current
+  byte-pinned, internally reviewed, non-normative RSF working profile this
+  package evaluates against, including its §11.5 `profile_local_notes`
+  contract, its §12 aggregate-identity formula, and its §17 transition rule.
+  The RSF profile is **not yet frozen** and is not yet a conformance
+  standard; it is byte-pinned working-draft text, reviewed and stable enough
+  to build against, not a frozen specification.
 - `docs/RECURSIVE_AGGREGATE_BOUNDARY_V0_WORKING_DRAFT.md` — the parent
-  boundary document; RAB-A1 (aggregate-of-aggregates) remains deferred and is
-  not touched here.
+  boundary document. RAB-V2 (aggregate-of-aggregates) remains deferred.
+  RAB-A1 (entry-as-fold-raw-input) is a separate, mutually exclusive
+  representation fork. Neither RAB-V2 nor RAB-A1 is adopted by this
+  reference-package draft.
 - `docs/EXECUTABLE_SEMANTIC_NON_ELEVATION_PROFILES_WORKING_RECORD.md` and
   `docs/ASYNC_DECISION_WRITE_V0.md` — source of the
   same-identity/non-identical-content conflict rule reused in §12 below.
@@ -110,6 +115,7 @@ convention and the RSF profile's own `recursive_singleton_*` prefix.
   "schema": "recursive_singleton_fold_source_admission_bundle.v0",
   "bundle_version": "recursive-singleton-fold-source-admission-bundle-v0",
   "admission_profile_id": "receiptos-chronicle-admission-v0",
+  "admission_fixture_set_sha256": "ff35ca8ae5cef10009479d50c10e111869875f6f62fb9d6bcb00f5aa5a1b4b4f",
   "source_evidence": { "...": "complete HandoffEvidence object" },
   "source_proof_object": { "...": "complete PortableProofObjectV0 object" },
   "source_entry_construction_options": {
@@ -124,6 +130,15 @@ convention and the RSF profile's own `recursive_singleton_*` prefix.
 }
 ```
 
+`admission_fixture_set_sha256` binds the bundle to the exact current shared
+admission v0 package identity — the `fixture_set_sha256` value presently
+recorded in `tests/fixtures/receiptos-chronicle-admission-v0/manifest.json`
+(`package_version: "receiptos-chronicle-admission-v0"`). A bundle whose
+`admission_profile_id` and `admission_fixture_set_sha256` do not both match
+the shared admission package's actual current identity is malformed at the
+package-identity boundary and MUST be rejected before any source evaluation
+begins — see §6.1 and §12 position 1.
+
 `source_evidence` and `source_proof_object` use the **exact current
 repository object shapes** — `HandoffEvidence`
 (`src/receiptos/schema/types.ts`, lines 37–87) and `PortableProofObjectV0`
@@ -131,17 +146,21 @@ repository object shapes** — `HandoffEvidence`
 field for field. This document does not invent a new producer evidence
 model.
 
-`source_entry_construction_options` mirrors, field for field, the exact
-optional-parameter shape accepted by the existing `createChronicleEntryV0`
-constructor (`src/receiptos/capsule/chronicle-portfolio-v0.ts`, lines
-71–82: `entryId`, `evidenceCapsuleRef`, `provenanceSummaryRef`, `createdFrom`,
-`labels`, `notes`, renamed here to the entry field names they populate). It
-is carried explicitly, rather than omitted, because `createChronicleEntryV0`
-is not a pure function of `(evidence, proofObject)` alone — several output
-fields (`entry_id`, `evidence_capsule_ref`, `provenance_summary_ref`,
-`created_from`, `labels`, `notes`) fall back to computed defaults only when
-the corresponding option is absent. Byte-exact reconstruction (§6) requires
-the exact options used, not just their defaults.
+`source_entry_construction_options` carries, field for field, the exact
+package-level representation of the optional-parameter shape accepted by the
+existing `createChronicleEntryV0` constructor
+(`src/receiptos/capsule/chronicle-portfolio-v0.ts`, lines 71–82: `entryId`,
+`evidenceCapsuleRef`, `provenanceSummaryRef`, `createdFrom`, `labels`,
+`notes`). It is carried explicitly, rather than omitted, because
+`createChronicleEntryV0` is not a pure function of `(evidence, proofObject)`
+alone — several output fields (`entry_id`, `evidence_capsule_ref`,
+`provenance_summary_ref`, `created_from`, `labels`, `notes`) fall back to
+computed defaults only when the corresponding constructor option is absent.
+Byte-exact reconstruction (§6) requires the exact options used, not just
+their defaults. The bundle's JSON representation of this object is **not**
+passed verbatim into the constructor call — §5.4 defines its exact closed
+shape and the exact deterministic adapter that maps it onto the
+constructor's actual TypeScript parameter types.
 
 `claimed_source_entry` is the complete `chronicle_entry.v0` object the bundle
 asserts is validly admitted. It is never trusted directly — §6 defines how it
@@ -153,10 +172,11 @@ is independently re-derived and byte-compared.
 |---|---|---|---|---|---|---|---|
 | `schema` | yes | no | no | no (bundle is evaluator input, outside aggregate identity) | no (fixed literal) | yes, against literal | yes |
 | `bundle_version` | yes | no | no | no | no (fixed literal) | yes, against literal | yes |
-| `admission_profile_id` | yes | no | no | no | no | yes, against the identifier of the admission package actually reused (§13) | yes |
+| `admission_profile_id` | yes | no | no | no | no | yes, against `"receiptos-chronicle-admission-v0"`, the actual current shared admission package's `package_version` (§20) | yes |
+| `admission_fixture_set_sha256` | yes | no | no; exact lowercase 64-hex SHA-256 string | no — outside aggregate identity and all RSF commitments | no | yes, against the actual current `fixture_set_sha256` recorded in `tests/fixtures/receiptos-chronicle-admission-v0/manifest.json` | yes |
 | `source_evidence` | yes | no | no (must satisfy `HandoffEvidence`'s own required-field shape) | no | no — it is the recomputation input, not an output | not directly; it is the input to recomputation (§6) | yes |
 | `source_proof_object` | yes | no | no | no | no — it is a recomputation input | not directly; cross-checked in §6 | yes |
-| `source_entry_construction_options` | yes | no | yes — every sub-field may take its documented default (`null` or `[]`) | no | no | used verbatim to drive reconstruction (§6) | yes |
+| `source_entry_construction_options` | yes | no | see §5.4 for the exact closed shape and per-sub-field pinning | no | no | not used verbatim — passed through the exact null-to-omitted adapter in §5.4 before driving reconstruction (§6) | yes |
 | `claimed_source_entry` | yes | no | no | no (the bundle's copy is never itself identity-bearing; only the independently reconstructed, verified entry feeds `source_entry_content_commitment`) | no — this is the claim being checked, not a derived value | yes, against the reconstructed entry (§6) | yes |
 
 No field in this bundle is a "trusted producer-supplied admission verdict."
@@ -165,22 +185,108 @@ never treated as proof of admission — §6 step 8 explicitly requires
 byte-exact comparison of the *entire* reconstructed entry, not merely its
 `entry_id`.
 
+### 5.4 Exact `source_entry_construction_options` shape and adapter
+
+The real `createChronicleEntryV0` constructor's `options` parameter
+(`chronicle-portfolio-v0.ts` lines 71–82) is typed as an object whose
+sub-fields are optional TypeScript parameters — most of type `string`, not
+`string | null`. A bundle is JSON, which has no `undefined`, so this
+subsection pins the exact closed JSON shape carried in the bundle and the
+exact deterministic adapter used to drive the constructor from it. The
+bundle's `source_entry_construction_options` object is never passed
+verbatim into the constructor call.
+
+**Exact closed JSON shape:**
+
+```json
+{
+  "entry_id": null,
+  "evidence_capsule_ref": null,
+  "provenance_summary_ref": null,
+  "created_from": null,
+  "labels": [],
+  "notes": null
+}
+```
+
+**Exact per-field types:**
+
+| Field | JSON type | Empty permitted |
+|---|---|---|
+| `entry_id` | string or `null` | empty string permitted |
+| `evidence_capsule_ref` | string or `null` | empty string permitted |
+| `provenance_summary_ref` | string or `null` | empty string permitted |
+| `created_from` | string or `null` | empty string permitted |
+| `labels` | array containing only strings | empty array permitted |
+| `notes` | string or `null` | empty string permitted |
+
+All six fields are REQUIRED to be present in the bundle (though each may
+take its documented default). No unknown field may appear in
+`source_entry_construction_options`. `undefined` MUST NOT appear anywhere in
+this object. Every member of `labels` MUST be a JSON string; a non-string
+label member is malformed. Array order in `labels` is preserved exactly.
+Empty strings are permitted for every nullable string field because the
+current constructor does not itself prohibit them. JSON `null` and an empty
+string (`""`) remain distinct package-level inputs and MUST NOT be treated
+as equivalent.
+
+**Exact deterministic adapter into `createChronicleEntryV0`'s `options`
+parameter:**
+
+| Bundle field | Adapter rule |
+|---|---|
+| `entry_id` | omit `entryId` from the constructor call when `entry_id` is `null`; otherwise pass the exact string as `entryId` |
+| `evidence_capsule_ref` | omit `evidenceCapsuleRef` when `evidence_capsule_ref` is `null`; otherwise pass the exact string as `evidenceCapsuleRef` |
+| `provenance_summary_ref` | omit `provenanceSummaryRef` when `provenance_summary_ref` is `null`; otherwise pass the exact string as `provenanceSummaryRef` |
+| `created_from` | pass `created_from` exactly as `createdFrom`, including `null` — this field's constructor type already accepts `string \| null` directly, so no omission adapter applies |
+| `labels` | pass a fresh array containing the exact ordered string members as `labels` |
+| `notes` | pass `notes` exactly as `notes`, including `null` — this field's constructor type already accepts `string \| null` directly, so no omission adapter applies |
+
+Bundle JSON `null` is therefore **not** passed verbatim into constructor
+fields whose TypeScript contract is `string | undefined` (`entryId`,
+`evidenceCapsuleRef`, `provenanceSummaryRef`): for those three fields, `null`
+is the package-level representation of an omitted constructor option, and
+the adapter above converts it to omission before the call. For the two
+fields whose TypeScript contract already accepts `string | null`
+(`createdFrom`, `notes`), `null` is passed straight through unchanged. This
+mapping is deterministic, applies identically to every conformant
+implementation, and is part of the package contract, not an implementation
+detail left open by it.
+
+A `source_entry_construction_options` object that violates any rule in this
+subsection is malformed and MUST be rejected by §12 position 3 before the
+adapter runs and before `source_evidence`, `source_proof_object`, or
+`claimed_source_entry` are even inspected.
+
 ## 6. Independent Chronicle admission recomputation
 
 Given a source-admission bundle, a conformant evaluator MUST perform, in
 order:
 
-1. **Validate bundle shape.** Reject if any required top-level field of
+1. **Validate the bundle header and exact v0 package identity.** Reject if
+   any required top-level field of
    `recursive_singleton_fold_source_admission_bundle.v0` is absent, of the
-   wrong type, or if an unknown top-level field is present.
-2. **Independently recompute the ReceiptOS receipt root** from
+   wrong type, or if an unknown top-level field is present; and reject if
+   `admission_profile_id` does not equal `"receiptos-chronicle-admission-v0"`
+   or `admission_fixture_set_sha256` does not equal the actual current
+   `fixture_set_sha256` recorded in
+   `tests/fixtures/receiptos-chronicle-admission-v0/manifest.json`.
+2. **Validate the `source_entry_construction_options` object** against the
+   exact closed shape pinned in §5.4. A malformed options object is rejected
+   here, before evidence, proof object, or claimed entry are inspected.
+3. **Apply the exact null-to-omitted adapter** from §5.4 to produce the
+   actual constructor `options` argument used in step 5.
+4. **Validate `source_evidence`, `source_proof_object`, and
+   `claimed_source_entry` shapes** against their exact current repository
+   types.
+5. **Independently recompute the ReceiptOS receipt root** from
    `source_evidence`, using the repository's existing recomputation path
    (`computeReceiptRoot`, `src/receiptos/canon/receipt-root.ts`) — the same
    function `createChronicleEntryV0` itself uses. This MUST NOT read
    `source_evidence.anchor.receipt_root` as ground truth; it is only the
    *claimed* stored root, checked against the recomputed root in the next
    step.
-3. **Verify cross-object consistency** between `source_evidence` and
+6. **Verify cross-object consistency** between `source_evidence` and
    `source_proof_object` — every check `createChronicleEntryV0` currently
    performs (`chronicle-portfolio-v0.ts` lines 87–121): stored vs. recomputed
    receipt root; `proofObject.receipt_root` vs. the verified root;
@@ -188,32 +294,38 @@ order:
    recomputed roots; `evidence_capsule.receipt_root.match`/`.status`
    internal consistency; `evidence_capsule.verifier_result` internal
    consistency.
-4. **Verify proof-object identity and proof reference** —
+7. **Verify proof-object identity and proof reference** —
    `proofObject.proof_object_id` equals the canonical derivation of the
    verified receipt root, and `proofObject.proof_ref` equals the canonical
    derivation of `proof_object_id` (`chronicle-portfolio-v0.ts` lines
    126–132).
-5. **Execute the current Chronicle admission gate** — call the existing,
-   unmodified `createChronicleEntryV0(source_evidence, source_proof_object,
-   source_entry_construction_options)`. Steps 2–4 above are restatements of
-   what this call already independently performs; a reference evaluator MAY
-   implement steps 2–4 by calling this function directly rather than
-   re-implementing its checks, but MUST NOT skip them or trust any field of
-   `source_proof_object` or `claimed_source_entry` in their place.
-6. **Independently reconstruct the canonical `chronicle_entry.v0`** — this is
-   exactly the return value of step 5 when it succeeds.
-7. **Canonicalize the reconstructed entry** using the repository's
-   `canonicalize()` (`src/receiptos/canon/canonicalize.ts`).
-8. **Compare the reconstructed entry byte-exactly with the claimed source
-   entry** — canonicalize `claimed_source_entry` the same way and require the
-   two canonical byte strings to be identical.
-9. **Reject on any mismatch** — any failure in steps 1–8 fails closed; no
-   partial, probationary, or weighted admission exists, consistent with
-   `docs/CHRONICLE.md` invariant 1 (lines 27–30).
+8. **Independently execute the current Chronicle admission gate** — call the
+   existing, unmodified `createChronicleEntryV0(source_evidence,
+   source_proof_object, <adapted options from step 3>)`. The gate MUST
+   receive only the exact deterministic adapter output pinned in §5.4, never
+   the bundle's raw `source_entry_construction_options` object. Steps 5–7
+   above are restatements of what this call already independently performs;
+   a reference evaluator MAY implement steps 5–7 by calling this function
+   directly rather than re-implementing its checks, but MUST NOT skip them or
+   trust any field of `source_proof_object` or `claimed_source_entry` in
+   their place. Any exception this call throws is mapped to a §11 finding
+   code by the check that produced it (§6 steps 5–7); the host-language
+   exception text itself is never canonical output.
+9. **Canonicalize the reconstructed and claimed entries** — the
+   reconstructed entry is exactly the return value of step 8 when it
+   succeeds; canonicalize it, and canonicalize `claimed_source_entry`, both
+   using the repository's `canonicalize()`
+   (`src/receiptos/canon/canonicalize.ts`).
+10. **Compare their canonical UTF-8 JSON bytes exactly** — require the two
+    canonical byte strings to be identical.
+11. **Fail closed on any mismatch** — any failure in steps 1–10 fails closed;
+    no partial, probationary, or weighted admission exists, consistent with
+    `docs/CHRONICLE.md` invariant 1 (lines 27–30).
 
 This procedure never adds a verdict field to `chronicle_entry.v0`, and it
 never treats `claimed_source_entry.entry_id` alone as proof of admission —
-the comparison in step 8 is over the complete canonical entry.
+the comparison in steps 9–10 is over the complete canonical entry, not any
+single field of it.
 
 ## 7. Exact singleton-fold evaluation envelope
 
@@ -262,8 +374,8 @@ absolute paths.
 ```json
 {
   "schema": "recursive_singleton_fold_finding.v0",
-  "code": "<one value from the §9 closed enum>",
-  "check_position": 6
+  "code": "<one value from the §11 closed enum>",
+  "check_position": 7
 }
 ```
 
@@ -313,7 +425,7 @@ Requirements:
   "finding": {
     "schema": "recursive_singleton_fold_finding.v0",
     "code": "source_receipt_root_mismatch",
-    "check_position": 6
+    "check_position": 7
   }
 }
 ```
@@ -325,7 +437,7 @@ Requirements:
   is ever emitted — an aggregate either is a complete, fully valid object, or
   it does not exist in the envelope at all.
 - Exactly one deterministic profile-local `finding` is present, whose `code`
-  is the first-failing check's code per the fixed order in §10.
+  is the first-failing check's code per the fixed order in §12.
 
 ## 10. Exact malformed and unverifiable contracts
 
@@ -340,7 +452,7 @@ Requirements:
   "finding": {
     "schema": "recursive_singleton_fold_finding.v0",
     "code": "source_admission_prerequisite_unavailable",
-    "check_position": 6
+    "check_position": 7
   }
 }
 ```
@@ -348,7 +460,7 @@ Requirements:
 `evaluation_state` is `"unverifiable"` exactly when the input was well-formed
 enough to run every prior check, but a prerequisite the evaluator does not
 control could not be established — currently only the case where
-`source_evidence.anchor.receipt_root` is absent (§6 step 2 cannot even be
+`source_evidence.anchor.receipt_root` is absent (§6 step 5 cannot even be
 compared). `profile_verdict` is `null`: unverifiable is not a synonym for
 invalid. Absence of evaluation evidence MUST NOT become invalidity — the
 evaluator reports that a determination could not be made, not that the
@@ -376,7 +488,7 @@ is `null`. Exactly one `finding` names the unavailable prerequisite.
 fails — the input did not even reach the point of being a well-typed
 candidate to evaluate for admission or transition validity. `profile_verdict`
 is `null`. `aggregate` is `null`. Exactly one `finding` identifies the first
-malformed boundary encountered, per §10's fixed order.
+malformed boundary encountered, per §12's fixed order.
 
 ## 11. Exact profile-local finding vocabulary
 
@@ -388,14 +500,14 @@ vocabulary. None of these codes reuses or aliases any
 `receiptos-chronicle-admission-v0` `failure_class`/`reason_code` value or any
 Unanchored Issuance Witness `reasonCode` enum value.
 
-Closed v0 enum (29 values), grouped by the `evaluation_state` each can appear
+Closed v0 enum (30 values), grouped by the `evaluation_state` each can appear
 under:
 
-**`malformed`** (7 codes):
-`malformed_source_admission_bundle`, `malformed_source_entry`,
-`malformed_source_evidence`, `malformed_portable_proof_object`,
-`malformed_fold_policy_declaration`, `malformed_comparability_class_declaration`,
-`malformed_transition_rule_declaration`.
+**`malformed`** (8 codes):
+`malformed_source_admission_bundle`, `malformed_source_entry_construction_options`,
+`malformed_source_entry`, `malformed_source_evidence`,
+`malformed_portable_proof_object`, `malformed_fold_policy_declaration`,
+`malformed_comparability_class_declaration`, `malformed_transition_rule_declaration`.
 
 **`unverifiable`** (1 code):
 `source_admission_prerequisite_unavailable`.
@@ -436,32 +548,33 @@ regardless of implementation language or control-flow structure.
 
 | # | Check | On failure |
 |---|---|---|
-| 1 | Outer evaluation input is shaped as a `recursive_singleton_fold_source_admission_bundle.v0` (required top-level keys present, correctly typed) | `malformed_source_admission_bundle` |
+| 1 | Outer evaluation input is shaped as a `recursive_singleton_fold_source_admission_bundle.v0` (required top-level keys present, correctly typed) and its `admission_profile_id`/`admission_fixture_set_sha256` match the actual current shared admission v0 package identity (§5.2, §6 step 1) | `malformed_source_admission_bundle` |
 | 2 | Bundle's nested containers (`source_evidence`, `source_proof_object`, `source_entry_construction_options`, `claimed_source_entry`) are each present as objects | `malformed_source_admission_bundle` |
-| 3 | `source_evidence` matches the exact `HandoffEvidence` shape | `malformed_source_evidence` |
-| 4 | `source_proof_object` matches the exact `PortableProofObjectV0` shape | `malformed_portable_proof_object` |
-| 5 | `claimed_source_entry` matches the exact `chronicle_entry.v0` shape (RSF profile §6.2/§6.5) | `malformed_source_entry` |
-| 6 | Independent receipt-root recomputation (§6 step 2): prerequisite present, then recomputed vs. stored equality | `source_admission_prerequisite_unavailable` if the prerequisite is absent; `source_receipt_root_mismatch` if present but unequal |
-| 7 | Cross-object consistency (§6 step 3; gate checks 3–7) | `cross_object_consistency_mismatch` |
-| 8 | Proof-object identity (§6 step 4; gate check 8) | `proof_object_identity_mismatch` |
-| 9 | Proof reference (§6 step 4; gate check 9) | `proof_reference_mismatch` |
-| 10 | Chronicle admission gate call succeeds as a whole (§6 step 5) | (no distinct code — any failure here was already caught at 6–9) |
-| 11 | Reconstructed entry equals claimed entry byte-exactly (§6 steps 6–8) | `reconstructed_source_entry_mismatch` |
-| 12 | `source_entry_content_commitment` recomputes | `source_entry_content_commitment_mismatch` |
-| 13 | `fold_policy_declaration` shape, then `fold_policy_commitment` recomputes | `malformed_fold_policy_declaration`, then `fold_policy_commitment_mismatch` |
-| 14 | `comparability_class_declaration` shape, then `comparability_class_commitment` recomputes | `malformed_comparability_class_declaration`, then `comparability_class_commitment_mismatch` |
-| 15 | `transition_rule_declaration` shape, then `transition_rule_commitment` recomputes | `malformed_transition_rule_declaration`, then `transition_rule_commitment_mismatch` |
-| 16 | Input semantic statement constructed, then input `semantic_result_commitment` recomputes | `semantic_statement_mismatch`, then `semantic_result_commitment_mismatch` |
-| 17 | Canonical inclusion set constructed, then `inclusion_set_commitment` recomputes | `inclusion_set_mismatch`, then `inclusion_set_commitment_mismatch` |
-| 18 | Singleton policy eligibility evaluates true | `singleton_policy_ineligible` |
-| 19 | Singleton comparability eligibility evaluates true | `singleton_class_ineligible` |
-| 20 | Transition construction: source identity is not reused as aggregate identity | `forbidden_source_identity_reuse` |
-| 21 | Output semantic statement constructed; output `semantic_result_commitment` equals input `semantic_result_commitment` (RSF §17.5) | `semantic_result_commitment_mismatch` |
-| 22 | `transition_result` derives to the single pinned success object (RSF §15.1) | `transition_result_mismatch` |
-| 23 | `no_stronger_semantic_class_created` recomputes true | `no_elevation_invariant_mismatch` |
-| 24 | `pre_aggregation_breakdown` constructed, then its commitment recomputes | `breakdown_mismatch`, then `breakdown_commitment_mismatch` |
-| 25 | `aggregate_id` recomputes from the exact §12.1 seed | `aggregate_id_mismatch` |
-| 26 | Complete aggregate object independently re-validates in full (every stored value equals every recomputed value) | (terminal checkpoint; success here yields the `accepted` envelope) |
+| 3 | `source_entry_construction_options` matches the exact closed shape and field types pinned in §5.4 | `malformed_source_entry_construction_options` |
+| 4 | `source_evidence` matches the exact `HandoffEvidence` shape | `malformed_source_evidence` |
+| 5 | `source_proof_object` matches the exact `PortableProofObjectV0` shape | `malformed_portable_proof_object` |
+| 6 | `claimed_source_entry` matches the exact `chronicle_entry.v0` shape (RSF profile §6.2/§6.5) | `malformed_source_entry` |
+| 7 | Independent receipt-root recomputation (§6 step 5): prerequisite present, then recomputed vs. stored equality | `source_admission_prerequisite_unavailable` if the prerequisite is absent; `source_receipt_root_mismatch` if present but unequal |
+| 8 | Cross-object consistency (§6 step 6; gate checks 3–7) | `cross_object_consistency_mismatch` |
+| 9 | Proof-object identity (§6 step 7; gate check 8) | `proof_object_identity_mismatch` |
+| 10 | Proof reference (§6 step 7; gate check 9) | `proof_reference_mismatch` |
+| 11 | Chronicle admission gate call succeeds as a whole, receiving only the exact adapted options from §5.4 (§6 step 8) | (no distinct code — any failure here was already caught at 7–10) |
+| 12 | Reconstructed entry equals claimed entry byte-exactly (§6 steps 9–10) | `reconstructed_source_entry_mismatch` |
+| 13 | `source_entry_content_commitment` recomputes | `source_entry_content_commitment_mismatch` |
+| 14 | `fold_policy_declaration` shape, then `fold_policy_commitment` recomputes | `malformed_fold_policy_declaration`, then `fold_policy_commitment_mismatch` |
+| 15 | `comparability_class_declaration` shape, then `comparability_class_commitment` recomputes | `malformed_comparability_class_declaration`, then `comparability_class_commitment_mismatch` |
+| 16 | `transition_rule_declaration` shape, then `transition_rule_commitment` recomputes | `malformed_transition_rule_declaration`, then `transition_rule_commitment_mismatch` |
+| 17 | Input semantic statement constructed, then input `semantic_result_commitment` recomputes | `semantic_statement_mismatch`, then `semantic_result_commitment_mismatch` |
+| 18 | Canonical inclusion set constructed, then `inclusion_set_commitment` recomputes | `inclusion_set_mismatch`, then `inclusion_set_commitment_mismatch` |
+| 19 | Singleton policy eligibility evaluates true | `singleton_policy_ineligible` |
+| 20 | Singleton comparability eligibility evaluates true | `singleton_class_ineligible` |
+| 21 | Transition construction: source identity is not reused as aggregate identity | `forbidden_source_identity_reuse` |
+| 22 | Output semantic statement constructed; output `semantic_result_commitment` equals input `semantic_result_commitment` (RSF §17.5) | `semantic_result_commitment_mismatch` |
+| 23 | `transition_result` derives to the single pinned success object (RSF §15.1) | `transition_result_mismatch` |
+| 24 | `no_stronger_semantic_class_created` recomputes true | `no_elevation_invariant_mismatch` |
+| 25 | `pre_aggregation_breakdown` constructed, then its commitment recomputes | `breakdown_mismatch`, then `breakdown_commitment_mismatch` |
+| 26 | `aggregate_id` recomputes from the exact §12.1 seed | `aggregate_id_mismatch` |
+| 27 | Complete aggregate object independently re-validates in full (every stored value equals every recomputed value) | (terminal checkpoint; success here yields the `accepted` envelope) |
 
 ## 13. Exact SF-V1 package contract
 
@@ -469,7 +582,7 @@ Package materials required for the one deterministic valid singleton fold
 (this pass creates no fixture bytes):
 
 - one exact source-admission bundle (§5.2), sufficient to pass all of §12's
-  checks 1–11;
+  checks 1–12;
 - exact `fold_policy_declaration`, `comparability_class_declaration`,
   `transition_rule_declaration` objects (RSF profile §8.1, §9.1, §10.1
   literals, used verbatim);
@@ -479,7 +592,7 @@ Package materials required for the one deterministic valid singleton fold
   independently derivable by a second implementation from the same bundle
   and declarations;
 - a distinct `aggregate_id` (distinct from `claimed_source_entry.entry_id`,
-  per §12's check 20);
+  per §12's check 21);
 - the recomputed `no_stronger_semantic_class_created` result;
 - no timestamps or generated metadata anywhere in the bundle, declarations,
   envelope, or aggregate.
@@ -553,7 +666,7 @@ outside the aggregate it wraps.
 
 Both objects must:
 
-- independently pass complete validation (§12, checks 1–26, run once per
+- independently pass complete validation (§12, checks 1–27, run once per
   object as an ordinary accepted single-object evaluation, prior to pairwise
   comparison);
 - share every identity-bearing field (RSF profile §11.2);
@@ -726,9 +839,11 @@ Before any file described in §18 as a candidate path may be created as real,
 canonical package content, the following must hold, mirroring the RSF
 profile's own §23 promotion-gate discipline:
 
-- this document itself must be reviewed and, if accepted, have its status
-  changed from working draft to a frozen contract with a pinned SHA-256, the
-  same way the RSF profile itself was frozen;
+- both the RSF profile itself and this package contract must be separately
+  reviewed and frozen in the future, each with its own pinned SHA-256, before
+  executable promotion; neither is frozen today — the RSF profile remains a
+  byte-pinned, internally reviewed, non-normative working profile, and this
+  document remains a working draft;
 - the source-admission bundle shape (§5), the evaluation envelope shape
   (§7–§10), the finding vocabulary (§11), the evaluation order (§12), and the
   pairwise conflict artifact (§15) must all be stable across that review with
@@ -748,16 +863,22 @@ work could begin.
 ## 22. Summary formulation
 
 This working draft pins, without freezing, exactly two things: (1) a
-`recursive_singleton_fold_source_admission_bundle.v0` object sufficient for
-any conformant implementation to independently reconstruct and admit a
-claimed `chronicle_entry.v0` without trusting a producer-supplied verdict or
-`entry_id` alone, and (2) a `recursive_singleton_fold_evaluation.v0` envelope
-with a closed four-state model (accepted / rejected / unverifiable /
-malformed), a single deterministic profile-local finding per failed
-evaluation, and a fixed 26-step evaluation order — plus a structurally
-separate `recursive_singleton_fold_pairwise_conflict.v0` artifact for SF-C1,
-so that same-identity/non-identical-content conflicts are never confused with
+`recursive_singleton_fold_source_admission_bundle.v0` object, bound to the
+exact current shared admission v0 package identity
+(`admission_profile_id`/`admission_fixture_set_sha256`), with an exact closed
+`source_entry_construction_options` shape and deterministic null-to-omitted
+adapter, sufficient for any conformant implementation to independently
+reconstruct and admit a claimed `chronicle_entry.v0` without trusting a
+producer-supplied verdict or `entry_id` alone, and (2) a
+`recursive_singleton_fold_evaluation.v0` envelope with a closed four-state
+model (accepted / rejected / unverifiable / malformed), a single
+deterministic profile-local finding per failed evaluation, and a fixed
+27-step evaluation order — plus a structurally separate
+`recursive_singleton_fold_pairwise_conflict.v0` artifact for SF-C1, so that
+same-identity/non-identical-content conflicts are never confused with
 single-object fold failures. No RSF profile formula, no Chronicle schema, and
 no existing shared admission package is changed. No ReceiptOS reason code,
-scoring mechanism, or reputation concept is introduced. This document is not
-frozen and creates no package bytes.
+scoring mechanism, or reputation concept is introduced. The RSF profile
+remains a byte-pinned, internally reviewed, non-normative working profile —
+not yet frozen — and this document remains a working draft, creating no
+package bytes.
