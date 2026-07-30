@@ -755,8 +755,9 @@ evidence is attested or unavailable [15].
 **Enclave profile: `tee-inference-enclave-v0`.** The pinned upstream authority is the same
 immutable recompute-kit PR #2 commit together with the associated TMerlini gist revision
 `060f2f995169b99abae2fdc43d31c7a3e1e9157b`; the enclave vectors SHA-256 is
-`b197809da7198f8854cc9d17036b46c7ad16466155bc0657c5197d204da82d2e`, and the primary
-enclave artifact SHA-256 is `ada9731bd58620ce5dc148e907903b786439dbad7b6f00e26b25e698e0cec78d`
+`b197809da7198f8854cc9d17036b46c7ad16466155bc0657c5197d204da82d2e`, and the reported primary
+enclave artifact SHA-256 is `ada9731bd58620ce5dc148e907903b786439dbad7b6f00e26b25e698e0cec78d`;
+the exact hashed object identity was not pinned and is therefore not independently byte-verifiable
 [15][16]. The enclave suite contains exactly 11 vectors; all 11 reproduced. The outcome
 partition is 7 verified, 4 rejected. The verified claim boundary is likewise narrow: request
 binding is recomputed; DCAP/X.509 chain parsing and verification are performed; and chain-
