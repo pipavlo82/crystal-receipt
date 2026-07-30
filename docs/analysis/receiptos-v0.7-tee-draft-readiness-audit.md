@@ -197,8 +197,11 @@ Required enclave profile:
 - 11/11 reproduced
 - vectors SHA-256:
   `b197809da7198f8854cc9d17036b46c7ad16466155bc0657c5197d204da82d2e`
-- primary enclave artifact SHA-256:
+- reported primary enclave artifact SHA-256:
   `ada9731bd58620ce5dc148e907903b786439dbad7b6f00e26b25e698e0cec78d`
+- evidence limitation:
+  exact hashed object identity was not pinned and is therefore not independently
+  byte-verifiable
 
 Observed across repaired draft and ledger:
 - total vectors: `11`
