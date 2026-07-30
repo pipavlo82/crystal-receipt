@@ -294,7 +294,9 @@ Bounded reproducibility note:
 - immutable identity:
   commit `73d6a1307a3671cd6fa713b5911936d333a4a498`; gist revision `060f2f995169b99abae2fdc43d31c7a3e1e9157b`
 - exact support:
-  primary enclave artifact SHA-256 `ada9731bd58620ce5dc148e907903b786439dbad7b6f00e26b25e698e0cec78d`
+  reported primary enclave artifact SHA-256 `ada9731bd58620ce5dc148e907903b786439dbad7b6f00e26b25e698e0cec78d`;
+  exact hashed object identity was not pinned and is therefore not independently
+  byte-verifiable
 - citation mapping:
   paper cites `[15][16]`
 - allowed wording:

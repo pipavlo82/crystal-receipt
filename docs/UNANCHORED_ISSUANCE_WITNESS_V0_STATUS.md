@@ -11,7 +11,7 @@ extend, or override the frozen normative specification in
 The Unanchored Issuance Witness v0 specification is published and frozen at:
 
 ```text
-SHA-256 24fdf071008638c5c0198dc80d94be4ae3a8e31f072b41009ded71ea7d49ffa4
+SHA-256 34de6694e6fb28b6d521a3314c0454f4639dfaba7d29dc0fb217244970e0536a
 ```
 
 The following witness-related schemas are published:
@@ -29,7 +29,7 @@ matrix, including separate G1/G2 and K1/K2 cases, plus co-occurrence vectors.
 Its manifest pins every normative dependency and the fixture set:
 
 ```text
-SHA-256 cf6136a129e1657ea7e4ff61e16e7c33be377339089ec3fa6e63f55cd4a5767e
+SHA-256 4c2ef4c01a4910638b8091badb27d9f24465d02e47ed461ab4478f4034166715
 ```
 
 The vector package is a conformance oracle derived from the specification. It
