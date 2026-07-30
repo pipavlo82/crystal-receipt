@@ -62,7 +62,7 @@ This mirrors the WYRIWE-style genesis / linked / tamper pattern: one stable posi
 
 ## 6a. First adopter-in-waiting
 
-`trustless-ai/recompute-kit` commit `4e72169d8d845b736e8aa9c276ea2466afa97bbd` added recipe `receiptos/canonicalize` (profile `receiptos-c14n-v0`: JCS RFC 8785 by reference, top-level anchor-strip the sole delta) with the §2.8 π vector as its golden vector (45 bytes ≠ 44 chars, the literal-UTF-8 tripwire); the kit is thereby a conforming `receiptos-c14n-v0` implementation per Definition 6. The recipe is deliberately version-less and slated as the first adopter of `ruleset_version` under the migration path above.
+`trustless-ai/recompute-kit` records the `receiptos/canonicalize` step (profile `receiptos-c14n-v0`: JCS RFC 8785 by reference, top-level anchor-strip the sole delta) together with the §2.8 π golden vector in commit `4e72169d8d845b736e8aa9c276ea2466afa97bbd`, across the changed paths `bin/conformance`, `bin/recompute-step`, `conformance/README.md`, and `conformance/agent-flow.vectors.json`; the kit is thereby a conforming `receiptos-c14n-v0` implementation per Definition 6. The recipe is deliberately version-less and slated as the first adopter of `ruleset_version` under the migration path above.
 
 ## 7. Side-note for the kit
 
