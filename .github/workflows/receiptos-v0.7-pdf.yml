@@ -1,0 +1,129 @@
+name: receiptos-v0.7-pdf
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'docs/paper/receiptos-v0.7-draft.md'
+      - 'docs/paper/build/**'
+      - '.github/workflows/receiptos-v0.7-pdf.yml'
+      - 'docs/analysis/receiptos-v0.7-pdf-build-audit.md'
+
+jobs:
+  build-pdf:
+    runs-on: ubuntu-latest
+    env:
+      TZ: UTC
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+      SOURCE_SHA256: 16c5d50b7e692acf7cc633a80c6381c876b6a0100ae53b257625c53d9fad1bb4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            pandoc \
+            texlive-latex-base \
+            texlive-latex-recommended \
+            texlive-latex-extra \
+            texlive-fonts-recommended \
+            texlive-science \
+            latexmk \
+            poppler-utils \
+            qpdf
+
+      - name: Report tool versions
+        run: |
+          set -euo pipefail
+          pandoc --version | head -n 2
+          pdflatex --version | head -n 2
+          latexmk --version | head -n 2
+          qpdf --version
+          pdftotext -v 2>&1 | head -n 2
+
+      - name: Set deterministic environment
+        run: |
+          set -euo pipefail
+          SOURCE_COMMIT_TS=$(git log -1 --format=%ct -- docs/paper/receiptos-v0.7-draft.md)
+          echo "SOURCE_DATE_EPOCH=$SOURCE_COMMIT_TS" >> "$GITHUB_ENV"
+          echo "SOURCE_DATE_EPOCH=$SOURCE_COMMIT_TS"
+
+      - name: Build A
+        run: |
+          set -euo pipefail
+          mkdir -p ci-out/build-a ci-out/out-a
+          docs/paper/build/build-receiptos-v0.7.sh ci-out/out-a | tee ci-out/build-a/build-a.stdout.log
+          cp ci-out/out-a/Tvardovskyi_ReceiptOS_v0.7_draft.pdf ci-out/build-a/
+          cp /tmp/* 2>/dev/null || true
+
+      - name: Build B
+        run: |
+          set -euo pipefail
+          mkdir -p ci-out/build-b ci-out/out-b
+          docs/paper/build/build-receiptos-v0.7.sh ci-out/out-b | tee ci-out/build-b/build-b.stdout.log
+          cp ci-out/out-b/Tvardovskyi_ReceiptOS_v0.7_draft.pdf ci-out/build-b/
+
+      - name: Compare builds and extract metadata
+        run: |
+          set -euo pipefail
+          PDF_A=ci-out/out-a/Tvardovskyi_ReceiptOS_v0.7_draft.pdf
+          PDF_B=ci-out/out-b/Tvardovskyi_ReceiptOS_v0.7_draft.pdf
+          sha256sum "$PDF_A" "$PDF_B" | tee ci-out/sha256-report.txt
+          stat -c '%n %s' "$PDF_A" "$PDF_B" | tee -a ci-out/sha256-report.txt
+          pdfinfo "$PDF_A" | tee ci-out/pdfinfo.txt
+          pdftotext "$PDF_A" ci-out/extracted-text.txt
+          qpdf --json "$PDF_A" > ci-out/qpdf.json
+          cmp -s "$PDF_A" "$PDF_B"
+
+      - name: Content presence audit
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          text = Path('ci-out/extracted-text.txt').read_text(encoding='utf-8', errors='replace')
+          required = [
+              '1 Introduction', '2 The Evidence Capsule Model', '3 Threat Model',
+              '4 Recompute, Don’t Trust; Gates, Not Scores',
+              '5 Composition with the Agent-Execution Stack',
+              '6 Post-Quantum Durability', '7 Relation to RAILS',
+              '8 Conformance Vectors and the Independent Verifier',
+              '9 Related Work', '10 Limitations and Open Problems',
+              'Definition 1', 'Definition 7', 'Proposition 1', 'Proposition 2',
+              '10/10', '3 verified', '4 rejected', '3 unverifiable',
+              '11/11', '7 verified',
+              'c02f8af51edef5038a76b9e30ab7ef4781d3d66bd4eafe00146fe225ddbb2a69',
+              'b197809da7198f8854cc9d17036b46c7ad16466155bc0657c5197d204da82d2e',
+              'ada9731bd58620ce5dc148e907903b786439dbad7b6f00e26b25e698e0cec78d',
+              '0xe61c9a9eed9e1d7eb5107acd9bb71d53cee9fcdae806444f4dc93b2f9694c2ae',
+              'live Intel PCS freshness', 'revocation', 'Acknowledgments and disclosure',
+              'Appendix A', 'Appendix B', 'Appendix C'
+          ]
+          missing = [x for x in required if x not in text]
+          if missing:
+              print('MISSING:')
+              for m in missing:
+                  print(m)
+              raise SystemExit(1)
+          PY
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: receiptos-v0.7-pdf-review-artifacts
+          retention-days: 14
+          path: |
+            ci-out/out-a/Tvardovskyi_ReceiptOS_v0.7_draft.pdf
+            ci-out/out-b/Tvardovskyi_ReceiptOS_v0.7_draft.pdf
+            ci-out/sha256-report.txt
+            ci-out/pdfinfo.txt
+            ci-out/qpdf.json
+            ci-out/extracted-text.txt
+            ci-out/build-a/build-a.stdout.log
+            ci-out/build-b/build-b.stdout.log
+            docs/paper/build/receiptos-v0.7-template.tex
+            ci-out/out-a/receiptos-v0.7.tex
