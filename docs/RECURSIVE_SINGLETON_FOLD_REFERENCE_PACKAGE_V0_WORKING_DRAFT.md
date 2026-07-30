@@ -358,12 +358,11 @@ Pinned exact literals:
 
 - `schema` MUST equal exactly `recursive_singleton_fold_evaluation_input.v0`.
 - `profile_id` MUST equal exactly `recursive-singleton-fold-profile-v0`.
-- `profile_sha256` MUST equal exactly
-  `170909acb19d28cae58c8870c5169dfde8ae1416e84a5c798a89f336bc1974c5`.
-  That digest identifies the exact raw Git blob bytes of
-  `docs/RECURSIVE_SINGLETON_FOLD_PROFILE_V0_WORKING_DRAFT.md` from canonical
-  `main`; no text decoding, newline conversion, or derived serialization step is
-  part of the byte recipe.
+- `profile_sha256` is reported as
+  `170909acb19d28cae58c8870c5169dfde8ae1416e84a5c798a89f336bc1974c5`,
+  but the exact hashed artifact and byte recipe were not pinned; this digest is
+  therefore not independently byte-verifiable and MUST NOT be treated as a
+  current immutable artifact identity.
 
 ### 7.3 Requiredness and nullability
 
