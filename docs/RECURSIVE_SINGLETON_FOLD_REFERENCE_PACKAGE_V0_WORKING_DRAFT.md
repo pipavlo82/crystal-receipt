@@ -366,6 +366,59 @@ package-local input artifact `recursive_singleton_fold_evaluation_input.v0`.
 It is distinct from the nested source-admission bundle (§5), the evaluation
 output envelope (§10), and the final aggregate object.
 
+### 7.0 Runtime input boundary
+
+The RSF core evaluation operation MUST begin with an immutable, or
+equivalently snapshotted, JSON-domain value tree. That tree consists only of:
+
+- `null`;
+- booleans;
+- finite IEEE-754 binary64 numeric values;
+- strings that are finite sequences of Unicode scalar values;
+- dense ordered arrays whose members are JSON-domain values; and
+- objects whose member names are unique Unicode-scalar strings and whose
+  member values are JSON-domain values.
+
+Object member order and host object identity are not part of this abstract
+value. The tree MUST be acyclic, MUST NOT expose shared-reference aliases, and
+MUST NOT mutate during evaluation. No Unicode normalization is performed, so
+canonically equivalent but distinct scalar sequences, including NFC and NFD
+forms, remain distinct. Negative zero has no distinct RSF abstract meaning
+from zero.
+
+Host-language-only constructs are outside this domain. These include absent-
+value sentinels distinct from `null`; functions or callable values; symbols or
+non-string object keys; arbitrary-precision native integers unless represented
+according to a field-specific JSON encoding; NaN and positive or negative
+infinity; sparse arrays or holes; prototypes, classes, accessors, proxies,
+maps, sets, dates, or equivalent host objects as protocol-visible constructs;
+cycles; observable shared-reference identity; and mutation during validation.
+A host implementation MUST either reject such a value or materialize an
+equivalent immutable JSON-domain value tree before invoking the core.
+Accidental acceptance of an exotic language-native value is not RSF core
+conformance.
+
+Raw bytes and JSON text are not RSF core inputs. UTF-8 decoding and JSON
+parsing occur outside the core. A byte/text adapter owns decoding, parsing,
+and duplicate-member detection and MUST reject duplicate object member names
+rather than applying first-wins or last-wins resolution. It MUST also reject
+ill-formed Unicode before core invocation; consequently, lone surrogates
+cannot enter the core. JSON escape spelling is not part of an abstract string:
+escaped and literal representations that denote the same Unicode scalar
+sequence produce the same core value. Malformed bytes or text do not invoke
+the core. A transport failure does not map to any current RSF finding code or
+check position, and in particular does not insert a parser failure before
+position 1. Only a separately versioned transport specification could define
+a transport result; such a result would not be a core RSF finding under this
+version. Transport-adapter conformance and RSF core conformance are separate
+claims. This document defines no transport error envelope or adapter API.
+
+This boundary does not change the seven top-level fields, their schema or
+profile literals, the 32 finding codes, or the 28-position order. Positions
+1–4 remain the only implemented structural machine-consumer positions, and
+valid already-materialized JSON-domain inputs retain their current structural
+meaning. No schema version change is introduced.
+
 ### 7.1 Exact top-level shape
 
 ```json
@@ -418,7 +471,8 @@ embedded artifacts; they are not silently ignored by the package contract.
 
 The canonicalization boundary for one evaluator invocation is the complete
 validated `recursive_singleton_fold_evaluation_input.v0` object. Validation
-occurs before canonicalization. Canonicalization uses the repository's
+occurs before canonicalization, which receives only values within the runtime
+input domain defined by §7.0. Canonicalization uses the repository's
 `canonicalize()`. Input canonical bytes are UTF-8 canonical JSON bytes; no
 Unicode normalization is applied. No timestamp, runtime, host, path, or UI
 metadata is permitted anywhere in this object.
