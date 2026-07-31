@@ -399,11 +399,12 @@ Pinned exact literals:
 
 - `schema` MUST equal exactly `recursive_singleton_fold_evaluation_input.v0`.
 - `profile_id` MUST equal exactly `recursive-singleton-fold-profile-v0`.
-- `profile_id` identifies the selected logical RSF profile. No
-  `profile_sha256` field is defined in this version. A cryptographic profile
+- `profile_id` identifies the selected logical RSF profile. This version does
+  not define any cryptographic profile identity field. A cryptographic profile
   identity remains undefined unless and until a later specification
   normatively adopts an exact artifact, an immutable source commit, a
-  byte-domain rule, and a deterministic derivation recipe.
+  byte-domain rule, and a deterministic derivation recipe. No removed digest is
+  historical, current, canonical, frozen, implied, or reserved in this version.
 
 ### 7.3 Requiredness and nullability
 
