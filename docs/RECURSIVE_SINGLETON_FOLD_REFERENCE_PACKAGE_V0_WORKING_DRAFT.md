@@ -372,7 +372,6 @@ output envelope (§10), and the final aggregate object.
 {
   "schema": "recursive_singleton_fold_evaluation_input.v0",
   "profile_id": "recursive-singleton-fold-profile-v0",
-  "profile_sha256": "170909acb19d28cae58c8870c5169dfde8ae1416e84a5c798a89f336bc1974c5",
   "source_admission_bundle": {
     "...": "complete recursive_singleton_fold_source_admission_bundle.v0"
   },
@@ -391,8 +390,8 @@ output envelope (§10), and the final aggregate object.
 
 ### 7.2 Required fields and pinned literals
 
-All eight top-level fields are required, and no unknown top-level field may
-appear: `schema`, `profile_id`, `profile_sha256`, `source_admission_bundle`,
+All seven top-level fields are required, and no unknown top-level field may
+appear: `schema`, `profile_id`, `source_admission_bundle`,
 `fold_policy_declaration`, `comparability_class_declaration`,
 `transition_rule_declaration`, `profile_local_notes`.
 
@@ -400,11 +399,11 @@ Pinned exact literals:
 
 - `schema` MUST equal exactly `recursive_singleton_fold_evaluation_input.v0`.
 - `profile_id` MUST equal exactly `recursive-singleton-fold-profile-v0`.
-- `profile_sha256` is reported as
-  `170909acb19d28cae58c8870c5169dfde8ae1416e84a5c798a89f336bc1974c5`,
-  but the exact hashed artifact and byte recipe were not pinned; this digest is
-  therefore not independently byte-verifiable and MUST NOT be treated as a
-  current immutable artifact identity.
+- `profile_id` identifies the selected logical RSF profile. No
+  `profile_sha256` field is defined in this version. A cryptographic profile
+  identity remains undefined unless and until a later specification
+  normatively adopts an exact artifact, an immutable source commit, a
+  byte-domain rule, and a deterministic derivation recipe.
 
 ### 7.3 Requiredness and nullability
 
@@ -822,7 +821,7 @@ order regardless of implementation language or control-flow structure.
 
 | # | Check | On failure |
 |---|---|---|
-| 1 | Evaluation-input shape, unknown-field policy, and `schema`/`profile_id`/`profile_sha256`/`profile_local_notes`-type literals (§7) | `malformed_evaluation_input` |
+| 1 | Evaluation-input shape, unknown-field policy, and `schema`/`profile_id`/`profile_local_notes`-type literals (§7) | `malformed_evaluation_input` |
 | 2 | Source-admission bundle shape and its exact pinned admission dependency literals (§5, §5.4) | `malformed_source_admission_bundle` |
 | 3 | Nested source-admission containers present as objects (§6 step 3) | `malformed_source_admission_bundle` |
 | 4 | Construction-options shape (§8) | `malformed_source_entry_construction_options` |
