@@ -58,6 +58,20 @@ export {
 } from "./capsule/chronicle-checkpoint-continuity-v0"
 export { buildCrystalReceiptMapping, type CrystalReceiptMapping } from "./capsule/crystal-mapping"
 export {
+  validateRsfEvaluationInputShape,
+  type RsfStructuralFindingCode,
+  type RsfStructuralCheckPosition,
+  type RsfStructuralFinding,
+  type RsfConstructionOptionsShape,
+  type RsfSourceAdmissionBundleShape,
+  type RsfEvaluationInputShape,
+  type RsfStructuralValidationResult,
+} from "./rsf/evaluation-input-shape"
+export {
+  adaptRsfConstructionOptions,
+  type RsfChronicleConstructorOptions,
+} from "./rsf/construction-options-adapter"
+export {
   buildRenderPlan,
   buildRenderPlanFromCapsule,
   getRenderPlanZoneDefinitions,
