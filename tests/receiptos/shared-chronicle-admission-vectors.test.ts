@@ -4,7 +4,7 @@ import { createHash } from "node:crypto"
 import { readdirSync, readFileSync } from "node:fs"
 import { join, resolve } from "node:path"
 import { createChronicleEntryV0 } from "../../src/receiptos"
-import { readGitBlobBytes, readGitBlobJson } from "./helpers/git-index-bytes"
+import { readGitBlobBytesAtCommit, readGitBlobJsonAtCommit } from "./helpers/git-index-bytes"
 
 type SharedResult = {
   outcome: "admitted" | "rejected"
@@ -30,14 +30,14 @@ const fixtureCommit = "7d9b67c96f2b472f5b4acfef3f95b669eb24de7b"
 const fixtureRepositoryRoot = "tests/fixtures/receiptos-chronicle-admission-v0"
 const packageRoot = resolve(import.meta.dir, "../fixtures/receiptos-chronicle-admission-v0")
 const vectorsRoot = join(packageRoot, "vectors")
-const manifest = readGitBlobJson<{
+const manifest = readGitBlobJsonAtCommit<{
   schema: string
   package_version: string
   vector_schema: { path: string; sha256: string }
   files: Array<{ path: string; sha256: string }>
   fixture_set_sha256: string
 }>(repo, fixtureCommit, `${fixtureRepositoryRoot}/manifest.json`)
-const schema = readGitBlobJson<{
+const schema = readGitBlobJsonAtCommit<{
   properties: {
     expected: { properties: { failure_class: { enum: string[] } } }
   }
@@ -131,7 +131,7 @@ describe("shared ReceiptOS Chronicle admission vectors", () => {
 
     const actualFiles = manifest.files.map(({ path, sha256: expectedHash }) => {
       const repositoryPath = `${fixtureRepositoryRoot}/${path}`
-      const bytes = readGitBlobBytes(repo, fixtureCommit, repositoryPath)
+      const bytes = readGitBlobBytesAtCommit(repo, fixtureCommit, repositoryPath)
       expect(gitBlobSha(repositoryPath).length).toBe(40)
       expect(sha256(bytes), path).toBe(expectedHash)
       return `${path}\t${expectedHash}\n`
