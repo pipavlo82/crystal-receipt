@@ -38,3 +38,57 @@ export function readGitIndexBytes(repoRoot: string, repositoryPath: string): Buf
 export function readGitIndexJson<T>(repoRoot: string, repositoryPath: string): T {
   return JSON.parse(readGitIndexBytes(repoRoot, repositoryPath).toString("utf8")) as T
 }
+
+function ensureGitCommitAvailable(repoRoot: string, commit: string): void {
+  try {
+    execFileSync("git", ["cat-file", "-e", `${commit}^{commit}`], {
+      cwd: repoRoot,
+      stdio: "ignore",
+    })
+    return
+  } catch {}
+
+  execFileSync("git", ["fetch", "--no-tags", "--depth=1", "origin", commit], {
+    cwd: repoRoot,
+    stdio: "pipe",
+    maxBuffer: 16 * 1024 * 1024,
+  })
+
+  try {
+    execFileSync("git", ["cat-file", "-e", `${commit}^{commit}`], {
+      cwd: repoRoot,
+      stdio: "ignore",
+    })
+  } catch (error: any) {
+    const status = error?.status ?? -1
+    throw new Error(`Pinned Git commit ${commit} is unavailable after explicit fetch (exit ${status}).`)
+  }
+
+  const resolved = execFileSync("git", ["rev-parse", `${commit}^{commit}`], {
+    cwd: repoRoot,
+    encoding: "utf8",
+  }).trim()
+  if (resolved !== commit) {
+    throw new Error(`Explicit fetch resolved ${commit} to unexpected commit ${resolved}.`)
+  }
+}
+
+export function readGitBlobBytesAtCommit(repoRoot: string, commit: string, repositoryPath: string): Buffer {
+  ensureGitCommitAvailable(repoRoot, commit)
+  try {
+    return execFileSync("git", ["cat-file", "blob", `${commit}:${repositoryPath}`], {
+      cwd: repoRoot,
+      encoding: "buffer",
+      maxBuffer: 16 * 1024 * 1024,
+    }) as Buffer
+  } catch (error: any) {
+    const status = error?.status ?? -1
+    const stderr = Buffer.isBuffer(error?.stderr) ? error.stderr.toString("utf8").trim() : ""
+    const suffix = stderr ? ` ${stderr}` : ""
+    throw new Error(`Git blob read failed for ${repositoryPath} at ${commit} (exit ${status}).${suffix}`)
+  }
+}
+
+export function readGitBlobJsonAtCommit<T>(repoRoot: string, commit: string, repositoryPath: string): T {
+  return JSON.parse(readGitBlobBytesAtCommit(repoRoot, commit, repositoryPath).toString("utf8")) as T
+}
