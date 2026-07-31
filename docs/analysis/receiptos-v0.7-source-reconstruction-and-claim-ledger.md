@@ -14,10 +14,15 @@ Canonical main audited: `b6cf60724eaa657166605e1d0e24a45fbb911853`
 
 LF is the canonical repository newline form for this Markdown source set.
 
-### Paper draft identity
-- file: `docs/paper/receiptos-v0.7-draft.md`
-- bytes: `58908`
-- SHA-256: `16c5d50b7e692acf7cc633a80c6381c876b6a0100ae53b257625c53d9fad1bb4`
+### Paper frozen source identity
+- frozen source commit: `c3098c46e7af6eeb039bc26ea3ee15532485d6c9`
+- path: `docs/paper/receiptos-v0.7-draft.md`
+- frozen source bytes: `58908`
+- frozen source SHA-256: `16c5d50b7e692acf7cc633a80c6381c876b6a0100ae53b257625c53d9fad1bb4`
+- scope:
+  this digest identifies the exact frozen v0.7 source bytes at the named
+  immutable commit; it is not the SHA-256 of the current mutable file on
+  main
 
 ### Historical pre-normalization CRLF identity — not canonical
 - file: `docs/paper/receiptos-v0.7-draft.md`

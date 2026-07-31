@@ -68,15 +68,23 @@ Byte-integrity policy update for commit safety:
 
 LF is the canonical repository newline form for this Markdown source set.
 
-### Reconstructed draft
+### Frozen v0.7 paper source
+- frozen source commit: `c3098c46e7af6eeb039bc26ea3ee15532485d6c9`
 - path: `docs/paper/receiptos-v0.7-draft.md`
-- bytes: `58908`
-- SHA-256: `16c5d50b7e692acf7cc633a80c6381c876b6a0100ae53b257625c53d9fad1bb4`
+- frozen source bytes: `58908`
+- frozen source SHA-256: `16c5d50b7e692acf7cc633a80c6381c876b6a0100ae53b257625c53d9fad1bb4`
+- scope:
+  this digest remains valid for the exact frozen source bytes only and is not
+  the SHA-256 of the current mutable file on main
 
-### Claim ledger
+### Frozen v0.7 claim-ledger source
+- frozen source commit: `c3098c46e7af6eeb039bc26ea3ee15532485d6c9`
 - path: `docs/analysis/receiptos-v0.7-source-reconstruction-and-claim-ledger.md`
-- bytes: `17794`
-- SHA-256: `f726bcbb50645c46a4f753e8d3ae0fe4d8990ebb7198e7cf2601fa805a8a42a1`
+- frozen source bytes: `17794`
+- frozen source SHA-256: `f726bcbb50645c46a4f753e8d3ae0fe4d8990ebb7198e7cf2601fa805a8a42a1`
+- scope:
+  this digest remains valid for the exact frozen source bytes only and is not
+  the SHA-256 of the current mutable file on main
 
 ### Historical pre-normalization CRLF identities — not canonical
 - draft historical pre-normalization CRLF identity:
