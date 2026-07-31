@@ -216,22 +216,64 @@ RSF commitment.
 
 ### 5.4 Relationship to shared admission v0 and unresolved v1
 
+#### 5.4.1 Canonical adopted dependency definition
+
+RSF adopts the ReceiptOS Chronicle admission v0 fixture package as an immutable
+external dependency identity with the following exact provenance and derivation:
+
+- immutable source commit:
+  `7d9b67c96f2b472f5b4acfef3f95b669eb24de7b`
+- package path:
+  `tests/fixtures/receiptos-chronicle-admission-v0/`
+- manifest path:
+  `tests/fixtures/receiptos-chronicle-admission-v0/manifest.json`
+- recipe path:
+  `tests/fixtures/receiptos-chronicle-admission-v0/README.md`
+- exact member count: `13`
+- member SHA-256 recipe:
+  `SHA-256(raw Git blob payload bytes)` for each manifest-listed member path at
+  the pinned immutable source commit
+- aggregate recipe:
+  sorted package-relative path, TAB, lowercase member SHA-256, LF
+- manifest self-exclusion:
+  `manifest.json` is excluded from its own aggregate
+- fixture-set SHA-256:
+  `ff35ca8ae5cef10009479d50c10e111869875f6f62fb9d6bcb00f5aa5a1b4b4f`
+- classification:
+  immutable external dependency identity adopted by RSF
+
+For this adopted package, the member digest input is the exact raw Git blob
+payload only. No checkout transformation, newline normalization, text decoding,
+re-encoding, Unicode normalization, whitespace normalization, JSON parsing,
+JSON re-serialization, canonical JSON transformation, clean/smudge filter,
+`.gitattributes` checkout transformation, or generated-file regeneration is
+applied before hashing.
+
+The package-relative paths in this package are ASCII, so their bytewise order
+and serialized bytes are unambiguous for this adopted aggregate recipe. This
+section does not introduce a broader Unicode path canonicalization rule.
+
+This digest is not an identity of the current mutable fixture directory on
+`main`. Later edits to that package do not change this frozen RSF dependency.
+Changing the dependency requires a deliberate new immutable commit pin and a
+fresh recomputation under the same adopted recipe. The digest remains outside
+aggregate identity and outside all RSF commitment computation; this section
+defines provenance and derivation only and does not alter RSF evaluation
+semantics.
+
 - The existing `tests/fixtures/receiptos-chronicle-admission-v0/` package —
   its manifest, its vectors, its `package_version` string
-  `"receiptos-chronicle-admission-v0"`, and its pinned `fixture_set_sha256`
-  value `ff35ca8ae5cef10009479d50c10e111869875f6f62fb9d6bcb00f5aa5a1b4b4f`
-  (recorded in `tests/fixtures/receiptos-chronicle-admission-v0/manifest.json`)
-  — **remains unchanged** by this document, and its current pinned identity
-  **remains unchanged**.
+  `"receiptos-chronicle-admission-v0"`, and its adopted `fixture_set_sha256`
+  dependency value `ff35ca8ae5cef10009479d50c10e111869875f6f62fb9d6bcb00f5aa5a1b4b4f`
+  — **remains unchanged** by this document.
 - A bundle whose `admission_profile_id` and `admission_fixture_set_sha256` do
   not both match those exact package-contract literals is malformed at the
   package-identity boundary and MUST be rejected before any source evaluation
   begins (§6 step 1; §12 position 2).
 - This reference package **may reuse** the shared admission package's
   semantics and source materials — §6's independent recomputation procedure
-  is, by design, a restatement of exactly what that package's `execute()`
-  runner (`tests/receiptos/shared-chronicle-admission-vectors.test.ts`, lines
-  58–90) already does against the same `createChronicleEntryV0` gate.
+  is, by design, a restatement of exactly what that package's verifier already
+  checks against the same `createChronicleEntryV0` gate.
 - The repository manifest is historical provenance for why these literals
   were selected, not mutable runtime authority; repository evolution MUST NOT
   silently change evaluation meaning, and there is no automatic upgrade to a
