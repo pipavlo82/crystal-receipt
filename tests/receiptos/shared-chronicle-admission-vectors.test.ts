@@ -1,9 +1,10 @@
 import { describe, expect, test } from "bun:test"
+import { execFileSync } from "node:child_process"
 import { createHash } from "node:crypto"
 import { readdirSync, readFileSync } from "node:fs"
 import { join, resolve } from "node:path"
 import { createChronicleEntryV0 } from "../../src/receiptos"
-import { readGitIndexBytes, readGitIndexJson } from "./helpers/git-index-bytes"
+import { readGitBlobBytesAtCommit, readGitBlobJsonAtCommit } from "./helpers/git-index-bytes"
 
 type SharedResult = {
   outcome: "admitted" | "rejected"
@@ -25,23 +26,30 @@ type Vector = {
 }
 
 const repo = resolve(import.meta.dir, "../..")
+const fixtureCommit = "7d9b67c96f2b472f5b4acfef3f95b669eb24de7b"
+const fixtureRepositoryRoot = "tests/fixtures/receiptos-chronicle-admission-v0"
 const packageRoot = resolve(import.meta.dir, "../fixtures/receiptos-chronicle-admission-v0")
 const vectorsRoot = join(packageRoot, "vectors")
-const manifest = readGitIndexJson<{
+const manifest = readGitBlobJsonAtCommit<{
   schema: string
   package_version: string
   vector_schema: { path: string; sha256: string }
   files: Array<{ path: string; sha256: string }>
   fixture_set_sha256: string
-}>(repo, "tests/fixtures/receiptos-chronicle-admission-v0/manifest.json")
-const schema = readGitIndexJson<{
+}>(repo, fixtureCommit, `${fixtureRepositoryRoot}/manifest.json`)
+const schema = readGitBlobJsonAtCommit<{
   properties: {
     expected: { properties: { failure_class: { enum: string[] } } }
   }
-}>(repo, `tests/fixtures/receiptos-chronicle-admission-v0/${manifest.vector_schema.path}`)
+}>(repo, fixtureCommit, `${fixtureRepositoryRoot}/${manifest.vector_schema.path}`)
 const vectorFiles = readdirSync(vectorsRoot).filter((name) => name.endsWith(".json")).sort()
 const vectors = vectorFiles.map((name) => JSON.parse(readFileSync(join(vectorsRoot, name), "utf8")) as Vector)
 const sha256 = (value: string | Buffer) => createHash("sha256").update(value).digest("hex")
+const gitBlobSha = (repositoryPath: string) =>
+  execFileSync("git", ["ls-tree", fixtureCommit, "--", repositoryPath], {
+    cwd: repo,
+    encoding: "utf8",
+  }).trim().split(/\s+/)[2]
 
 const errorMap: Array<[string, string, string]> = [
   ["requires evidence.anchor.receipt_root to be present", "unverifiable", "evidence_root_missing"],
@@ -90,7 +98,7 @@ function execute(vector: Vector): SharedResult {
 }
 
 describe("shared ReceiptOS Chronicle admission vectors", () => {
-  test("package schema, inventory, and manifest are complete and hash-pinned by Git index bytes", () => {
+  test("package schema, inventory, and manifest are complete and hash-pinned by raw Git blob bytes at the pinned immutable commit", () => {
     expect(manifest.schema).toBe("receiptos_chronicle_admission_fixture_manifest.v0")
     expect(manifest.package_version).toBe("receiptos-chronicle-admission-v0")
     expect(vectorFiles).toHaveLength(11)
@@ -122,7 +130,9 @@ describe("shared ReceiptOS Chronicle admission vectors", () => {
     }
 
     const actualFiles = manifest.files.map(({ path, sha256: expectedHash }) => {
-      const bytes = readGitIndexBytes(repo, `tests/fixtures/receiptos-chronicle-admission-v0/${path}`)
+      const repositoryPath = `${fixtureRepositoryRoot}/${path}`
+      const bytes = readGitBlobBytesAtCommit(repo, fixtureCommit, repositoryPath)
+      expect(gitBlobSha(repositoryPath).length).toBe(40)
       expect(sha256(bytes), path).toBe(expectedHash)
       return `${path}\t${expectedHash}\n`
     })
