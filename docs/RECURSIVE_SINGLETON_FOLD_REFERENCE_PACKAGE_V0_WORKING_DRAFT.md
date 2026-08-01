@@ -903,7 +903,7 @@ order regardless of implementation language or control-flow structure.
 | 25 | `no_stronger_semantic_class_created` recomputes true | `no_elevation_invariant_mismatch` |
 | 26 | `pre_aggregation_breakdown` constructed, then its commitment recomputed and equal | `breakdown_mismatch`, then `breakdown_commitment_mismatch` |
 | 27 | `aggregate_id` recomputes from the exact RSF profile §12.1 seed | `aggregate_id_mismatch` |
-| 28 | Position-28 preservation verification, in order: (a) the position-14-derived `source_entry_content_commitment`, as stored in the assembled aggregate, is compared against a fresh recomputation from the complete verified source entry; then, only if (a) succeeds, (b) final `profile_local_notes` is applied (§9) and the complete aggregate independently re-validates in full — every remaining stored value equals every remaining recomputed value | (a) `source_entry_content_commitment_mismatch` if the stored and freshly recomputed values differ; otherwise (b) `complete_aggregate_validation_mismatch` for any other stored-vs-recomputed divergence; success here yields the `accepted` envelope |
+| 28 | Final complete-aggregate validation, after final `profile_local_notes` has already been applied (§9 steps 3–4): (a) the stored `source_entry_content_commitment`, as carried into the complete final aggregate from position 14, is compared against a fresh recomputation from the complete verified source entry; then, only if (a) succeeds, (b) every remaining stored value in the complete final aggregate — including the applied `profile_local_notes` — independently re-validates against its own recomputation | (a) `source_entry_content_commitment_mismatch` if the stored and freshly recomputed values differ; otherwise (b) `complete_aggregate_validation_mismatch` for any other stored-vs-recomputed divergence in the complete final aggregate; success here yields the `accepted` envelope |
 
 For every compound position: subchecks execute left-to-right exactly as
 written; the first failing subcheck determines the one finding; shape
@@ -917,10 +917,11 @@ two occurrences; the code alone does not.
 
 #### Position 14 and position 28: derivation versus preservation verification
 
-Position 14 and position 28's subcheck (a) jointly own
-`source_entry_content_commitment_mismatch`, and this subsection states how,
-without changing the closed 32-code finding vocabulary or the 28-position
-count.
+Position 14 produces and retains `source_entry_content_commitment`.
+Position 28 exclusively owns the executable trigger for
+`source_entry_content_commitment_mismatch`, through its named
+preservation-verification subcheck. This subsection states how, without
+changing the closed 32-code finding vocabulary or the 28-position count.
 
 Position 14 derives and retains `source_entry_content_commitment`: it
 canonicalizes the complete position-13-verified `chronicle_entry.v0` object
@@ -936,9 +937,15 @@ position-12 convention of a position that performs a real operation
 without owning a code of its own.
 
 Position 28's subcheck (a) is where `source_entry_content_commitment` is
-verified: the value stored in the by-then-fully-assembled aggregate is
-compared against a fresh, independent recomputation performed at position
-28 from the same complete verified source entry. This is the same
+verified. Per §9's already-pinned notes application order, final
+`profile_local_notes` is applied before position 28 begins (§9 steps 3–4);
+position 28 does not apply notes itself and does not defer notes
+application until after subcheck (a). Position 28 operates on the
+complete final aggregate — notes already included — and, within that
+single terminal validation, first compares the `source_entry_content_commitment`
+value stored in that complete final aggregate against a fresh, independent
+recomputation performed at position 28 from the same complete verified
+source entry. This is the same
 "stored-versus-freshly-recomputed" pattern already normative for every
 other identity-bearing commitment in this profile (RSF profile §7.6, §8.4,
 §9.4, §10.4, §13.4, §14.5: "consumers MUST NOT trust the stored commitment
