@@ -1022,6 +1022,89 @@ formatting. Precisely:
   missing-carrier finding before position 1, and defines no transport or API
   error envelope (§7.0).
 
+#### Commitment-mismatch reachability in v0
+
+This subsection clarifies the reachability of the three position-15/16/17
+commitment-mismatch findings from conforming, shape-valid external input in
+v0. It changes no field, pin, finding, or position; it names an already-true
+consequence of the closed exact-literal declaration domains defined by RSF
+profile §8.1, §9.1, and §10.1.
+
+**Evaluation order.** For each of positions 15, 16, and 17, an evaluator
+MUST, in order: (1) validate the complete declaration against its
+position-owned exact closed declaration object; (2) on shape failure, emit
+the position-owned malformed-declaration finding
+(`malformed_fold_policy_declaration`, `malformed_comparability_class_declaration`,
+or `malformed_transition_rule_declaration`) and stop; (3) only after shape
+success, canonicalize the complete declaration value with the repository
+`canonicalize()` (§7.4); (4) compute SHA-256 over the resulting UTF-8
+canonical bytes; (5) compare the digest against the corresponding package
+pin from the table in this section; (6) on inequality, emit the
+position-owned commitment-mismatch finding (`fold_policy_commitment_mismatch`,
+`comparability_class_commitment_mismatch`, or
+`transition_rule_commitment_mismatch`). Shape validation gates commitment
+recomputation; commitment recomputation never runs before shape success, and
+never runs on a value shape validation has already rejected.
+
+**Closed exact-literal domain.** In v0, every member of
+`fold_policy_declaration`, `comparability_class_declaration`, and
+`transition_rule_declaration` is fixed by RSF profile §8.1, §9.1, or §10.1
+respectively to one normative literal value — this includes, without
+exception, `member_cardinality` (exact literal `1`), `admission_required`
+(exact literal `true`), and `fail_closed_on_malformed_or_unknown_input`
+(exact literal `true`), as well as every string-valued member of all three
+declarations. A value alteration to any member, of any type, is not a
+shape-valid alternative policy, class, or rule. It is malformed at the same
+position, under the position-owned malformed-declaration finding.
+
+**Reachability.** Because shape success at positions 15, 16, or 17 proves
+the supplied declaration is, member for member, identical to the exact
+declaration object pinned by RSF profile §8.1, §9.1, or §10.1, a conforming
+shape-valid external input has no alternative abstract JSON-domain value
+that could legitimately differ from the corresponding package pin in this
+section. Consequently, `fold_policy_commitment_mismatch`,
+`comparability_class_commitment_mismatch`, and
+`transition_rule_commitment_mismatch` are not expected to be reachable from
+conforming, shape-valid external input in v0. This statement is scoped to
+external input reaching a correctly functioning implementation; it does not
+address internal implementation corruption, which is covered below.
+
+**Integrity role.** The commitment comparison at each of positions 15, 16,
+and 17 remains mandatory and MUST NOT be skipped, weakened, or treated as
+optional on the basis of the reachability statement above. If shape
+validation succeeds but the recomputed commitment differs from the
+normative pin, the evaluator MUST still fail closed with the position-owned
+commitment-mismatch finding. Such an outcome is an integrity/invariant
+inconsistency involving at least one of: the embedded declaration value as
+actually supplied at runtime, the normative package pin used by the
+implementation, canonicalization, UTF-8 encoding, SHA-256 computation, or
+implementation behavior. This clarification does not prescribe which
+component is defective in that event; it only establishes that the
+comparison exists to catch exactly this class of inconsistency, and that
+the resulting finding remains a legitimate, fail-closed evaluator outcome
+rather than a defect in the finding's definition.
+
+**Conformance vectors.** A conforming test suite for positions 15, 16, and
+17 MUST test exact-declaration success, MUST test malformed-declaration
+ownership for every altered key or value, and MUST independently verify
+canonical bytes and the pinned hashes against the repository's
+`canonicalize()` and synchronous SHA-256 helper. A conforming test suite
+MUST NOT weaken exact-literal shape semantics merely to manufacture a
+commitment-mismatch witness, and is not required to produce a shape-valid
+external-input witness for an invariant-only mismatch outcome.
+
+**Contract preservation.** This clarification changes none of: the seven
+evaluation-input fields (§7.2); the `fold_policy_declaration`,
+`comparability_class_declaration`, and `transition_rule_declaration`
+objects (RSF profile §8.1, §9.1, §10.1); the three package pins in this
+section; the closed 32-code finding vocabulary (§11); the 28-position
+evaluation order (§12); first-finding semantics; the existing
+`canonicalize()`; package identity; or the current public-evaluator
+implementation boundary. Positions 15–17 remain isolated, non-chaining
+primitives, not integrated into a public evaluator; positions 5–14 remain
+unimplemented and are not represented as passed by this clarification or by
+positions 15–17.
+
 ## 13. Exact SF-V1 package contract
 
 Package materials required for the one deterministic valid singleton fold
