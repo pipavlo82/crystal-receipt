@@ -29,6 +29,7 @@ const FOLD_POLICY_VERSION = "recursive-singleton-fold-policy-v0"
 const FOLD_POLICY_ID = "singleton-chronicle-entry-semantic-preservation"
 const FOLD_POLICY_SOURCE_OBJECT_SCHEMA = "chronicle_entry.v0"
 const FOLD_POLICY_AGGREGATE_OBJECT_SCHEMA = "recursive_singleton_aggregate.v0"
+const FOLD_POLICY_MEMBER_CARDINALITY = 1
 const FOLD_POLICY_AGGREGATION_MODE = "singleton_only"
 const FOLD_POLICY_SEMANTIC_ELEVATION = "forbidden"
 const FOLD_POLICY_SOURCE_IDENTITY_REUSE = "forbidden"
@@ -51,6 +52,7 @@ const COMPARABILITY_CLASS_SCHEMA = "recursive_singleton_comparability_class.v0"
 const COMPARABILITY_CLASS_VERSION = "recursive-singleton-comparability-class-v0"
 const COMPARABILITY_CLASS_ID = "admitted-chronicle-entry-singleton"
 const COMPARABILITY_SOURCE_OBJECT_SCHEMA = "chronicle_entry.v0"
+const COMPARABILITY_ADMISSION_REQUIRED = true
 const COMPARABILITY_CROSS_ENTRY_COMPARABILITY = "not_asserted"
 const COMPARABILITY_CROSS_POLICY_BRIDGE = "deferred"
 const COMPARABILITY_CROSS_CLASS_BRIDGE = "deferred"
@@ -76,6 +78,7 @@ const TRANSITION_AGGREGATE_OBJECT_SCHEMA = "recursive_singleton_aggregate.v0"
 const TRANSITION_PRESERVED_EQUALITY_RELATION = "semantic_result_commitment_equality_only"
 const TRANSITION_SOURCE_IDENTITY_REUSE = "forbidden"
 const TRANSITION_STRONGER_CLASS_CREATION = "forbidden"
+const TRANSITION_FAIL_CLOSED_ON_MALFORMED_OR_UNKNOWN_INPUT = true
 
 const TRANSITION_RULE_KEYS = [
   "schema",
@@ -132,7 +135,7 @@ export type FoldPolicyDeclarationShape = {
   policy_id: typeof FOLD_POLICY_ID
   source_object_schema: typeof FOLD_POLICY_SOURCE_OBJECT_SCHEMA
   aggregate_object_schema: typeof FOLD_POLICY_AGGREGATE_OBJECT_SCHEMA
-  member_cardinality: number
+  member_cardinality: typeof FOLD_POLICY_MEMBER_CARDINALITY
   aggregation_mode: typeof FOLD_POLICY_AGGREGATION_MODE
   semantic_elevation: typeof FOLD_POLICY_SEMANTIC_ELEVATION
   source_identity_reuse: typeof FOLD_POLICY_SOURCE_IDENTITY_REUSE
@@ -144,7 +147,7 @@ export type ComparabilityClassDeclarationShape = {
   class_version: typeof COMPARABILITY_CLASS_VERSION
   class_id: typeof COMPARABILITY_CLASS_ID
   source_object_schema: typeof COMPARABILITY_SOURCE_OBJECT_SCHEMA
-  admission_required: boolean
+  admission_required: typeof COMPARABILITY_ADMISSION_REQUIRED
   cross_entry_comparability: typeof COMPARABILITY_CROSS_ENTRY_COMPARABILITY
   cross_policy_bridge: typeof COMPARABILITY_CROSS_POLICY_BRIDGE
   cross_class_bridge: typeof COMPARABILITY_CROSS_CLASS_BRIDGE
@@ -160,7 +163,7 @@ export type TransitionRuleDeclarationShape = {
   preserved_equality_relation: typeof TRANSITION_PRESERVED_EQUALITY_RELATION
   source_identity_reuse: typeof TRANSITION_SOURCE_IDENTITY_REUSE
   stronger_class_creation: typeof TRANSITION_STRONGER_CLASS_CREATION
-  fail_closed_on_malformed_or_unknown_input: boolean
+  fail_closed_on_malformed_or_unknown_input: typeof TRANSITION_FAIL_CLOSED_ON_MALFORMED_OR_UNKNOWN_INPUT
 }
 
 export type FoldPolicyDeclarationCheckResult =
@@ -185,10 +188,6 @@ function hasExactOwnKeys(value: Record<string, unknown>, keys: readonly string[]
   return keys.every((key) => Object.prototype.hasOwnProperty.call(value, key))
 }
 
-function isFiniteNumber(value: unknown): value is number {
-  return typeof value === "number" && Number.isFinite(value)
-}
-
 function checkFoldPolicyShape(value: unknown): FoldPolicyDeclarationShape | null {
   if (!isPlainObject(value)) return null
   if (!hasExactOwnKeys(value, FOLD_POLICY_KEYS)) return null
@@ -198,7 +197,7 @@ function checkFoldPolicyShape(value: unknown): FoldPolicyDeclarationShape | null
   if (value.policy_id !== FOLD_POLICY_ID) return null
   if (value.source_object_schema !== FOLD_POLICY_SOURCE_OBJECT_SCHEMA) return null
   if (value.aggregate_object_schema !== FOLD_POLICY_AGGREGATE_OBJECT_SCHEMA) return null
-  if (!isFiniteNumber(value.member_cardinality)) return null
+  if (value.member_cardinality !== FOLD_POLICY_MEMBER_CARDINALITY) return null
   if (value.aggregation_mode !== FOLD_POLICY_AGGREGATION_MODE) return null
   if (value.semantic_elevation !== FOLD_POLICY_SEMANTIC_ELEVATION) return null
   if (value.source_identity_reuse !== FOLD_POLICY_SOURCE_IDENTITY_REUSE) return null
@@ -210,7 +209,7 @@ function checkFoldPolicyShape(value: unknown): FoldPolicyDeclarationShape | null
     policy_id: FOLD_POLICY_ID,
     source_object_schema: FOLD_POLICY_SOURCE_OBJECT_SCHEMA,
     aggregate_object_schema: FOLD_POLICY_AGGREGATE_OBJECT_SCHEMA,
-    member_cardinality: value.member_cardinality,
+    member_cardinality: FOLD_POLICY_MEMBER_CARDINALITY,
     aggregation_mode: FOLD_POLICY_AGGREGATION_MODE,
     semantic_elevation: FOLD_POLICY_SEMANTIC_ELEVATION,
     source_identity_reuse: FOLD_POLICY_SOURCE_IDENTITY_REUSE,
@@ -226,7 +225,7 @@ function checkComparabilityClassShape(value: unknown): ComparabilityClassDeclara
   if (value.class_version !== COMPARABILITY_CLASS_VERSION) return null
   if (value.class_id !== COMPARABILITY_CLASS_ID) return null
   if (value.source_object_schema !== COMPARABILITY_SOURCE_OBJECT_SCHEMA) return null
-  if (typeof value.admission_required !== "boolean") return null
+  if (value.admission_required !== COMPARABILITY_ADMISSION_REQUIRED) return null
   if (value.cross_entry_comparability !== COMPARABILITY_CROSS_ENTRY_COMPARABILITY) return null
   if (value.cross_policy_bridge !== COMPARABILITY_CROSS_POLICY_BRIDGE) return null
   if (value.cross_class_bridge !== COMPARABILITY_CROSS_CLASS_BRIDGE) return null
@@ -237,7 +236,7 @@ function checkComparabilityClassShape(value: unknown): ComparabilityClassDeclara
     class_version: COMPARABILITY_CLASS_VERSION,
     class_id: COMPARABILITY_CLASS_ID,
     source_object_schema: COMPARABILITY_SOURCE_OBJECT_SCHEMA,
-    admission_required: value.admission_required,
+    admission_required: COMPARABILITY_ADMISSION_REQUIRED,
     cross_entry_comparability: COMPARABILITY_CROSS_ENTRY_COMPARABILITY,
     cross_policy_bridge: COMPARABILITY_CROSS_POLICY_BRIDGE,
     cross_class_bridge: COMPARABILITY_CROSS_CLASS_BRIDGE,
@@ -257,7 +256,7 @@ function checkTransitionRuleShape(value: unknown): TransitionRuleDeclarationShap
   if (value.preserved_equality_relation !== TRANSITION_PRESERVED_EQUALITY_RELATION) return null
   if (value.source_identity_reuse !== TRANSITION_SOURCE_IDENTITY_REUSE) return null
   if (value.stronger_class_creation !== TRANSITION_STRONGER_CLASS_CREATION) return null
-  if (typeof value.fail_closed_on_malformed_or_unknown_input !== "boolean") return null
+  if (value.fail_closed_on_malformed_or_unknown_input !== TRANSITION_FAIL_CLOSED_ON_MALFORMED_OR_UNKNOWN_INPUT) return null
 
   return {
     schema: TRANSITION_RULE_SCHEMA,
@@ -268,7 +267,7 @@ function checkTransitionRuleShape(value: unknown): TransitionRuleDeclarationShap
     preserved_equality_relation: TRANSITION_PRESERVED_EQUALITY_RELATION,
     source_identity_reuse: TRANSITION_SOURCE_IDENTITY_REUSE,
     stronger_class_creation: TRANSITION_STRONGER_CLASS_CREATION,
-    fail_closed_on_malformed_or_unknown_input: value.fail_closed_on_malformed_or_unknown_input,
+    fail_closed_on_malformed_or_unknown_input: TRANSITION_FAIL_CLOSED_ON_MALFORMED_OR_UNKNOWN_INPUT,
   }
 }
 

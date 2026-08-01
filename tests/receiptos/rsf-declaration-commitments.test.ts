@@ -173,10 +173,6 @@ describe("checkFoldPolicyDeclaration - negative: shape (malformed_fold_policy_de
     expectMalformed({ ...normativeFoldPolicy(), profile_local_notes: null })
   })
 
-  test("wrong member type (member_cardinality as string)", () => {
-    expectMalformed({ ...normativeFoldPolicy(), member_cardinality: "1" })
-  })
-
   test("wrong pinned literal (aggregation_mode)", () => {
     expectMalformed({ ...normativeFoldPolicy(), aggregation_mode: "batch_mode" })
   })
@@ -184,21 +180,45 @@ describe("checkFoldPolicyDeclaration - negative: shape (malformed_fold_policy_de
   test("cross-declaration input is rejected as malformed, not delegated", () => {
     expectMalformed(normativeComparabilityClass())
   })
+
+  // member_cardinality is an exact normative literal (RSF profile §8.1: "1"),
+  // not a generic finite-number field. Every value other than the literal 1
+  // is a shape failure, never a commitment mismatch.
+  const WRONG_MEMBER_CARDINALITY_VALUES: Array<[string, unknown]> = [
+    ["0", 0],
+    ["-1", -1],
+    ["-0", -0],
+    ["1.5", 1.5],
+    ["2", 2],
+    ["Number.MAX_VALUE", Number.MAX_VALUE],
+    ["NaN", NaN],
+    ["Infinity", Infinity],
+    ["-Infinity", -Infinity],
+    ['string "1"', "1"],
+    ["boolean true", true],
+    ["null", null],
+    ["array", []],
+    ["object", {}],
+  ]
+
+  for (const [label, value] of WRONG_MEMBER_CARDINALITY_VALUES) {
+    test(`member_cardinality ${label} is malformed, not a commitment mismatch`, () => {
+      expectMalformed({ ...normativeFoldPolicy(), member_cardinality: value })
+    })
+  }
 })
 
-describe("checkFoldPolicyDeclaration - negative: commitment (fold_policy_commitment_mismatch)", () => {
-  test("structurally valid permitted-value mutation changes commitment", () => {
-    const mutated = { ...normativeFoldPolicy(), member_cardinality: 2 }
-    const result = checkFoldPolicyDeclaration(mutated)
-    expect(result.success).toBe(false)
-    if (result.success) return
-    expect(result.finding).toEqual({
-      schema: "recursive_singleton_fold_finding.v0",
-      code: "fold_policy_commitment_mismatch",
-      check_position: 15,
-    })
-  })
-})
+// Reachability audit (RSF profile §8.1): every field of fold_policy_declaration
+// is an exact normative literal, including member_cardinality (1). A value
+// that satisfies shape validation is therefore already identical, field for
+// field, to the pinned declaration, so its canonical bytes and commitment
+// always match FOLD_POLICY_COMMITMENT. No structurally valid input can differ
+// from the pinned value while still passing shape validation, so
+// `fold_policy_commitment_mismatch` is UNREACHABLE from any well-formed
+// declaration under the current exact-literal shape contract. The comparison
+// in checkFoldPolicyDeclaration is retained as a defense against a
+// canonicalize()/sha256() implementation defect, not because a valid
+// mismatching input exists.
 
 // ---------------------------------------------------------------------------
 // Position 16 — comparability_class_declaration
@@ -275,10 +295,6 @@ describe("checkComparabilityClassDeclaration - negative: shape (malformed_compar
     expectMalformed({ ...normativeComparabilityClass(), profile_local_notes: null })
   })
 
-  test("wrong member type (admission_required as string)", () => {
-    expectMalformed({ ...normativeComparabilityClass(), admission_required: "true" })
-  })
-
   test("wrong pinned literal (cross_entry_comparability)", () => {
     expectMalformed({ ...normativeComparabilityClass(), cross_entry_comparability: "asserted" })
   })
@@ -286,21 +302,34 @@ describe("checkComparabilityClassDeclaration - negative: shape (malformed_compar
   test("cross-declaration input is rejected as malformed, not delegated", () => {
     expectMalformed(normativeTransitionRule())
   })
+
+  // admission_required is an exact normative literal (RSF profile §9.1:
+  // "true"), not a generic boolean field. Every value other than the literal
+  // true, including false, is a shape failure, never a commitment mismatch.
+  const WRONG_ADMISSION_REQUIRED_VALUES: Array<[string, unknown]> = [
+    ["boolean false", false],
+    ['string "true"', "true"],
+    ["number 1", 1],
+    ["null", null],
+    ["array", []],
+    ["object", {}],
+  ]
+
+  for (const [label, value] of WRONG_ADMISSION_REQUIRED_VALUES) {
+    test(`admission_required ${label} is malformed, not a commitment mismatch`, () => {
+      expectMalformed({ ...normativeComparabilityClass(), admission_required: value })
+    })
+  }
 })
 
-describe("checkComparabilityClassDeclaration - negative: commitment (comparability_class_commitment_mismatch)", () => {
-  test("structurally valid permitted-value mutation changes commitment", () => {
-    const mutated = { ...normativeComparabilityClass(), admission_required: false }
-    const result = checkComparabilityClassDeclaration(mutated)
-    expect(result.success).toBe(false)
-    if (result.success) return
-    expect(result.finding).toEqual({
-      schema: "recursive_singleton_fold_finding.v0",
-      code: "comparability_class_commitment_mismatch",
-      check_position: 16,
-    })
-  })
-})
+// Reachability audit (RSF profile §9.1): every field of
+// comparability_class_declaration is an exact normative literal, including
+// admission_required (true). A value that satisfies shape validation is
+// therefore already identical, field for field, to the pinned declaration, so
+// its commitment always matches COMPARABILITY_CLASS_COMMITMENT.
+// `comparability_class_commitment_mismatch` is UNREACHABLE from any
+// well-formed declaration under the current exact-literal shape contract, for
+// the same reason as position 15.
 
 // ---------------------------------------------------------------------------
 // Position 17 — transition_rule_declaration
@@ -377,10 +406,6 @@ describe("checkTransitionRuleDeclaration - negative: shape (malformed_transition
     expectMalformed({ ...normativeTransitionRule(), profile_local_notes: null })
   })
 
-  test("wrong member type (fail_closed_on_malformed_or_unknown_input as string)", () => {
-    expectMalformed({ ...normativeTransitionRule(), fail_closed_on_malformed_or_unknown_input: "true" })
-  })
-
   test("wrong pinned literal (preserved_equality_relation)", () => {
     expectMalformed({ ...normativeTransitionRule(), preserved_equality_relation: "byte_identity" })
   })
@@ -388,21 +413,35 @@ describe("checkTransitionRuleDeclaration - negative: shape (malformed_transition
   test("cross-declaration input is rejected as malformed, not delegated", () => {
     expectMalformed(normativeFoldPolicy())
   })
+
+  // fail_closed_on_malformed_or_unknown_input is an exact normative literal
+  // (RSF profile §10.1: "true"), not a generic boolean field. Every value
+  // other than the literal true, including false, is a shape failure, never a
+  // commitment mismatch.
+  const WRONG_FAIL_CLOSED_VALUES: Array<[string, unknown]> = [
+    ["boolean false", false],
+    ['string "true"', "true"],
+    ["number 1", 1],
+    ["null", null],
+    ["array", []],
+    ["object", {}],
+  ]
+
+  for (const [label, value] of WRONG_FAIL_CLOSED_VALUES) {
+    test(`fail_closed_on_malformed_or_unknown_input ${label} is malformed, not a commitment mismatch`, () => {
+      expectMalformed({ ...normativeTransitionRule(), fail_closed_on_malformed_or_unknown_input: value })
+    })
+  }
 })
 
-describe("checkTransitionRuleDeclaration - negative: commitment (transition_rule_commitment_mismatch)", () => {
-  test("structurally valid permitted-value mutation changes commitment", () => {
-    const mutated = { ...normativeTransitionRule(), fail_closed_on_malformed_or_unknown_input: false }
-    const result = checkTransitionRuleDeclaration(mutated)
-    expect(result.success).toBe(false)
-    if (result.success) return
-    expect(result.finding).toEqual({
-      schema: "recursive_singleton_fold_finding.v0",
-      code: "transition_rule_commitment_mismatch",
-      check_position: 17,
-    })
-  })
-})
+// Reachability audit (RSF profile §10.1): every field of
+// transition_rule_declaration is an exact normative literal, including
+// fail_closed_on_malformed_or_unknown_input (true). A value that satisfies
+// shape validation is therefore already identical, field for field, to the
+// pinned declaration, so its commitment always matches
+// TRANSITION_RULE_COMMITMENT. `transition_rule_commitment_mismatch` is
+// UNREACHABLE from any well-formed declaration under the current
+// exact-literal shape contract, for the same reason as positions 15 and 16.
 
 // ---------------------------------------------------------------------------
 // Execution-order behavior
@@ -412,9 +451,9 @@ describe("execution order", () => {
   test("canonicalization is not performed after shape failure (fold policy)", () => {
     const circular: Record<string, unknown> = {}
     circular.self = circular
-    // member_cardinality fails its type check before any canonicalize/hash
-    // step runs; if canonicalization ran anyway on this declaration, the
-    // circular reference would throw during JSON.stringify.
+    // member_cardinality fails its exact-literal check before any
+    // canonicalize/hash step runs; if canonicalization ran anyway on this
+    // declaration, the circular reference would throw during JSON.stringify.
     const malformed = { ...normativeFoldPolicy(), member_cardinality: circular }
     let result: ReturnType<typeof checkFoldPolicyDeclaration> | undefined
     expect(() => {
