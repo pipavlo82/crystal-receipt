@@ -86,6 +86,17 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
+// Deep-snapshots a validated JSON-domain value so a success result never
+// aliases the caller-owned object graph. Every value reaching this point has
+// already passed exact-shape validation (only plain objects, arrays,
+// strings, booleans, numbers, and null), so `structuredClone` cannot
+// encounter an unsupported type; if it somehow did, its native
+// `DataCloneError` correctly surfaces as an implementation failure rather
+// than a fabricated RSF finding.
+function snapshot<T>(value: T): T {
+  return structuredClone(value)
+}
+
 function hasExactOwnKeys(value: Record<string, unknown>, keys: readonly string[]): boolean {
   const ownKeys = Object.keys(value)
   if (ownKeys.length !== keys.length) return false
@@ -124,7 +135,7 @@ export function checkSourceEvidence(declaration: unknown): CheckSourceEvidenceRe
       finding: { schema: "recursive_singleton_fold_finding.v0", code: "malformed_source_evidence", check_position: 5 },
     }
   }
-  return { success: true, value: result.value }
+  return { success: true, value: snapshot(result.value) }
 }
 
 // ---------------------------------------------------------------------------
@@ -332,7 +343,7 @@ export function checkPortableProofObject(declaration: unknown): CheckPortablePro
       finding: { schema: "recursive_singleton_fold_finding.v0", code: "malformed_portable_proof_object", check_position: 6 },
     }
   }
-  return { success: true, value: declaration }
+  return { success: true, value: snapshot(declaration) }
 }
 
 // ---------------------------------------------------------------------------
@@ -379,7 +390,7 @@ export function checkClaimedSourceEntry(declaration: unknown): CheckClaimedSourc
       finding: { schema: "recursive_singleton_fold_finding.v0", code: "malformed_source_entry", check_position: 7 },
     }
   }
-  return { success: true, value: declaration }
+  return { success: true, value: snapshot(declaration) }
 }
 
 // ---------------------------------------------------------------------------

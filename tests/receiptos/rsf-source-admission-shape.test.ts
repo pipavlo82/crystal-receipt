@@ -55,12 +55,49 @@ describe("checkSourceEvidence - positive", () => {
     expect(checkSourceEvidence(fresh).success).toBe(true)
   })
 
-  test("input remains unmodified after invocation and later caller mutation does not affect the returned value's identity requirement", () => {
+  test("input remains unmodified during invocation", () => {
     const input = validEvidence()
     const before = JSON.stringify(input)
+    checkSourceEvidence(input)
+    expect(JSON.stringify(input)).toBe(before)
+  })
+
+  test("success returns an independent deep snapshot, not a caller-owned alias", () => {
+    const input = validEvidence()
+    const originalSnapshot = JSON.parse(JSON.stringify(input))
     const result = checkSourceEvidence(input)
     expect(result.success).toBe(true)
-    expect(JSON.stringify(input)).toBe(before)
+    if (!result.success) return
+
+    // root and nested object/array identity must differ from the caller input
+    expect(result.value).not.toBe(input)
+    expect(result.value.anchor).not.toBe(input.anchor)
+    expect(result.value.task).not.toBe(input.task)
+    expect(result.value.execution).not.toBe(input.execution)
+    expect(result.value.commands).not.toBe(input.commands)
+    expect(result.value.changes.files_changed).not.toBe(input.changes.files_changed)
+
+    // mutate the caller-owned input after the checker has already returned
+    input.anchor.receipt_root = "MUTATED_AFTER_SUCCESS"
+    input.task.title = "MUTATED_AFTER_SUCCESS"
+    input.changes.files_changed.push("mutated-after-success.ts")
+    input.execution.push({
+      call_id: "mutated",
+      tool: "mutated",
+      action_performed: "mutated",
+      target: "mutated",
+      execution_timestamp: 0,
+      completed_timestamp: 0,
+      status: "completed",
+      scope_match: null,
+    })
+
+    // the already-returned value must be unaffected by the later mutation
+    expect(result.value).toEqual(originalSnapshot)
+    expect(result.value.anchor.receipt_root).not.toBe("MUTATED_AFTER_SUCCESS")
+    expect(result.value.task.title).not.toBe("MUTATED_AFTER_SUCCESS")
+    expect(result.value.changes.files_changed).not.toContain("mutated-after-success.ts")
+    expect(result.value.execution.length).toBe(originalSnapshot.execution.length)
   })
 })
 
@@ -151,11 +188,47 @@ describe("checkPortableProofObject - positive", () => {
     expect(checkPortableProofObject(reordered).success).toBe(true)
   })
 
-  test("input remains unmodified", async () => {
+  test("input remains unmodified during invocation", async () => {
     const proof = await validProofObject()
     const before = JSON.stringify(proof)
     checkPortableProofObject(proof)
     expect(JSON.stringify(proof)).toBe(before)
+  })
+
+  test("success returns an independent deep snapshot, not a caller-owned alias", async () => {
+    const proof = await validProofObject()
+    const originalSnapshot = JSON.parse(JSON.stringify(proof))
+    const result = checkPortableProofObject(proof)
+    expect(result.success).toBe(true)
+    if (!result.success) return
+
+    expect(result.value).not.toBe(proof)
+    expect(result.value.metadata).not.toBe(proof.metadata)
+    expect(result.value.producer).not.toBe(proof.producer)
+    expect(result.value.project_refs).not.toBe(proof.project_refs)
+    expect(result.value.evidence_capsule).not.toBe(proof.evidence_capsule)
+    expect(result.value.evidence_capsule.capsule.sections).not.toBe(proof.evidence_capsule.capsule.sections)
+    expect(result.value.evidence_capsule.capsule.sections[0]).not.toBe(proof.evidence_capsule.capsule.sections[0])
+    expect(result.value.evidence_capsule.capsule.sections[0].sourceFields).not.toBe(
+      proof.evidence_capsule.capsule.sections[0].sourceFields,
+    )
+    expect(result.value.provenance_summary).not.toBe(proof.provenance_summary)
+    expect(result.value.provenance_summary.warnings).not.toBe(proof.provenance_summary.warnings)
+
+    proof.metadata.label = "MUTATED_AFTER_SUCCESS"
+    proof.producer.runtime = "MUTATED_AFTER_SUCCESS"
+    proof.project_refs.push("mutated-after-success")
+    proof.evidence_capsule.capsule.sections[0].label = "MUTATED_AFTER_SUCCESS"
+    proof.evidence_capsule.capsule.sections[0].sourceFields.push("mutated-after-success")
+    proof.provenance_summary.warnings.push("mutated-after-success")
+
+    expect(result.value).toEqual(originalSnapshot)
+    expect(result.value.metadata.label).not.toBe("MUTATED_AFTER_SUCCESS")
+    expect(result.value.producer.runtime).not.toBe("MUTATED_AFTER_SUCCESS")
+    expect(result.value.project_refs).not.toContain("mutated-after-success")
+    expect(result.value.evidence_capsule.capsule.sections[0].label).not.toBe("MUTATED_AFTER_SUCCESS")
+    expect(result.value.evidence_capsule.capsule.sections[0].sourceFields).not.toContain("mutated-after-success")
+    expect(result.value.provenance_summary.warnings).not.toContain("mutated-after-success")
   })
 })
 
@@ -298,11 +371,31 @@ describe("checkClaimedSourceEntry - positive", () => {
     expect(checkClaimedSourceEntry(reordered).success).toBe(true)
   })
 
-  test("input remains unmodified", async () => {
+  test("input remains unmodified during invocation", async () => {
     const entry = await validClaimedSourceEntry()
     const before = JSON.stringify(entry)
     checkClaimedSourceEntry(entry)
     expect(JSON.stringify(entry)).toBe(before)
+  })
+
+  test("success returns an independent deep snapshot, not a caller-owned alias", async () => {
+    const entry = await validClaimedSourceEntry()
+    const originalSnapshot = JSON.parse(JSON.stringify(entry))
+    const result = checkClaimedSourceEntry(entry)
+    expect(result.success).toBe(true)
+    if (!result.success) return
+
+    expect(result.value).not.toBe(entry)
+    expect(result.value.labels).not.toBe(entry.labels)
+
+    entry.entry_id = "MUTATED_AFTER_SUCCESS"
+    entry.notes = "MUTATED_AFTER_SUCCESS"
+    entry.labels.push("mutated-after-success")
+
+    expect(result.value).toEqual(originalSnapshot)
+    expect(result.value.entry_id).not.toBe("MUTATED_AFTER_SUCCESS")
+    expect(result.value.notes).not.toBe("MUTATED_AFTER_SUCCESS")
+    expect(result.value.labels).not.toContain("mutated-after-success")
   })
 })
 
@@ -392,11 +485,24 @@ describe("checkSourceAdmissionPrerequisitesAndReceiptRoot - positive", () => {
     expect(result.value.verifiedReceiptRoot.toLowerCase()).toBe(evidence.anchor.receipt_root.toLowerCase())
   })
 
-  test("input remains unmodified", () => {
+  test("input remains unmodified during invocation", () => {
     const evidence = validEvidence()
     const before = JSON.stringify(evidence)
     checkSourceAdmissionPrerequisitesAndReceiptRoot(evidence)
     expect(JSON.stringify(evidence)).toBe(before)
+  })
+
+  test("success output object is independent of the input; its payload is an immutable string", () => {
+    const evidence = validEvidence()
+    const result = checkSourceAdmissionPrerequisitesAndReceiptRoot(evidence)
+    expect(result.success).toBe(true)
+    if (!result.success) return
+    expect(result.value).not.toBe(evidence as unknown)
+    const before = result.value.verifiedReceiptRoot
+    // Mutating the caller's evidence after the fact cannot retroactively
+    // change an already-returned string primitive.
+    evidence.anchor.receipt_root = "MUTATED_AFTER_SUCCESS"
+    expect(result.value.verifiedReceiptRoot).toBe(before)
   })
 })
 
