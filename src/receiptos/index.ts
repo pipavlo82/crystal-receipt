@@ -95,6 +95,21 @@ export {
   type TransitionRuleDeclarationCheckResult,
 } from "./rsf/declaration-commitments"
 export {
+  checkSourceEvidence,
+  checkPortableProofObject,
+  checkClaimedSourceEntry,
+  checkSourceAdmissionPrerequisitesAndReceiptRoot,
+  type SourceEvidenceCheckFinding,
+  type PortableProofObjectCheckFinding,
+  type ClaimedSourceEntryCheckFinding,
+  type SourceAdmissionReceiptRootFindingCode,
+  type SourceAdmissionReceiptRootCheckFinding,
+  type CheckSourceEvidenceResult,
+  type CheckPortableProofObjectResult,
+  type CheckClaimedSourceEntryResult,
+  type CheckSourceAdmissionReceiptRootResult,
+} from "./rsf/source-admission-shape"
+export {
   buildRenderPlan,
   buildRenderPlanFromCapsule,
   getRenderPlanZoneDefinitions,
