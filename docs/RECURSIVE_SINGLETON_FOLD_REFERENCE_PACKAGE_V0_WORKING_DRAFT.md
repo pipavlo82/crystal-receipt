@@ -915,6 +915,120 @@ preservation) — the position at which it is raised distinguishes a
 derivation failure from a preservation failure. Position distinguishes these
 two occurrences; the code alone does not.
 
+#### Position 14 expected commitment source
+
+Position 14 recomputes a commitment and compares it for equality, but this
+document has not previously stated where the expected value comes from.
+This subsection pins that source. It does not implement position 14, does
+not implement positions 5–13, and does not integrate positions 15–17 into
+any evaluator.
+
+**Complete canonicalization subject.** The position-14 subject is the
+complete, fully materialized `chronicle_entry.v0` object independently
+verified by position 13 — the same ten-field object pinned by RSF profile
+§6.2 (`schema`, `entry_id`, `source_system`, `receipt_root`,
+`proof_object_ref`, `evidence_capsule_ref`, `provenance_summary_ref`,
+`created_from`, `labels`, `notes`). It is not a content-only projection;
+every field is included, per RSF profile §6.4. It is not the original
+`claimed_source_entry` copy and not the freshly reconstructed entry
+considered separately — position 13 has already proven, by canonical-byte
+equality, that these two objects are the same abstract JSON-domain value,
+so position 14 operates on that single verified value. The subject
+excludes no member; in particular it is not restricted to exclude
+`receipt_root` or any reference field, consistent with RSF profile §6.4's
+explicit statement that this profile does not silently recast any
+`chronicle_entry.v0` field as excluded sidecar metadata.
+
+**Recomputation.** An evaluator MUST canonicalize this subject with the
+repository `canonicalize()` (§7.4) and MUST compute SHA-256 over the
+resulting UTF-8 canonical bytes, per RSF profile §6.3. This produces the
+candidate `source_entry_content_commitment` value.
+
+**Expected-comparison source.** No field of the seven-field evaluation
+input (§7.2), no field of the `recursive_singleton_fold_source_admission_bundle.v0`
+bundle (§5.2), and no reference-package pin (of the kind defined for
+positions 15–17 in §12.1) carries an externally supplied expected value for
+`source_entry_content_commitment`. This is confirmed by RSF profile §6.2's
+exact `chronicle_entry.v0` field list, which has no such member, and by
+§5.3's field-level pinning table, which states that the independently
+reconstructed, verified entry "feeds" `source_entry_content_commitment` —
+naming it as a value *produced from* the verified entry, never as a value
+*compared against* a separately carried input. `source_entry_content_commitment`
+first appears as a stored field only inside the `recursive_singleton_aggregate.v0`
+object (RSF profile §11.1) and the `aggregate_id` identity seed (RSF profile
+§12.1), both of which are constructed later, at positions 22–27 — after
+position 14 has already run. During the single forward evaluation pass
+described by this document's §12 order, no aggregate and no identity seed
+exists yet at position 14; there is therefore no earlier-available stored
+value for position 14 to compare against on this pass.
+
+Consequently, position 14's expected-comparison source **is the
+recomputation itself**: the position establishes the canonical
+`source_entry_content_commitment` value for this evaluation from the sole
+available complete subject (the position-13-verified entry), the same way
+positions 7.6, 8.4, 9.4, and 10.4 already require of their own commitments —
+independent recomputation from the complete inline subject, never trust of
+a producer-asserted value. The value position 14 establishes is then
+reused, unchanged, wherever `source_entry_content_commitment` is
+consumed later in this same evaluation pass — the input semantic-statement
+object (RSF profile §7.3, position 18), the aggregate object (RSF profile
+§11.1), and the aggregate identity seed (RSF profile §12.1, position 27).
+Position 28's final "every stored value equals every recomputed value"
+re-validation (§12 row 28) is the point at which this document already
+requires the by-then-assembled aggregate's stored copy to be checked
+against a fresh recomputation from the same verified entry — position 14
+is not a second, independent instance of that check; it is the first and
+only computation of the value on this pass, and 28 is its wholesale
+re-verification once the value has been placed inside a complete aggregate.
+
+**Missing-source ownership.** Because no external carrier is read at
+position 14, there is no missing-carrier failure mode to define at this
+position. If the underlying subject itself is unavailable or malformed,
+that is owned entirely by an earlier position: absence or malformation of
+`claimed_source_entry` is owned by position 7
+(`malformed_source_entry`); a source-entry canonical-byte discrepancy
+between the reconstructed and claimed entries is owned by position 13
+(`reconstructed_source_entry_mismatch`); by first-finding semantics (§12
+preamble), any such earlier failure prevents position 14 from executing at
+all. Absence of the `node:crypto` SHA-256 implementation, or any other
+inability to execute `canonicalize()`/SHA-256 in the host environment, is
+an evaluator/package setup failure that occurs before or during evaluation
+execution — it is not a new RSF finding and not a new position, consistent
+with §12.1's existing "Missing-package behavior" treatment for positions
+15–17.
+
+**Mismatch finding and reachability.** Ownership of a position-14 mismatch
+remains with the already-defined finding and position (§11, §12):
+`source_entry_content_commitment_mismatch` at position 14. Because the
+recomputation and its only available comparison source are one and the
+same deterministic operation over the same already-verified, immutable
+subject, `source_entry_content_commitment_mismatch` is not expected to be
+reachable from conforming, shape-valid external input in v0 — the same
+integrity-self-check classification already established for the
+position-15/16/17 commitment-mismatch findings. An observed mismatch at
+position 14 would indicate an integrity/invariant inconsistency in the
+evaluator's own canonicalization or hashing execution between the value
+established at position 14 and its later reuse, not a defect an external
+producer could induce by supplying a different `chronicle_entry.v0`
+object — a different source entry produces a different, but still
+internally self-consistent, `source_entry_content_commitment`, and any
+malformed or altered source entry is already excluded before position 14
+by positions 7 and 13. This clarification does not weaken position 13, does
+not change position 14's finding code or check position, and does not
+introduce a new finding, a new position, a new package digest, or a new
+seven-field input member.
+
+**Contract preservation.** This clarification changes none of: the seven
+evaluation-input fields (§7.2); the source-admission bundle shape (§5); the
+`chronicle_entry.v0` shape (RSF profile §6.2); the closed 32-code finding
+vocabulary (§11); the 28-position evaluation order (§12); first-finding
+semantics; the existing `canonicalize()`; the current implementation
+boundary (positions 1–4 implemented; positions 5–14 unimplemented;
+positions 15–17 isolated primitives, not evaluator-integrated); package
+identity; or Chronicle behavior. It introduces no `profile_sha256`, no
+package digest, no runtime configuration, and no network or environment
+authority.
+
 ### 12.1 Authoritative declaration commitments
 
 Positions 15–17 recompute a commitment and compare it for equality, but this
