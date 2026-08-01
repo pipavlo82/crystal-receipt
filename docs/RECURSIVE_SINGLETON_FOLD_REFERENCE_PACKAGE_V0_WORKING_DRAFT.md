@@ -925,8 +925,8 @@ subsection pins that source. It does not implement positions 15–17.
 
 This reference package normatively pins exactly three expected SHA-256
 commitments, one for each declaration field checked at positions 15–17. Each
-pin is a property of this immutable reference-package revision, not of any
-evaluation input.
+pin is a normative constant of the exact committed reference-package
+revision in which this subsection appears, not of any evaluation input.
 
 | Position | Declaration field | Canonicalization rule | Digest algorithm | Expected commitment (lowercase hex SHA-256) |
 |---|---|---|---|---|
@@ -958,22 +958,34 @@ formatting. Precisely:
 
 #### Authority and lifecycle
 
-- These three pins belong to this immutable version of the RSF reference
-  package. They are package constants, not evaluator-supplied assertions, and
-  are never read from the evaluation input itself.
-- A conformant implementation resolves these pins from the exact
-  reference-package version it claims conformance to, and this resolution
-  MUST work offline.
+- These three pins are normative constants of the exact committed
+  reference-package revision containing this subsection. They are package
+  constants, not evaluator-supplied assertions, and are never read from the
+  evaluation input itself.
+- An implementation claiming conformance to these pins MUST identify and use
+  that exact committed revision. During the working-draft phase, this
+  committed Git revision is the publication locator for the pin set; this
+  document does not yet define a permanent reference-package version
+  identifier or whole-package commitment.
+- Git commit identity, so used, is external publication metadata: it is not
+  part of the seven-field RSF evaluation input (§7.2), not a profile digest,
+  not a package digest, not an RSF finding, and not an evaluation position.
+  It does not alter the seven-field input in any way.
 - Local configuration, network registries, mutable profile lookup, Chronicle
   state, environment variables, and hidden constructor options are not
   authoritative sources for these pins.
-- Changing any pinned declaration value requires a new versioned
-  reference-package revision; a pin MUST NOT change silently under the same
-  package identity.
+- A future revision that changes any pinned declaration value MUST publish a
+  distinct committed revision; a pin MUST NOT change silently within the same
+  committed revision.
 - This clarification does not define a new package digest and does not
   restore, rename, imply, or reserve the removed `profile_sha256` field
   (§7.2). The three pins above are declaration-level commitments, not a
   whole-package or whole-profile digest.
+- This clarification does not define the permanent package-versioning or
+  freeze mechanism. Future frozen/package-version identity remains governed
+  by the existing §21 promotion-gate discipline, which already states that
+  this package is not frozen today and carries no pinned whole-package
+  SHA-256 yet.
 
 #### Evaluation relationship
 
@@ -999,11 +1011,13 @@ formatting. Precisely:
 
 #### Missing-package behavior
 
-- An implementation cannot claim conformance to this reference-package
-  version unless it holds the exact immutable pins above.
-- Absence of the claimed package version, or an implementation's inability to
-  resolve it, is an evaluator/package setup failure that occurs before RSF
-  evaluation begins. It is not a new RSF finding and not a new position.
+- An implementation cannot claim conformance to these pins unless it has
+  identified and holds the exact committed reference-package revision
+  described above.
+- Absence of the identified committed revision, or an implementation's
+  inability to resolve it, is an evaluator/package setup failure that occurs
+  before RSF evaluation begins. It is not a new RSF finding and not a new
+  position.
 - This clarification inserts no parser, package-resolution, or
   missing-carrier finding before position 1, and defines no transport or API
   error envelope (§7.0).
