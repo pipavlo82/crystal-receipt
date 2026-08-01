@@ -915,6 +915,99 @@ preservation) — the position at which it is raised distinguishes a
 derivation failure from a preservation failure. Position distinguishes these
 two occurrences; the code alone does not.
 
+### 12.1 Authoritative declaration commitments
+
+Positions 15–17 recompute a commitment and compare it for equality, but this
+document has not previously stated where the expected value comes from. This
+subsection pins that source. It does not implement positions 15–17.
+
+#### Immutable reference-package pins
+
+This reference package normatively pins exactly three expected SHA-256
+commitments, one for each declaration field checked at positions 15–17. Each
+pin is a property of this immutable reference-package revision, not of any
+evaluation input.
+
+| Position | Declaration field | Canonicalization rule | Digest algorithm | Expected commitment (lowercase hex SHA-256) |
+|---|---|---|---|---|
+| 15 | `fold_policy_declaration` | repository `canonicalize()` (§7.4) over the complete declaration object (RSF profile §8.1) | SHA-256 over the resulting UTF-8 canonical bytes | `9c9617921b764cbdea0d2674e397a8a687e28a4a8f25ea4056515a1175b5455f` |
+| 16 | `comparability_class_declaration` | repository `canonicalize()` (§7.4) over the complete declaration object (RSF profile §9.1) | SHA-256 over the resulting UTF-8 canonical bytes | `7a11e0f99232c5a0c41823551ca43064becd870b8f6abb941fc8820b57f088ed` |
+| 17 | `transition_rule_declaration` | repository `canonicalize()` (§7.4) over the complete declaration object (RSF profile §10.1) | SHA-256 over the resulting UTF-8 canonical bytes | `d5fa45fb6ab73c58d14a635d3ba7b899d653a73a133360b8e7ca7e530cfee25c` |
+
+Each pinned value was independently recomputed from the complete canonical
+inline declaration object at RSF profile §8.1, §9.1, and §10.1 respectively;
+none is asserted without a recomputable derivation.
+
+#### Commitment subject
+
+The subject of each pin is the complete declaration value, not its source
+formatting. Precisely:
+
+- the subject is the complete `fold_policy_declaration`,
+  `comparability_class_declaration`, or `transition_rule_declaration` value,
+  taken as a whole;
+- the value MUST first satisfy the already-defined closed singleton shape for
+  that declaration before its commitment is meaningful;
+- canonicalization uses the existing repository `canonicalize()` (§7.4), the
+  same canonicalizer already normative for this evaluation input;
+- hashing is SHA-256 over the resulting UTF-8 canonical bytes;
+- Markdown formatting, source whitespace, Git blob line endings, host object
+  identity, and object member insertion order are not commitment inputs — the
+  commitment subject is the abstract JSON-domain value, not any particular
+  serialization of it.
+
+#### Authority and lifecycle
+
+- These three pins belong to this immutable version of the RSF reference
+  package. They are package constants, not evaluator-supplied assertions, and
+  are never read from the evaluation input itself.
+- A conformant implementation resolves these pins from the exact
+  reference-package version it claims conformance to, and this resolution
+  MUST work offline.
+- Local configuration, network registries, mutable profile lookup, Chronicle
+  state, environment variables, and hidden constructor options are not
+  authoritative sources for these pins.
+- Changing any pinned declaration value requires a new versioned
+  reference-package revision; a pin MUST NOT change silently under the same
+  package identity.
+- This clarification does not define a new package digest and does not
+  restore, rename, imply, or reserve the removed `profile_sha256` field
+  (§7.2). The three pins above are declaration-level commitments, not a
+  whole-package or whole-profile digest.
+
+#### Evaluation relationship
+
+- After the already-defined structural prerequisite for a position succeeds,
+  positions 15–17 recompute the corresponding declaration's commitment from
+  its complete canonical inline value.
+- The recomputed value is compared against the package pin for that
+  position, from the table above.
+- Ownership of a mismatch remains with the already-defined finding and
+  position (§11, §12): `fold_policy_commitment_mismatch` at position 15,
+  `comparability_class_commitment_mismatch` at position 16,
+  `transition_rule_commitment_mismatch` at position 17.
+- This clarification does not implement positions 15–17. It pins the
+  expected-commitment values those positions will compare against once
+  implemented; it introduces no new finding code, no new check position, and
+  no new result envelope.
+- Semantic support for a declaration — whether its content is fit for a
+  particular evaluation — remains a distinct and later question from
+  structural closure (the position-15/16/17 shape checks) and commitment
+  equality (the position-15/16/17 hash checks). A structurally closed,
+  commitment-matching declaration is not thereby asserted to be semantically
+  supported.
+
+#### Missing-package behavior
+
+- An implementation cannot claim conformance to this reference-package
+  version unless it holds the exact immutable pins above.
+- Absence of the claimed package version, or an implementation's inability to
+  resolve it, is an evaluator/package setup failure that occurs before RSF
+  evaluation begins. It is not a new RSF finding and not a new position.
+- This clarification inserts no parser, package-resolution, or
+  missing-carrier finding before position 1, and defines no transport or API
+  error envelope (§7.0).
+
 ## 13. Exact SF-V1 package contract
 
 Package materials required for the one deterministic valid singleton fold
