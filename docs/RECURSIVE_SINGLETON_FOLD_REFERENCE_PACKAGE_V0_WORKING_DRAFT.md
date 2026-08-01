@@ -889,7 +889,7 @@ order regardless of implementation language or control-flow structure.
 | 11 | Proof reference (§6 step 12) | `proof_reference_mismatch` |
 | 12 | Chronicle admission gate call succeeds as a whole, receiving only the exact adapted options from §8 (§6 step 14) | no distinct code — every recognized failure here already maps to positions 8–11; an unrecognized implementation exception is an implementation failure, not canonical evaluator output |
 | 13 | Reconstructed source-entry canonical-byte equality (§6 steps 15–17) | `reconstructed_source_entry_mismatch` |
-| 14 | Source-entry content commitment recomputation and equality | `source_entry_content_commitment_mismatch` |
+| 14 | Source-entry content commitment derivation and retention — no equality comparison occurs at this position | No distinct code at this position; the derived value is later subject to position-28 preservation verification (`source_entry_content_commitment_mismatch`) |
 | 15 | Fold-policy declaration shape, then commitment recomputation and equality | `malformed_fold_policy_declaration`, then `fold_policy_commitment_mismatch` |
 | 16 | Comparability-class declaration shape, then commitment recomputation and equality | `malformed_comparability_class_declaration`, then `comparability_class_commitment_mismatch` |
 | 17 | Transition-rule declaration shape, then commitment recomputation and equality | `malformed_transition_rule_declaration`, then `transition_rule_commitment_mismatch` |
@@ -903,7 +903,7 @@ order regardless of implementation language or control-flow structure.
 | 25 | `no_stronger_semantic_class_created` recomputes true | `no_elevation_invariant_mismatch` |
 | 26 | `pre_aggregation_breakdown` constructed, then its commitment recomputed and equal | `breakdown_mismatch`, then `breakdown_commitment_mismatch` |
 | 27 | `aggregate_id` recomputes from the exact RSF profile §12.1 seed | `aggregate_id_mismatch` |
-| 28 | Final `profile_local_notes` applied (§9), and the complete aggregate independently re-validates in full — every stored value equals every recomputed value | `complete_aggregate_validation_mismatch`; success here yields the `accepted` envelope |
+| 28 | Final complete-aggregate validation, after final `profile_local_notes` has already been applied (§9 steps 3–4): (a) the stored `source_entry_content_commitment`, as carried into the complete final aggregate from position 14, is compared against a fresh recomputation from the complete verified source entry; then, only if (a) succeeds, (b) every remaining stored value in the complete final aggregate — including the applied `profile_local_notes` — independently re-validates against its own recomputation | (a) `source_entry_content_commitment_mismatch` if the stored and freshly recomputed values differ; otherwise (b) `complete_aggregate_validation_mismatch` for any other stored-vs-recomputed divergence in the complete final aggregate; success here yields the `accepted` envelope |
 
 For every compound position: subchecks execute left-to-right exactly as
 written; the first failing subcheck determines the one finding; shape
@@ -914,6 +914,72 @@ position 18 (input-side derivation) or position 23 (output-side
 preservation) — the position at which it is raised distinguishes a
 derivation failure from a preservation failure. Position distinguishes these
 two occurrences; the code alone does not.
+
+#### Position 14 and position 28: derivation versus preservation verification
+
+Position 14 produces and retains `source_entry_content_commitment`.
+Position 28 exclusively owns the executable trigger for
+`source_entry_content_commitment_mismatch`, through its named
+preservation-verification subcheck. This subsection states how, without
+changing the closed 32-code finding vocabulary or the 28-position count.
+
+Position 14 derives and retains `source_entry_content_commitment`: it
+canonicalizes the complete position-13-verified `chronicle_entry.v0` object
+with the repository `canonicalize()` and computes SHA-256 over the
+resulting UTF-8 canonical bytes, per RSF profile §6.3, then carries the
+result forward, unchanged, for reuse at position 18's semantic statement
+(RSF profile §7.3), the assembled aggregate object (RSF profile §11.1), the
+aggregate identity seed (RSF profile §12.1, position 27), the canonical
+inclusion-set member (RSF profile §13.1), and the pre-aggregation breakdown
+(RSF profile §14.3). No equality comparison occurs at position 14, and
+position 14 carries no distinct finding code, mirroring the existing
+position-12 convention of a position that performs a real operation
+without owning a code of its own.
+
+Position 28's subcheck (a) is where `source_entry_content_commitment` is
+verified. Per §9's already-pinned notes application order, final
+`profile_local_notes` is applied before position 28 begins (§9 steps 3–4);
+position 28 does not apply notes itself and does not defer notes
+application until after subcheck (a). Position 28 operates on the
+complete final aggregate — notes already included — and, within that
+single terminal validation, first compares the `source_entry_content_commitment`
+value stored in that complete final aggregate against a fresh, independent
+recomputation performed at position 28 from the same complete verified
+source entry. This is the same
+"stored-versus-freshly-recomputed" pattern already normative for every
+other identity-bearing commitment in this profile (RSF profile §7.6, §8.4,
+§9.4, §10.4, §13.4, §14.5: "consumers MUST NOT trust the stored commitment
+without recomputation"); position 28 is simply where this profile's
+existing pattern applies to `source_entry_content_commitment` specifically,
+because — unlike the other identity-bearing commitments (declarations at
+positions 15–17, `semantic_result_commitment` at positions 18/23,
+`inclusion_set_commitment` at position 19, `pre_aggregation_breakdown_commitment`
+at position 26) — no earlier position performs an equality comparison for
+`source_entry_content_commitment` before position 28. Position 28 does not
+retroactively make position 14 a comparison: the two-operand equality
+exists only at position 28, where both a stored copy and a fresh
+recomputation are genuinely and independently available; position 14
+remains derivation-only.
+
+Ownership after this clarification: `source_entry_content_commitment_mismatch`
+remains one of the closed 32 finding codes, unchanged in name; its trigger
+is position 28's named subcheck (a), not position 14. Within position 28,
+first-finding semantics (the paragraph above) applies to its own ordered
+subchecks exactly as it already applies to every other compound position in
+this table: subcheck (a) executes before subcheck (b), and the first
+failing subcheck determines the one finding for the entire evaluation.
+
+This clarification changes none of: the seven evaluation-input fields
+(§7.2); the source-admission bundle shape (§5); the `chronicle_entry.v0`
+shape (RSF profile §6.2); the `recursive_singleton_aggregate.v0` shape (RSF
+profile §11.1); the closed 32-code finding vocabulary (§11) — same 32
+names, same total; the 28-position count (§12) — still exactly 28 rows;
+first-finding semantics; the existing `canonicalize()`; the current
+implementation boundary (positions 1–4 implemented; positions 5–14
+unimplemented; positions 15–17 isolated primitives, not evaluator-
+integrated); package identity; or Chronicle behavior. It introduces no new
+carrier, no `profile_sha256`, no package digest, and no runtime
+configuration.
 
 ### 12.1 Authoritative declaration commitments
 
