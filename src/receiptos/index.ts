@@ -26,8 +26,6 @@ export {
 } from "./capsule/evidence-capsule-v0"
 export {
   createPortableProofObjectV0,
-  deriveProofObjectId,
-  deriveProofRef,
   type PortableProofObjectV0,
 } from "./capsule/portable-proof-object-v0"
 export {
