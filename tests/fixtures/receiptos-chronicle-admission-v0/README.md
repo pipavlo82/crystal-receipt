@@ -51,3 +51,17 @@ path canonicalization rule applies here.
 `manifest.json` is excluded from its own aggregate. Exactly one TAB appears in
 each record, exactly one LF terminates each record, the final record also ends
 with LF, and no extra separators or length prefixes are used.
+
+## Pinned integrity versus current-checkout execution
+
+Manifest identity and hash verification are frozen to commit
+`7d9b67c96f2b472f5b4acfef3f95b669eb24de7b` and intentionally do not
+describe the current mutable directory. The integrity test reads the pinned
+manifest, schema, and member bytes from that Git tree, while executable vector
+cases are discovered and read from the current checkout.
+
+Consequently, edits to vector files in the working tree change what the
+executable cases run against, while manifest-member and aggregate integrity
+continue to be verified against the pinned tree. These are deliberately
+separate byte domains: a green pinned-integrity check does not attest that the
+current directory's vector bytes match the frozen manifest.
