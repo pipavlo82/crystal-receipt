@@ -523,15 +523,24 @@ describe("checkChronicleAdmissionReconstruction - positive", () => {
   })
 })
 
-describe("checkChronicleAdmissionReconstruction - exception propagation", () => {
-  test("a constructor precondition failure (bypassing positions 8-11) propagates as a thrown error, never as a fabricated finding", async () => {
+describe("checkChronicleAdmissionReconstruction - position-12 invariant violation (typed rejection after positions 8-11)", () => {
+  test("direct invocation with a proof-root defect throws exactly the position-12 invariant message", async () => {
     const evidence = validEvidence()
     const proof = await validProofObject(evidence)
     const tamperedProof = { ...proof, receipt_root: "0x" + "0".repeat(64) }
-    expect(() => checkChronicleAdmissionReconstruction(evidence, tamperedProof, { labels: [], notes: null })).toThrow()
+    let thrown: unknown
+    try {
+      checkChronicleAdmissionReconstruction(evidence, tamperedProof, { labels: [], notes: null })
+    } catch (error) {
+      thrown = error
+    }
+    expect(thrown).toBeInstanceOf(Error)
+    expect((thrown as Error).message).toBe(
+      "RSF position 12 invariant violated after positions 8-11: cross_object_inconsistency/proof_root_mismatch",
+    )
   })
 
-  test("thrown error message matches the canonical constructor's own message (no reimplementation drift)", async () => {
+  test("direct invocation with an invalid proof-object ID throws exactly the position-12 invariant message", async () => {
     const evidence = validEvidence()
     const proof = await validProofObject(evidence)
     const tamperedProof = { ...proof, proof_object_id: "proofobj-wrong" }
@@ -542,7 +551,52 @@ describe("checkChronicleAdmissionReconstruction - exception propagation", () => 
       thrown = error
     }
     expect(thrown).toBeInstanceOf(Error)
-    expect((thrown as Error).message).toContain("proof_object_id")
+    expect((thrown as Error).message).toBe(
+      "RSF position 12 invariant violated after positions 8-11: identity_inconsistency/proof_object_id_invalid",
+    )
+  })
+
+  test("the thrown error is not returned as an RSF finding (structural: a throw, not a {success:false} result)", async () => {
+    const evidence = validEvidence()
+    const proof = await validProofObject(evidence)
+    const tamperedProof = { ...proof, receipt_root: "0x" + "0".repeat(64) }
+    let threw = false
+    let returnedValue: unknown
+    try {
+      returnedValue = checkChronicleAdmissionReconstruction(evidence, tamperedProof, { labels: [], notes: null })
+    } catch {
+      threw = true
+    }
+    expect(threw).toBe(true)
+    expect(returnedValue).toBeUndefined()
+  })
+
+  test("the thrown error contains no check_position", async () => {
+    const evidence = validEvidence()
+    const proof = await validProofObject(evidence)
+    const tamperedProof = { ...proof, proof_object_id: "proofobj-wrong" }
+    let thrown: unknown
+    try {
+      checkChronicleAdmissionReconstruction(evidence, tamperedProof, { labels: [], notes: null })
+    } catch (error) {
+      thrown = error
+    }
+    expect(thrown).toBeInstanceOf(Error)
+    expect("check_position" in (thrown as Error)).toBe(false)
+  })
+
+  test("the primitive no longer preserves or depends on legacy constructor message text", async () => {
+    const evidence = validEvidence()
+    const proof = await validProofObject(evidence)
+    const tamperedProof = { ...proof, receipt_root: "0x" + "0".repeat(64) }
+    let thrown: unknown
+    try {
+      checkChronicleAdmissionReconstruction(evidence, tamperedProof, { labels: [], notes: null })
+    } catch (error) {
+      thrown = error
+    }
+    expect(thrown).toBeInstanceOf(Error)
+    expect((thrown as Error).message).not.toContain("createChronicleEntryV0 requires")
   })
 })
 

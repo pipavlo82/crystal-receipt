@@ -132,6 +132,12 @@ export {
   type DeriveSourceEntryContentCommitmentResult,
 } from "./rsf/source-admission-recomputation"
 export {
+  evaluateRsfPrefixThroughPosition17,
+  type RsfPrefixThroughPosition17Finding,
+  type RsfPrefixThroughPosition17Value,
+  type EvaluateRsfPrefixThroughPosition17Result,
+} from "./rsf/evaluate-prefix-through-position-17"
+export {
   buildRenderPlan,
   buildRenderPlanFromCapsule,
   getRenderPlanZoneDefinitions,
