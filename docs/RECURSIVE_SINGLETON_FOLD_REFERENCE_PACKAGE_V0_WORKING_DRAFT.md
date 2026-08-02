@@ -977,9 +977,10 @@ shape (RSF profile §6.2); the `recursive_singleton_aggregate.v0` shape (RSF
 profile §11.1); the closed 32-code finding vocabulary (§11) — same 32
 names, same total; the 28-position count (§12) — still exactly 28 rows;
 first-finding semantics; the existing `canonicalize()`; the current
-implementation boundary (positions 1–4 implemented and wired; positions 5–17 implemented as
-isolated, non-chaining primitives, not evaluator-integrated; positions
-18–28 unimplemented); package identity; or Chronicle behavior. It introduces no new
+implementation boundary (positions 1–17 implemented and wired into the ordered prefix
+evaluator `evaluateRsfPrefixThroughPosition17` — a prefix evaluator only, not the complete
+positions 1–28 evaluator; positions 18–28 remain unimplemented); package identity; or
+Chronicle behavior. It introduces no new
 carrier, no `profile_sha256`, no package digest, and no runtime
 configuration.
 
@@ -1168,10 +1169,14 @@ objects (RSF profile §8.1, §9.1, §10.1); the three package pins in this
 section; the closed 32-code finding vocabulary (§11); the 28-position
 evaluation order (§12); first-finding semantics; the existing
 `canonicalize()`; package identity; or the current public-evaluator
-implementation boundary. Positions 5–17 remain isolated, non-chaining
-primitives, not integrated into a public evaluator; positions
-18–28 remain unimplemented and are not represented as passed by this
-clarification or by positions 5–12 or 15–17.
+implementation boundary. Positions 1–17 are wired into the ordered prefix evaluator
+`evaluateRsfPrefixThroughPosition17` — a prefix evaluator only: success through
+position 17 does not mean the complete RSF evaluation is accepted, no aggregate is
+constructed or returned, and the prefix evaluator emits no
+`recursive_singleton_fold_evaluation.v0`, `evaluation_state`, `profile_verdict`, or other
+final four-state outcome. Positions 18–28 remain unimplemented, the complete
+positions 1–28 evaluator does not yet exist, and positions 18–28 are not represented as
+passed by this clarification or by positions 1–17.
 
 ## 13. Exact SF-V1 package contract
 
