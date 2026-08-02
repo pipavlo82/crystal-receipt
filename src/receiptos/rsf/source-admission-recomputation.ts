@@ -29,10 +29,10 @@
 // Position 9 owns exactly five ordered internal consistency checks that
 // all collapse into the single `cross_object_consistency_mismatch` code —
 // the code exposes no subreason, matching the reference package's "single
-// deterministic primary finding" design (§11). These five checks are
-// derived exactly from the five corresponding throw sites inside
-// `createChronicleEntryV0` (src/receiptos/capsule/chronicle-portfolio-v0.ts),
-// which §6 step 10 names as their normative source.
+// deterministic primary finding" design (§11). These five checks mirror
+// the five corresponding typed A3 checks inside `tryCreateChronicleEntryV0`
+// (src/receiptos/capsule/chronicle-portfolio-v0.ts) — the current normative
+// source of this logic, not the pre-A3 throw sites.
 //
 // Position 10's identity comparison is case-sensitive (`!==`), unlike
 // position 9's case-insensitive root comparisons — this asymmetry exists
@@ -42,13 +42,20 @@
 // ID, never a fresh recomputation and never the claimed field it is
 // checking against.
 //
-// Position 12 has no distinct finding. It directly reuses the existing,
-// unmodified `createChronicleEntryV0`, which defensively repeats checks
-// already independently owned by positions 8-11. Under conforming
-// operation (positions 8-11 already succeeded) those repeated checks
-// cannot fail; an unrecognized exception from this call is an
-// implementation failure, not canonical evaluator output, and is never
-// mapped to a fabricated position-12 finding.
+// Position 12 has no distinct finding. It consumes the typed, non-throwing
+// `tryCreateChronicleEntryV0` (A3) directly — never the legacy throwing
+// `createChronicleEntryV0` wrapper. `tryCreateChronicleEntryV0` defensively
+// repeats checks already independently owned by positions 8-11; under
+// conforming operation (positions 8-11 already succeeded) those repeated
+// checks cannot fail. Position 12 still owns no finding code. A typed
+// rejection reaching this call after positions 8-11 have already
+// independently passed is an implementation invariant violation, not a
+// canonical evaluator outcome — it is surfaced as a thrown `Error`, never
+// mapped to a fabricated position-12 finding, and never converted into an
+// RSF finding by the ordered evaluator. The isolated primitive may still
+// throw when called directly with inputs that bypass positions 8-11 (e.g.
+// in unit tests exercising it in isolation); the ordered evaluator never
+// catches or translates that throw into canonical output.
 //
 // Position 13 compares the complete position-12 reconstructed entry
 // against the complete position-7 claimed entry as opaque canonical UTF-8
@@ -67,7 +74,7 @@
 import type { HandoffEvidence } from "../schema/types"
 import type { PortableProofObjectV0 } from "../capsule/portable-proof-object-v0"
 import { deriveProofObjectId, deriveProofRef } from "../capsule/portable-proof-object-v0"
-import { createChronicleEntryV0, type ChronicleEntryV0 } from "../capsule/chronicle-portfolio-v0"
+import { tryCreateChronicleEntryV0, type ChronicleEntryV0 } from "../capsule/chronicle-portfolio-v0"
 import type { RsfChronicleConstructorOptions } from "./construction-options-adapter"
 import { canonicalize } from "../canon/canonicalize"
 import { sha256 } from "../canon/receipt-root"
@@ -161,8 +168,9 @@ function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {
 // position-5-validated `HandoffEvidence`, the position-6-validated
 // `PortableProofObjectV0`, and the position-8 `verifiedReceiptRoot`.
 //
-// The five internal checks, in exact order (mirrored from
-// `createChronicleEntryV0`'s own five throw sites):
+// The five internal checks, in exact order (mirrored from the
+// corresponding typed A3 checks inside `tryCreateChronicleEntryV0`, not
+// from any pre-A3 throw site):
 //   1. proofObject.receipt_root         vs. verifiedReceiptRoot
 //   2. evidence_capsule.receipt_root.stored   vs. verifiedReceiptRoot
 //   3. evidence_capsule.receipt_root.computed vs. verifiedReceiptRoot
@@ -213,7 +221,7 @@ export function checkSourceAdmissionCrossObjectConsistency(
 // `deriveProofObjectId(verifiedReceiptRoot)` — never from the claimed
 // `proof_object_id` being checked, never from metadata, timestamps,
 // package identity, or any runtime/network state. Comparison is
-// case-sensitive (`!==`), matching `createChronicleEntryV0`'s own
+// case-sensitive (`!==`), matching `tryCreateChronicleEntryV0`'s own
 // comparison exactly; this is a deliberate asymmetry with position 9's
 // case-insensitive root comparisons, not an inconsistency to "fix."
 export function checkProofObjectIdentity(
@@ -234,7 +242,7 @@ export function checkProofObjectIdentity(
 // 12-28. Accepts position 10's already-derived `expectedProofObjectId` as
 // input rather than recomputing it, and never trusts the claimed
 // `proof_object_id` as authority for the expected reference. Comparison
-// is case-sensitive (`!==`), matching `createChronicleEntryV0` exactly.
+// is case-sensitive (`!==`), matching `tryCreateChronicleEntryV0` exactly.
 export function checkProofReference(
   sourceProofObject: PortableProofObjectV0,
   expectedProofObjectId: string,
@@ -252,23 +260,37 @@ export function checkProofReference(
 // Isolated position-12 primitive only. Does not run positions 1-11 or
 // 13-28, does not perform reconstructed-vs-claimed entry equality
 // (position 13), and does not derive `source_entry_content_commitment`
-// (position 14). Directly reuses the existing, unmodified
-// `createChronicleEntryV0` — the sole normative source for the exact
-// reconstruction logic (entry_id/evidence_capsule_ref/etc. defaulting)
-// that position 13 must later compare against. `createChronicleEntryV0`
-// defensively repeats checks already independently owned by positions
-// 8-11; under conforming operation (this function is only ever called
-// after 8-11 have already succeeded) those repeated checks cannot fail.
-// An unrecognized exception from this call is an implementation failure,
-// never converted into a fabricated position-12 finding — there is no
-// `{success:false}` branch on this function's result type.
+// (position 14). Consumes the typed, non-throwing `tryCreateChronicleEntryV0`
+// (A3) directly, never the legacy throwing `createChronicleEntryV0`
+// wrapper — the required dependency direction is
+// checkChronicleAdmissionReconstruction -> tryCreateChronicleEntryV0, never
+// the reverse and never through the legacy wrapper.
+// `tryCreateChronicleEntryV0` is the sole normative source for the exact
+// reconstruction logic (entry_id/evidence_capsule_ref/etc. defaulting) that
+// position 13 must later compare against, and defensively repeats checks
+// already independently owned by positions 8-11; under conforming
+// operation (this function is only ever called after 8-11 have already
+// succeeded) those repeated checks cannot fail.
+//
+// If `tryCreateChronicleEntryV0` nonetheless returns a typed failure here,
+// that is not a new input finding, not a position-12 finding, not a reason
+// to reuse a Chronicle `reason_code` as an RSF result, and not a reason to
+// retroactively report a different earlier finding — it is an
+// implementation invariant violation. It is thrown as a plain `Error`,
+// never converted into a `{success:false}` branch (none exists on this
+// function's result type) and never caught here.
 export function checkChronicleAdmissionReconstruction(
   sourceEvidence: HandoffEvidence,
   sourceProofObject: PortableProofObjectV0,
   adaptedConstructionOptions: RsfChronicleConstructorOptions,
 ): CheckChronicleAdmissionReconstructionResult {
-  const reconstructedEntry = createChronicleEntryV0(sourceEvidence, sourceProofObject, adaptedConstructionOptions)
-  return { success: true, value: snapshot(reconstructedEntry) }
+  const result = tryCreateChronicleEntryV0(sourceEvidence, sourceProofObject, adaptedConstructionOptions)
+  if (result.success) {
+    return { success: true, value: snapshot(result.value) }
+  }
+  throw new Error(
+    `RSF position 12 invariant violated after positions 8-11: ${result.failure.failure_class}/${result.failure.reason_code}`,
+  )
 }
 
 // Isolated position-13 primitive only. Does not run positions 1-12 or
