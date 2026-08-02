@@ -9,11 +9,10 @@ import {
   checkSourceAdmissionPrerequisitesAndReceiptRoot,
   createChronicleEntryV0,
   createPortableProofObjectV0,
-  deriveProofObjectId,
-  deriveProofRef,
   type HandoffEvidence,
   type PortableProofObjectV0,
 } from "../../src/receiptos"
+import { deriveProofObjectId, deriveProofRef } from "../../src/receiptos/capsule/portable-proof-object-v0"
 
 function fixturePath(name: string) {
   return resolve(import.meta.dir, "../../src/receiptos/fixtures", name)
