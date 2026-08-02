@@ -6,13 +6,19 @@ import {
   checkProofObjectIdentity,
   checkProofReference,
   checkChronicleAdmissionReconstruction,
+  checkReconstructedSourceEntryCanonicalEquality,
+  deriveSourceEntryContentCommitment,
   checkSourceAdmissionPrerequisitesAndReceiptRoot,
   createChronicleEntryV0,
   createPortableProofObjectV0,
   type HandoffEvidence,
   type PortableProofObjectV0,
+  type ChronicleEntryV0,
+  type RsfChronicleConstructorOptions,
 } from "../../src/receiptos"
 import { deriveProofObjectId, deriveProofRef } from "../../src/receiptos/capsule/portable-proof-object-v0"
+import { canonicalize } from "../../src/receiptos/canon/canonicalize"
+import { sha256 } from "../../src/receiptos/canon/receipt-root"
 
 function fixturePath(name: string) {
   return resolve(import.meta.dir, "../../src/receiptos/fixtures", name)
@@ -577,5 +583,365 @@ describe("isolation and scope", () => {
     const position8Result = checkSourceAdmissionPrerequisitesAndReceiptRoot(withMissingPrerequisite)
     expect(position8Result.success).toBe(false)
     // A conforming caller stops here; positions 9-12 are never invoked on this input.
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Position 13 — checkReconstructedSourceEntryCanonicalEquality
+// ---------------------------------------------------------------------------
+
+function baseChronicleEntry(): ChronicleEntryV0 {
+  return {
+    schema: "chronicle_entry.v0",
+    entry_id: "entry-proofobj-0123456789abcdef0123456789abcdef01234567",
+    source_system: "stealth-handoff",
+    receipt_root: `0x${"a".repeat(64)}`,
+    proof_object_ref: "receiptos://portable-proof-object/proofobj-0123456789abcdef0123456789abcdef01234567",
+    evidence_capsule_ref: "embedded:proofobj-0123456789abcdef0123456789abcdef01234567:evidence_capsule",
+    provenance_summary_ref: "embedded:proofobj-0123456789abcdef0123456789abcdef01234567:provenance_summary",
+    created_from: "example://stealth-handoff/normalized-evidence.json",
+    labels: ["alpha", "beta"],
+    notes: "example note",
+  }
+}
+
+// Same key/value pairs as baseChronicleEntry(), but every key is inserted in
+// reverse order -- proves canonical equality is insensitive to object-key
+// insertion order (canonicalize() owns key ordering).
+function baseChronicleEntryWithReorderedKeys(): ChronicleEntryV0 {
+  const entry = baseChronicleEntry()
+  return {
+    notes: entry.notes,
+    labels: entry.labels,
+    created_from: entry.created_from,
+    provenance_summary_ref: entry.provenance_summary_ref,
+    evidence_capsule_ref: entry.evidence_capsule_ref,
+    proof_object_ref: entry.proof_object_ref,
+    receipt_root: entry.receipt_root,
+    source_system: entry.source_system,
+    entry_id: entry.entry_id,
+    schema: entry.schema,
+  }
+}
+
+async function validReconstructedAndClaimedPair(): Promise<{
+  reconstructed: ChronicleEntryV0
+  claimed: ChronicleEntryV0
+  evidence: HandoffEvidence
+  proof: PortableProofObjectV0
+  options: RsfChronicleConstructorOptions
+}> {
+  const evidence = validEvidence()
+  const proof = await validProofObject(evidence)
+  const options: RsfChronicleConstructorOptions = { labels: ["alpha", "beta"], notes: "example note" }
+  const reconstructed = createChronicleEntryV0(evidence, proof, options)
+  // Simulates position 7's independently-parsed claimed entry: identical
+  // content, but a structurally distinct object (never the same reference).
+  const claimed = JSON.parse(JSON.stringify(reconstructed)) as ChronicleEntryV0
+  return { reconstructed, claimed, evidence, proof, options }
+}
+
+describe("checkReconstructedSourceEntryCanonicalEquality - positive", () => {
+  test("independently reconstructed and claimed identical entries succeed", async () => {
+    const { reconstructed, claimed } = await validReconstructedAndClaimedPair()
+    const result = checkReconstructedSourceEntryCanonicalEquality(reconstructed, claimed)
+    expect(result.success).toBe(true)
+    if (!result.success) return
+    expect(result.value.verifiedSourceEntry).toEqual(reconstructed)
+  })
+
+  test("equivalent entries with different object-key insertion order succeed", () => {
+    const a = baseChronicleEntry()
+    const b = baseChronicleEntryWithReorderedKeys()
+    expect(Object.keys(a)).not.toEqual(Object.keys(b))
+    const result = checkReconstructedSourceEntryCanonicalEquality(a, b)
+    expect(result.success).toBe(true)
+  })
+
+  test("the function accepts exactly two arguments", () => {
+    expect(checkReconstructedSourceEntryCanonicalEquality.length).toBe(2)
+  })
+
+  test("does not mutate either input", () => {
+    const a = baseChronicleEntry()
+    const b = { ...baseChronicleEntry(), notes: "different note" }
+    const beforeA = JSON.stringify(a)
+    const beforeB = JSON.stringify(b)
+    checkReconstructedSourceEntryCanonicalEquality(a, b)
+    expect(JSON.stringify(a)).toBe(beforeA)
+    expect(JSON.stringify(b)).toBe(beforeB)
+  })
+
+  test("success returns a deep snapshot, not the reconstructed input object", () => {
+    const a = baseChronicleEntry()
+    const b = baseChronicleEntry()
+    const result = checkReconstructedSourceEntryCanonicalEquality(a, b)
+    expect(result.success).toBe(true)
+    if (!result.success) return
+    expect(result.value.verifiedSourceEntry as unknown).not.toBe(a as unknown)
+    expect(result.value.verifiedSourceEntry.labels as unknown).not.toBe(a.labels as unknown)
+  })
+
+  test("nested arrays in the success value are independently owned", () => {
+    const a = baseChronicleEntry()
+    const b = baseChronicleEntry()
+    const result = checkReconstructedSourceEntryCanonicalEquality(a, b)
+    expect(result.success).toBe(true)
+    if (!result.success) return
+    result.value.verifiedSourceEntry.labels.push("mutated-after-success")
+    expect(a.labels).toEqual(["alpha", "beta"])
+  })
+
+  test("mutation of either caller input after return cannot change the returned value", () => {
+    const a = baseChronicleEntry()
+    const b = baseChronicleEntry()
+    const result = checkReconstructedSourceEntryCanonicalEquality(a, b)
+    expect(result.success).toBe(true)
+    if (!result.success) return
+    const before = JSON.stringify(result.value)
+    a.notes = "MUTATED_AFTER_SUCCESS"
+    a.labels.push("MUTATED_AFTER_SUCCESS")
+    b.notes = "ALSO_MUTATED_AFTER_SUCCESS"
+    expect(JSON.stringify(result.value)).toBe(before)
+  })
+
+  test("position 13 does not run or derive position 14", () => {
+    const a = baseChronicleEntry()
+    const b = baseChronicleEntry()
+    const result = checkReconstructedSourceEntryCanonicalEquality(a, b)
+    expect(result.success).toBe(true)
+    if (!result.success) return
+    expect("sourceEntryContentCommitment" in (result.value as Record<string, unknown>)).toBe(false)
+  })
+})
+
+describe("checkReconstructedSourceEntryCanonicalEquality - negative (reconstructed_source_entry_mismatch, position 13)", () => {
+  test("same entry_id with different otherwise shape-valid content fails", () => {
+    const a = baseChronicleEntry()
+    const b = { ...baseChronicleEntry(), notes: "a completely different note" }
+    expect(a.entry_id).toBe(b.entry_id)
+    const result = checkReconstructedSourceEntryCanonicalEquality(a, b)
+    expect(result.success).toBe(false)
+  })
+
+  test("a shape-valid difference in every mutable complete-entry field is independently detected", () => {
+    const base = baseChronicleEntry()
+    const fieldVariants: Array<[string, ChronicleEntryV0]> = [
+      ["entry_id", { ...base, entry_id: "entry-a-different-identity" }],
+      ["source_system", { ...base, source_system: "a-different-source-system" }],
+      ["receipt_root", { ...base, receipt_root: `0x${"b".repeat(64)}` }],
+      ["proof_object_ref", { ...base, proof_object_ref: "receiptos://portable-proof-object/a-different-one" }],
+      ["evidence_capsule_ref", { ...base, evidence_capsule_ref: "embedded:a-different-one:evidence_capsule" }],
+      ["provenance_summary_ref", { ...base, provenance_summary_ref: "embedded:a-different-one:provenance_summary" }],
+      ["created_from", { ...base, created_from: "example://a-different-source.json" }],
+      ["labels", { ...base, labels: ["alpha", "gamma"] }],
+      ["notes", { ...base, notes: "a completely different note" }],
+    ]
+    for (const [field, variant] of fieldVariants) {
+      const result = checkReconstructedSourceEntryCanonicalEquality(base, variant)
+      expect(result.success, `expected a mismatch for field: ${field}`).toBe(false)
+    }
+  })
+
+  test("label member order is significant", () => {
+    const a = { ...baseChronicleEntry(), labels: ["alpha", "beta"] }
+    const b = { ...baseChronicleEntry(), labels: ["beta", "alpha"] }
+    const result = checkReconstructedSourceEntryCanonicalEquality(a, b)
+    expect(result.success).toBe(false)
+  })
+
+  test("label content is significant", () => {
+    const a = { ...baseChronicleEntry(), labels: ["alpha", "beta"] }
+    const b = { ...baseChronicleEntry(), labels: ["alpha", "gamma"] }
+    const result = checkReconstructedSourceEntryCanonicalEquality(a, b)
+    expect(result.success).toBe(false)
+  })
+
+  test("notes: null and notes: '' are distinct", () => {
+    const a = { ...baseChronicleEntry(), notes: null }
+    const b = { ...baseChronicleEntry(), notes: "" }
+    const result = checkReconstructedSourceEntryCanonicalEquality(a, b)
+    expect(result.success).toBe(false)
+  })
+
+  test("exact mismatch finding shape, code, and position", () => {
+    const a = baseChronicleEntry()
+    const b = { ...baseChronicleEntry(), notes: "a completely different note" }
+    const result = checkReconstructedSourceEntryCanonicalEquality(a, b)
+    expect(result.success).toBe(false)
+    if (result.success) return
+    expect(result.finding).toEqual({
+      schema: "recursive_singleton_fold_finding.v0",
+      code: "reconstructed_source_entry_mismatch",
+      check_position: 13,
+    })
+  })
+
+  test("the finding exposes no subreason or compared bytes", () => {
+    const a = baseChronicleEntry()
+    const b = { ...baseChronicleEntry(), notes: "a completely different note" }
+    const result = checkReconstructedSourceEntryCanonicalEquality(a, b)
+    expect(result.success).toBe(false)
+    if (result.success) return
+    expect(Object.keys(result.finding).sort()).toEqual(["check_position", "code", "schema"])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Position 14 — deriveSourceEntryContentCommitment
+// ---------------------------------------------------------------------------
+
+describe("deriveSourceEntryContentCommitment", () => {
+  test("output equals the direct repository recipe", () => {
+    const entry = baseChronicleEntry()
+    const result = deriveSourceEntryContentCommitment(entry)
+    expect(result.value.sourceEntryContentCommitment).toBe(`sha256:${sha256(canonicalize(entry))}`)
+  })
+
+  test("output format is exactly sha256:<64-lowercase-hex>", () => {
+    const entry = baseChronicleEntry()
+    const result = deriveSourceEntryContentCommitment(entry)
+    expect(result.value.sourceEntryContentCommitment).toMatch(/^sha256:[0-9a-f]{64}$/)
+  })
+
+  test("the complete entry is bound, not entry_id alone", () => {
+    const a = baseChronicleEntry()
+    const b = { ...baseChronicleEntry(), notes: "a completely different note" }
+    expect(a.entry_id).toBe(b.entry_id)
+    const resultA = deriveSourceEntryContentCommitment(a)
+    const resultB = deriveSourceEntryContentCommitment(b)
+    expect(resultA.value.sourceEntryContentCommitment).not.toBe(resultB.value.sourceEntryContentCommitment)
+  })
+
+  test("shape-valid changes to complete-entry content change the commitment", () => {
+    const base = baseChronicleEntry()
+    const fieldVariants: Array<[string, ChronicleEntryV0]> = [
+      ["source_system", { ...base, source_system: "a-different-source-system" }],
+      ["receipt_root", { ...base, receipt_root: `0x${"b".repeat(64)}` }],
+      ["created_from", { ...base, created_from: "example://a-different-source.json" }],
+    ]
+    const baseCommitment = deriveSourceEntryContentCommitment(base).value.sourceEntryContentCommitment
+    for (const [field, variant] of fieldVariants) {
+      const variantCommitment = deriveSourceEntryContentCommitment(variant).value.sourceEntryContentCommitment
+      expect(variantCommitment, `expected a different commitment for field: ${field}`).not.toBe(baseCommitment)
+    }
+  })
+
+  test("label order changes the commitment", () => {
+    const a = { ...baseChronicleEntry(), labels: ["alpha", "beta"] }
+    const b = { ...baseChronicleEntry(), labels: ["beta", "alpha"] }
+    const resultA = deriveSourceEntryContentCommitment(a)
+    const resultB = deriveSourceEntryContentCommitment(b)
+    expect(resultA.value.sourceEntryContentCommitment).not.toBe(resultB.value.sourceEntryContentCommitment)
+  })
+
+  test("null and empty string produce different commitments", () => {
+    const a = { ...baseChronicleEntry(), notes: null }
+    const b = { ...baseChronicleEntry(), notes: "" }
+    const resultA = deriveSourceEntryContentCommitment(a)
+    const resultB = deriveSourceEntryContentCommitment(b)
+    expect(resultA.value.sourceEntryContentCommitment).not.toBe(resultB.value.sourceEntryContentCommitment)
+  })
+
+  test("does not mutate its input", () => {
+    const entry = baseChronicleEntry()
+    const before = JSON.stringify(entry)
+    deriveSourceEntryContentCommitment(entry)
+    expect(JSON.stringify(entry)).toBe(before)
+  })
+
+  test("the returned value object is newly owned", () => {
+    const entry = baseChronicleEntry()
+    const resultA = deriveSourceEntryContentCommitment(entry)
+    const resultB = deriveSourceEntryContentCommitment(entry)
+    expect(resultA.value as unknown).not.toBe(resultB.value as unknown)
+  })
+
+  test("the function accepts exactly one argument", () => {
+    expect(deriveSourceEntryContentCommitment.length).toBe(1)
+  })
+
+  test("no expected/stored commitment is accepted (structural: only one parameter exists)", () => {
+    expect(deriveSourceEntryContentCommitment.length).toBe(1)
+  })
+
+  test("no `{ success: false }` branch exists (structural: only one variant is ever returned)", () => {
+    const entry = baseChronicleEntry()
+    const result = deriveSourceEntryContentCommitment(entry)
+    expect(result.success).toBe(true)
+    expect("finding" in result).toBe(false)
+  })
+
+  test("no position-28 finding is emitted or referenced as runtime output", () => {
+    const entry = baseChronicleEntry()
+    const result = deriveSourceEntryContentCommitment(entry)
+    expect(Object.keys(result.value)).toEqual(["sourceEntryContentCommitment"])
+    expect(JSON.stringify(result)).not.toContain("source_entry_content_commitment_mismatch")
+    expect(JSON.stringify(result)).not.toContain("check_position")
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Positions 13-14 isolation and scope
+// ---------------------------------------------------------------------------
+
+// A private, test-file-local harness proving intended caller order
+// (12 -> 13 -> 14) without asserting any integrated public evaluator
+// exists. Never exported, never presented as the public evaluator, and
+// never wired into validateRsfEvaluationInputShape.
+function runPositions12Through14(
+  evidence: HandoffEvidence,
+  proofObject: PortableProofObjectV0,
+  adaptedOptions: RsfChronicleConstructorOptions,
+  claimedSourceEntry: ChronicleEntryV0,
+): { firstFailingPosition: 13 | null; sourceEntryContentCommitment: string | null } {
+  const p12 = checkChronicleAdmissionReconstruction(evidence, proofObject, adaptedOptions)
+
+  const p13 = checkReconstructedSourceEntryCanonicalEquality(p12.value, claimedSourceEntry)
+  if (!p13.success) return { firstFailingPosition: 13, sourceEntryContentCommitment: null }
+
+  const p14 = deriveSourceEntryContentCommitment(p13.value.verifiedSourceEntry)
+  return { firstFailingPosition: null, sourceEntryContentCommitment: p14.value.sourceEntryContentCommitment }
+}
+
+describe("positions 13-14 isolation and scope", () => {
+  test("checkReconstructedSourceEntryCanonicalEquality and deriveSourceEntryContentCommitment do not chain to one another or to positions 9-12", () => {
+    const a = baseChronicleEntry()
+    const b = baseChronicleEntry()
+    const p13 = checkReconstructedSourceEntryCanonicalEquality(a, b)
+    expect(p13.success).toBe(true)
+    if (!p13.success) return
+    // deriveSourceEntryContentCommitment must be called explicitly by the
+    // caller -- position 13 never invokes it internally.
+    const p14 = deriveSourceEntryContentCommitment(p13.value.verifiedSourceEntry)
+    expect(p14.success).toBe(true)
+  })
+
+  test("full prefix through position 14 succeeds for a fully valid, matching bundle (private harness)", async () => {
+    const { evidence, proof, options, claimed } = await validReconstructedAndClaimedPair()
+    const outcome = runPositions12Through14(evidence, proof, options, claimed)
+    expect(outcome.firstFailingPosition).toBeNull()
+    expect(outcome.sourceEntryContentCommitment).toMatch(/^sha256:[0-9a-f]{64}$/)
+  })
+
+  test("a position-13 mismatch stops the private harness before position 14 ever runs (private prefix harness)", async () => {
+    const { evidence, proof, options } = await validReconstructedAndClaimedPair()
+    const tamperedClaim = { ...baseChronicleEntry(), notes: "not what was reconstructed" }
+    const outcome = runPositions12Through14(evidence, proof, options, tamperedClaim)
+    expect(outcome.firstFailingPosition).toBe(13)
+    expect(outcome.sourceEntryContentCommitment).toBeNull()
+  })
+
+  test("position 14 accepts only the position-13-verified entry, never the raw claimed or reconstructed entry directly", async () => {
+    const { reconstructed, claimed } = await validReconstructedAndClaimedPair()
+    const p13 = checkReconstructedSourceEntryCanonicalEquality(reconstructed, claimed)
+    expect(p13.success).toBe(true)
+    if (!p13.success) return
+    const direct = deriveSourceEntryContentCommitment(reconstructed)
+    const throughPosition13 = deriveSourceEntryContentCommitment(p13.value.verifiedSourceEntry)
+    // Since reconstructed and claimed canonicalize identically here, both
+    // calls happen to agree -- this proves the API shape, not a special
+    // relationship between raw and verified inputs.
+    expect(direct.value.sourceEntryContentCommitment).toBe(throughPosition13.value.sourceEntryContentCommitment)
   })
 })
