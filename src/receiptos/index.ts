@@ -110,6 +110,19 @@ export {
   type CheckSourceAdmissionReceiptRootResult,
 } from "./rsf/source-admission-shape"
 export {
+  checkSourceAdmissionCrossObjectConsistency,
+  checkProofObjectIdentity,
+  checkProofReference,
+  checkChronicleAdmissionReconstruction,
+  type CrossObjectConsistencyFinding,
+  type ProofObjectIdentityFinding,
+  type ProofReferenceFinding,
+  type CheckSourceAdmissionCrossObjectConsistencyResult,
+  type CheckProofObjectIdentityResult,
+  type CheckProofReferenceResult,
+  type CheckChronicleAdmissionReconstructionResult,
+} from "./rsf/source-admission-recomputation"
+export {
   buildRenderPlan,
   buildRenderPlanFromCapsule,
   getRenderPlanZoneDefinitions,
