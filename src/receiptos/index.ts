@@ -114,6 +114,8 @@ export {
   checkProofObjectIdentity,
   checkProofReference,
   checkChronicleAdmissionReconstruction,
+  checkReconstructedSourceEntryCanonicalEquality,
+  deriveSourceEntryContentCommitment,
   type CrossObjectConsistencyFinding,
   type ProofObjectIdentityFinding,
   type ProofReferenceFinding,
@@ -121,6 +123,9 @@ export {
   type CheckProofObjectIdentityResult,
   type CheckProofReferenceResult,
   type CheckChronicleAdmissionReconstructionResult,
+  type ReconstructedSourceEntryFinding,
+  type CheckReconstructedSourceEntryCanonicalEqualityResult,
+  type DeriveSourceEntryContentCommitmentResult,
 } from "./rsf/source-admission-recomputation"
 export {
   buildRenderPlan,

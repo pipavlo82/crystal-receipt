@@ -1,4 +1,4 @@
-// RSF ISOLATED PRIMITIVES ONLY — positions 9, 10, 11, and 12 of the
+// RSF ISOLATED PRIMITIVES ONLY — positions 9, 10, 11, 12, 13, and 14 of the
 // 28-position evaluation order in
 // docs/RECURSIVE_SINGLETON_FOLD_REFERENCE_PACKAGE_V0_WORKING_DRAFT.md §12.
 //
@@ -8,17 +8,18 @@
 //   position 11 — proof reference (§6 step 12)
 //   position 12 — Chronicle admission gate call succeeds as a whole
 //                 (§6 step 14), owning no distinct finding code
+//   position 13 — reconstructed-vs-claimed source-entry canonical-byte
+//                 equality (§6 steps 15-17)
+//   position 14 — source-entry content commitment derivation, retention
+//                 only, no comparison
 //
 // Not covered by this module, deliberately:
-//   positions 1-8 (already implemented elsewhere), positions 13-28
-//   (reconstructed-entry canonical-byte equality, source-entry content
-//   commitment, declarations, semantic statement, inclusion set,
-//   eligibility, transition, breakdown, aggregate identity, final
-//   aggregate validation). This module does not perform reconstructed-vs-
-//   claimed entry equality (position 13), does not derive
-//   `source_entry_content_commitment` (position 14, derivation-only per
-//   the merged position-14 repair), and does not touch position 28's
-//   exclusive ownership of `source_entry_content_commitment_mismatch`. It
+//   positions 1-8 (already implemented elsewhere), positions 15-28
+//   (declarations, semantic statement, inclusion set, eligibility,
+//   transition, breakdown, aggregate identity, final aggregate
+//   validation). This module does not touch position 28's exclusive
+//   ownership of `source_entry_content_commitment_mismatch` — position 14
+//   here derives and retains the commitment only, never compares it. It
 //   is not the RSF evaluator and is not wired into any evaluator.
 //
 // Each exported checker accepts only its position-owned subject plus the
@@ -48,12 +49,28 @@
 // cannot fail; an unrecognized exception from this call is an
 // implementation failure, not canonical evaluator output, and is never
 // mapped to a fabricated position-12 finding.
+//
+// Position 13 compares the complete position-12 reconstructed entry
+// against the complete position-7 claimed entry as opaque canonical UTF-8
+// bytes — never by object identity, raw `JSON.stringify`, or individual
+// field comparison. `canonicalize()` owns key ordering, so insertion order
+// is irrelevant; array order and the null/empty-string distinction remain
+// exactly as `canonicalize()` already treats them.
+//
+// Position 14 is derivation-only, per the reference package's own
+// clarification (§12, §12.1): it derives and retains
+// `source_entry_content_commitment` from the position-13-verified entry.
+// It has no failure branch, owns no finding code, and never compares the
+// derived commitment against anything — that comparison belongs
+// exclusively to position 28.
 
 import type { HandoffEvidence } from "../schema/types"
 import type { PortableProofObjectV0 } from "../capsule/portable-proof-object-v0"
 import { deriveProofObjectId, deriveProofRef } from "../capsule/portable-proof-object-v0"
 import { createChronicleEntryV0, type ChronicleEntryV0 } from "../capsule/chronicle-portfolio-v0"
 import type { RsfChronicleConstructorOptions } from "./construction-options-adapter"
+import { canonicalize } from "../canon/canonicalize"
+import { sha256 } from "../canon/receipt-root"
 
 export type CrossObjectConsistencyFinding = {
   schema: "recursive_singleton_fold_finding.v0"
@@ -95,8 +112,47 @@ export type CheckChronicleAdmissionReconstructionResult = {
   value: ChronicleEntryV0
 }
 
+export type ReconstructedSourceEntryFinding = {
+  schema: "recursive_singleton_fold_finding.v0"
+  code: "reconstructed_source_entry_mismatch"
+  check_position: 13
+}
+
+export type CheckReconstructedSourceEntryCanonicalEqualityResult =
+  | {
+      success: true
+      value: {
+        verifiedSourceEntry: ChronicleEntryV0
+      }
+    }
+  | {
+      success: false
+      finding: ReconstructedSourceEntryFinding
+    }
+
+// Position 14 is derivation-only (§12, §12.1): no failure branch, no owned
+// finding code, no comparison.
+export type DeriveSourceEntryContentCommitmentResult = {
+  success: true
+  value: {
+    sourceEntryContentCommitment: string
+  }
+}
+
 function snapshot<T>(value: T): T {
   return structuredClone(value)
+}
+
+function canonicalUtf8Bytes(value: unknown): Uint8Array {
+  return new TextEncoder().encode(canonicalize(value))
+}
+
+function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {
+  if (a.length !== b.length) return false
+  for (let index = 0; index < a.length; index += 1) {
+    if (a[index] !== b[index]) return false
+  }
+  return true
 }
 
 // Isolated position-9 primitive only. Does not run positions 1-8 or
@@ -213,4 +269,43 @@ export function checkChronicleAdmissionReconstruction(
 ): CheckChronicleAdmissionReconstructionResult {
   const reconstructedEntry = createChronicleEntryV0(sourceEvidence, sourceProofObject, adaptedConstructionOptions)
   return { success: true, value: snapshot(reconstructedEntry) }
+}
+
+// Isolated position-13 primitive only. Does not run positions 1-12 or
+// 14-28, and does not re-perform position-7 shape validation. Compares the
+// complete canonicalized entries as UTF-8 bytes — never `entry_id` alone,
+// never individual fields, never object identity, never raw
+// `JSON.stringify`. `canonicalize()` already sorts object keys (insertion
+// order is irrelevant) and preserves array order and the null/empty-string
+// distinction, so no additional normalization is applied here.
+export function checkReconstructedSourceEntryCanonicalEquality(
+  reconstructedSourceEntry: ChronicleEntryV0,
+  claimedSourceEntry: ChronicleEntryV0,
+): CheckReconstructedSourceEntryCanonicalEqualityResult {
+  const reconstructedBytes = canonicalUtf8Bytes(reconstructedSourceEntry)
+  const claimedBytes = canonicalUtf8Bytes(claimedSourceEntry)
+
+  if (!bytesEqual(reconstructedBytes, claimedBytes)) {
+    return {
+      success: false,
+      finding: { schema: "recursive_singleton_fold_finding.v0", code: "reconstructed_source_entry_mismatch", check_position: 13 },
+    }
+  }
+
+  return { success: true, value: { verifiedSourceEntry: snapshot(reconstructedSourceEntry) } }
+}
+
+// Isolated position-14 primitive only. Does not run positions 1-13 or
+// 15-28. Derivation-only: no failure branch, no owned finding code, no
+// expected/stored commitment argument, no aggregate inspection, and never
+// emits `source_entry_content_commitment_mismatch` (position 28's
+// exclusive comparison). An unrecognized host-language exception here
+// remains an implementation failure, not canonical evaluator output.
+export function deriveSourceEntryContentCommitment(
+  verifiedSourceEntry: ChronicleEntryV0,
+): DeriveSourceEntryContentCommitmentResult {
+  return {
+    success: true,
+    value: { sourceEntryContentCommitment: `sha256:${sha256(canonicalize(verifiedSourceEntry))}` },
+  }
 }
