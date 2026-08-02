@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process"
 import { createHash } from "node:crypto"
 import { readdirSync, readFileSync } from "node:fs"
 import { join, resolve } from "node:path"
-import { createChronicleEntryV0 } from "../../src/receiptos"
+import { tryCreateChronicleEntryV0 } from "../../src/receiptos"
 import { readGitBlobBytesAtCommit, readGitBlobJsonAtCommit } from "./helpers/git-index-bytes"
 
 type SharedResult = {
@@ -51,49 +51,40 @@ const gitBlobSha = (repositoryPath: string) =>
     encoding: "utf8",
   }).trim().split(/\s+/)[2]
 
-const errorMap: Array<[string, string, string]> = [
-  ["requires evidence.anchor.receipt_root to be present", "unverifiable", "evidence_root_missing"],
-  ["stored receipt_root to independently recompute (mismatch)", "evidence_mismatch", "evidence_root_mismatch"],
-  ["proofObject.receipt_root to equal", "cross_object_inconsistency", "proof_root_mismatch"],
-  ["receipt_root.stored to equal", "cross_object_inconsistency", "capsule_stored_mismatch"],
-  ["receipt_root.computed to equal", "cross_object_inconsistency", "capsule_computed_mismatch"],
-  ["receipt_root.match/status to be internally consistent", "reported_state_inconsistency", "capsule_label_inconsistent"],
-  ["evidence_capsule.verifier_result to be internally consistent", "reported_state_inconsistency", "verifier_result_inconsistent"],
-  ["proofObject.proof_object_id to be the canonical derivation", "identity_inconsistency", "proof_object_id_invalid"],
-  ["proofObject.proof_ref to be the canonical derivation", "identity_inconsistency", "proof_ref_invalid"],
-]
-
 function execute(vector: Vector): SharedResult {
-  try {
-    const chronicleEntry = createChronicleEntryV0(
-      vector.input.evidence as never,
-      vector.input.proof_object as never,
-      vector.input.options as never,
-    )
+  // Test-adapter boundary only: a null evidence or proof_object cannot be
+  // passed into the typed Chronicle construction domain. This
+  // "malformed_input" classification is not part of the typed Chronicle
+  // primitive's failure vocabulary (ChronicleEntryAdmissionFailureV0).
+  if (vector.input.evidence === null || vector.input.proof_object === null) {
+    return {
+      outcome: "rejected",
+      failure_class: "malformed_input",
+      reason_code: null,
+      chronicle_entry: null,
+    }
+  }
+
+  const result = tryCreateChronicleEntryV0(
+    vector.input.evidence as never,
+    vector.input.proof_object as never,
+    vector.input.options as never,
+  )
+
+  if (result.success) {
     return {
       outcome: "admitted",
       failure_class: "none",
       reason_code: null,
-      chronicle_entry: chronicleEntry,
+      chronicle_entry: result.value,
     }
-  } catch (error) {
-    if (!(error instanceof Error)) throw error
-    if (vector.input.evidence === null) {
-      return {
-        outcome: "rejected",
-        failure_class: "malformed_input",
-        reason_code: null,
-        chronicle_entry: null,
-      }
-    }
-    const mapped = errorMap.find(([fragment]) => error.message.includes(fragment))
-    if (!mapped) throw new Error(`Unmapped Crystal admission error: ${error.message}`)
-    return {
-      outcome: "rejected",
-      failure_class: mapped[1],
-      reason_code: mapped[2],
-      chronicle_entry: null,
-    }
+  }
+
+  return {
+    outcome: "rejected",
+    failure_class: result.failure.failure_class,
+    reason_code: result.failure.reason_code,
+    chronicle_entry: null,
   }
 }
 

@@ -68,34 +68,102 @@ export type ChronicleCheckpointVerification = {
   recomputed_checkpoint_root: string
 }
 
-export function createChronicleEntryV0(
+// A3 — typed, non-throwing Chronicle entry admission result vocabulary.
+// This is the single executable source of truth for every currently
+// recognized chronicle_entry.v0 admission check; `createChronicleEntryV0`
+// below is a compatibility wrapper over it, never an independent copy of
+// these checks. This does not decide how PR D will later compose an
+// unexpected typed position-12 rejection with the RSF finding vocabulary —
+// that composition decision belongs to PR D, not to this primitive.
+export type ChronicleEntryAdmissionReasonCodeV0 =
+  | "evidence_root_missing"
+  | "evidence_root_mismatch"
+  | "proof_root_mismatch"
+  | "capsule_stored_mismatch"
+  | "capsule_computed_mismatch"
+  | "capsule_label_inconsistent"
+  | "verifier_result_inconsistent"
+  | "proof_object_id_invalid"
+  | "proof_ref_invalid"
+
+export type ChronicleEntryAdmissionFailureV0 =
+  | {
+      failure_class: "unverifiable"
+      reason_code: "evidence_root_missing"
+    }
+  | {
+      failure_class: "evidence_mismatch"
+      reason_code: "evidence_root_mismatch"
+    }
+  | {
+      failure_class: "cross_object_inconsistency"
+      reason_code:
+        | "proof_root_mismatch"
+        | "capsule_stored_mismatch"
+        | "capsule_computed_mismatch"
+    }
+  | {
+      failure_class: "reported_state_inconsistency"
+      reason_code:
+        | "capsule_label_inconsistent"
+        | "verifier_result_inconsistent"
+    }
+  | {
+      failure_class: "identity_inconsistency"
+      reason_code:
+        | "proof_object_id_invalid"
+        | "proof_ref_invalid"
+    }
+
+export type TryCreateChronicleEntryV0Result =
+  | {
+      success: true
+      value: ChronicleEntryV0
+    }
+  | {
+      success: false
+      failure: ChronicleEntryAdmissionFailureV0
+    }
+
+type ChronicleEntryConstructionOptions = {
+  entryId?: string
+  evidenceCapsuleRef?: string
+  provenanceSummaryRef?: string
+  createdFrom?: string | null
+  labels?: string[]
+  notes?: string | null
+}
+
+// Typed, non-throwing admission primitive. Executes the nine currently
+// recognized admission checks in their existing order, first-failure-wins.
+// Malformed values smuggled through casts, proxies, getters, or other
+// host-language violations are not promoted into canonical admission
+// failures -- this defines typed behavior for the existing typed Chronicle
+// construction domain only. Unrecognized host-language or implementation
+// failures (e.g. a thrown getter) remain implementation failures and
+// propagate uncaught; they are never converted into a fabricated reason
+// code.
+export function tryCreateChronicleEntryV0(
   evidence: HandoffEvidence,
   proofObject: PortableProofObjectV0,
-  options?: {
-    entryId?: string
-    evidenceCapsuleRef?: string
-    provenanceSummaryRef?: string
-    createdFrom?: string | null
-    labels?: string[]
-    notes?: string | null
-  },
-): ChronicleEntryV0 {
+  options?: ChronicleEntryConstructionOptions,
+): TryCreateChronicleEntryV0Result {
   // Admission gate: chronicle_entry.v0 MUST NOT be produced from evidence_capsule
   // status/match/ok labels alone (they are consistency signals, not source of
   // truth). The receipt_root is independently recomputed here from the raw
   // evidence using the same canonicalization the capsule/verifier already use.
   const storedRoot = evidence.anchor?.receipt_root ?? null
   if (!storedRoot) {
-    throw new Error("createChronicleEntryV0 requires evidence.anchor.receipt_root to be present")
+    return { success: false, failure: { failure_class: "unverifiable", reason_code: "evidence_root_missing" } }
   }
 
   const recomputedRoot = computeReceiptRoot(evidence)
   if (storedRoot.toLowerCase() !== recomputedRoot.toLowerCase()) {
-    throw new Error("createChronicleEntryV0 requires the stored receipt_root to independently recompute (mismatch)")
+    return { success: false, failure: { failure_class: "evidence_mismatch", reason_code: "evidence_root_mismatch" } }
   }
 
   if (proofObject.receipt_root.toLowerCase() !== storedRoot.toLowerCase()) {
-    throw new Error("createChronicleEntryV0 requires proofObject.receipt_root to equal the verified stored/recomputed receipt_root")
+    return { success: false, failure: { failure_class: "cross_object_inconsistency", reason_code: "proof_root_mismatch" } }
   }
 
   const verifiedRoot = storedRoot
@@ -106,18 +174,18 @@ export function createChronicleEntryV0(
   // recomputation above, never a replacement for it.
   const capsuleReceiptRoot = proofObject.evidence_capsule.receipt_root
   if (capsuleReceiptRoot.stored.toLowerCase() !== verifiedRoot.toLowerCase()) {
-    throw new Error("createChronicleEntryV0 requires evidence_capsule.receipt_root.stored to equal the verified receipt_root")
+    return { success: false, failure: { failure_class: "cross_object_inconsistency", reason_code: "capsule_stored_mismatch" } }
   }
   if (capsuleReceiptRoot.computed.toLowerCase() !== recomputedRoot.toLowerCase()) {
-    throw new Error("createChronicleEntryV0 requires evidence_capsule.receipt_root.computed to equal the independently recomputed receipt_root")
+    return { success: false, failure: { failure_class: "cross_object_inconsistency", reason_code: "capsule_computed_mismatch" } }
   }
   if (capsuleReceiptRoot.match !== true || capsuleReceiptRoot.status !== "verified") {
-    throw new Error("createChronicleEntryV0 requires evidence_capsule.receipt_root.match/status to be internally consistent with the verified root")
+    return { success: false, failure: { failure_class: "reported_state_inconsistency", reason_code: "capsule_label_inconsistent" } }
   }
 
   const verifierResult = proofObject.evidence_capsule.verifier_result
   if (verifierResult.ok !== true || verifierResult.status !== "verified") {
-    throw new Error("createChronicleEntryV0 requires evidence_capsule.verifier_result to be internally consistent with a successful independent recomputation")
+    return { success: false, failure: { failure_class: "reported_state_inconsistency", reason_code: "verifier_result_inconsistent" } }
   }
 
   // Identity binding: proof_object_id/proof_ref are normatively derived from
@@ -125,24 +193,69 @@ export function createChronicleEntryV0(
   // than a second rule, so this can never drift from createPortableProofObjectV0.
   const expectedProofObjectId = deriveProofObjectId(verifiedRoot)
   if (proofObject.proof_object_id !== expectedProofObjectId) {
-    throw new Error("createChronicleEntryV0 requires proofObject.proof_object_id to be the canonical derivation of the verified receipt_root")
+    return { success: false, failure: { failure_class: "identity_inconsistency", reason_code: "proof_object_id_invalid" } }
   }
   if (proofObject.proof_ref !== deriveProofRef(expectedProofObjectId)) {
-    throw new Error("createChronicleEntryV0 requires proofObject.proof_ref to be the canonical derivation of proof_object_id")
+    return { success: false, failure: { failure_class: "identity_inconsistency", reason_code: "proof_ref_invalid" } }
   }
 
   return {
-    schema: CHRONICLE_ENTRY_VERSION_V0,
-    entry_id: options?.entryId ?? `entry-${proofObject.proof_object_id}`,
-    source_system: proofObject.proof_system,
-    receipt_root: proofObject.receipt_root,
-    proof_object_ref: proofObject.proof_ref,
-    evidence_capsule_ref: options?.evidenceCapsuleRef ?? `embedded:${proofObject.proof_object_id}:evidence_capsule`,
-    provenance_summary_ref: options?.provenanceSummaryRef ?? `embedded:${proofObject.proof_object_id}:provenance_summary`,
-    created_from: options?.createdFrom ?? proofObject.source_evidence_ref ?? null,
-    labels: Array.isArray(options?.labels) ? options!.labels.filter((value): value is string => typeof value === "string") : [],
-    notes: typeof options?.notes === "string" ? options.notes : null,
+    success: true,
+    value: {
+      schema: CHRONICLE_ENTRY_VERSION_V0,
+      entry_id: options?.entryId ?? `entry-${proofObject.proof_object_id}`,
+      source_system: proofObject.proof_system,
+      receipt_root: proofObject.receipt_root,
+      proof_object_ref: proofObject.proof_ref,
+      evidence_capsule_ref: options?.evidenceCapsuleRef ?? `embedded:${proofObject.proof_object_id}:evidence_capsule`,
+      provenance_summary_ref: options?.provenanceSummaryRef ?? `embedded:${proofObject.proof_object_id}:provenance_summary`,
+      created_from: options?.createdFrom ?? proofObject.source_evidence_ref ?? null,
+      labels: Array.isArray(options?.labels) ? options!.labels.filter((value): value is string => typeof value === "string") : [],
+      notes: typeof options?.notes === "string" ? options.notes : null,
+    },
   }
+}
+
+function legacyChronicleAdmissionMessage(reasonCode: ChronicleEntryAdmissionReasonCodeV0): string {
+  switch (reasonCode) {
+    case "evidence_root_missing":
+      return "createChronicleEntryV0 requires evidence.anchor.receipt_root to be present"
+    case "evidence_root_mismatch":
+      return "createChronicleEntryV0 requires the stored receipt_root to independently recompute (mismatch)"
+    case "proof_root_mismatch":
+      return "createChronicleEntryV0 requires proofObject.receipt_root to equal the verified stored/recomputed receipt_root"
+    case "capsule_stored_mismatch":
+      return "createChronicleEntryV0 requires evidence_capsule.receipt_root.stored to equal the verified receipt_root"
+    case "capsule_computed_mismatch":
+      return "createChronicleEntryV0 requires evidence_capsule.receipt_root.computed to equal the independently recomputed receipt_root"
+    case "capsule_label_inconsistent":
+      return "createChronicleEntryV0 requires evidence_capsule.receipt_root.match/status to be internally consistent with the verified root"
+    case "verifier_result_inconsistent":
+      return "createChronicleEntryV0 requires evidence_capsule.verifier_result to be internally consistent with a successful independent recomputation"
+    case "proof_object_id_invalid":
+      return "createChronicleEntryV0 requires proofObject.proof_object_id to be the canonical derivation of the verified receipt_root"
+    case "proof_ref_invalid":
+      return "createChronicleEntryV0 requires proofObject.proof_ref to be the canonical derivation of proof_object_id"
+    default: {
+      const exhaustive: never = reasonCode
+      throw new Error(`unreachable Chronicle admission reason code: ${exhaustive}`)
+    }
+  }
+}
+
+// Compatibility wrapper only. Calls tryCreateChronicleEntryV0 exactly once
+// and translates its typed result into the pre-A3 throwing API -- it is not
+// an independent copy of the admission checks.
+export function createChronicleEntryV0(
+  evidence: HandoffEvidence,
+  proofObject: PortableProofObjectV0,
+  options?: ChronicleEntryConstructionOptions,
+): ChronicleEntryV0 {
+  const result = tryCreateChronicleEntryV0(evidence, proofObject, options)
+  if (result.success) {
+    return result.value
+  }
+  throw new Error(legacyChronicleAdmissionMessage(result.failure.reason_code))
 }
 
 export function sortCollectionRefs(collectionRefs: string[]): string[] {

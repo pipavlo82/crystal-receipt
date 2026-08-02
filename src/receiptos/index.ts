@@ -30,6 +30,7 @@ export {
 } from "./capsule/portable-proof-object-v0"
 export {
   createChronicleEntryV0,
+  tryCreateChronicleEntryV0,
   sortArtifactRefs,
   sortEntryRefs,
   deriveArtifactRefsFromChronicleEntry,
@@ -45,6 +46,9 @@ export {
   createChronicleCheckpointV0,
   verifyChronicleCheckpointV0,
   type ChronicleEntryV0,
+  type ChronicleEntryAdmissionReasonCodeV0,
+  type ChronicleEntryAdmissionFailureV0,
+  type TryCreateChronicleEntryV0Result,
   type ChronicleCollectionV0,
   type ChronicleCollectionVerification,
   type ChroniclePortfolioV0,
