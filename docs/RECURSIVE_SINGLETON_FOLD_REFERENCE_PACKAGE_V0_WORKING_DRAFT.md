@@ -415,7 +415,9 @@ claims. This document defines no transport error envelope or adapter API.
 
 This boundary does not change the seven top-level fields, their schema or
 profile literals, the 32 finding codes, or the 28-position order. Positions
-1–4 remain the only implemented structural machine-consumer positions, and
+1–4 remain the only implemented and wired structural machine-consumer
+positions; positions 5–12 are implemented as isolated, non-chaining
+primitives (§12) that are not integrated into this structural validator, and
 valid already-materialized JSON-domain inputs retain their current structural
 meaning. No schema version change is introduced.
 
@@ -975,7 +977,8 @@ shape (RSF profile §6.2); the `recursive_singleton_aggregate.v0` shape (RSF
 profile §11.1); the closed 32-code finding vocabulary (§11) — same 32
 names, same total; the 28-position count (§12) — still exactly 28 rows;
 first-finding semantics; the existing `canonicalize()`; the current
-implementation boundary (positions 1–4 implemented; positions 5–14
+implementation boundary (positions 1–4 implemented and wired; positions
+5–12 implemented as isolated, non-chaining primitives; positions 13–14
 unimplemented; positions 15–17 isolated primitives, not evaluator-
 integrated); package identity; or Chronicle behavior. It introduces no new
 carrier, no `profile_sha256`, no package digest, and no runtime
@@ -1166,10 +1169,10 @@ objects (RSF profile §8.1, §9.1, §10.1); the three package pins in this
 section; the closed 32-code finding vocabulary (§11); the 28-position
 evaluation order (§12); first-finding semantics; the existing
 `canonicalize()`; package identity; or the current public-evaluator
-implementation boundary. Positions 15–17 remain isolated, non-chaining
-primitives, not integrated into a public evaluator; positions 5–14 remain
-unimplemented and are not represented as passed by this clarification or by
-positions 15–17.
+implementation boundary. Positions 5–12 and 15–17 remain isolated,
+non-chaining primitives, not integrated into a public evaluator; positions
+13–14 remain unimplemented and are not represented as passed by this
+clarification or by positions 5–12 or 15–17.
 
 ## 13. Exact SF-V1 package contract
 
