@@ -26,6 +26,8 @@ export {
 } from "./capsule/evidence-capsule-v0"
 export {
   createPortableProofObjectV0,
+  deriveProofObjectId,
+  deriveProofRef,
   type PortableProofObjectV0,
 } from "./capsule/portable-proof-object-v0"
 export {
@@ -109,6 +111,19 @@ export {
   type CheckClaimedSourceEntryResult,
   type CheckSourceAdmissionReceiptRootResult,
 } from "./rsf/source-admission-shape"
+export {
+  checkSourceAdmissionCrossObjectConsistency,
+  checkProofObjectIdentity,
+  checkProofReference,
+  checkChronicleAdmissionReconstruction,
+  type CrossObjectConsistencyFinding,
+  type ProofObjectIdentityFinding,
+  type ProofReferenceFinding,
+  type CheckSourceAdmissionCrossObjectConsistencyResult,
+  type CheckProofObjectIdentityResult,
+  type CheckProofReferenceResult,
+  type CheckChronicleAdmissionReconstructionResult,
+} from "./rsf/source-admission-recomputation"
 export {
   buildRenderPlan,
   buildRenderPlanFromCapsule,
