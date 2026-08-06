@@ -9,7 +9,7 @@
       "schema": "recursive_singleton_fold_source_admission_bundle.v0",
       "bundle_version": "recursive-singleton-fold-source-admission-bundle-v0",
       "admission_profile_id": "receiptos-chronicle-admission-v0",
-      "admission_fixture_set_sha256": "ff35ca7a2ef40670c9b08bdbb6838dc675a97f920f3824a6033e9709be639f1d",
+      "admission_fixture_set_sha256": "ff35ca8ae5cef10009479d50c10e111869875f6f62fb9d6bcb00f5aa5a1b4b4f",
       "source_evidence": {
         "schema": "stealth.session.evidence.v1",
         "session_id": "session-demo-001",
@@ -564,15 +564,68 @@
     "evaluation_state": "evaluated",
     "profile_verdict": "accepted",
     "aggregate": {
-      "profile_local_notes": null,
-      "no_stronger_semantic_class_created": true,
-      "transition_result": {
-        "status": "singleton_transition_ok",
-        "semantic_equivalence_result": "semantic_result_commitment_preserved",
-        "source_identity_reuse_result": "source_identity_not_reused",
-        "stronger_semantic_class_creation_result": "no_stronger_semantic_class_created"
+      "schema": "recursive_singleton_aggregate.v0",
+      "profile_version": "recursive-singleton-fold-profile-v0",
+      "aggregate_id": "sha256:c3ed79e0644b757335320ab15ca10973349e43fa9d2e7e38d4bceb9cb7a24b85",
+      "source_entry_ref": "entry-shared-admission-v0",
+      "source_entry_content_commitment": "sha256:64bbd7dab6869b9a71f810c5b3d6decaa7db6f076c245da7613ad40033937515",
+      "semantic_statement": {
+        "schema": "chronicle_entry_singleton_semantic_statement.v0",
+        "source_entry_schema": "chronicle_entry.v0",
+        "source_entry_ref": "entry-shared-admission-v0",
+        "source_entry_content_commitment": "sha256:64bbd7dab6869b9a71f810c5b3d6decaa7db6f076c245da7613ad40033937515",
+        "source_admission_state": "chronicle_entry_independently_admitted",
+        "fold_policy_commitment": "sha256:9c9617921b764cbdea0d2674e397a8a687e28a4a8f25ea4056515a1175b5455f",
+        "comparability_class_commitment": "sha256:7a11e0f99232c5a0c41823551ca43064becd870b8f6abb941fc8820b57f088ed",
+        "transition_rule_commitment": "sha256:d5fa45fb6ab73c58d14a635d3ba7b899d653a73a133360b8e7ca7e530cfee25c",
+        "singleton_transition_eligibility": "eligible_under_exact_singleton_profile_declarations"
       },
-      "pre_aggregation_breakdown_commitment": "sha256:3b19cbf73497dec39c7a9dca633d5de0dde5eba7e98e4b13af8000c0ca6239cf",
+      "semantic_result_commitment": "sha256:f707bc77cc29bb10c7dea5b109cf30bd932c7f80447b4f3c1ebf0bba68e29d5c",
+      "canonical_inclusion_set": [
+        {
+          "member_schema": "chronicle_entry.v0",
+          "member_ref": "entry-shared-admission-v0",
+          "member_source_entry_content_commitment": "sha256:64bbd7dab6869b9a71f810c5b3d6decaa7db6f076c245da7613ad40033937515"
+        }
+      ],
+      "inclusion_set_commitment": "sha256:c70950b712a5541c047a10a43215e62bc6f65aeb765ce0ccb59845c38f1b9bd5",
+      "fold_policy_declaration": {
+        "schema": "recursive_singleton_fold_policy.v0",
+        "policy_version": "recursive-singleton-fold-policy-v0",
+        "policy_id": "singleton-chronicle-entry-semantic-preservation",
+        "source_object_schema": "chronicle_entry.v0",
+        "aggregate_object_schema": "recursive_singleton_aggregate.v0",
+        "member_cardinality": 1,
+        "aggregation_mode": "singleton_only",
+        "semantic_elevation": "forbidden",
+        "source_identity_reuse": "forbidden",
+        "multi_member_extension": "deferred"
+      },
+      "fold_policy_commitment": "sha256:9c9617921b764cbdea0d2674e397a8a687e28a4a8f25ea4056515a1175b5455f",
+      "comparability_class_declaration": {
+        "schema": "recursive_singleton_comparability_class.v0",
+        "class_version": "recursive-singleton-comparability-class-v0",
+        "class_id": "admitted-chronicle-entry-singleton",
+        "source_object_schema": "chronicle_entry.v0",
+        "admission_required": true,
+        "cross_entry_comparability": "not_asserted",
+        "cross_policy_bridge": "deferred",
+        "cross_class_bridge": "deferred",
+        "singleton_eligibility_rule": "exactly_one_independently_admitted_source_entry"
+      },
+      "comparability_class_commitment": "sha256:7a11e0f99232c5a0c41823551ca43064becd870b8f6abb941fc8820b57f088ed",
+      "transition_rule_declaration": {
+        "schema": "recursive_singleton_transition_rule.v0",
+        "rule_version": "recursive-singleton-transition-rule-v0",
+        "rule_id": "semantic_result_preserving_singleton_identity_transition",
+        "source_object_schema": "chronicle_entry.v0",
+        "aggregate_object_schema": "recursive_singleton_aggregate.v0",
+        "preserved_equality_relation": "semantic_result_commitment_equality_only",
+        "source_identity_reuse": "forbidden",
+        "stronger_class_creation": "forbidden",
+        "fail_closed_on_malformed_or_unknown_input": true
+      },
+      "transition_rule_commitment": "sha256:d5fa45fb6ab73c58d14a635d3ba7b899d653a73a133360b8e7ca7e530cfee25c",
       "pre_aggregation_breakdown": {
         "schema": "recursive_singleton_breakdown.v0",
         "source_entry_ref": "entry-shared-admission-v0",
@@ -590,68 +643,15 @@
         },
         "no_elevation_finding": "no_stronger_semantic_class_created"
       },
-      "transition_rule_commitment": "sha256:d5fa45fb6ab73c58d14a635d3ba7b899d653a73a133360b8e7ca7e530cfee25c",
-      "transition_rule_declaration": {
-        "schema": "recursive_singleton_transition_rule.v0",
-        "rule_version": "recursive-singleton-transition-rule-v0",
-        "rule_id": "semantic_result_preserving_singleton_identity_transition",
-        "source_object_schema": "chronicle_entry.v0",
-        "aggregate_object_schema": "recursive_singleton_aggregate.v0",
-        "preserved_equality_relation": "semantic_result_commitment_equality_only",
-        "source_identity_reuse": "forbidden",
-        "stronger_class_creation": "forbidden",
-        "fail_closed_on_malformed_or_unknown_input": true
+      "pre_aggregation_breakdown_commitment": "sha256:3b19cbf73497dec39c7a9dca633d5de0dde5eba7e98e4b13af8000c0ca6239cf",
+      "transition_result": {
+        "status": "singleton_transition_ok",
+        "semantic_equivalence_result": "semantic_result_commitment_preserved",
+        "source_identity_reuse_result": "source_identity_not_reused",
+        "stronger_semantic_class_creation_result": "no_stronger_semantic_class_created"
       },
-      "comparability_class_commitment": "sha256:7a11e0f99232c5a0c41823551ca43064becd870b8f6abb941fc8820b57f088ed",
-      "comparability_class_declaration": {
-        "schema": "recursive_singleton_comparability_class.v0",
-        "class_version": "recursive-singleton-comparability-class-v0",
-        "class_id": "admitted-chronicle-entry-singleton",
-        "source_object_schema": "chronicle_entry.v0",
-        "admission_required": true,
-        "cross_entry_comparability": "not_asserted",
-        "cross_policy_bridge": "deferred",
-        "cross_class_bridge": "deferred",
-        "singleton_eligibility_rule": "exactly_one_independently_admitted_source_entry"
-      },
-      "fold_policy_commitment": "sha256:9c9617921b764cbdea0d2674e397a8a687e28a4a8f25ea4056515a1175b5455f",
-      "fold_policy_declaration": {
-        "schema": "recursive_singleton_fold_policy.v0",
-        "policy_version": "recursive-singleton-fold-policy-v0",
-        "policy_id": "singleton-chronicle-entry-semantic-preservation",
-        "source_object_schema": "chronicle_entry.v0",
-        "aggregate_object_schema": "recursive_singleton_aggregate.v0",
-        "member_cardinality": 1,
-        "aggregation_mode": "singleton_only",
-        "semantic_elevation": "forbidden",
-        "source_identity_reuse": "forbidden",
-        "multi_member_extension": "deferred"
-      },
-      "inclusion_set_commitment": "sha256:c70950b712a5541c047a10a43215e62bc6f65aeb765ce0ccb59845c38f1b9bd5",
-      "canonical_inclusion_set": [
-        {
-          "member_schema": "chronicle_entry.v0",
-          "member_ref": "entry-shared-admission-v0",
-          "member_source_entry_content_commitment": "sha256:64bbd7dab6869b9a71f810c5b3d6decaa7db6f076c245da7613ad40033937515"
-        }
-      ],
-      "semantic_result_commitment": "sha256:f707bc77cc29bb10c7dea5b109cf30bd932c7f80447b4f3c1ebf0bba68e29d5c",
-      "semantic_statement": {
-        "schema": "chronicle_entry_singleton_semantic_statement.v0",
-        "source_entry_schema": "chronicle_entry.v0",
-        "source_entry_ref": "entry-shared-admission-v0",
-        "source_entry_content_commitment": "sha256:64bbd7dab6869b9a71f810c5b3d6decaa7db6f076c245da7613ad40033937515",
-        "source_admission_state": "chronicle_entry_independently_admitted",
-        "fold_policy_commitment": "sha256:9c9617921b764cbdea0d2674e397a8a687e28a4a8f25ea4056515a1175b5455f",
-        "comparability_class_commitment": "sha256:7a11e0f99232c5a0c41823551ca43064becd870b8f6abb941fc8820b57f088ed",
-        "transition_rule_commitment": "sha256:d5fa45fb6ab73c58d14a635d3ba7b899d653a73a133360b8e7ca7e530cfee25c",
-        "singleton_transition_eligibility": "eligible_under_exact_singleton_profile_declarations"
-      },
-      "source_entry_content_commitment": "sha256:64bbd7dab6869b9a71f810c5b3d6decaa7db6f076c245da7613ad40033937515",
-      "source_entry_ref": "entry-shared-admission-v0",
-      "aggregate_id": "sha256:c3ed79e0644b757335320ab15ca10973349e43fa9d2e7e38d4bceb9cb7a24b85",
-      "profile_version": "recursive-singleton-fold-profile-v0",
-      "schema": "recursive_singleton_aggregate.v0"
+      "no_stronger_semantic_class_created": true,
+      "profile_local_notes": null
     },
     "finding": null
   },

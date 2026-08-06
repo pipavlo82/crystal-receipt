@@ -7,9 +7,11 @@ these fixtures (objects, arrays, strings, booleans, null, and integers).
 """
 from __future__ import annotations
 
+import argparse
 import copy
 import hashlib
 import json
+import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -67,7 +69,7 @@ def source_input():
         "schema":"recursive_singleton_fold_source_admission_bundle.v0",
         "bundle_version":"recursive-singleton-fold-source-admission-bundle-v0",
         "admission_profile_id":"receiptos-chronicle-admission-v0",
-        "admission_fixture_set_sha256":"ff35ca7a2ef40670c9b08bdbb6838dc675a97f920f3824a6033e9709be639f1d",
+        "admission_fixture_set_sha256":"ff35ca8ae5cef10009479d50c10e111869875f6f62fb9d6bcb00f5aa5a1b4b4f",
         "source_evidence":shared["input"]["evidence"],
         "source_proof_object":shared["input"]["proof_object"],
         "source_entry_construction_options":{
@@ -151,6 +153,78 @@ def baseline(notes=None, entry_id=None):
              "claimed_input_semantic_result_commitment":sem,"candidate_aggregate":aggregate}
     return inp, prefix, stage
 
+def reconstruct_expected(prefix, input_value):
+    """Reconstruct accepted facts without reading any candidate value or ID."""
+    entry = copy.deepcopy(prefix["sourceEntry"])
+    notes = input_value["profile_local_notes"]
+    policy = copy.deepcopy(input_value["fold_policy_declaration"])
+    class_decl = copy.deepcopy(input_value["comparability_class_declaration"])
+    rule = copy.deepcopy(input_value["transition_rule_declaration"])
+    source_commit, pc, cc, rc = digest(entry), digest(policy), digest(class_decl), digest(rule)
+    input_statement = {
+        "schema":"chronicle_entry_singleton_semantic_statement.v0","source_entry_schema":"chronicle_entry.v0",
+        "source_entry_ref":entry["entry_id"],"source_entry_content_commitment":source_commit,
+        "source_admission_state":"chronicle_entry_independently_admitted","fold_policy_commitment":pc,
+        "comparability_class_commitment":cc,"transition_rule_commitment":rc,
+        "singleton_transition_eligibility":"eligible_under_exact_singleton_profile_declarations"
+    }
+    input_commit = digest(input_statement)
+    inclusion = [{"member_schema":"chronicle_entry.v0","member_ref":entry["entry_id"],
+                  "member_source_entry_content_commitment":source_commit}]
+    inclusion_commit = digest(inclusion)
+    # A distinct output reconstruction; never alias or copy the input claim.
+    output_statement = {
+        "schema":"chronicle_entry_singleton_semantic_statement.v0","source_entry_schema":entry["schema"],
+        "source_entry_ref":entry["entry_id"],"source_entry_content_commitment":source_commit,
+        "source_admission_state":"chronicle_entry_independently_admitted","fold_policy_commitment":pc,
+        "comparability_class_commitment":cc,"transition_rule_commitment":rc,
+        "singleton_transition_eligibility":"eligible_under_exact_singleton_profile_declarations"
+    }
+    output_commit = digest(output_statement)
+    input_descriptor = {
+        "schema":"recursive_singleton_semantic_class_descriptor.v0",
+        "source_object_schema":input_statement["source_entry_schema"],
+        "source_admission_state":input_statement["source_admission_state"],"fold_policy_commitment":pc,
+        "comparability_class_commitment":cc,"transition_rule_commitment":rc,
+        "singleton_transition_eligibility":input_statement["singleton_transition_eligibility"]
+    }
+    output_descriptor = {
+        "schema":"recursive_singleton_semantic_class_descriptor.v0",
+        "source_object_schema":output_statement["source_entry_schema"],
+        "source_admission_state":output_statement["source_admission_state"],"fold_policy_commitment":pc,
+        "comparability_class_commitment":cc,"transition_rule_commitment":rc,
+        "singleton_transition_eligibility":output_statement["singleton_transition_eligibility"]
+    }
+    no_promotion = (canonical(input_descriptor) == canonical(output_descriptor)
+                    and input_commit == output_commit and policy == POLICY and class_decl == CLASS and rule == RULE)
+    breakdown = {
+        "schema":"recursive_singleton_breakdown.v0","source_entry_ref":entry["entry_id"],
+        "source_entry_content_commitment":source_commit,"source_admission_prerequisite":"chronicle_entry_independently_admitted",
+        "inclusion_decision":"included","exclusion_decision":"none","comparability_evaluation":"singleton_class_eligible",
+        "policy_evaluation":"singleton_policy_eligible","transition_input":{"semantic_result_commitment":input_commit},
+        "transition_output":{"semantic_result_commitment":output_commit},"no_elevation_finding":"no_stronger_semantic_class_created"
+    }
+    bd = digest(breakdown)
+    seed = {"schema":"recursive_singleton_aggregate_identity_seed.v0","aggregate_schema":"recursive_singleton_aggregate.v0",
+            "profile_version":"recursive-singleton-fold-profile-v0","source_entry_ref":entry["entry_id"],
+            "source_entry_content_commitment":source_commit,"semantic_result_commitment":output_commit,
+            "inclusion_set_commitment":inclusion_commit,"fold_policy_commitment":pc,
+            "comparability_class_commitment":cc,"transition_rule_commitment":rc,
+            "pre_aggregation_breakdown_commitment":bd}
+    aggregate = {
+        "schema":"recursive_singleton_aggregate.v0","profile_version":"recursive-singleton-fold-profile-v0",
+        "aggregate_id":digest(seed),"source_entry_ref":entry["entry_id"],"source_entry_content_commitment":source_commit,
+        "semantic_statement":output_statement,"semantic_result_commitment":output_commit,"canonical_inclusion_set":inclusion,
+        "inclusion_set_commitment":inclusion_commit,"fold_policy_declaration":policy,"fold_policy_commitment":pc,
+        "comparability_class_declaration":class_decl,"comparability_class_commitment":cc,
+        "transition_rule_declaration":rule,"transition_rule_commitment":rc,"pre_aggregation_breakdown":breakdown,
+        "pre_aggregation_breakdown_commitment":bd,"transition_result":copy.deepcopy(TRANSITION),
+        "no_stronger_semantic_class_created":no_promotion,"profile_local_notes":notes
+    }
+    return {"input_statement":input_statement,"input_commitment":input_commit,"input_descriptor":input_descriptor,
+            "output_descriptor":output_descriptor,"aggregate":aggregate,
+            "envelope":envelope("evaluated", aggregate=aggregate)}
+
 def envelope(state, code=None, pos=None, aggregate=None):
     finding = None if code is None else {"schema":"recursive_singleton_fold_finding.v0","code":code,"check_position":pos}
     return {"schema":"recursive_singleton_fold_evaluation.v0","evaluation_state":state,
@@ -161,8 +235,9 @@ def vector(case_id, state="evaluated", code=None, pos=None, mutate=None, notes=N
            scope="positions_18_28", context=None):
     inp, prefix, stage = baseline(notes, entry_id)
     if mutate: mutate(inp, prefix, stage)
-    agg = stage["candidate_aggregate"] if state == "evaluated" and code is None else None
-    expected = envelope(state, code, pos, agg)
+    reconstructed = reconstruct_expected(prefix, inp)
+    agg = reconstructed["aggregate"] if state == "evaluated" and code is None else None
+    expected = reconstructed["envelope"] if agg is not None else envelope(state, code, pos, None)
     return {"schema":"recursive_singleton_fold_vector.v0","case_id":case_id,"scope":scope,
             "input":inp,"prefix_continuation":prefix,"stage_input":stage,"expected_evaluation":expected,
             "expected_state":state,"expected_code":code,"expected_check_position":pos,
@@ -228,7 +303,7 @@ def build_vectors():
         context={"success_labels_are_data_only":True})
     v["V-NOPROOF"] = malformed("V-NOPROOF", lambda i,p,s: s.pop("claimed_input_semantic_result_commitment"))
     v["V-UNVER"] = vector("V-UNVER","unverifiable","source_admission_prerequisite_unavailable",8,
-        lambda i,p,s: i["source_admission_bundle"]["source_evidence"]["anchor"].update(receipt_root=None), scope="prefix_and_stage")
+        lambda i,p,s: i["source_admission_bundle"]["source_evidence"]["anchor"].update(receipt_root=""), scope="prefix_and_stage")
     v["V-MAL-REJ"] = malformed("V-MAL-REJ", lambda i,p,s: s.update(claimed_input_semantic_result_commitment="not-a-digest"))
     def reverse_keys(i,p,s):
         a=s["candidate_aggregate"]; s["candidate_aggregate"]={k:a[k] for k in reversed(list(a))}
@@ -256,31 +331,104 @@ by `conformance/recursive-singleton-fold-v0/generate_expected.py`, which does
 not import ReceiptOS implementation helpers, and are independently audited by
 the TypeScript script beside it.
 
-The manifest hashes exact LF UTF-8 Git candidate bytes. Its `fixture_set_sha256`
-is SHA-256 over sorted `<path>\\t<file-sha256>\\n` records and excludes the
-manifest itself. Semantic commitments hash independently canonicalized JSON,
-never checkout or file bytes.
+This legacy template is retained only for source-history readability and is
+never emitted. `README_V2` below is the sole generated package README.
 """
 
-def main():
+README_V2 = """# Recursive Singleton Fold v0 normative fixtures
+
+These 34 vectors freeze the adopted positions 18–28 contract. They are
+normative data, not a production evaluator. Python and TypeScript independently
+reconstruct expected facts without production helpers or candidate-as-expected
+copying.
+
+The manifest hashes exact Git-index/blob bytes. Package model A owns 40
+repository-relative artifacts: this README, `contract.json`, four schemas, and
+34 vectors. `fixture_set_sha256` is SHA-256 over sorted
+`<repository-path>\\t<file-sha256>\\n` records and excludes the manifest itself.
+Semantic commitments hash canonical JSON, never file or checkout bytes.
+Verification is read-only; only `--generate` intentionally writes artifacts.
+"""
+
+SCHEMA_PATHS = [
+    "src/receiptos/schemas/recursive-singleton-aggregate-v0.schema.json",
+    "src/receiptos/schemas/recursive-singleton-fold-evaluation-v0.schema.json",
+    "src/receiptos/schemas/recursive-singleton-fold-finding-v0.schema.json",
+    "src/receiptos/schemas/recursive-singleton-fold-stage-input-v0.schema.json",
+]
+
+def git_index_bytes(path):
+    return subprocess.check_output(["git", "show", f":{path}"], cwd=ROOT)
+
+def package_paths(vectors):
+    prefix = "tests/fixtures/recursive-singleton-fold-v0"
+    return sorted(SCHEMA_PATHS + [f"{prefix}/README.md", f"{prefix}/contract.json"] +
+                  [f"{prefix}/vectors/{case}.json" for case in vectors], key=lambda x:x.encode("utf-8"))
+
+def result_record(vectors, fixture_hash):
+    reconstructed = reconstruct_expected(vectors["V-OK"]["prefix_continuation"], vectors["V-OK"]["input"])
+    aggregate = reconstructed["aggregate"]
+    return {"generator":"python-independent-rsf-v0","mode":"independent_reconstruction",
+            "vector_count":len(vectors),"package_inventory_count":40,"fixture_set_sha256":fixture_hash,
+            "canonicalizer":"local recursive JSON canonicalizer; no production imports",
+            "v_ok":{"source_entry_content_commitment":aggregate["source_entry_content_commitment"],
+                    "semantic_result_commitment":aggregate["semantic_result_commitment"],
+                    "inclusion_set_commitment":aggregate["inclusion_set_commitment"],
+                    "fold_policy_commitment":aggregate["fold_policy_commitment"],
+                    "comparability_class_commitment":aggregate["comparability_class_commitment"],
+                    "transition_rule_commitment":aggregate["transition_rule_commitment"],
+                    "pre_aggregation_breakdown_commitment":aggregate["pre_aggregation_breakdown_commitment"],
+                    "aggregate_id":aggregate["aggregate_id"],
+                    "aggregate_bytes_sha256":hashlib.sha256(canonical(aggregate).encode("utf-8")).hexdigest(),
+                    "envelope_bytes_sha256":hashlib.sha256(canonical(reconstructed["envelope"]).encode("utf-8")).hexdigest()}}
+
+def generate():
     VECTORS.mkdir(parents=True, exist_ok=True)
-    (OUT/"README.md").write_text(README, encoding="utf-8", newline="\n")
+    (OUT/"README.md").write_text(README_V2, encoding="utf-8", newline="\n")
     vectors=build_vectors()
     for case in sorted(vectors, key=lambda x:x.encode("utf-8")):
         (VECTORS/f"{case}.json").write_text(json.dumps(vectors[case],ensure_ascii=False,indent=2)+"\n",encoding="utf-8",newline="\n")
-    files=["README.md"]+[f"vectors/{c}.json" for c in sorted(vectors,key=lambda x:x.encode("utf-8"))]
     rows=[]; entries=[]
-    for rel in files:
-        raw=(OUT/rel).read_bytes(); h=hashlib.sha256(raw).hexdigest()
+    for rel in package_paths(vectors):
+        # Generation records the already-staged candidate bytes. This keeps
+        # checkout CRLF materialization outside normative package identity.
+        raw=git_index_bytes(rel); h=hashlib.sha256(raw).hexdigest()
         entries.append({"path":rel,"sha256":h}); rows.append(f"{rel}\t{h}\n")
     fixture_hash=hashlib.sha256("".join(rows).encode("utf-8")).hexdigest()
     manifest={"schema":"recursive_singleton_fold_fixture_manifest.v0","package_version":"recursive-singleton-fold-v0",
-              "file_count":len(entries),"files":entries,"fixture_set_sha256":fixture_hash,
-              "manifest_self_excluded":True,"path_order":"ascending UTF-8 bytes"}
+              "dependency_model":"A-included-schemas","file_count":len(entries),"files":entries,
+              "fixture_set_sha256":fixture_hash,"manifest_self_excluded":True,
+              "path_order":"ascending UTF-8 bytes","byte_domain":"Git-index/blob bytes"}
     (OUT/"manifest.json").write_text(json.dumps(manifest,indent=2)+"\n",encoding="utf-8",newline="\n")
-    result={"generator":"python-independent-rsf-v0","vector_count":len(vectors),"fixture_set_sha256":fixture_hash,
-            "canonicalizer":"local recursive JSON canonicalizer; no production imports"}
+    result=result_record(vectors, fixture_hash)
     (Path(__file__).parent/"python-generator-output.json").write_text(json.dumps(result,indent=2)+"\n",encoding="utf-8",newline="\n")
+    return result
+
+def verify():
+    vectors=build_vectors()
+    manifest=json.loads(git_index_bytes("tests/fixtures/recursive-singleton-fold-v0/manifest.json"))
+    expected_paths=package_paths(vectors)
+    assert manifest["file_count"] == 40 and [x["path"] for x in manifest["files"]] == expected_paths
+    rows=[]
+    for item in manifest["files"]:
+        actual=hashlib.sha256(git_index_bytes(item["path"])).hexdigest()
+        assert actual == item["sha256"], item["path"]
+        rows.append(f'{item["path"]}\t{actual}\n')
+    fixture_hash=hashlib.sha256("".join(rows).encode("utf-8")).hexdigest()
+    assert fixture_hash == manifest["fixture_set_sha256"]
+    for case, expected in vectors.items():
+        actual=json.loads(git_index_bytes(f"tests/fixtures/recursive-singleton-fold-v0/vectors/{case}.json"))
+        assert actual == expected, case
+    result=result_record(vectors, fixture_hash)
+    committed=json.loads(git_index_bytes("conformance/recursive-singleton-fold-v0/python-generator-output.json"))
+    assert committed == result
+    return result
+
+def main():
+    parser=argparse.ArgumentParser()
+    parser.add_argument("--generate", action="store_true", help="intentionally rewrite generated fixtures")
+    args=parser.parse_args()
+    result=generate() if args.generate else verify()
     print(json.dumps(result,sort_keys=True))
 
 if __name__ == "__main__": main()

@@ -1,0 +1,100 @@
+{
+  "schema": "recursive_singleton_fold_normative_contract.v0",
+  "canonical_base": "0cd910b5b659d5c3972923ee3cb4df0c4bd1a166",
+  "source_admission_fixture_set_sha256": "ff35ca8ae5cef10009479d50c10e111869875f6f62fb9d6bcb00f5aa5a1b4b4f",
+  "position_order": [
+    { "position": 18, "checks": ["stage_shape", "singleton_policy_eligibility"] },
+    { "position": 19, "checks": ["singleton_comparability_eligibility"] },
+    { "position": 20, "checks": ["input_semantic_statement", "input_semantic_result_commitment"] },
+    { "position": 21, "checks": ["canonical_inclusion_set", "inclusion_set_commitment"] },
+    { "position": 22, "checks": ["source_id_non_reuse"] },
+    { "position": 23, "checks": ["output_semantic_statement", "output_stored_digest", "input_output_preservation"] },
+    { "position": 24, "checks": ["mechanical_no_class_promotion"] },
+    { "position": 25, "checks": ["transition_result"] },
+    { "position": 26, "checks": ["pre_aggregation_breakdown", "pre_aggregation_breakdown_commitment"] },
+    { "position": 27, "checks": ["aggregate_id_derivation_and_comparison"] },
+    { "position": 28, "checks": ["fresh_source_commitment", "prefix_position_14_commitment", "candidate_source_commitment", "remaining_fields_in_order", "emit_accepted"] }
+  ],
+  "finding_position_map": {
+    "malformed_rsf_stage_input": [18],
+    "singleton_policy_ineligible": [18],
+    "singleton_class_ineligible": [19],
+    "semantic_statement_mismatch": [20],
+    "semantic_result_commitment_mismatch": [20, 23],
+    "inclusion_set_mismatch": [21],
+    "inclusion_set_commitment_mismatch": [21],
+    "forbidden_source_identity_reuse": [22],
+    "no_elevation_invariant_mismatch": [24],
+    "transition_result_mismatch": [25],
+    "breakdown_mismatch": [26],
+    "breakdown_commitment_mismatch": [26],
+    "aggregate_id_mismatch": [27],
+    "source_entry_content_commitment_mismatch": [28],
+    "complete_aggregate_validation_mismatch": [28]
+  },
+  "position_24_descriptor": {
+    "fields": [
+      "schema",
+      "source_object_schema",
+      "source_admission_state",
+      "fold_policy_commitment",
+      "comparability_class_commitment",
+      "transition_rule_commitment",
+      "singleton_transition_eligibility"
+    ],
+    "sources": {
+      "schema": "literal:recursive_singleton_semantic_class_descriptor.v0",
+      "source_object_schema": "reconstructed_semantic_statement.source_entry_schema",
+      "source_admission_state": "reconstructed_semantic_statement.source_admission_state",
+      "fold_policy_commitment": "recomputed_fold_policy_commitment",
+      "comparability_class_commitment": "recomputed_comparability_class_commitment",
+      "transition_rule_commitment": "recomputed_transition_rule_commitment",
+      "singleton_transition_eligibility": "reconstructed_semantic_statement.singleton_transition_eligibility"
+    },
+    "comparison": "canonical_json_utf8_byte_equality",
+    "predicate": [
+      "input_descriptor_equals_output_descriptor",
+      "input_semantic_result_commitment_equals_output_semantic_result_commitment",
+      "candidate_aggregate_id_differs_from_source_entry_id",
+      "fold_policy_is_locally_eligible",
+      "comparability_class_is_locally_eligible",
+      "transition_rule_literals_are_exact"
+    ],
+    "forbidden_inputs": ["candidate_boolean", "admission_label", "timing", "prefix_success", "status_literal", "absence_of_exception"]
+  },
+  "position_28_remaining_fields": [
+    { "field": "schema", "comparison": "exact_scalar_equality" },
+    { "field": "profile_version", "comparison": "exact_scalar_equality" },
+    { "field": "aggregate_id", "comparison": "exact_digest_text_equality" },
+    { "field": "source_entry_ref", "comparison": "exact_scalar_equality" },
+    { "field": "semantic_statement", "comparison": "canonical_json_utf8_byte_equality" },
+    { "field": "semantic_result_commitment", "comparison": "exact_digest_text_equality" },
+    { "field": "canonical_inclusion_set", "comparison": "canonical_json_utf8_byte_equality" },
+    { "field": "inclusion_set_commitment", "comparison": "exact_digest_text_equality" },
+    { "field": "fold_policy_declaration", "comparison": "canonical_json_utf8_byte_equality" },
+    { "field": "fold_policy_commitment", "comparison": "exact_digest_text_equality" },
+    { "field": "comparability_class_declaration", "comparison": "canonical_json_utf8_byte_equality" },
+    { "field": "comparability_class_commitment", "comparison": "exact_digest_text_equality" },
+    { "field": "transition_rule_declaration", "comparison": "canonical_json_utf8_byte_equality" },
+    { "field": "transition_rule_commitment", "comparison": "exact_digest_text_equality" },
+    { "field": "pre_aggregation_breakdown", "comparison": "canonical_json_utf8_byte_equality" },
+    { "field": "pre_aggregation_breakdown_commitment", "comparison": "exact_digest_text_equality" },
+    { "field": "transition_result", "comparison": "canonical_json_utf8_byte_equality" },
+    { "field": "no_stronger_semantic_class_created", "comparison": "exact_scalar_equality" },
+    { "field": "profile_local_notes", "comparison": "exact_scalar_equality" }
+  ],
+  "schema_dependencies": [
+    "src/receiptos/schemas/recursive-singleton-aggregate-v0.schema.json",
+    "src/receiptos/schemas/recursive-singleton-fold-evaluation-v0.schema.json",
+    "src/receiptos/schemas/recursive-singleton-fold-finding-v0.schema.json",
+    "src/receiptos/schemas/recursive-singleton-fold-stage-input-v0.schema.json"
+  ],
+  "positions_1_17_runtime_blobs": {
+    "src/receiptos/rsf/construction-options-adapter.ts": "cc339181d87377139fe72f6b565282c0725d6851",
+    "src/receiptos/rsf/declaration-commitments.ts": "752c0fc9c5d06dd2902f2bd74ada4aa86f190129",
+    "src/receiptos/rsf/evaluate-prefix-through-position-17.ts": "d846b56cb044288b91c7dc4823e8289d3d1b1956",
+    "src/receiptos/rsf/evaluation-input-shape.ts": "2565fa87fbe847aa2153f6202188b03a45f6121a",
+    "src/receiptos/rsf/source-admission-recomputation.ts": "281c57ac54599b1efb1e53049f59c464040e0bbc",
+    "src/receiptos/rsf/source-admission-shape.ts": "099a8bc95dbed7aa4eeec0d8fed3e56ba331aa1e"
+  }
+}

@@ -2,9 +2,9 @@
 
 ## 1. Status and purpose
 
-This is a **non-normative working draft**. It is internally reviewed and
-byte-pinned only as a working-draft artifact. It is **not frozen**, it is
-**not a conformance standard**, it is **not a ReceiptOS validity rule**, it is
+This is a **non-normative working draft except for the expressly adopted
+positions 18–28 closure**. That narrow normative contract and its package are
+frozen; the remainder is not a conformance standard, is **not a ReceiptOS validity rule**, and is
 **not a Chronicle schema change**, and it is **not** a scoring, ranking,
 reputation, certification, or trust-tier mechanism.
 
@@ -46,9 +46,10 @@ This document is downstream of, and does not modify:
   byte-pinned, internally reviewed, non-normative RSF working profile this
   package evaluates against, including its §11.5 `profile_local_notes`
   contract, its §12.1 aggregate-identity seed, and its §17 transition rule.
-  The RSF profile is **not yet frozen** and is not yet a conformance
-  standard; it is byte-pinned working-draft text, reviewed and stable enough
-  to build against, not a frozen specification.
+  Except for the adopted positions 18–28 normative closure, the RSF profile
+  is **not yet frozen** and is not yet a conformance standard. The adopted
+  closure is a frozen implementation contract, not a production conformance
+  claim.
 - `docs/RECURSIVE_AGGREGATE_BOUNDARY_V0_WORKING_DRAFT.md` — the parent
   boundary document. RAB-V2 (aggregate-of-aggregates) remains deferred.
   RAB-A1 (entry-as-fold-raw-input) is a separate, mutually exclusive
@@ -91,10 +92,10 @@ In scope:
 - candidate (non-canonical) future file-layout and manifest mechanics;
 - the promotion gates that must hold before any of this becomes canonical.
 
-Out of scope, explicitly:
+Out of scope, explicitly, except for the adopted positions 18–28 normative
+schemas, fixture package, independent audit models, and conformance guards:
 
-- any schema file, TypeScript type, validator, evaluator, fixture, vector, or
-  manifest implementation;
+- any production evaluator or public runtime implementation;
 - any change to the RSF profile text or its formulas;
 - any change to Chronicle schemas or admission semantics;
 - any change to the existing `receiptos-chronicle-admission-v0` package or
@@ -102,7 +103,8 @@ Out of scope, explicitly:
 - any decision about a future shared admission v1;
 - Counterfactual Conformance work of any kind;
 - opening or merging a pull request;
-- freezing package bytes or making a conformance claim.
+- claiming production conformance before a later evaluator passes this frozen
+  package.
 
 ## 4. Exact reference-package surfaces
 
@@ -935,10 +937,22 @@ host/programmer invariants throw outside it. No intermediate surface may emit
 Position 22 uses candidate `aggregate_id` only as an untrusted operand and
 requires it to differ from source `entry_id`; position 27 independently checks
 that same candidate value against the exact profile §12.1 derivation.
-Position 24 constructs fresh closed input/output semantic-class descriptors
-and proves descriptor equality, preserved semantic commitment, source-ID
-nonreuse, exact rule literals, absence of candidate promotion fields, and local
-policy/class eligibility without reading the candidate boolean.
+Position 24 constructs separate fresh, closed input/output semantic-class
+descriptors with exactly these seven fields in order: `schema`,
+`source_object_schema`, `source_admission_state`, `fold_policy_commitment`,
+`comparability_class_commitment`, `transition_rule_commitment`, and
+`singleton_transition_eligibility`. `schema` is the exact literal
+`recursive_singleton_semantic_class_descriptor.v0`; the next two fields come
+from the corresponding independently reconstructed semantic statement; the
+three declaration commitments are freshly recomputed; and eligibility comes
+from the reconstructed statement. The descriptors are compared by canonical
+JSON UTF-8 byte equality. The deterministic no-promotion predicate is true iff
+those bytes are equal, input/output semantic-result commitments are equal,
+candidate aggregate ID differs byte-for-byte from source entry ID, policy and
+class are locally eligible, and every transition-rule literal is exact.
+Candidate boolean, admission/timing/prefix/status labels, and absence of an
+exception are forbidden inputs to this derivation. Only after the mechanical
+predicate is established is the candidate boolean compared.
 
 Position 28(b) checks exactly this remaining order after 28(a): `schema`,
 `profile_version`, `aggregate_id`, `source_entry_ref`, `semantic_statement`,
@@ -948,16 +962,29 @@ Position 28(b) checks exactly this remaining order after 28(a): `schema`,
 `comparability_class_commitment`, `transition_rule_declaration`,
 `transition_rule_commitment`, `pre_aggregation_breakdown`,
 `pre_aggregation_breakdown_commitment`, `transition_result`,
-`no_stronger_semantic_class_created`, `profile_local_notes`. Generic unordered
-deep equality is not the position-28 algorithm.
+`no_stronger_semantic_class_created`, `profile_local_notes`. Comparison modes
+in that same order are: scalar, scalar, digest text, scalar, canonical JSON
+UTF-8 bytes, digest text, canonical JSON UTF-8 bytes, digest text, canonical
+JSON UTF-8 bytes, digest text, canonical JSON UTF-8 bytes, digest text,
+canonical JSON UTF-8 bytes, digest text, canonical JSON UTF-8 bytes, digest
+text, canonical JSON UTF-8 bytes, scalar, scalar. Generic unordered deep
+equality is not the position-28 algorithm.
 
 Semantic commitments hash repository-canonicalized strict JSON UTF-8 bytes.
-Fixture manifests instead hash exact LF UTF-8 Git-index blob bytes. Checkout
+Fixture manifests instead hash exact Git-index/blob bytes. Checkout
 materialization bytes never substitute for either domain. The adopted schemas
 are the four `src/receiptos/schemas/recursive-singleton-*.schema.json` files;
 the 34-vector package and two independent expected-value implementations are
 under `tests/fixtures/recursive-singleton-fold-v0` and
 `conformance/recursive-singleton-fold-v0`.
+
+Package dependency model A is frozen: the manifest directly includes this
+package's README and contract metadata, all four adopted schemas, and all 34
+vector JSON files, for exactly 40 repository-relative Git-index/blob members.
+The manifest excludes itself. Rows are sorted by UTF-8 repository path and are
+exactly `<path><TAB><lowercase-sha256><LF>` with `/` separators, UTF-8 encoding,
+a final LF, and no BOM. The current fixture-set digest is
+`64b88bfbd578ee8399f6a78793f14fc71271937aef517afe8fab7822aaa46d4a`.
 
 For every compound position: subchecks execute left-to-right exactly as
 written; the first failing subcheck determines the one finding; shape
@@ -993,28 +1020,29 @@ position-12 convention of a position that performs a real operation
 without owning a code of its own.
 
 Position 28's subcheck (a) is where `source_entry_content_commitment` is
-verified. Per §9's already-pinned notes application order, final
+verified using three independent operands in this exact order: a fresh
+commitment over the verified source entry; the stored position-14 prefix
+commitment compared with fresh; and the candidate stored commitment compared
+with fresh. Per §9's already-pinned notes application order, final
 `profile_local_notes` is applied before position 28 begins (§9 steps 3–4);
 position 28 does not apply notes itself and does not defer notes
 application until after subcheck (a). Position 28 operates on the
 complete final aggregate — notes already included — and, within that
-single terminal validation, first compares the `source_entry_content_commitment`
-value stored in that complete final aggregate against a fresh, independent
-recomputation performed at position 28 from the same complete verified
-source entry. This is the same
+single terminal validation, performs those two stored-versus-fresh comparisons
+after the fresh recomputation. This is the same
 "stored-versus-freshly-recomputed" pattern already normative for every
 other identity-bearing commitment in this profile (RSF profile §7.6, §8.4,
 §9.4, §10.4, §13.4, §14.5: "consumers MUST NOT trust the stored commitment
 without recomputation"); position 28 is simply where this profile's
 existing pattern applies to `source_entry_content_commitment` specifically,
 because — unlike the other identity-bearing commitments (declarations at
-positions 15–17, `semantic_result_commitment` at positions 18/23,
-`inclusion_set_commitment` at position 19, `pre_aggregation_breakdown_commitment`
+positions 15–17, `semantic_result_commitment` at positions 20/23,
+`inclusion_set_commitment` at position 21, `pre_aggregation_breakdown_commitment`
 at position 26) — no earlier position performs an equality comparison for
 `source_entry_content_commitment` before position 28. Position 28 does not
 retroactively make position 14 a comparison: the two-operand equality
-exists only at position 28, where both a stored copy and a fresh
-recomputation are genuinely and independently available; position 14
+exists only at position 28, where the prefix stored copy, candidate stored
+copy, and fresh recomputation are genuinely and independently available; position 14
 remains derivation-only.
 
 Ownership after this clarification: `source_entry_content_commitment_mismatch`
@@ -1252,8 +1280,8 @@ that a production evaluator exists:
   evaluation input;
 - an `aggregate_id` distinct from `claimed_source_entry.entry_id` (§12
   position 22);
-- the recomputed `transition_result` (§12 position 24) and
-  `no_stronger_semantic_class_created` result (§12 position 25);
+- the recomputed `transition_result` (§12 position 25) and
+  `no_stronger_semantic_class_created` result (§12 position 24);
 - no timestamps or generated metadata anywhere in the evaluation input,
   envelope, or aggregate.
 
@@ -1617,9 +1645,10 @@ profile's own §23 promotion-gate discipline:
 - LF-only/no-BOM/Git-index-byte integrity checks (§17) must pass for every
   package file, and semantic tests must pass.
 
-This documentation correction satisfies none of those gates. It only pins
-the packaging and evaluator-contract text that must exist before any of that
-work could begin.
+The positions 18–28 normative contract is frozen by the adopted exception.
+This does not claim production conformance: a future production evaluator must
+still pass the frozen package and all promotion gates before conformance can be
+claimed.
 
 ## 22. Summary
 
