@@ -2,11 +2,18 @@
 
 **Status:** NON-NORMATIVE WORKING DRAFT.
 
+**Adopted exception:** the positions 18–28 construction/validation closure in
+§17.4 and the reference package §12.1 is normative and frozen as an
+implementation contract. The profile outside that narrow exception remains a
+working draft, and no positions 18–28 production evaluator is implemented.
+The adopted package uses dependency model A: its four schemas are direct
+Git-index/blob manifest members rather than mutable external dependencies.
+
 **Classification:**
 
 - non-core candidate executable profile;
 - working draft;
-- not yet frozen;
+- not yet frozen outside the adopted positions 18–28 exception;
 - not yet a conformance standard;
 - not a ReceiptOS validity rule;
 - not a Chronicle schema change;
@@ -22,7 +29,9 @@ This profile begins only **after** successful independent Chronicle admission.
 It does not alter source receipt validity.
 It does not alter Chronicle history.
 It does not add reputation to ReceiptOS.
-It does not create frozen vectors, schemas, evaluators, or conformance requirements yet.
+Except for the adopted positions 18–28 schemas, vectors, and normative-data
+conformance requirements, it does not create frozen package material. It does
+not create an evaluator.
 
 ## 2. Parent artifacts and governing boundary
 
@@ -878,21 +887,28 @@ The rule mechanically:
 1. validates the complete source entry and admission prerequisite;
 2. recomputes `source_entry_content_commitment`;
 3. recomputes all declaration commitments;
-4. evaluates singleton policy and comparability eligibility;
-5. constructs the exact input semantic-statement object;
-6. recomputes the input `semantic_result_commitment`;
-7. constructs the singleton aggregate;
-8. constructs the exact output semantic-statement object;
-9. recomputes the output `semantic_result_commitment`;
+4. evaluates singleton policy eligibility;
+5. evaluates singleton comparability eligibility;
+6. compares the caller's input semantic statement and commitment with fresh local derivations;
+7. compares the candidate inclusion set and commitment with fresh local derivations;
+8. proves source identity nonreuse against the untrusted candidate aggregate ID;
+9. compares the candidate output semantic statement and commitment with fresh local derivations;
 10. requires equality between input and output semantic-result commitments;
-11. derives `transition_result`;
-12. derives `no_stronger_semantic_class_created`;
+11. mechanically derives and verifies `no_stronger_semantic_class_created`;
+12. derives and verifies `transition_result`;
 13. recomputes the breakdown and its commitment;
 14. derives `aggregate_id` from all pinned identity inputs;
 15. verifies all stored/recomputed values; and
 16. fails closed on any mismatch.
 
 ### 17.5 Exact equality relation preserved
+
+The construction order in §17.4 is the adopted normative mapping to reference
+positions 18–28: policy 18, class 19, input statement 20, inclusion 21,
+identity nonreuse 22, output preservation 23, no-promotion proof 24,
+transition result 25, breakdown 26, aggregate ID 27, and terminal complete
+validation 28. This ordering is normative although the production evaluator
+for these positions remains intentionally absent.
 
 The preserved relation is:
 

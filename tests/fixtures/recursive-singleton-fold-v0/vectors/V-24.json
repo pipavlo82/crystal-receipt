@@ -1,0 +1,578 @@
+{
+  "schema": "recursive_singleton_fold_vector.v0",
+  "case_id": "V-24",
+  "scope": "positions_18_28",
+  "input": {
+    "schema": "recursive_singleton_fold_evaluation_input.v0",
+    "profile_id": "recursive-singleton-fold-profile-v0",
+    "source_admission_bundle": {
+      "schema": "recursive_singleton_fold_source_admission_bundle.v0",
+      "bundle_version": "recursive-singleton-fold-source-admission-bundle-v0",
+      "admission_profile_id": "receiptos-chronicle-admission-v0",
+      "admission_fixture_set_sha256": "ff35ca8ae5cef10009479d50c10e111869875f6f62fb9d6bcb00f5aa5a1b4b4f",
+      "source_evidence": {
+        "schema": "stealth.session.evidence.v1",
+        "session_id": "session-demo-001",
+        "directory": "C:/demo/workspace",
+        "task": {
+          "title": "Portable ReceiptOS evidence core sample",
+          "prompt": "Verify portable receipt_root parity."
+        },
+        "agent": {
+          "id": "stealth-main",
+          "runtime": "Stealth"
+        },
+        "scope": {
+          "permission": null,
+          "lease": {
+            "id": "session-demo-001:scoped-lease:v1",
+            "mode": "read_only",
+            "target": "C:/demo/workspace",
+            "allowed_actions": [],
+            "issued_at": 1718676000,
+            "expires_at": null,
+            "status": "missing"
+          }
+        },
+        "authorization": {
+          "delegation_ref": null,
+          "delegator": null,
+          "agent_operator": "stealth-main",
+          "target": "C:/demo/workspace",
+          "allowed_actions": [],
+          "authorization_valid_from": null,
+          "authorization_expiry": null,
+          "authorization_checked_at": 1718676060,
+          "authorization_state_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "authorized_at_execution": null
+        },
+        "execution": [
+          {
+            "call_id": "call-demo-001",
+            "tool": "exec",
+            "action_performed": "git status --short",
+            "target": "C:/demo/workspace",
+            "execution_timestamp": 1718676020,
+            "completed_timestamp": 1718676021,
+            "status": "completed",
+            "scope_match": null
+          }
+        ],
+        "commands": [
+          {
+            "command": "git status --short",
+            "exit_code": 0,
+            "stdout_summary": " M src/demo.txt"
+          }
+        ],
+        "changes": {
+          "files_changed": [
+            "src/demo.txt"
+          ],
+          "diff_sha256": "4d5e8d336a6f2d0d45d76c6f9d1fd8013a4a8b4f28e8c5cad20c4d5f0f1a0abc"
+        },
+        "anchor": {
+          "receipt_root": "0x687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc",
+          "merkle_proof_status": "not attached",
+          "merkle_root": null,
+          "merkle_leaf_index": null,
+          "merkle_proof": [],
+          "onchain_anchor_status": "not anchored",
+          "network": "local/off-chain",
+          "contract": null,
+          "tx_hash": null,
+          "verifier_status": "not verified"
+        },
+        "metadata": {
+          "message_count": 3,
+          "diff_count": 1,
+          "generated_by": "stealth.handoff.evidence.builder.v1"
+        }
+      },
+      "source_proof_object": {
+        "schema": "receiptos.portable_proof_object.v0",
+        "proof_object_id": "proofobj-687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc",
+        "proof_system": "ReceiptOS",
+        "receipt_root": "0x687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc",
+        "proof_ref": "receiptos://portable-proof-object/proofobj-687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc",
+        "replay_ref": "receiptos://replay/session-demo-001",
+        "anchor_ref": null,
+        "created_at": "2024-06-18T02:00:21.000Z",
+        "relation_type": "imported",
+        "project_refs": [
+          "workspace"
+        ],
+        "source_evidence_ref": "shared-vector://clean-evidence",
+        "producer": {
+          "runtime": "Stealth",
+          "agent_id": "stealth-main",
+          "generated_by": "stealth.handoff.evidence.builder.v1",
+          "source_schema": "stealth.session.evidence.v1"
+        },
+        "metadata": {
+          "label": "Portable ReceiptOS evidence core sample",
+          "session_id": "session-demo-001",
+          "directory": "C:/demo/workspace",
+          "position_id": "workspace"
+        },
+        "evidence_capsule": {
+          "schema": "receiptos.evidence_capsule.v0",
+          "action": {
+            "summary": "Portable ReceiptOS evidence core sample",
+            "source_fields": [
+              "task.title",
+              "task.prompt",
+              "commands"
+            ]
+          },
+          "evidence": {
+            "summary": "1 changed file(s); diff count 1.",
+            "source_fields": [
+              "changes.files_changed",
+              "changes.diff_sha256",
+              "metadata.diff_count",
+              "metadata.message_count"
+            ],
+            "status": "present"
+          },
+          "receipt_root": {
+            "stored": "0x687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc",
+            "computed": "0x687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc",
+            "match": true,
+            "status": "verified"
+          },
+          "proof_refs": {
+            "merkle": {
+              "present": false,
+              "status": "missing"
+            },
+            "anchor": {
+              "status": "missing"
+            }
+          },
+          "verifier_result": {
+            "ok": true,
+            "status": "verified"
+          },
+          "capsule": {
+            "sections": [
+              {
+                "id": "payload",
+                "label": "Payload / Action",
+                "status": "present",
+                "summary": "Portable ReceiptOS evidence core sample",
+                "sourceFields": [
+                  "task.title",
+                  "task.prompt",
+                  "commands"
+                ]
+              },
+              {
+                "id": "policy_boundary",
+                "label": "Policy Boundary",
+                "status": "present",
+                "summary": "Scope lease missing in mode read_only.",
+                "sourceFields": [
+                  "scope.permission",
+                  "scope.lease"
+                ]
+              },
+              {
+                "id": "authorization",
+                "label": "Authorization",
+                "status": "present",
+                "summary": "0 allowed action rule(s).",
+                "sourceFields": [
+                  "authorization.allowed_actions",
+                  "authorization.authorization_state_hash",
+                  "authorization.authorized_at_execution"
+                ]
+              },
+              {
+                "id": "decision_trace",
+                "label": "Decision Trace",
+                "status": "present",
+                "summary": "Decision trace recorded via title: Portable ReceiptOS evidence core sample, prompt present, 1 command(s), 1 execution step(s).",
+                "sourceFields": [
+                  "task.title",
+                  "task.prompt",
+                  "commands",
+                  "execution",
+                  "authorization.authorized_at_execution"
+                ]
+              },
+              {
+                "id": "execution",
+                "label": "Execution",
+                "status": "present",
+                "summary": "1 execution record(s); 1 completed, 0 error.",
+                "sourceFields": [
+                  "execution",
+                  "commands"
+                ]
+              },
+              {
+                "id": "evidence",
+                "label": "Evidence Record",
+                "status": "present",
+                "summary": "1 changed file(s); diff count 1.",
+                "sourceFields": [
+                  "changes.files_changed",
+                  "changes.diff_sha256",
+                  "metadata.diff_count",
+                  "metadata.message_count"
+                ]
+              },
+              {
+                "id": "counterfactual",
+                "label": "Counterfactual / Denied Action",
+                "status": "missing",
+                "summary": "No explicit denied-action / counterfactual evidence is recorded in the current receipt schema.",
+                "sourceFields": [
+                  "authorization.allowed_actions",
+                  "execution.status",
+                  "commands.exit_code"
+                ]
+              },
+              {
+                "id": "result",
+                "label": "Result",
+                "status": "present",
+                "summary": "Recorded result data is internally consistent.",
+                "sourceFields": [
+                  "commands.exit_code",
+                  "commands.stdout_summary"
+                ]
+              },
+              {
+                "id": "receipt_root",
+                "label": "Receipt Root",
+                "status": "valid",
+                "summary": "Stored receipt_root matches recomputed canonical root.",
+                "sourceFields": [
+                  "anchor.receipt_root"
+                ]
+              },
+              {
+                "id": "merkle",
+                "label": "Merkle Proof",
+                "status": "pending",
+                "summary": "No local Merkle proof attached yet.",
+                "sourceFields": [
+                  "anchor.merkle_proof_status",
+                  "anchor.merkle_root",
+                  "anchor.merkle_leaf_index",
+                  "anchor.merkle_proof"
+                ]
+              },
+              {
+                "id": "anchor",
+                "label": "Anchor",
+                "status": "missing",
+                "summary": "No external anchor recorded.",
+                "sourceFields": [
+                  "anchor.onchain_anchor_status",
+                  "anchor.network",
+                  "anchor.contract",
+                  "anchor.tx_hash"
+                ]
+              },
+              {
+                "id": "replay_manifest",
+                "label": "Replay Manifest",
+                "status": "present",
+                "summary": "Replay inputs include session/task context, 1 command(s), diff hash state, and 1 anchor reference(s).",
+                "sourceFields": [
+                  "session_id",
+                  "directory",
+                  "task",
+                  "commands",
+                  "changes.diff_sha256",
+                  "anchor.receipt_root",
+                  "anchor.merkle_root",
+                  "anchor.tx_hash",
+                  "metadata.generated_by"
+                ]
+              },
+              {
+                "id": "verifier",
+                "label": "Verifier",
+                "status": "verified",
+                "summary": "Portable verifier confirmed the receipt root.",
+                "sourceFields": [
+                  "anchor.verifier_status",
+                  "anchor.receipt_root"
+                ]
+              }
+            ]
+          },
+          "replay_manifest": {
+            "summary": "Replay inputs include session/task context, 1 command(s), diff hash state, and 1 anchor reference(s).",
+            "source_fields": [
+              "session_id",
+              "directory",
+              "task",
+              "commands",
+              "changes.diff_sha256",
+              "anchor.receipt_root",
+              "anchor.merkle_root",
+              "anchor.tx_hash",
+              "metadata.generated_by"
+            ]
+          }
+        },
+        "provenance_summary": {
+          "schema": "receiptos.provenance_summary.v0",
+          "version": "v0",
+          "what_happened": "Portable ReceiptOS evidence core sample",
+          "evidence_present": true,
+          "verifier_status": "verified",
+          "receipt_root_status": "verified",
+          "anchor_status": "missing",
+          "replay_status": "present",
+          "warnings": [],
+          "risk_flags": []
+        }
+      },
+      "source_entry_construction_options": {
+        "entry_id": "entry-shared-admission-v0",
+        "evidence_capsule_ref": "shared-vector://clean/evidence-capsule",
+        "provenance_summary_ref": "shared-vector://clean/provenance-summary",
+        "created_from": "shared-vector://clean-evidence",
+        "labels": [
+          "shared-vector",
+          "receiptos"
+        ],
+        "notes": "ReceiptOS Chronicle shared admission vector v0"
+      },
+      "claimed_source_entry": {
+        "schema": "chronicle_entry.v0",
+        "entry_id": "entry-shared-admission-v0",
+        "source_system": "ReceiptOS",
+        "receipt_root": "0x687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc",
+        "proof_object_ref": "receiptos://portable-proof-object/proofobj-687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc",
+        "evidence_capsule_ref": "shared-vector://clean/evidence-capsule",
+        "provenance_summary_ref": "shared-vector://clean/provenance-summary",
+        "created_from": "shared-vector://clean-evidence",
+        "labels": [
+          "shared-vector",
+          "receiptos"
+        ],
+        "notes": "ReceiptOS Chronicle shared admission vector v0"
+      }
+    },
+    "fold_policy_declaration": {
+      "schema": "recursive_singleton_fold_policy.v0",
+      "policy_version": "recursive-singleton-fold-policy-v0",
+      "policy_id": "singleton-chronicle-entry-semantic-preservation",
+      "source_object_schema": "chronicle_entry.v0",
+      "aggregate_object_schema": "recursive_singleton_aggregate.v0",
+      "member_cardinality": 1,
+      "aggregation_mode": "singleton_only",
+      "semantic_elevation": "forbidden",
+      "source_identity_reuse": "forbidden",
+      "multi_member_extension": "deferred"
+    },
+    "comparability_class_declaration": {
+      "schema": "recursive_singleton_comparability_class.v0",
+      "class_version": "recursive-singleton-comparability-class-v0",
+      "class_id": "admitted-chronicle-entry-singleton",
+      "source_object_schema": "chronicle_entry.v0",
+      "admission_required": true,
+      "cross_entry_comparability": "not_asserted",
+      "cross_policy_bridge": "deferred",
+      "cross_class_bridge": "deferred",
+      "singleton_eligibility_rule": "exactly_one_independently_admitted_source_entry"
+    },
+    "transition_rule_declaration": {
+      "schema": "recursive_singleton_transition_rule.v0",
+      "rule_version": "recursive-singleton-transition-rule-v0",
+      "rule_id": "semantic_result_preserving_singleton_identity_transition",
+      "source_object_schema": "chronicle_entry.v0",
+      "aggregate_object_schema": "recursive_singleton_aggregate.v0",
+      "preserved_equality_relation": "semantic_result_commitment_equality_only",
+      "source_identity_reuse": "forbidden",
+      "stronger_class_creation": "forbidden",
+      "fail_closed_on_malformed_or_unknown_input": true
+    },
+    "profile_local_notes": null
+  },
+  "prefix_continuation": {
+    "sourceEntry": {
+      "schema": "chronicle_entry.v0",
+      "entry_id": "entry-shared-admission-v0",
+      "source_system": "ReceiptOS",
+      "receipt_root": "0x687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc",
+      "proof_object_ref": "receiptos://portable-proof-object/proofobj-687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc",
+      "evidence_capsule_ref": "shared-vector://clean/evidence-capsule",
+      "provenance_summary_ref": "shared-vector://clean/provenance-summary",
+      "created_from": "shared-vector://clean-evidence",
+      "labels": [
+        "shared-vector",
+        "receiptos"
+      ],
+      "notes": "ReceiptOS Chronicle shared admission vector v0"
+    },
+    "sourceEntryContentCommitment": "sha256:64bbd7dab6869b9a71f810c5b3d6decaa7db6f076c245da7613ad40033937515",
+    "foldPolicyDeclaration": {
+      "schema": "recursive_singleton_fold_policy.v0",
+      "policy_version": "recursive-singleton-fold-policy-v0",
+      "policy_id": "singleton-chronicle-entry-semantic-preservation",
+      "source_object_schema": "chronicle_entry.v0",
+      "aggregate_object_schema": "recursive_singleton_aggregate.v0",
+      "member_cardinality": 1,
+      "aggregation_mode": "singleton_only",
+      "semantic_elevation": "forbidden",
+      "source_identity_reuse": "forbidden",
+      "multi_member_extension": "deferred"
+    },
+    "foldPolicyCommitment": "sha256:9c9617921b764cbdea0d2674e397a8a687e28a4a8f25ea4056515a1175b5455f",
+    "comparabilityClassDeclaration": {
+      "schema": "recursive_singleton_comparability_class.v0",
+      "class_version": "recursive-singleton-comparability-class-v0",
+      "class_id": "admitted-chronicle-entry-singleton",
+      "source_object_schema": "chronicle_entry.v0",
+      "admission_required": true,
+      "cross_entry_comparability": "not_asserted",
+      "cross_policy_bridge": "deferred",
+      "cross_class_bridge": "deferred",
+      "singleton_eligibility_rule": "exactly_one_independently_admitted_source_entry"
+    },
+    "comparabilityClassCommitment": "sha256:7a11e0f99232c5a0c41823551ca43064becd870b8f6abb941fc8820b57f088ed",
+    "transitionRuleDeclaration": {
+      "schema": "recursive_singleton_transition_rule.v0",
+      "rule_version": "recursive-singleton-transition-rule-v0",
+      "rule_id": "semantic_result_preserving_singleton_identity_transition",
+      "source_object_schema": "chronicle_entry.v0",
+      "aggregate_object_schema": "recursive_singleton_aggregate.v0",
+      "preserved_equality_relation": "semantic_result_commitment_equality_only",
+      "source_identity_reuse": "forbidden",
+      "stronger_class_creation": "forbidden",
+      "fail_closed_on_malformed_or_unknown_input": true
+    },
+    "transitionRuleCommitment": "sha256:d5fa45fb6ab73c58d14a635d3ba7b899d653a73a133360b8e7ca7e530cfee25c",
+    "profileLocalNotes": null,
+    "sourceAdmissionPrerequisite": "chronicle_entry_independently_admitted"
+  },
+  "stage_input": {
+    "schema": "recursive_singleton_fold_stage_input.v0",
+    "claimed_input_semantic_statement": {
+      "schema": "chronicle_entry_singleton_semantic_statement.v0",
+      "source_entry_schema": "chronicle_entry.v0",
+      "source_entry_ref": "entry-shared-admission-v0",
+      "source_entry_content_commitment": "sha256:64bbd7dab6869b9a71f810c5b3d6decaa7db6f076c245da7613ad40033937515",
+      "source_admission_state": "chronicle_entry_independently_admitted",
+      "fold_policy_commitment": "sha256:9c9617921b764cbdea0d2674e397a8a687e28a4a8f25ea4056515a1175b5455f",
+      "comparability_class_commitment": "sha256:7a11e0f99232c5a0c41823551ca43064becd870b8f6abb941fc8820b57f088ed",
+      "transition_rule_commitment": "sha256:d5fa45fb6ab73c58d14a635d3ba7b899d653a73a133360b8e7ca7e530cfee25c",
+      "singleton_transition_eligibility": "eligible_under_exact_singleton_profile_declarations"
+    },
+    "claimed_input_semantic_result_commitment": "sha256:f707bc77cc29bb10c7dea5b109cf30bd932c7f80447b4f3c1ebf0bba68e29d5c",
+    "candidate_aggregate": {
+      "schema": "recursive_singleton_aggregate.v0",
+      "profile_version": "recursive-singleton-fold-profile-v0",
+      "aggregate_id": "sha256:c3ed79e0644b757335320ab15ca10973349e43fa9d2e7e38d4bceb9cb7a24b85",
+      "source_entry_ref": "entry-shared-admission-v0",
+      "source_entry_content_commitment": "sha256:64bbd7dab6869b9a71f810c5b3d6decaa7db6f076c245da7613ad40033937515",
+      "semantic_statement": {
+        "schema": "chronicle_entry_singleton_semantic_statement.v0",
+        "source_entry_schema": "chronicle_entry.v0",
+        "source_entry_ref": "entry-shared-admission-v0",
+        "source_entry_content_commitment": "sha256:64bbd7dab6869b9a71f810c5b3d6decaa7db6f076c245da7613ad40033937515",
+        "source_admission_state": "chronicle_entry_independently_admitted",
+        "fold_policy_commitment": "sha256:9c9617921b764cbdea0d2674e397a8a687e28a4a8f25ea4056515a1175b5455f",
+        "comparability_class_commitment": "sha256:7a11e0f99232c5a0c41823551ca43064becd870b8f6abb941fc8820b57f088ed",
+        "transition_rule_commitment": "sha256:d5fa45fb6ab73c58d14a635d3ba7b899d653a73a133360b8e7ca7e530cfee25c",
+        "singleton_transition_eligibility": "eligible_under_exact_singleton_profile_declarations"
+      },
+      "semantic_result_commitment": "sha256:f707bc77cc29bb10c7dea5b109cf30bd932c7f80447b4f3c1ebf0bba68e29d5c",
+      "canonical_inclusion_set": [
+        {
+          "member_schema": "chronicle_entry.v0",
+          "member_ref": "entry-shared-admission-v0",
+          "member_source_entry_content_commitment": "sha256:64bbd7dab6869b9a71f810c5b3d6decaa7db6f076c245da7613ad40033937515"
+        }
+      ],
+      "inclusion_set_commitment": "sha256:c70950b712a5541c047a10a43215e62bc6f65aeb765ce0ccb59845c38f1b9bd5",
+      "fold_policy_declaration": {
+        "schema": "recursive_singleton_fold_policy.v0",
+        "policy_version": "recursive-singleton-fold-policy-v0",
+        "policy_id": "singleton-chronicle-entry-semantic-preservation",
+        "source_object_schema": "chronicle_entry.v0",
+        "aggregate_object_schema": "recursive_singleton_aggregate.v0",
+        "member_cardinality": 1,
+        "aggregation_mode": "singleton_only",
+        "semantic_elevation": "forbidden",
+        "source_identity_reuse": "forbidden",
+        "multi_member_extension": "deferred"
+      },
+      "fold_policy_commitment": "sha256:9c9617921b764cbdea0d2674e397a8a687e28a4a8f25ea4056515a1175b5455f",
+      "comparability_class_declaration": {
+        "schema": "recursive_singleton_comparability_class.v0",
+        "class_version": "recursive-singleton-comparability-class-v0",
+        "class_id": "admitted-chronicle-entry-singleton",
+        "source_object_schema": "chronicle_entry.v0",
+        "admission_required": true,
+        "cross_entry_comparability": "not_asserted",
+        "cross_policy_bridge": "deferred",
+        "cross_class_bridge": "deferred",
+        "singleton_eligibility_rule": "exactly_one_independently_admitted_source_entry"
+      },
+      "comparability_class_commitment": "sha256:7a11e0f99232c5a0c41823551ca43064becd870b8f6abb941fc8820b57f088ed",
+      "transition_rule_declaration": {
+        "schema": "recursive_singleton_transition_rule.v0",
+        "rule_version": "recursive-singleton-transition-rule-v0",
+        "rule_id": "semantic_result_preserving_singleton_identity_transition",
+        "source_object_schema": "chronicle_entry.v0",
+        "aggregate_object_schema": "recursive_singleton_aggregate.v0",
+        "preserved_equality_relation": "semantic_result_commitment_equality_only",
+        "source_identity_reuse": "forbidden",
+        "stronger_class_creation": "forbidden",
+        "fail_closed_on_malformed_or_unknown_input": true
+      },
+      "transition_rule_commitment": "sha256:d5fa45fb6ab73c58d14a635d3ba7b899d653a73a133360b8e7ca7e530cfee25c",
+      "pre_aggregation_breakdown": {
+        "schema": "recursive_singleton_breakdown.v0",
+        "source_entry_ref": "entry-shared-admission-v0",
+        "source_entry_content_commitment": "sha256:64bbd7dab6869b9a71f810c5b3d6decaa7db6f076c245da7613ad40033937515",
+        "source_admission_prerequisite": "chronicle_entry_independently_admitted",
+        "inclusion_decision": "included",
+        "exclusion_decision": "none",
+        "comparability_evaluation": "singleton_class_eligible",
+        "policy_evaluation": "singleton_policy_eligible",
+        "transition_input": {
+          "semantic_result_commitment": "sha256:f707bc77cc29bb10c7dea5b109cf30bd932c7f80447b4f3c1ebf0bba68e29d5c"
+        },
+        "transition_output": {
+          "semantic_result_commitment": "sha256:f707bc77cc29bb10c7dea5b109cf30bd932c7f80447b4f3c1ebf0bba68e29d5c"
+        },
+        "no_elevation_finding": "no_stronger_semantic_class_created"
+      },
+      "pre_aggregation_breakdown_commitment": "sha256:3b19cbf73497dec39c7a9dca633d5de0dde5eba7e98e4b13af8000c0ca6239cf",
+      "transition_result": {
+        "status": "singleton_transition_ok",
+        "semantic_equivalence_result": "semantic_result_commitment_preserved",
+        "source_identity_reuse_result": "source_identity_not_reused",
+        "stronger_semantic_class_creation_result": "no_stronger_semantic_class_created"
+      },
+      "no_stronger_semantic_class_created": false,
+      "profile_local_notes": null
+    }
+  },
+  "expected_evaluation": {
+    "schema": "recursive_singleton_fold_evaluation.v0",
+    "evaluation_state": "evaluated",
+    "profile_verdict": "rejected",
+    "aggregate": null,
+    "finding": {
+      "schema": "recursive_singleton_fold_finding.v0",
+      "code": "no_elevation_invariant_mismatch",
+      "check_position": 24
+    }
+  },
+  "expected_state": "evaluated",
+  "expected_code": "no_elevation_invariant_mismatch",
+  "expected_check_position": 24,
+  "expected_aggregate_presence": false,
+  "context": {}
+}

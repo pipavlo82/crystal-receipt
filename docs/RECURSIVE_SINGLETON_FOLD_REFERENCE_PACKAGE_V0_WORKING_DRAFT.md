@@ -2,16 +2,23 @@
 
 ## 1. Status and purpose
 
-This is a **non-normative working draft**. It is internally reviewed and
-byte-pinned only as a working-draft artifact. It is **not frozen**, it is
-**not a conformance standard**, it is **not a ReceiptOS validity rule**, it is
+This is a **non-normative working draft except for the expressly adopted
+positions 18–28 closure**. That narrow normative contract and its package are
+frozen; the remainder is not a conformance standard, is **not a ReceiptOS validity rule**, and is
 **not a Chronicle schema change**, and it is **not** a scoring, ranking,
 reputation, certification, or trust-tier mechanism.
 
-This documentation pass creates no schema file, no TypeScript type, no
-validator, no evaluator, no fixture, no vector, no manifest, no runner, no
-independent implementation, and no conformance claim. It defines packaging
-and evaluator **boundaries** only.
+One narrow exception is adopted and normative: the positions 18–28 closure
+in §12, including its stage input, four schemas, 33-code single-evaluation
+vocabulary, first-finding order, byte domains, and fixture package. This
+exception freezes an implementation contract but does not itself implement an
+evaluator or promote any source/admission/status label to carrier validity.
+
+Outside the adopted §12 positions 18–28 closure, this working draft creates no
+schema, validator, evaluator, fixture, vector, manifest, runner, independent
+implementation, or conformance claim. The adopted exception adds only the
+four schemas, normative fixture package, two independent expected-value
+programs, and data-integrity tests named in §12.1; it adds no evaluator.
 
 Its purpose is narrow: pin, in one coherent document, the reference-package
 contract needed before any executable reference implementation of the
@@ -39,9 +46,10 @@ This document is downstream of, and does not modify:
   byte-pinned, internally reviewed, non-normative RSF working profile this
   package evaluates against, including its §11.5 `profile_local_notes`
   contract, its §12.1 aggregate-identity seed, and its §17 transition rule.
-  The RSF profile is **not yet frozen** and is not yet a conformance
-  standard; it is byte-pinned working-draft text, reviewed and stable enough
-  to build against, not a frozen specification.
+  Except for the adopted positions 18–28 normative closure, the RSF profile
+  is **not yet frozen** and is not yet a conformance standard. The adopted
+  closure is a frozen implementation contract, not a production conformance
+  claim.
 - `docs/RECURSIVE_AGGREGATE_BOUNDARY_V0_WORKING_DRAFT.md` — the parent
   boundary document. RAB-V2 (aggregate-of-aggregates) remains deferred.
   RAB-A1 (entry-as-fold-raw-input) is a separate, mutually exclusive
@@ -84,10 +92,10 @@ In scope:
 - candidate (non-canonical) future file-layout and manifest mechanics;
 - the promotion gates that must hold before any of this becomes canonical.
 
-Out of scope, explicitly:
+Out of scope, explicitly, except for the adopted positions 18–28 normative
+schemas, fixture package, independent audit models, and conformance guards:
 
-- any schema file, TypeScript type, validator, evaluator, fixture, vector, or
-  manifest implementation;
+- any production evaluator or public runtime implementation;
 - any change to the RSF profile text or its formulas;
 - any change to Chronicle schemas or admission semantics;
 - any change to the existing `receiptos-chronicle-admission-v0` package or
@@ -95,7 +103,8 @@ Out of scope, explicitly:
 - any decision about a future shared admission v1;
 - Counterfactual Conformance work of any kind;
 - opening or merging a pull request;
-- freezing package bytes or making a conformance claim.
+- claiming production conformance before a later evaluator passes this frozen
+  package.
 
 ## 4. Exact reference-package surfaces
 
@@ -812,9 +821,9 @@ separate operation (§15) with its own closed vocabulary (§15.1), consuming
 two already-valid aggregates, never a candidate still being validated for a
 single fold.
 
-Closed v0 enum: exactly **32** values.
+Closed v0 enum: exactly **33** values.
 
-### malformed — 9 codes
+### malformed — 10 codes
 
 - `malformed_evaluation_input`
 - `malformed_source_admission_bundle`
@@ -825,6 +834,7 @@ Closed v0 enum: exactly **32** values.
 - `malformed_fold_policy_declaration`
 - `malformed_comparability_class_declaration`
 - `malformed_transition_rule_declaration`
+- `malformed_rsf_stage_input`
 
 ### unverifiable — 1 code
 
@@ -895,24 +905,93 @@ order regardless of implementation language or control-flow structure.
 | 15 | Fold-policy declaration shape, then commitment recomputation and equality | `malformed_fold_policy_declaration`, then `fold_policy_commitment_mismatch` |
 | 16 | Comparability-class declaration shape, then commitment recomputation and equality | `malformed_comparability_class_declaration`, then `comparability_class_commitment_mismatch` |
 | 17 | Transition-rule declaration shape, then commitment recomputation and equality | `malformed_transition_rule_declaration`, then `transition_rule_commitment_mismatch` |
-| 18 | Input semantic statement constructed, then input semantic-result commitment recomputation and equality | `semantic_statement_mismatch`, then `semantic_result_commitment_mismatch` |
-| 19 | Canonical inclusion set constructed, then inclusion-set commitment recomputation and equality | `inclusion_set_mismatch`, then `inclusion_set_commitment_mismatch` |
-| 20 | Singleton policy eligibility evaluates true | `singleton_policy_ineligible` |
-| 21 | Singleton comparability eligibility evaluates true | `singleton_class_ineligible` |
+| 18 | Stage input closed claim shape is validated and independently snapshotted; then singleton policy eligibility is derived from the verified policy and claimed cardinality | `malformed_rsf_stage_input`, then `singleton_policy_ineligible` |
+| 19 | Singleton comparability eligibility is derived from the verified class and proof that the sole claimed member is the independently admitted prefix source | `singleton_class_ineligible` |
+| 20 | Claimed input semantic statement is compared with a fresh local statement; then the claimed input commitment is compared with a fresh digest | `semantic_statement_mismatch`, then `semantic_result_commitment_mismatch` |
+| 21 | Claimed canonical inclusion set is compared with a fresh singleton set; then its claimed commitment is compared with a fresh digest | `inclusion_set_mismatch`, then `inclusion_set_commitment_mismatch` |
 | 22 | Transition construction: source identity is not reused as aggregate identity | `forbidden_source_identity_reuse` |
-| 23 | Output semantic statement constructed; output semantic-result commitment equals input semantic-result commitment (RSF profile §17.5) | `semantic_result_commitment_mismatch` |
-| 24 | `transition_result` derives to the single pinned success object (RSF profile §15.1) | `transition_result_mismatch` |
-| 25 | `no_stronger_semantic_class_created` recomputes true | `no_elevation_invariant_mismatch` |
+| 23 | Claimed output semantic statement is compared with a fresh local statement, its stored commitment is freshly verified, and output commitment is required to equal the position-20 input commitment | `semantic_result_commitment_mismatch` |
+| 24 | Fresh input/output semantic-class descriptors are compared under the closed no-promotion predicate; only then is the candidate boolean compared | `no_elevation_invariant_mismatch` |
+| 25 | `transition_result` is freshly derived from verified positions 22–24 and compared with the candidate object | `transition_result_mismatch` |
 | 26 | `pre_aggregation_breakdown` constructed, then its commitment recomputed and equal | `breakdown_mismatch`, then `breakdown_commitment_mismatch` |
 | 27 | `aggregate_id` recomputes from the exact RSF profile §12.1 seed | `aggregate_id_mismatch` |
-| 28 | Final complete-aggregate validation, after final `profile_local_notes` has already been applied (§9 steps 3–4): (a) the stored `source_entry_content_commitment`, as carried into the complete final aggregate from position 14, is compared against a fresh recomputation from the complete verified source entry; then, only if (a) succeeds, (b) every remaining stored value in the complete final aggregate — including the applied `profile_local_notes` — independently re-validates against its own recomputation | (a) `source_entry_content_commitment_mismatch` if the stored and freshly recomputed values differ; otherwise (b) `complete_aggregate_validation_mismatch` for any other stored-vs-recomputed divergence in the complete final aggregate; success here yields the `accepted` envelope |
+| 28 | Final complete-aggregate validation: (a) both the prefix position-14 commitment and candidate stored commitment are compared against a fresh recomputation from the verified source; then (b) the frozen remaining 19 fields below are revalidated in order | (a) `source_entry_content_commitment_mismatch`; otherwise (b) `complete_aggregate_validation_mismatch`; success here alone yields the `accepted` envelope |
+
+### 12.1 Adopted positions 18–28 stage boundary
+
+The caller supplies a separate closed `recursive_singleton_fold_stage_input.v0`
+with exactly `schema`, `claimed_input_semantic_statement`,
+`claimed_input_semantic_result_commitment`, and `candidate_aggregate`. The
+candidate is a complete 20-field claim, not an accepted aggregate. Position 18
+validates field inventory, JSON types, and digest syntax only; semantic truth,
+cardinality, and cross-field equality remain owned by their later positions.
+
+The prefix continuation and stage input MUST each be independently copied once
+into fresh strict-JSON-domain trees. Later reads use only those snapshots.
+Caller mutation, insertion order, timing, admission labels, status literals,
+and runtime metadata cannot establish carrier validity. Missing local proof is
+never success. Recognized outcomes use the four-state envelope; impossible
+host/programmer invariants throw outside it. No intermediate surface may emit
+`accepted` or an equivalent verdict.
+
+Position 22 uses candidate `aggregate_id` only as an untrusted operand and
+requires it to differ from source `entry_id`; position 27 independently checks
+that same candidate value against the exact profile §12.1 derivation.
+Position 24 constructs separate fresh, closed input/output semantic-class
+descriptors with exactly these seven fields in order: `schema`,
+`source_object_schema`, `source_admission_state`, `fold_policy_commitment`,
+`comparability_class_commitment`, `transition_rule_commitment`, and
+`singleton_transition_eligibility`. `schema` is the exact literal
+`recursive_singleton_semantic_class_descriptor.v0`; the next two fields come
+from the corresponding independently reconstructed semantic statement; the
+three declaration commitments are freshly recomputed; and eligibility comes
+from the reconstructed statement. The descriptors are compared by canonical
+JSON UTF-8 byte equality. The deterministic no-promotion predicate is true iff
+those bytes are equal, input/output semantic-result commitments are equal,
+candidate aggregate ID differs byte-for-byte from source entry ID, policy and
+class are locally eligible, and every transition-rule literal is exact.
+Candidate boolean, admission/timing/prefix/status labels, and absence of an
+exception are forbidden inputs to this derivation. Only after the mechanical
+predicate is established is the candidate boolean compared.
+
+Position 28(b) checks exactly this remaining order after 28(a): `schema`,
+`profile_version`, `aggregate_id`, `source_entry_ref`, `semantic_statement`,
+`semantic_result_commitment`, `canonical_inclusion_set`,
+`inclusion_set_commitment`, `fold_policy_declaration`,
+`fold_policy_commitment`, `comparability_class_declaration`,
+`comparability_class_commitment`, `transition_rule_declaration`,
+`transition_rule_commitment`, `pre_aggregation_breakdown`,
+`pre_aggregation_breakdown_commitment`, `transition_result`,
+`no_stronger_semantic_class_created`, `profile_local_notes`. Comparison modes
+in that same order are: scalar, scalar, digest text, scalar, canonical JSON
+UTF-8 bytes, digest text, canonical JSON UTF-8 bytes, digest text, canonical
+JSON UTF-8 bytes, digest text, canonical JSON UTF-8 bytes, digest text,
+canonical JSON UTF-8 bytes, digest text, canonical JSON UTF-8 bytes, digest
+text, canonical JSON UTF-8 bytes, scalar, scalar. Generic unordered deep
+equality is not the position-28 algorithm.
+
+Semantic commitments hash repository-canonicalized strict JSON UTF-8 bytes.
+Fixture manifests instead hash exact Git-index/blob bytes. Checkout
+materialization bytes never substitute for either domain. The adopted schemas
+are the four `src/receiptos/schemas/recursive-singleton-*.schema.json` files;
+the 34-vector package and two independent expected-value implementations are
+under `tests/fixtures/recursive-singleton-fold-v0` and
+`conformance/recursive-singleton-fold-v0`.
+
+Package dependency model A is frozen: the manifest directly includes this
+package's README and contract metadata, all four adopted schemas, and all 34
+vector JSON files, for exactly 40 repository-relative Git-index/blob members.
+The manifest excludes itself. Rows are sorted by UTF-8 repository path and are
+exactly `<path><TAB><lowercase-sha256><LF>` with `/` separators, UTF-8 encoding,
+a final LF, and no BOM. The current fixture-set digest is
+`4549d3b58290d5eb79c285902f8fd91b99c8b6ffaee357d960754189bd5ab194`.
 
 For every compound position: subchecks execute left-to-right exactly as
 written; the first failing subcheck determines the one finding; shape
 validation precedes commitment recomputation; semantic-statement,
 inclusion-set, and breakdown object construction each precede their own
 commitment verification. `semantic_result_commitment_mismatch` may occur at
-position 18 (input-side derivation) or position 23 (output-side
+position 20 (input-side derivation) or position 23 (output-side
 preservation) — the position at which it is raised distinguishes a
 derivation failure from a preservation failure. Position distinguishes these
 two occurrences; the code alone does not.
@@ -923,13 +1002,15 @@ Position 14 produces and retains `source_entry_content_commitment`.
 Position 28 exclusively owns the executable trigger for
 `source_entry_content_commitment_mismatch`, through its named
 preservation-verification subcheck. This subsection states how, without
-changing the closed 32-code finding vocabulary or the 28-position count.
+changing the 28-position count. Adoption of the stage boundary adds exactly
+one single-evaluation code, `malformed_rsf_stage_input`, making the vocabulary
+33 codes.
 
 Position 14 derives and retains `source_entry_content_commitment`: it
 canonicalizes the complete position-13-verified `chronicle_entry.v0` object
 with the repository `canonicalize()` and computes SHA-256 over the
 resulting UTF-8 canonical bytes, per RSF profile §6.3, then carries the
-result forward, unchanged, for reuse at position 18's semantic statement
+result forward, unchanged, for reuse at position 20's semantic statement
 (RSF profile §7.3), the assembled aggregate object (RSF profile §11.1), the
 aggregate identity seed (RSF profile §12.1, position 27), the canonical
 inclusion-set member (RSF profile §13.1), and the pre-aggregation breakdown
@@ -939,32 +1020,33 @@ position-12 convention of a position that performs a real operation
 without owning a code of its own.
 
 Position 28's subcheck (a) is where `source_entry_content_commitment` is
-verified. Per §9's already-pinned notes application order, final
+verified using three independent operands in this exact order: a fresh
+commitment over the verified source entry; the stored position-14 prefix
+commitment compared with fresh; and the candidate stored commitment compared
+with fresh. Per §9's already-pinned notes application order, final
 `profile_local_notes` is applied before position 28 begins (§9 steps 3–4);
 position 28 does not apply notes itself and does not defer notes
 application until after subcheck (a). Position 28 operates on the
 complete final aggregate — notes already included — and, within that
-single terminal validation, first compares the `source_entry_content_commitment`
-value stored in that complete final aggregate against a fresh, independent
-recomputation performed at position 28 from the same complete verified
-source entry. This is the same
+single terminal validation, performs those two stored-versus-fresh comparisons
+after the fresh recomputation. This is the same
 "stored-versus-freshly-recomputed" pattern already normative for every
 other identity-bearing commitment in this profile (RSF profile §7.6, §8.4,
 §9.4, §10.4, §13.4, §14.5: "consumers MUST NOT trust the stored commitment
 without recomputation"); position 28 is simply where this profile's
 existing pattern applies to `source_entry_content_commitment` specifically,
 because — unlike the other identity-bearing commitments (declarations at
-positions 15–17, `semantic_result_commitment` at positions 18/23,
-`inclusion_set_commitment` at position 19, `pre_aggregation_breakdown_commitment`
+positions 15–17, `semantic_result_commitment` at positions 20/23,
+`inclusion_set_commitment` at position 21, `pre_aggregation_breakdown_commitment`
 at position 26) — no earlier position performs an equality comparison for
 `source_entry_content_commitment` before position 28. Position 28 does not
 retroactively make position 14 a comparison: the two-operand equality
-exists only at position 28, where both a stored copy and a fresh
-recomputation are genuinely and independently available; position 14
+exists only at position 28, where the prefix stored copy, candidate stored
+copy, and fresh recomputation are genuinely and independently available; position 14
 remains derivation-only.
 
 Ownership after this clarification: `source_entry_content_commitment_mismatch`
-remains one of the closed 32 finding codes, unchanged in name; its trigger
+remains one of the closed 33 finding codes, unchanged in name; its trigger
 is position 28's named subcheck (a), not position 14. Within position 28,
 first-finding semantics (the paragraph above) applies to its own ordered
 subchecks exactly as it already applies to every other compound position in
@@ -974,8 +1056,8 @@ failing subcheck determines the one finding for the entire evaluation.
 This clarification changes none of: the seven evaluation-input fields
 (§7.2); the source-admission bundle shape (§5); the `chronicle_entry.v0`
 shape (RSF profile §6.2); the `recursive_singleton_aggregate.v0` shape (RSF
-profile §11.1); the closed 32-code finding vocabulary (§11) — same 32
-names, same total; the 28-position count (§12) — still exactly 28 rows;
+profile §11.1); the closed 33-code finding vocabulary (§11); the 28-position
+count (§12) — still exactly 28 rows;
 first-finding semantics; the existing `canonicalize()`; the current
 implementation boundary (positions 1–17 implemented and wired into the ordered prefix
 evaluator `evaluateRsfPrefixThroughPosition17` — a prefix evaluator only, not the complete
@@ -1053,8 +1135,8 @@ formatting. Precisely:
 - This clarification does not define the permanent package-versioning or
   freeze mechanism. Future frozen/package-version identity remains governed
   by the existing §21 promotion-gate discipline, which already states that
-  this package is not frozen today and carries no pinned whole-package
-  SHA-256 yet.
+  the whole package is not frozen today and carries no whole-package SHA-256.
+  This does not unset the narrower §12.1 normative fixture-set hash.
 
 #### Evaluation relationship
 
@@ -1166,7 +1248,7 @@ external-input witness for an invariant-only mismatch outcome.
 evaluation-input fields (§7.2); the `fold_policy_declaration`,
 `comparability_class_declaration`, and `transition_rule_declaration`
 objects (RSF profile §8.1, §9.1, §10.1); the three package pins in this
-section; the closed 32-code finding vocabulary (§11); the 28-position
+section; the closed 33-code finding vocabulary (§11); the 28-position
 evaluation order (§12); first-finding semantics; the existing
 `canonicalize()`; package identity; or the current public-evaluator
 implementation boundary. Positions 1–17 are wired into the ordered prefix evaluator
@@ -1180,8 +1262,9 @@ passed by this clarification or by positions 1–17.
 
 ## 13. Exact SF-V1 package contract
 
-Package materials required for the one deterministic valid singleton fold
-(this pass creates no fixture bytes):
+Package materials required for the one deterministic valid singleton fold are
+represented by the adopted §12.1 fixture bytes. Their presence does not claim
+that a production evaluator exists:
 
 - one complete `recursive_singleton_fold_evaluation_input.v0` (§7), with
   `profile_local_notes: null`, whose bundle is sufficient to pass §12
@@ -1197,8 +1280,8 @@ Package materials required for the one deterministic valid singleton fold
   evaluation input;
 - an `aggregate_id` distinct from `claimed_source_entry.entry_id` (§12
   position 22);
-- the recomputed `transition_result` (§12 position 24) and
-  `no_stronger_semantic_class_created` result (§12 position 25);
+- the recomputed `transition_result` (§12 position 25) and
+  `no_stronger_semantic_class_created` result (§12 position 24);
 - no timestamps or generated metadata anywhere in the evaluation input,
   envelope, or aggregate.
 
@@ -1544,9 +1627,9 @@ profile's own §23 promotion-gate discipline:
 
 - both the RSF profile itself and this package contract must be separately
   reviewed and frozen in the future, each with its own pinned SHA-256,
-  before executable promotion; neither is frozen today — the RSF profile
-  remains a byte-pinned, internally reviewed, non-normative working profile,
-  and this document remains a working draft;
+  before whole-package executable promotion; neither whole document is frozen
+  today. This gate does not reopen the expressly adopted §12.1 positions
+  18–28 contract and fixtures;
 - the source-admission bundle shape (§5), the evaluation-input artifact
   (§7), the construction-options adapter (§8), the evaluation envelope shape
   (§10), the finding vocabulary (§11), the 28-position evaluation order
@@ -1562,9 +1645,10 @@ profile's own §23 promotion-gate discipline:
 - LF-only/no-BOM/Git-index-byte integrity checks (§17) must pass for every
   package file, and semantic tests must pass.
 
-This documentation correction satisfies none of those gates. It only pins
-the packaging and evaluator-contract text that must exist before any of that
-work could begin.
+The positions 18–28 normative contract is frozen by the adopted exception.
+This does not claim production conformance: a future production evaluator must
+still pass the frozen package and all promotion gates before conformance can be
+claimed.
 
 ## 22. Summary
 
@@ -1584,7 +1668,7 @@ contract for the Recursive Singleton Fold Profile v0:
 3. a `recursive_singleton_fold_evaluation.v0` envelope with a closed
    four-state model (accepted / rejected / unverifiable / malformed), a
    single deterministic profile-local finding per failed evaluation drawn
-   from a closed 32-code vocabulary, and one fixed 28-position evaluation
+   from a closed 33-code vocabulary, and one fixed 28-position evaluation
    order (§10–§12);
 4. exact SF-V1, SF-V1B, and SF-C1 package contracts, including a
    structurally separate `recursive_singleton_fold_pairwise_conflict.v0`
@@ -1596,9 +1680,8 @@ contract for the Recursive Singleton Fold Profile v0:
    promotion gates that must hold before any of it becomes canonical
    (§17–§21).
 
-No RSF profile formula, no Chronicle schema, and no existing shared
-admission package is changed. No ReceiptOS reason code, scoring mechanism,
-or reputation concept is introduced. The RSF profile remains a byte-pinned,
-internally reviewed, non-normative working profile — not yet frozen — and
-this document remains an internally reviewed, non-normative working draft,
-creating no package bytes. It is not frozen.
+No RSF profile formula, Chronicle schema, existing shared-admission package,
+ReceiptOS reason code, scoring mechanism, or reputation concept is changed.
+The documents remain working drafts except for the expressly adopted
+positions 18–28 normative closure in §12.1. Those package bytes are frozen as
+an implementation-independent contract; no production evaluator is supplied.

@@ -1,0 +1,172 @@
+{
+  "schema": "recursive_singleton_fold_fixture_manifest.v0",
+  "package_version": "recursive-singleton-fold-v0",
+  "dependency_model": "A-included-schemas",
+  "file_count": 40,
+  "files": [
+    {
+      "path": "src/receiptos/schemas/recursive-singleton-aggregate-v0.schema.json",
+      "sha256": "c3ae473110aaf35f7f11d2bbdc56d69571ec4d94c0375600cfacf06caa0010d6"
+    },
+    {
+      "path": "src/receiptos/schemas/recursive-singleton-fold-evaluation-v0.schema.json",
+      "sha256": "d285c839ab5dfee0df60a2d61d8f00e53c5ee73aae3031114fa5ebec4393a626"
+    },
+    {
+      "path": "src/receiptos/schemas/recursive-singleton-fold-finding-v0.schema.json",
+      "sha256": "2a8689c579e4608963ee8e8c28b4da2cfc43fcf04b1735584c0f307395d0d79f"
+    },
+    {
+      "path": "src/receiptos/schemas/recursive-singleton-fold-stage-input-v0.schema.json",
+      "sha256": "218a70e7ba7f7de3bc678fa28fc67b5c258b2f14a03185a28e119c322d12cc3b"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/README.md",
+      "sha256": "48b8aa36a008fa21586dac6054929acebb7456d5f09e45163943034c0af40d31"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/contract.json",
+      "sha256": "9d2a312556d29b5fbb3056c280d27bfb931b804f005574b7df8c5f8b5da5691f"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-18M.json",
+      "sha256": "0b179d3a03cad91738a5ed2f1ade1fcef311893ca0f0f713c7526499a31e52b3"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-18P.json",
+      "sha256": "49405e5734253d8ee3abdbb068dd2ea68e2d5fb9ae5e631bb40da7cd52e50d44"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-19.json",
+      "sha256": "ff5221e6010cd493961673c48782f14a443c78bbf9da173cdf002770066b3b6e"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-20A.json",
+      "sha256": "869a7aefc668229cf5bfa0062a5491fbb4c0c2cc8dc69a5c848d0c9f5a0d8056"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-20B.json",
+      "sha256": "016ba7e93381add2bedbc526fa37d6d72475cf8d648e83f6057087306703628b"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-21A.json",
+      "sha256": "d90734a5393f32317a51179927ad1802b18aa23467a384e20eabff6e3ad16064"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-21B.json",
+      "sha256": "4c658bf9f15bbc4e5a3fefebf20723308975ccb4507afb1302d20119aedaf3dc"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-22.json",
+      "sha256": "199916ab5baf5ed3df4a551f6ae16ae086854b7917a951a43b083128293ce2e8"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-23A.json",
+      "sha256": "739323d47f7db20f13fe58486ae9002242fb69aa0e602de5b9349403f8c20828"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-23B.json",
+      "sha256": "b5183fecc141ba70f0058cd84b3e80cd335c27ae5142763edecfdfd7b3478024"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-23C.json",
+      "sha256": "3786259d6e291aae61519b324fcc2cb340811ecac97637aa1fea74848670b315"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-24.json",
+      "sha256": "59b11d20f8b09f61bfabbb34a7e2ad74659da5c775a85b2b8751fbe3b3ff7e71"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-25.json",
+      "sha256": "50814f3074655a9cb814234de5ce891acafbb9cc08358024ee45c0b5a5746703"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-26A.json",
+      "sha256": "e79f01247372e21771033ca518f65b5e03211797782c9e046ac725f5ee884236"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-26B.json",
+      "sha256": "d7993730b3aad51ed8ebd08e1d8fd699647e78e2d1fa83145d87ae2b298018ae"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-27.json",
+      "sha256": "b491e167e2c3bdeec03c3b3dad5196098e1646e34f295bb17376ad0e37d8e538"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-28A1.json",
+      "sha256": "5d135d8c69837a2cea28a681d1ec1387a0fc755b2820b2fae19e78960e150d0b"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-28A2.json",
+      "sha256": "4639b8595722323d18cdcd4cdc7ec00be0d19b4d081c1d356e0aa028f0034799"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-28B.json",
+      "sha256": "3ec18a9b193e01ad914019ae9e873ab68ea924e8012a690fd7fdaf9947308611"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-ADM.json",
+      "sha256": "e052b231ed11c72e6d481a0d6812dfd4495ec5d1e1d640cd4768811fffbe7ab3"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-ESCAPE.json",
+      "sha256": "c91aad4445d4805eb072b2bc5e6d9dc2dddb0997c612bb451c83e970973d422e"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-FALL.json",
+      "sha256": "b5c57bb68c3c4898c6409f5325272354c63fbd6152bc5330a0cd334e7efd76b8"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-GIT.json",
+      "sha256": "28992389bed50b8d73f43b81cbd199f68f2b2a0a867ddf415b494db6ab8054d0"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-INSERT.json",
+      "sha256": "bc70ecb8d7f017ad56726e3949af03211cc6542eb4d33d90954e5641e0b9a8e9"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-LABEL.json",
+      "sha256": "54f7b5860644ddf8b2dc4b694e2d665ecf39f29363db341a3a76c7b9512e5f5c"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-MAL-REJ.json",
+      "sha256": "c4a9cb76aadcaa55e394b68d887d8b3b1d2c54e50b45484ccd39db1d2b8e7b7a"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-MUTATE.json",
+      "sha256": "565cac8f972eb50579888f59294d435104d6257278c465f5e04918c315dc20f2"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-NOPROOF.json",
+      "sha256": "d1246c091a4ed429b6a3055f12480db063e95539f93fcb179e893bc1b1d3832b"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-OK.json",
+      "sha256": "21cab6ca7929026f1c4b4117cfbef0f61c837bb8932bf133d7e8fecec99a0712"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-ORDER.json",
+      "sha256": "962602ce561d04bf336703d0b09479771a82252ee2a0941d0150e990cadcee91"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-REPLAY.json",
+      "sha256": "6091e6a1aca03cb38a6c92c9d816ef54cab84f3707ad8d234c0a5a51fc112b69"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-SCALAR.json",
+      "sha256": "78da8b7808816bfac6cdbbe9d93c4960d008a4a11a545dfa4d7700610faa547c"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-TIME.json",
+      "sha256": "a6c752e5720a828083984f2b1b4b1bda5be63c46962114da1716bb55d88ece7e"
+    },
+    {
+      "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-UNVER.json",
+      "sha256": "a2674bba7a4f5b2d117b85e4e1832d28833f9a35c5d0e3ce1dfc6d31b1371441"
+    }
+  ],
+  "fixture_set_sha256": "4549d3b58290d5eb79c285902f8fd91b99c8b6ffaee357d960754189bd5ab194",
+  "manifest_self_excluded": true,
+  "path_order": "ascending UTF-8 bytes",
+  "byte_domain": "Git-index/blob bytes"
+}
