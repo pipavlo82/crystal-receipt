@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from "node:fs"
 import { resolve } from "node:path"
 
 export type RuntimeBlobEvidenceSource = "git-index-blob" | "head-tree-blob" | "checked-out-exact-byte-git-blob"
-export type ChangedPathEvidenceSource = "github-event-two-tree-diff" | "existing-two-tree-diff" | "pinned-changed-path-inventory"
+export type ChangedPathEvidenceSource = "frozen-two-tree-diff" | "github-event-two-tree-diff" | "existing-two-tree-diff" | "pinned-changed-path-inventory"
 
 export type RuntimeEvidence = {
   indexOid(path: string): string | undefined
@@ -136,8 +136,18 @@ export function resolveChangedPathEvidence(
   root: string,
   canonicalBase: string,
   policy: ChangedPathPolicy,
-  environment: NodeJS.ProcessEnv = process.env
+  environment: NodeJS.ProcessEnv = process.env,
+  frozenHead?: string,
 ): { source: ChangedPathEvidenceSource, paths: string[] } {
+  if (frozenHead) {
+    if ((!objectExists(root, canonicalBase) || !objectExists(root, frozenHead)) && !fetchExactPair(root, canonicalBase, frozenHead)) {
+      throw new Error("frozen normative base/head objects are unavailable")
+    }
+    const paths = exactDiff(root, canonicalBase, frozenHead)
+    if (!paths) throw new Error("frozen normative two-tree diff is unavailable")
+    return { source: "frozen-two-tree-diff", paths: validateChangedPaths(paths, policy) }
+  }
+
   const eventPath = environment.GITHUB_EVENT_PATH
   if (eventPath && existsSync(eventPath)) {
     const pair = eventPair(JSON.parse(readFileSync(eventPath, "utf8")), canonicalBase)
