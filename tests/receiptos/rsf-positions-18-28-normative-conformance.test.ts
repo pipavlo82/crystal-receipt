@@ -1,9 +1,10 @@
 import { describe, expect, test } from "bun:test"
-import { execFileSync } from "node:child_process"
+import { Buffer } from "node:buffer"
 import { resolve } from "node:path"
 import { auditPackage, canonical, evaluatePositions18Through28, executableSpecialCases, inspectImports, readGitIndexBytes, reconstructExpected } from "../../conformance/recursive-singleton-fold-v0/audit_expected"
 import { evaluateRsfPrefixThroughPosition17 } from "../../src/receiptos/rsf/evaluate-prefix-through-position-17"
 import { validateSchema, type Registry } from "./helpers/json-schema-2020-subset"
+import { filesystemRuntimeEvidence, gitBlobOid, resolveChangedPathEvidence, selectChangedPathEvidence, validateChangedPaths, verifyPinnedRuntimeBlobs } from "./helpers/rsf-normative-ci-evidence"
 
 const root=resolve(import.meta.dir,"../.."), pkg="tests/fixtures/recursive-singleton-fold-v0"
 const json=(path:string)=>JSON.parse(readGitIndexBytes(path).toString("utf8"))
@@ -113,18 +114,46 @@ describe("RSF positions 18-28 normative closure",()=>{
 
   test("positions 1-17 runtime blobs equal the exact canonical base",()=>{
     expect(Object.keys(contract.positions_1_17_runtime_blobs)).toHaveLength(6)
-    for (const [path,oid] of Object.entries(contract.positions_1_17_runtime_blobs)) {
-      const actual=execFileSync("git",["rev-parse",`:${path}`],{cwd:root,encoding:"utf8"}).trim()
-      expect(actual).toBe(oid)
-      const base=execFileSync("git",["rev-parse",`${contract.canonical_base}:${path}`],{cwd:root,encoding:"utf8"}).trim()
-      expect(actual).toBe(base)
-    }
+    const result=verifyPinnedRuntimeBlobs(contract.positions_1_17_runtime_blobs,filesystemRuntimeEvidence(root))
+    expect(result).toEqual({source:"git-index-blob",paths:Object.keys(contract.positions_1_17_runtime_blobs).sort()})
   })
 
   test("diff remains normative-only with no evaluator/runtime/export path",()=>{
-    const paths=execFileSync("git",["diff","--name-only",contract.canonical_base,"--"],{cwd:root,encoding:"utf8"}).trim().split(/\r?\n/).filter(Boolean)
-    expect(paths.some(path=>path.startsWith("src/receiptos/rsf/"))).toBe(false)
-    expect(paths.some(path=>path==="src/receiptos/index.ts" || path.includes("counterfactual") || path.includes("chronicle") || path.includes("crc") || path.includes("b5"))).toBe(false)
+    const result=resolveChangedPathEvidence(root,contract.canonical_base,contract.changed_path_policy)
+    expect(result.paths).toEqual([...contract.changed_path_policy.exact_paths].sort())
+    expect(["github-event-two-tree-diff","existing-two-tree-diff","pinned-changed-path-inventory"]).toContain(result.source)
+  })
+
+  test("runtime-blob evidence is exact-byte, topology-independent, and fail-closed",()=>{
+    const bytes=Buffer.from("exact canonical runtime bytes\n","utf8"), oid=gitBlobOid(bytes), pins={"src/receiptos/rsf/example.ts":oid}
+    const unavailable=()=>undefined
+    expect(verifyPinnedRuntimeBlobs(pins,{indexOid:()=>oid,headOid:unavailable,checkoutBytes:unavailable}).source).toBe("git-index-blob")
+    expect(verifyPinnedRuntimeBlobs(pins,{indexOid:unavailable,headOid:()=>oid,checkoutBytes:unavailable}).source).toBe("head-tree-blob")
+    expect(verifyPinnedRuntimeBlobs(pins,{indexOid:unavailable,headOid:unavailable,checkoutBytes:()=>bytes}).source).toBe("checked-out-exact-byte-git-blob")
+    expect(()=>verifyPinnedRuntimeBlobs(pins,{indexOid:unavailable,headOid:unavailable,checkoutBytes:()=>Buffer.from(bytes.toString().replace("bytes","byteX"))})).toThrow("runtime blob mismatch")
+    expect(()=>verifyPinnedRuntimeBlobs(pins,{indexOid:unavailable,headOid:unavailable,checkoutBytes:unavailable})).toThrow("no trustworthy runtime-blob evidence")
+    for (const [path,pin] of Object.entries(contract.positions_1_17_runtime_blobs) as [string,string][]) {
+      const mutant=Buffer.from(readGitIndexBytes(path)); mutant[mutant.length-1]^=1
+      expect(()=>verifyPinnedRuntimeBlobs({[path]:pin},{indexOid:unavailable,headOid:unavailable,checkoutBytes:()=>mutant})).toThrow(`runtime blob mismatch (${path})`)
+    }
+  })
+
+  test("changed-path evidence covers CI topologies and rejects forbidden or unclassified paths",()=>{
+    const policy=contract.changed_path_policy, exact=[...policy.exact_paths]
+    const cases=[
+      ["detached PR head with base object",{existingTwoTreePaths:exact},"existing-two-tree-diff"],
+      ["synthetic merge with event pair",{githubEventPaths:exact},"github-event-two-tree-diff"],
+      ["shallow history after exact-object fetch",{githubEventPaths:exact},"github-event-two-tree-diff"],
+      ["canonical base and origin unavailable",{pinnedInventoryPaths:exact},"pinned-changed-path-inventory"],
+      ["source artifact without .git",{pinnedInventoryPaths:exact},"pinned-changed-path-inventory"]] as const
+    for (const [,candidate,source] of cases) expect(selectChangedPathEvidence(policy,candidate).source).toBe(source)
+    expect(()=>selectChangedPathEvidence(policy,{})).toThrow("no trustworthy changed-path evidence")
+    expect(()=>validateChangedPaths([...exact,"src/receiptos/rsf/evaluate-positions-18-through-28.ts"],policy)).toThrow("forbidden changed-path prefix")
+    expect(()=>validateChangedPaths([...exact,"src/receiptos/index.ts"],policy)).toThrow("forbidden changed path")
+    expect(()=>validateChangedPaths([...exact,"notes/unknown-rsf-change.md"],policy)).toThrow("changed-path inventory mismatch")
+    expect(()=>validateChangedPaths(exact.filter((path:string)=>path!=="tests/fixtures/recursive-singleton-fold-v0/contract.json"),policy)).toThrow("changed-path inventory mismatch")
+    expect(()=>validateChangedPaths(exact,{...policy,exact_paths:[...exact,"tests/receiptos/fake-allowed-path.ts"]})).toThrow("changed-path inventory mismatch")
+    expect(validateChangedPaths(exact,policy)).toEqual(exact.sort())
   })
 
   test("V-MUTATE, V-REPLAY, and V-FALL execute their obligations",()=>{
@@ -154,7 +183,7 @@ describe("RSF positions 18-28 normative closure",()=>{
     expect(validateSchema(impossible,registry[schemaNames[1]],registry).length).toBeGreaterThan(0) // accepted impossible literal
     expect(Object.keys(vectors)).toHaveLength(34) // missing vector
     const manifest=json(`${pkg}/manifest.json`)
-    expect(manifest.fixture_set_sha256).toBe("64b88bfbd578ee8399f6a78793f14fc71271937aef517afe8fab7822aaa46d4a") // wrong digest
+    expect(manifest.fixture_set_sha256).toBe("4549d3b58290d5eb79c285902f8fd91b99c8b6ffaee357d960754189bd5ab194") // wrong digest
     expect(contract.position_24_descriptor.forbidden_inputs).toContain("candidate_boolean") // candidate boolean as proof
     expect(contract.position_28_remaining_fields[16].field).toBe("transition_result") // position-28 order swap
     expect(inspectImports({"x.ts":'import x from "../../src/receiptos/rsf/evaluate-positions-18"'}).violations.length).toBeGreaterThan(0) // production import

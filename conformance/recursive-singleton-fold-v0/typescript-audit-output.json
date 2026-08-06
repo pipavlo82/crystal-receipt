@@ -3,7 +3,7 @@
   "mode": "read-only-git-index",
   "vector_count": 34,
   "package_inventory_count": 40,
-  "fixture_set_sha256": "64b88bfbd578ee8399f6a78793f14fc71271937aef517afe8fab7822aaa46d4a",
+  "fixture_set_sha256": "4549d3b58290d5eb79c285902f8fd91b99c8b6ffaee357d960754189bd5ab194",
   "commitment_identity_checks": 10,
   "classification_checks": 34,
   "production_imports": 0,

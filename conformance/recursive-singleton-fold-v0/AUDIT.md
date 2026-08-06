@@ -8,7 +8,7 @@
 - Package model: A; four schemas are direct manifest members.
 - Package inventory: 40 exact Git-index/blob artifacts.
 - Fixture-set SHA-256:
-  `64b88bfbd578ee8399f6a78793f14fc71271937aef517afe8fab7822aaa46d4a`
+  `4549d3b58290d5eb79c285902f8fd91b99c8b6ffaee357d960754189bd5ab194`
 - Python generator: independent reconstruction; default verification mode is
   read-only; `--generate` is the only write mode.
 - TypeScript audit: independent reconstruction from raw vector prefix/source

@@ -984,7 +984,7 @@ vector JSON files, for exactly 40 repository-relative Git-index/blob members.
 The manifest excludes itself. Rows are sorted by UTF-8 repository path and are
 exactly `<path><TAB><lowercase-sha256><LF>` with `/` separators, UTF-8 encoding,
 a final LF, and no BOM. The current fixture-set digest is
-`64b88bfbd578ee8399f6a78793f14fc71271937aef517afe8fab7822aaa46d4a`.
+`4549d3b58290d5eb79c285902f8fd91b99c8b6ffaee357d960754189bd5ab194`.
 
 For every compound position: subchecks execute left-to-right exactly as
 written; the first failing subcheck determines the one finding; shape
