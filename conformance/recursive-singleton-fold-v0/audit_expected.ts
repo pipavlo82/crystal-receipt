@@ -189,6 +189,49 @@ const EXPECTED: Record<string,[string,string|null,number|null]> = {
   "V-MUTATE":["evaluated",null,null],"V-REPLAY":["evaluated",null,null],"V-FALL":["evaluated","no_elevation_invariant_mismatch",24]
 }
 
+const EXECUTION_CLASSES=["public-complete-entrypoint","stage-continuation-invariant","package-integrity-only"] as const
+
+function validateExecutionClasses(vectors:Record<string,J>,contract:J):J {
+  const scope=contract.f02_normative_amendment_scope
+  assert(scope.base==="d3bc93ffdf5e13ed56d988634afcdde943966058" && Object.keys(scope.paths).length===13,"closed F-02 amendment scope")
+  assert(Object.keys(scope.paths).every(path=>!path.startsWith("src/")&&!path.startsWith(".github/")),"F-02 production source exclusion")
+  assert(scope.only_allowed_production_related_test==="tests/receiptos/rsf-positions-18-through-28.test.ts" && scope.production_source_forbidden===true,
+    "F-02 test-only production boundary")
+  const section=contract.vector_execution_classes, table=section.vectors
+  assert(equalCanonical(section.allowed,EXECUTION_CLASSES),"closed execution-class vocabulary")
+  assert(equalCanonical(Object.keys(table).sort(),Object.keys(vectors).sort()),"execution-class table completeness")
+  const counts:Record<string,number>=Object.fromEntries(EXECUTION_CLASSES.map(name=>[name,0]))
+  const publicResults=new Map<string,string>()
+  for(const [name,vector] of Object.entries(vectors)){
+    const prefix=vector.prefix_continuation
+    const derived=vector.expected_evaluation===null ? "package-integrity-only" :
+      prefix.sourceEntryContentCommitment!==digest(prefix.sourceEntry) ? "stage-continuation-invariant" : "public-complete-entrypoint"
+    const actual=table[name].execution_class
+    assert(actual===derived,`${name} execution class is mechanically owned`)
+    counts[actual]=(counts[actual]??0)+1
+    if(actual==="public-complete-entrypoint"){
+      const key=canonical({input:vector.input,stage_input:vector.stage_input}), result=canonical(vector.expected_evaluation)
+      assert(!publicResults.has(key)||publicResults.get(key)===result,`${name} violates public-argument determinism`)
+      publicResults.set(key,result)
+    }
+  }
+  assert(equalCanonical(counts,{"public-complete-entrypoint":32,"stage-continuation-invariant":1,"package-integrity-only":1}),"execution-class counts")
+  const v28=table["V-28A1"]
+  assert(equalCanonical(v28,{execution_class:"stage-continuation-invariant",public_input_representable:false,
+    injected_continuation_field:"prefix_continuation.sourceEntryContentCommitment",
+    fresh_recomputation_source:"canonical_json_utf8_sha256(prefix_continuation.sourceEntry)",owned_position:28,owned_subcheck:"28a.1",
+    non_public_reason:"The public evaluator recomputes the position-14 commitment from raw input and accepts no caller-supplied prefix continuation; V-28A1 and V-OK therefore have byte-identical public arguments.",
+    expected_finding:{code:"source_entry_content_commitment_mismatch",check_position:28}}),"V-28A1 invariant ownership")
+  assert(equalCanonical(vectors["V-OK"].input,vectors["V-28A1"].input) && equalCanonical(vectors["V-OK"].stage_input,vectors["V-28A1"].stage_input),
+    "V-OK and V-28A1 public arguments")
+  assert(equalCanonical(table["V-28A2"],{execution_class:"public-complete-entrypoint",owned_position:28,owned_subcheck:"28a.2",
+    public_operand_field:"stage_input.candidate_aggregate.source_entry_content_commitment",
+    expected_finding:{code:"source_entry_content_commitment_mismatch",check_position:28}}),"V-28A2 candidate mismatch ownership")
+  const expectedRows=Object.keys(vectors).sort().map(name=>`${name}\t${shaBytes(Buffer.from(canonical(vectors[name].expected_evaluation),"utf8"))}\n`).join("")
+  assert(shaBytes(Buffer.from(expectedRows,"utf8"))===section.expected_evaluation_set_sha256,"unchanged expected-evaluation byte set")
+  return {counts,public_determinism_checks:32,v_ok_v_28a1_public_arguments_byte_identical:true}
+}
+
 export function executableSpecialCases(vectors: Record<string,J>): J {
   const original=clone(vectors["V-MUTATE"]), snapshot=clone(original)
   const before=canonical(evaluatePositions18Through28(snapshot).result)
@@ -219,6 +262,8 @@ export function auditPackage(useBytes=(path:string)=>readGitIndexBytes(path)): J
   const vectors:Record<string,J>={}
   for (const name of Object.keys(EXPECTED)) vectors[name]=JSON.parse(useBytes(`${PACKAGE}/vectors/${name}.json`).toString("utf8"))
   assert(Object.keys(vectors).length===34,"vector count")
+  const contract=JSON.parse(useBytes(`${PACKAGE}/contract.json`).toString("utf8"))
+  const executionClasses=validateExecutionClasses(vectors,contract)
   for (const [name,vector] of Object.entries(vectors)) {
     const [state,code,pos]=EXPECTED[name]
     assert(vector.expected_state===state && vector.expected_code===code && vector.expected_check_position===pos,`${name} metadata`)
@@ -236,6 +281,8 @@ export function auditPackage(useBytes=(path:string)=>readGitIndexBytes(path)): J
     aggregate_bytes_sha256:shaBytes(Buffer.from(canonical(a),"utf8")),envelope_bytes_sha256:shaBytes(Buffer.from(canonical(ok.envelope),"utf8"))}
   return {auditor:"typescript-independent-rsf-v0",mode:"read-only-git-index",vector_count:34,package_inventory_count:40,
     fixture_set_sha256:manifest.fixture_set_sha256,commitment_identity_checks:10,classification_checks:34,
+    execution_class_counts:executionClasses.counts,public_determinism_checks:executionClasses.public_determinism_checks,
+    v_ok_v_28a1_public_arguments_byte_identical:executionClasses.v_ok_v_28a1_public_arguments_byte_identical,
     production_imports:0,import_graph:imports.graph,v_ok:vOk,special_cases:special}
 }
 
