@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { canonicalize } from "../../src/receiptos/canon/canonicalize"
 import { evaluateCompleteRsf, evaluateCompleteRsfFromPrefix } from "../../src/receiptos/rsf/evaluate-complete-rsf"
-import { evaluateRsfPositions18Through28 } from "../../src/receiptos/rsf/evaluate-positions-18-through-28"
+import { evaluateRsfPositions18Through28, RSF_POSITION_28_COMPARISON_PLAN, RSF_POSITIONS_18_THROUGH_28_CHECK_PLAN } from "../../src/receiptos/rsf/evaluate-positions-18-through-28"
 
 const root=resolve(import.meta.dir,"../..")
 const vectorIds=["V-OK","V-18M","V-18P","V-19","V-20A","V-20B","V-21A","V-21B","V-22","V-23A","V-23B","V-23C","V-24","V-25","V-26A","V-26B","V-27","V-28A1","V-28A2","V-28B","V-ORDER","V-ADM","V-TIME","V-LABEL","V-NOPROOF","V-UNVER","V-MAL-REJ","V-INSERT","V-ESCAPE","V-SCALAR","V-GIT","V-MUTATE","V-REPLAY","V-FALL"] as const
@@ -84,6 +84,66 @@ describe("production RSF positions 18 through 28",()=>{
     expect(stageInvariant).toMatchObject({evaluation_state:"evaluated",profile_verdict:"rejected",aggregate:null,
       finding:{code:"source_entry_content_commitment_mismatch",check_position:28}})
     expect(canonicalBytes(stageInvariant)).toEqual(canonicalBytes(invariant.expected_evaluation))
+  })
+
+  test("the evaluator consumes the exact immutable position plan and position 24 precedes 25",()=>{
+    expect(Object.isFrozen(RSF_POSITIONS_18_THROUGH_28_CHECK_PLAN)).toBe(true)
+    expect(RSF_POSITIONS_18_THROUGH_28_CHECK_PLAN.every(item=>Object.isFrozen(item)&&Object.isFrozen(item.checks))).toBe(true)
+    expect(RSF_POSITIONS_18_THROUGH_28_CHECK_PLAN).toEqual(contract.position_order)
+    const entered:number[]=[]
+    const result=evaluateRsfPositions18Through28(prefixOf(vectors["V-OK"]),vectors["V-OK"].stage_input,{enteredPosition:p=>entered.push(p)})
+    expect(result).toMatchObject({kind:"verified_aggregate",completedThrough:28})
+    expect(entered).toEqual([18,19,20,21,22,23,24,25,26,27,28])
+    expect(entered.indexOf(24)).toBeLessThan(entered.indexOf(25))
+  })
+
+  test("the evaluator-owned position-28 plan freezes all 19 fields and comparison modes",()=>{
+    const expected=contract.position_28_remaining_fields.map((item:any)=>({field:item.field,mode:item.comparison}))
+    expect(Object.isFrozen(RSF_POSITION_28_COMPARISON_PLAN)).toBe(true)
+    expect(RSF_POSITION_28_COMPARISON_PLAN.every(Object.isFrozen)).toBe(true)
+    expect(RSF_POSITION_28_COMPARISON_PLAN).toHaveLength(19)
+    expect(RSF_POSITION_28_COMPARISON_PLAN).toEqual(expected)
+    expect(new Set(RSF_POSITION_28_COMPARISON_PLAN.map(item=>item.field)).size).toBe(19)
+    expect(RSF_POSITION_28_COMPARISON_PLAN.slice(0,2).map(item=>item.field)).toEqual(["schema","profile_version"])
+    expect(new Set(RSF_POSITION_28_COMPARISON_PLAN.map(item=>item.mode))).toEqual(new Set([
+      "exact_scalar_equality","exact_digest_text_equality","canonical_json_utf8_byte_equality"]))
+  })
+
+  test("position-20 input and position-23 output reconstructions are distinct invocations and objects",()=>{
+    const captured:{side:"input"|"output";statement:any}[]=[]
+    const result=evaluateRsfPositions18Through28(prefixOf(vectors["V-OK"]),vectors["V-OK"].stage_input,{
+      reconstructedSemanticStatement:(side,statement)=>captured.push({side,statement})})
+    expect(result).toMatchObject({kind:"verified_aggregate",completedThrough:28})
+    expect(captured.map(item=>item.side)).toEqual(["input","output"])
+    expect(captured[0].statement).not.toBe(captured[1].statement)
+    expect(canonicalBytes(captured[0].statement)).toEqual(canonicalBytes(captured[1].statement))
+    expect(Object.values(captured[0].statement).every(value=>value===null||typeof value!=="object")).toBe(true)
+    const outputBefore=canonicalBytes(captured[1].statement)
+    captured[0].statement.source_entry_ref="test-copy-mutated"
+    expect(canonicalBytes(captured[1].statement)).toEqual(outputBefore)
+  })
+
+  test("source structure binds actual order, comparison plan, separate reconstructions, and private seams",()=>{
+    const source=readFileSync(resolve(root,"src/receiptos/rsf/evaluate-positions-18-through-28.ts"),"utf8")
+    const index=readFileSync(resolve(root,"src/receiptos/index.ts"),"utf8")
+    expect(source).toContain("function reconstructInputSemanticStatement(")
+    expect(source).toContain("function reconstructOutputSemanticStatement(")
+    expect(source).toContain("reconstructInputSemanticStatement(prefix,semanticSourceCommitment,observer)")
+    expect(source).toContain("reconstructOutputSemanticStatement(prefix,semanticSourceCommitment,observer)")
+    expect(source).not.toMatch(/verifiedOutputSemanticStatement\s*=\s*verifiedInputSemanticStatement/)
+    expect(source.indexOf("enterPosition(24)")).toBeLessThan(source.indexOf("enterPosition(25)"))
+    const position24Derivation=source.slice(
+      source.indexOf("const noStrongerSemanticClassCreated ="),
+      source.indexOf("if (candidate.no_stronger_semantic_class_created"),
+    )
+    expect(position24Derivation).not.toContain("candidate")
+    for(const operand of ["canonicalEqual(inputDescriptor,outputDescriptor)",
+      "verifiedInputSemanticResultCommitment === verifiedOutputSemanticResultCommitment",
+      "sourceIdentityNotReused","transitionRuleExact","policyEligibility","classEligibility"]){
+      expect(position24Derivation).toContain(operand)
+    }
+    expect(source).toContain("for (const {field,mode} of RSF_POSITION_28_COMPARISON_PLAN)")
+    expect(index).not.toMatch(/evaluateRsfPositions18Through28|evaluateCompleteRsfFromPrefix|RSF_POSITION_28_COMPARISON_PLAN|RSF_POSITIONS_18_THROUGH_28_CHECK_PLAN/)
   })
 
   test("the complete evaluator alone emits exactly the four frozen envelope tuples",()=>{

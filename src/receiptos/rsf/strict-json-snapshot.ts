@@ -1,3 +1,5 @@
+import { types } from "node:util"
+
 export type RsfJsonValue = null | string | boolean | number | RsfJsonValue[] | { [key: string]: RsfJsonValue }
 
 const ARRAY_INDEX_LIMIT = 2 ** 32 - 1
@@ -88,6 +90,9 @@ function snapshotValue(value: unknown, path: string, active: WeakSet<object>): R
     return value
   }
   if (typeof value !== "object") fail(path, "value is outside the JSON domain")
+  // Proxy rejection must precede Array.isArray and every reflection operation.
+  // Repeatedly sampling hostile traps cannot establish a stable JSON fact.
+  if (types.isProxy(value)) fail(path, "Proxy values are forbidden")
   if (active.has(value)) fail(path, "cycles are forbidden")
   active.add(value)
   try { return Array.isArray(value) ? snapshotArray(value, path, active) : snapshotObject(value, path, active) }

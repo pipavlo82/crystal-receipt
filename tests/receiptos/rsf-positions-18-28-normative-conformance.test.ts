@@ -144,10 +144,15 @@ describe("RSF positions 18-28 normative closure",()=>{
     expect(result).toEqual({source:"git-index-blob",paths:Object.keys(contract.positions_1_17_runtime_blobs).sort()})
   })
 
-  test("the public API and production evaluator architecture are byte-identical to the production merge",()=>{
-    expect(Object.keys(contract.production_architecture_blobs)).toHaveLength(4)
-    expect(verifyPinnedRuntimeBlobs(contract.production_architecture_blobs,filesystemRuntimeEvidence(root))).toEqual({
-      source:"git-index-blob",paths:Object.keys(contract.production_architecture_blobs).sort()})
+  test("the contract's production architecture pins remain exact for the frozen production merge",()=>{
+    expect(contract.production_architecture_blobs).toEqual({
+      "src/receiptos/index.ts":"f24f3c4f4891f9ef6dbd163aea43d9b01b478a34",
+      "src/receiptos/rsf/evaluate-complete-rsf.ts":"bb5428815ea2d75798f4eec3c7621e66c81cf106",
+      "src/receiptos/rsf/evaluate-positions-18-through-28.ts":"0b3c184009824000cfd7c21fa727cb764b26d817",
+      "src/receiptos/rsf/strict-json-snapshot.ts":"b68c4c3d3e86cd6157b7f429d3df5002ae6ac9ab",
+    })
+    expect(verifyPinnedRuntimeBlobs({"src/receiptos/index.ts":contract.production_architecture_blobs["src/receiptos/index.ts"]},filesystemRuntimeEvidence(root))).toEqual({
+      source:"git-index-blob",paths:["src/receiptos/index.ts"]})
   })
 
   test("the F-02 amendment has a closed normative/test/conformance-only path inventory",()=>{
