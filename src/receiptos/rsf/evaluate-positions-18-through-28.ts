@@ -118,6 +118,48 @@ export type EvaluateRsfPositions18Through28Result =
   | { kind: "verified_aggregate"; aggregate: RecursiveSingletonAggregateV0; completedThrough: 28 }
   | { kind: "finding"; finding: RsfPositions18Through28Finding; completedThrough: RsfPositions18Through28Finding["check_position"] }
 
+export const RSF_POSITIONS_18_THROUGH_28_CHECK_PLAN = Object.freeze([
+  Object.freeze({position:18,checks:Object.freeze(["stage_shape","singleton_policy_eligibility"])}),
+  Object.freeze({position:19,checks:Object.freeze(["singleton_comparability_eligibility"])}),
+  Object.freeze({position:20,checks:Object.freeze(["input_semantic_statement","input_semantic_result_commitment"])}),
+  Object.freeze({position:21,checks:Object.freeze(["canonical_inclusion_set","inclusion_set_commitment"])}),
+  Object.freeze({position:22,checks:Object.freeze(["source_id_non_reuse"])}),
+  Object.freeze({position:23,checks:Object.freeze(["output_semantic_statement","output_stored_digest","input_output_preservation"])}),
+  Object.freeze({position:24,checks:Object.freeze(["mechanical_no_class_promotion"])}),
+  Object.freeze({position:25,checks:Object.freeze(["transition_result"])}),
+  Object.freeze({position:26,checks:Object.freeze(["pre_aggregation_breakdown","pre_aggregation_breakdown_commitment"])}),
+  Object.freeze({position:27,checks:Object.freeze(["aggregate_id_derivation_and_comparison"])}),
+  Object.freeze({position:28,checks:Object.freeze(["fresh_source_commitment","prefix_position_14_commitment","candidate_source_commitment","remaining_fields_in_order","emit_accepted"])}),
+] as const)
+
+export type RsfPosition28ComparisonMode = "exact_scalar_equality" | "exact_digest_text_equality" | "canonical_json_utf8_byte_equality"
+export const RSF_POSITION_28_COMPARISON_PLAN: ReadonlyArray<Readonly<{field:keyof RecursiveSingletonAggregateV0;mode:RsfPosition28ComparisonMode}>> = Object.freeze([
+  Object.freeze({field:"schema",mode:"exact_scalar_equality"}),
+  Object.freeze({field:"profile_version",mode:"exact_scalar_equality"}),
+  Object.freeze({field:"aggregate_id",mode:"exact_digest_text_equality"}),
+  Object.freeze({field:"source_entry_ref",mode:"exact_scalar_equality"}),
+  Object.freeze({field:"semantic_statement",mode:"canonical_json_utf8_byte_equality"}),
+  Object.freeze({field:"semantic_result_commitment",mode:"exact_digest_text_equality"}),
+  Object.freeze({field:"canonical_inclusion_set",mode:"canonical_json_utf8_byte_equality"}),
+  Object.freeze({field:"inclusion_set_commitment",mode:"exact_digest_text_equality"}),
+  Object.freeze({field:"fold_policy_declaration",mode:"canonical_json_utf8_byte_equality"}),
+  Object.freeze({field:"fold_policy_commitment",mode:"exact_digest_text_equality"}),
+  Object.freeze({field:"comparability_class_declaration",mode:"canonical_json_utf8_byte_equality"}),
+  Object.freeze({field:"comparability_class_commitment",mode:"exact_digest_text_equality"}),
+  Object.freeze({field:"transition_rule_declaration",mode:"canonical_json_utf8_byte_equality"}),
+  Object.freeze({field:"transition_rule_commitment",mode:"exact_digest_text_equality"}),
+  Object.freeze({field:"pre_aggregation_breakdown",mode:"canonical_json_utf8_byte_equality"}),
+  Object.freeze({field:"pre_aggregation_breakdown_commitment",mode:"exact_digest_text_equality"}),
+  Object.freeze({field:"transition_result",mode:"canonical_json_utf8_byte_equality"}),
+  Object.freeze({field:"no_stronger_semantic_class_created",mode:"exact_scalar_equality"}),
+  Object.freeze({field:"profile_local_notes",mode:"exact_scalar_equality"}),
+])
+
+export type RsfPositions18Through28TestObserver = {
+  enteredPosition?: (position: 18|19|20|21|22|23|24|25|26|27|28) => void
+  reconstructedSemanticStatement?: (side: "input"|"output", statement: Readonly<SemanticStatement>) => void
+}
+
 const semanticStatementKeys = ["schema","source_entry_schema","source_entry_ref","source_entry_content_commitment","source_admission_state","fold_policy_commitment","comparability_class_commitment","transition_rule_commitment","singleton_transition_eligibility"] as const
 const inclusionMemberKeys = ["member_schema","member_ref","member_source_entry_content_commitment"] as const
 const policyKeys = ["schema","policy_version","policy_id","source_object_schema","aggregate_object_schema","member_cardinality","aggregation_mode","semantic_elevation","source_identity_reuse","multi_member_extension"] as const
@@ -209,20 +251,24 @@ function finding(code: RsfPositions18Through28FindingCode, check_position: RsfPo
   return {kind:"finding",finding:{schema:FINDING_SCHEMA,code,check_position},completedThrough:check_position}
 }
 
-function inputStatement(prefix: RsfPrefixThroughPosition17Value, sourceCommitment: string): SemanticStatement {
-  return {schema:"chronicle_entry_singleton_semantic_statement.v0",source_entry_schema:"chronicle_entry.v0",
+function reconstructInputSemanticStatement(prefix: RsfPrefixThroughPosition17Value, sourceCommitment: string, observer?: RsfPositions18Through28TestObserver): SemanticStatement {
+  const statement: SemanticStatement = {schema:"chronicle_entry_singleton_semantic_statement.v0",source_entry_schema:"chronicle_entry.v0",
     source_entry_ref:prefix.verifiedSourceEntry.entry_id,source_entry_content_commitment:sourceCommitment,
     source_admission_state:"chronicle_entry_independently_admitted",fold_policy_commitment:prefix.foldPolicyCommitment,
     comparability_class_commitment:prefix.comparabilityClassCommitment,transition_rule_commitment:prefix.transitionRuleCommitment,
     singleton_transition_eligibility:"eligible_under_exact_singleton_profile_declarations"}
+  observer?.reconstructedSemanticStatement?.("input",statement)
+  return statement
 }
 
-function outputStatement(prefix: RsfPrefixThroughPosition17Value, sourceCommitment: string): SemanticStatement {
-  return {schema:"chronicle_entry_singleton_semantic_statement.v0",source_entry_schema:prefix.verifiedSourceEntry.schema,
+function reconstructOutputSemanticStatement(prefix: RsfPrefixThroughPosition17Value, sourceCommitment: string, observer?: RsfPositions18Through28TestObserver): SemanticStatement {
+  const statement: SemanticStatement = {schema:"chronicle_entry_singleton_semantic_statement.v0",source_entry_schema:prefix.verifiedSourceEntry.schema,
     source_entry_ref:prefix.verifiedSourceEntry.entry_id,source_entry_content_commitment:sourceCommitment,
     source_admission_state:"chronicle_entry_independently_admitted",fold_policy_commitment:prefix.foldPolicyCommitment,
     comparability_class_commitment:prefix.comparabilityClassCommitment,transition_rule_commitment:prefix.transitionRuleCommitment,
     singleton_transition_eligibility:"eligible_under_exact_singleton_profile_declarations"}
+  observer?.reconstructedSemanticStatement?.("output",statement)
+  return statement
 }
 
 function descriptor(statement: SemanticStatement, prefix: RsfPrefixThroughPosition17Value) {
@@ -236,12 +282,22 @@ const expectedTransition = (): TransitionResult => ({status:"singleton_transitio
   source_identity_reuse_result:"source_identity_not_reused",stronger_semantic_class_creation_result:"no_stronger_semantic_class_created"})
 
 /** Ordered, non-envelope stage. It emits only a position-owned finding or a mechanically verified aggregate. */
-export function evaluateRsfPositions18Through28(prefixValue: RsfPrefixThroughPosition17Value, stageInput: unknown): EvaluateRsfPositions18Through28Result {
-  const prefix = snapshotRsfJson(prefixValue,"$prefix") as unknown as RsfPrefixThroughPosition17Value
-  let stageSnapshot: unknown
-  try { stageSnapshot = snapshotRsfJson(stageInput,"$stage") } catch { return finding("malformed_rsf_stage_input",18) }
+export function evaluateRsfPositions18Through28(prefixValue: RsfPrefixThroughPosition17Value, stageInput: unknown, observer?: RsfPositions18Through28TestObserver): EvaluateRsfPositions18Through28Result {
+  let prefix: RsfPrefixThroughPosition17Value, stageSnapshot: unknown
+  try {
+    prefix = snapshotRsfJson(prefixValue,"$prefix") as unknown as RsfPrefixThroughPosition17Value
+    stageSnapshot = snapshotRsfJson(stageInput,"$stage")
+  } catch { return finding("malformed_rsf_stage_input",18) }
+  let planIndex=0
+  const enterPosition=(position: 18|19|20|21|22|23|24|25|26|27|28) => {
+    const expected=RSF_POSITIONS_18_THROUGH_28_CHECK_PLAN[planIndex]?.position
+    if (expected !== position) throw new Error(`RSF internal position-plan violation: expected ${expected}, received ${position}`)
+    planIndex += 1
+    observer?.enteredPosition?.(position)
+  }
 
   // Position 18(a): closed JSON shape and digest syntax, deliberately without semantic literal pre-acceptance.
+  enterPosition(18)
   if (!stageShape(stageSnapshot)) return finding("malformed_rsf_stage_input",18)
   const stage = stageSnapshot
   const candidate = stage.candidate_aggregate
@@ -254,6 +310,7 @@ export function evaluateRsfPositions18Through28(prefixValue: RsfPrefixThroughPos
   if (!policyEligibility) return finding("singleton_policy_ineligible",18)
 
   // Position 19: independently linked singleton comparability.
+  enterPosition(19)
   const classEligibility = prefix.comparabilityClassDeclaration.admission_required === true &&
     prefix.comparabilityClassDeclaration.source_object_schema === "chronicle_entry.v0" &&
     prefix.comparabilityClassDeclaration.singleton_eligibility_rule === "exactly_one_independently_admitted_source_entry" &&
@@ -261,13 +318,15 @@ export function evaluateRsfPositions18Through28(prefixValue: RsfPrefixThroughPos
   if (!classEligibility) return finding("singleton_class_ineligible",19)
 
   // Position 20: fresh input statement, then its independently derived commitment.
+  enterPosition(20)
   const semanticSourceCommitment = deriveSourceEntryContentCommitment(prefix.verifiedSourceEntry).value.sourceEntryContentCommitment
-  const verifiedInputSemanticStatement = inputStatement(prefix,semanticSourceCommitment)
+  const verifiedInputSemanticStatement = reconstructInputSemanticStatement(prefix,semanticSourceCommitment,observer)
   if (!canonicalEqual(stage.claimed_input_semantic_statement,verifiedInputSemanticStatement)) return finding("semantic_statement_mismatch",20)
   const verifiedInputSemanticResultCommitment = semanticDigest(verifiedInputSemanticStatement)
   if (stage.claimed_input_semantic_result_commitment !== verifiedInputSemanticResultCommitment) return finding("semantic_result_commitment_mismatch",20)
 
   // Position 21: fresh inclusion set, then its commitment.
+  enterPosition(21)
   const verifiedInclusionSet: InclusionMember[] = [{member_schema:"chronicle_entry.v0",member_ref:prefix.verifiedSourceEntry.entry_id,
     member_source_entry_content_commitment:semanticSourceCommitment}]
   if (!canonicalEqual(candidate.canonical_inclusion_set,verifiedInclusionSet)) return finding("inclusion_set_mismatch",21)
@@ -275,17 +334,20 @@ export function evaluateRsfPositions18Through28(prefixValue: RsfPrefixThroughPos
   if (candidate.inclusion_set_commitment !== verifiedInclusionSetCommitment) return finding("inclusion_set_commitment_mismatch",21)
 
   // Position 22 model A: this proves non-reuse only; the candidate ID remains untrusted.
+  enterPosition(22)
   const sourceIdentityNotReused = candidate.aggregate_id !== prefix.verifiedSourceEntry.entry_id
   if (!sourceIdentityNotReused) return finding("forbidden_source_identity_reuse",22)
 
   // Position 23: allocate a distinct output statement and verify object, stored digest, then preservation.
-  const verifiedOutputSemanticStatement = outputStatement(prefix,semanticSourceCommitment)
+  enterPosition(23)
+  const verifiedOutputSemanticStatement = reconstructOutputSemanticStatement(prefix,semanticSourceCommitment,observer)
   if (!canonicalEqual(candidate.semantic_statement,verifiedOutputSemanticStatement)) return finding("semantic_result_commitment_mismatch",23)
   const verifiedOutputSemanticResultCommitment = semanticDigest(verifiedOutputSemanticStatement)
   if (candidate.semantic_result_commitment !== verifiedOutputSemanticResultCommitment) return finding("semantic_result_commitment_mismatch",23)
   if (verifiedOutputSemanticResultCommitment !== verifiedInputSemanticResultCommitment) return finding("semantic_result_commitment_mismatch",23)
 
   // Position 24: the candidate boolean is read only after the complete mechanical predicate is derived.
+  enterPosition(24)
   const inputDescriptor = descriptor(verifiedInputSemanticStatement,prefix)
   const outputDescriptor = descriptor(verifiedOutputSemanticStatement,prefix)
   const transitionRuleExact = prefix.transitionRuleDeclaration.preserved_equality_relation === "semantic_result_commitment_equality_only" &&
@@ -299,10 +361,12 @@ export function evaluateRsfPositions18Through28(prefixValue: RsfPrefixThroughPos
   }
 
   // Position 25: labels are constructed from the facts already established at 22-24.
+  enterPosition(25)
   const verifiedTransitionResult = expectedTransition()
   if (!canonicalEqual(candidate.transition_result,verifiedTransitionResult)) return finding("transition_result_mismatch",25)
 
   // Position 26: fresh breakdown, then its commitment.
+  enterPosition(26)
   const verifiedBreakdown: Breakdown = {schema:"recursive_singleton_breakdown.v0",source_entry_ref:prefix.verifiedSourceEntry.entry_id,
     source_entry_content_commitment:semanticSourceCommitment,source_admission_prerequisite:"chronicle_entry_independently_admitted",
     inclusion_decision:"included",exclusion_decision:"none",comparability_evaluation:"singleton_class_eligible",policy_evaluation:"singleton_policy_eligible",
@@ -313,6 +377,7 @@ export function evaluateRsfPositions18Through28(prefixValue: RsfPrefixThroughPos
   if (candidate.pre_aggregation_breakdown_commitment !== verifiedBreakdownCommitment) return finding("breakdown_commitment_mismatch",26)
 
   // Position 27: derive identity from the frozen seed, never from the candidate ID.
+  enterPosition(27)
   const aggregateIdentitySeed = {schema:"recursive_singleton_aggregate_identity_seed.v0",aggregate_schema:"recursive_singleton_aggregate.v0",
     profile_version:"recursive-singleton-fold-profile-v0",source_entry_ref:prefix.verifiedSourceEntry.entry_id,
     source_entry_content_commitment:semanticSourceCommitment,semantic_result_commitment:verifiedOutputSemanticResultCommitment,
@@ -323,6 +388,7 @@ export function evaluateRsfPositions18Through28(prefixValue: RsfPrefixThroughPos
   if (candidate.aggregate_id !== verifiedAggregateId) return finding("aggregate_id_mismatch",27)
 
   // Position 28(a): fresh source commitment, prefix stored value, then candidate stored value.
+  enterPosition(28)
   const freshSourceCommitment = deriveSourceEntryContentCommitment(prefix.verifiedSourceEntry).value.sourceEntryContentCommitment
   if (prefix.sourceEntryContentCommitment !== freshSourceCommitment) return finding("source_entry_content_commitment_mismatch",28)
   if (candidate.source_entry_content_commitment !== freshSourceCommitment) return finding("source_entry_content_commitment_mismatch",28)
@@ -337,17 +403,11 @@ export function evaluateRsfPositions18Through28(prefixValue: RsfPrefixThroughPos
     transition_rule_declaration:prefix.transitionRuleDeclaration,transition_rule_commitment:prefix.transitionRuleCommitment,
     pre_aggregation_breakdown:verifiedBreakdown,pre_aggregation_breakdown_commitment:verifiedBreakdownCommitment,
     transition_result:verifiedTransitionResult,no_stronger_semantic_class_created:noStrongerSemanticClassCreated,profile_local_notes:prefix.profileLocalNotes}
-  const comparisons: [keyof RecursiveSingletonAggregateV0,"scalar"|"digest"|"canonical"][] = [
-    ["schema","scalar"],["profile_version","scalar"],["aggregate_id","digest"],["source_entry_ref","scalar"],
-    ["semantic_statement","canonical"],["semantic_result_commitment","digest"],["canonical_inclusion_set","canonical"],
-    ["inclusion_set_commitment","digest"],["fold_policy_declaration","canonical"],["fold_policy_commitment","digest"],
-    ["comparability_class_declaration","canonical"],["comparability_class_commitment","digest"],["transition_rule_declaration","canonical"],
-    ["transition_rule_commitment","digest"],["pre_aggregation_breakdown","canonical"],["pre_aggregation_breakdown_commitment","digest"],
-    ["transition_result","canonical"],["no_stronger_semantic_class_created","scalar"],["profile_local_notes","scalar"]]
-  for (const [field,mode] of comparisons) {
-    const same = mode === "canonical" ? canonicalEqual(candidate[field],expected[field]) : candidate[field] === expected[field]
+  for (const {field,mode} of RSF_POSITION_28_COMPARISON_PLAN) {
+    const same = mode === "canonical_json_utf8_byte_equality" ? canonicalEqual(candidate[field],expected[field]) : candidate[field] === expected[field]
     if (!same) return finding("complete_aggregate_validation_mismatch",28)
   }
 
+  if (planIndex !== RSF_POSITIONS_18_THROUGH_28_CHECK_PLAN.length) throw new Error("RSF internal position-plan incomplete at accepted emission")
   return {kind:"verified_aggregate",aggregate:snapshotRsfJson(candidate,"$verifiedAggregate") as unknown as RecursiveSingletonAggregateV0,completedThrough:28}
 }
