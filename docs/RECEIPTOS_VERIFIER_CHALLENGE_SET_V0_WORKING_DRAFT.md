@@ -345,12 +345,14 @@ challenge-set semantics, or verifier-profile semantics. Its presence, absence,
 or value MUST NOT change the semantic artifact reference or conformance result
 of the artifact it accompanies.
 
-A validator MUST reject, before canonicalization, any semantic artifact object
-that contains a property named `audit_timestamp` at any depth. It MUST NOT
-silently strip that property from an object already presented as semantic
-input. Review or packaging tooling derives a semantic artifact reference only
-from the separately validated semantic artifact object; the enclosing manifest
-and its audit metadata are outside that derivation.
+A validator MUST reject, before any future profile-defined canonicalization,
+any semantic artifact object that contains a property named `audit_timestamp`
+at any depth. It MUST NOT silently strip that property from an object already
+presented as semantic input. Enforcement constructs a fresh strict-JSON
+snapshot by descriptor inspection, deterministic key traversal, and exactly
+one capture of each accepted data-property value. No downstream operation may
+reread the caller-owned input. Review or packaging tooling keeps the enclosing
+manifest and its audit metadata outside the semantic snapshot.
 
 This exclusion does not make timestamp-bearing manifest files byte-stable. If
 the serialized bytes of a review or packaging manifest include
@@ -360,12 +362,19 @@ inventory entry that honestly hashes the file. Such a byte-hash change does not
 change the semantic identity of the artifact described by the manifest.
 
 The reusable enforcement helpers are
-`validateCounterfactualSemanticArtifact`,
-`computeCounterfactualSemanticArtifactRef`, and
+`snapshotCounterfactualSemanticJson` and
 `computeCounterfactualManifestFileSha256` in
-`src/receiptos/challenge/counterfactual-audit-boundary.ts`. They establish only
-this byte-domain boundary; they do not freeze the open `subject_bundle_root`
-formula or any future challenge-set identity.
+`src/receiptos/challenge/counterfactual-audit-boundary.ts`. A manifest string is
+encoded as UTF-8 exactly once before file-byte hashing; a `Uint8Array` is hashed
+as the exact supplied bytes.
+
+This repository rule freezes only the reserved-field exclusion boundary, the
+strict JSON snapshot boundary used to enforce that exclusion, and the exact
+raw manifest-byte hashing rule. It does not define or freeze challenge
+canonicalization, semantic artifact identity, `subject_bundle_root`,
+verifier-profile identity, or challenge-set identity. Any digest used only by
+tests to witness the exclusion behavior is non-normative execution evidence,
+not a Counterfactual artifact reference.
 
 ## 15. Initial challenge registry
 
