@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "recursive-singleton-aggregate-v0.schema.json",
+  "title": "Accepted Recursive Singleton Aggregate v0",
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "semanticStatementAccepted": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema", "source_entry_schema", "source_entry_ref", "source_entry_content_commitment", "source_admission_state", "fold_policy_commitment", "comparability_class_commitment", "transition_rule_commitment", "singleton_transition_eligibility"],
+      "properties": {
+        "schema": { "const": "chronicle_entry_singleton_semantic_statement.v0" },
+        "source_entry_schema": { "const": "chronicle_entry.v0" },
+        "source_entry_ref": { "type": "string" },
+        "source_entry_content_commitment": { "$ref": "#/$defs/digest" },
+        "source_admission_state": { "const": "chronicle_entry_independently_admitted" },
+        "fold_policy_commitment": { "$ref": "#/$defs/digest" },
+        "comparability_class_commitment": { "$ref": "#/$defs/digest" },
+        "transition_rule_commitment": { "$ref": "#/$defs/digest" },
+        "singleton_transition_eligibility": { "const": "eligible_under_exact_singleton_profile_declarations" }
+      }
+    },
+    "inclusionMemberAccepted": {
+      "type": "object", "additionalProperties": false,
+      "required": ["member_schema", "member_ref", "member_source_entry_content_commitment"],
+      "properties": {
+        "member_schema": { "const": "chronicle_entry.v0" },
+        "member_ref": { "type": "string" },
+        "member_source_entry_content_commitment": { "$ref": "#/$defs/digest" }
+      }
+    },
+    "foldPolicyAccepted": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema", "policy_version", "policy_id", "source_object_schema", "aggregate_object_schema", "member_cardinality", "aggregation_mode", "semantic_elevation", "source_identity_reuse", "multi_member_extension"],
+      "properties": {
+        "schema": { "const": "recursive_singleton_fold_policy.v0" },
+        "policy_version": { "const": "recursive-singleton-fold-policy-v0" },
+        "policy_id": { "const": "singleton-chronicle-entry-semantic-preservation" },
+        "source_object_schema": { "const": "chronicle_entry.v0" },
+        "aggregate_object_schema": { "const": "recursive_singleton_aggregate.v0" },
+        "member_cardinality": { "const": 1 },
+        "aggregation_mode": { "const": "singleton_only" },
+        "semantic_elevation": { "const": "forbidden" },
+        "source_identity_reuse": { "const": "forbidden" },
+        "multi_member_extension": { "const": "deferred" }
+      }
+    },
+    "comparabilityClassAccepted": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema", "class_version", "class_id", "source_object_schema", "admission_required", "cross_entry_comparability", "cross_policy_bridge", "cross_class_bridge", "singleton_eligibility_rule"],
+      "properties": {
+        "schema": { "const": "recursive_singleton_comparability_class.v0" },
+        "class_version": { "const": "recursive-singleton-comparability-class-v0" },
+        "class_id": { "const": "admitted-chronicle-entry-singleton" },
+        "source_object_schema": { "const": "chronicle_entry.v0" },
+        "admission_required": { "const": true },
+        "cross_entry_comparability": { "const": "not_asserted" },
+        "cross_policy_bridge": { "const": "deferred" },
+        "cross_class_bridge": { "const": "deferred" },
+        "singleton_eligibility_rule": { "const": "exactly_one_independently_admitted_source_entry" }
+      }
+    },
+    "transitionRuleAccepted": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema", "rule_version", "rule_id", "source_object_schema", "aggregate_object_schema", "preserved_equality_relation", "source_identity_reuse", "stronger_class_creation", "fail_closed_on_malformed_or_unknown_input"],
+      "properties": {
+        "schema": { "const": "recursive_singleton_transition_rule.v0" },
+        "rule_version": { "const": "recursive-singleton-transition-rule-v0" },
+        "rule_id": { "const": "semantic_result_preserving_singleton_identity_transition" },
+        "source_object_schema": { "const": "chronicle_entry.v0" },
+        "aggregate_object_schema": { "const": "recursive_singleton_aggregate.v0" },
+        "preserved_equality_relation": { "const": "semantic_result_commitment_equality_only" },
+        "source_identity_reuse": { "const": "forbidden" },
+        "stronger_class_creation": { "const": "forbidden" },
+        "fail_closed_on_malformed_or_unknown_input": { "const": true }
+      }
+    },
+    "breakdownAccepted": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema", "source_entry_ref", "source_entry_content_commitment", "source_admission_prerequisite", "inclusion_decision", "exclusion_decision", "comparability_evaluation", "policy_evaluation", "transition_input", "transition_output", "no_elevation_finding"],
+      "properties": {
+        "schema": { "const": "recursive_singleton_breakdown.v0" },
+        "source_entry_ref": { "type": "string" },
+        "source_entry_content_commitment": { "$ref": "#/$defs/digest" },
+        "source_admission_prerequisite": { "const": "chronicle_entry_independently_admitted" },
+        "inclusion_decision": { "const": "included" },
+        "exclusion_decision": { "const": "none" },
+        "comparability_evaluation": { "const": "singleton_class_eligible" },
+        "policy_evaluation": { "const": "singleton_policy_eligible" },
+        "transition_input": { "type": "object", "additionalProperties": false, "required": ["semantic_result_commitment"], "properties": { "semantic_result_commitment": { "$ref": "#/$defs/digest" } } },
+        "transition_output": { "type": "object", "additionalProperties": false, "required": ["semantic_result_commitment"], "properties": { "semantic_result_commitment": { "$ref": "#/$defs/digest" } } },
+        "no_elevation_finding": { "const": "no_stronger_semantic_class_created" }
+      }
+    },
+    "transitionAccepted": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "semantic_equivalence_result", "source_identity_reuse_result", "stronger_semantic_class_creation_result"],
+      "properties": {
+        "status": { "const": "singleton_transition_ok" },
+        "semantic_equivalence_result": { "const": "semantic_result_commitment_preserved" },
+        "source_identity_reuse_result": { "const": "source_identity_not_reused" },
+        "stronger_semantic_class_creation_result": { "const": "no_stronger_semantic_class_created" }
+      }
+    }
+  },
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "profile_version", "aggregate_id", "source_entry_ref", "source_entry_content_commitment", "semantic_statement", "semantic_result_commitment", "canonical_inclusion_set", "inclusion_set_commitment", "fold_policy_declaration", "fold_policy_commitment", "comparability_class_declaration", "comparability_class_commitment", "transition_rule_declaration", "transition_rule_commitment", "pre_aggregation_breakdown", "pre_aggregation_breakdown_commitment", "transition_result", "no_stronger_semantic_class_created", "profile_local_notes"],
+  "properties": {
+    "schema": { "const": "recursive_singleton_aggregate.v0" },
+    "profile_version": { "const": "recursive-singleton-fold-profile-v0" },
+    "aggregate_id": { "$ref": "#/$defs/digest" },
+    "source_entry_ref": { "type": "string" },
+    "source_entry_content_commitment": { "$ref": "#/$defs/digest" },
+    "semantic_statement": { "$ref": "#/$defs/semanticStatementAccepted" },
+    "semantic_result_commitment": { "$ref": "#/$defs/digest" },
+    "canonical_inclusion_set": { "type": "array", "minItems": 1, "maxItems": 1, "items": { "$ref": "#/$defs/inclusionMemberAccepted" } },
+    "inclusion_set_commitment": { "$ref": "#/$defs/digest" },
+    "fold_policy_declaration": { "$ref": "#/$defs/foldPolicyAccepted" },
+    "fold_policy_commitment": { "$ref": "#/$defs/digest" },
+    "comparability_class_declaration": { "$ref": "#/$defs/comparabilityClassAccepted" },
+    "comparability_class_commitment": { "$ref": "#/$defs/digest" },
+    "transition_rule_declaration": { "$ref": "#/$defs/transitionRuleAccepted" },
+    "transition_rule_commitment": { "$ref": "#/$defs/digest" },
+    "pre_aggregation_breakdown": { "$ref": "#/$defs/breakdownAccepted" },
+    "pre_aggregation_breakdown_commitment": { "$ref": "#/$defs/digest" },
+    "transition_result": { "$ref": "#/$defs/transitionAccepted" },
+    "no_stronger_semantic_class_created": { "const": true },
+    "profile_local_notes": { "type": ["string", "null"] }
+  }
+}

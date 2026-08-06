@@ -1,0 +1,20 @@
+{
+  "generator": "python-independent-rsf-v0",
+  "mode": "independent_reconstruction",
+  "vector_count": 34,
+  "package_inventory_count": 40,
+  "fixture_set_sha256": "4549d3b58290d5eb79c285902f8fd91b99c8b6ffaee357d960754189bd5ab194",
+  "canonicalizer": "local recursive JSON canonicalizer; no production imports",
+  "v_ok": {
+    "source_entry_content_commitment": "sha256:64bbd7dab6869b9a71f810c5b3d6decaa7db6f076c245da7613ad40033937515",
+    "semantic_result_commitment": "sha256:f707bc77cc29bb10c7dea5b109cf30bd932c7f80447b4f3c1ebf0bba68e29d5c",
+    "inclusion_set_commitment": "sha256:c70950b712a5541c047a10a43215e62bc6f65aeb765ce0ccb59845c38f1b9bd5",
+    "fold_policy_commitment": "sha256:9c9617921b764cbdea0d2674e397a8a687e28a4a8f25ea4056515a1175b5455f",
+    "comparability_class_commitment": "sha256:7a11e0f99232c5a0c41823551ca43064becd870b8f6abb941fc8820b57f088ed",
+    "transition_rule_commitment": "sha256:d5fa45fb6ab73c58d14a635d3ba7b899d653a73a133360b8e7ca7e530cfee25c",
+    "pre_aggregation_breakdown_commitment": "sha256:3b19cbf73497dec39c7a9dca633d5de0dde5eba7e98e4b13af8000c0ca6239cf",
+    "aggregate_id": "sha256:c3ed79e0644b757335320ab15ca10973349e43fa9d2e7e38d4bceb9cb7a24b85",
+    "aggregate_bytes_sha256": "5da22c96a5cc36930100ce3a78f72c75f632d71246a2a5c3d59f69965ac38fb8",
+    "envelope_bytes_sha256": "feaec941cc246f1bef2e3f419f3951a66dddcaa1308d74bb4b0decbba1fe490e"
+  }
+}
