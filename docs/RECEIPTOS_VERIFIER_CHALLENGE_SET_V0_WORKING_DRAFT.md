@@ -329,6 +329,53 @@ At the same time, this design draft does not freeze any vector bytes or challeng
 
 The repository's existing byte-pinning discipline is relevant here, especially around Git-index-byte verification and manifest-bound artifact integrity. But this draft does not define a manifest or package format for the future challenge set.
 
+### 14.1 Normative `audit_timestamp` metadata boundary
+
+The following repository boundary is normative for any Counterfactual artifact
+or review manifest that permits an `audit_timestamp`, even though this document
+does not otherwise freeze a challenge schema, manifest format, or identity
+formula:
+
+`audit_timestamp` is non-semantic audit metadata.
+
+It MUST be outside the semantic artifact object. It MUST NOT participate in
+canonical semantic bytes, artifact identity, digest or external-reference
+derivation, equality or conformance comparison, mutation semantics,
+challenge-set semantics, or verifier-profile semantics. Its presence, absence,
+or value MUST NOT change the semantic artifact reference or conformance result
+of the artifact it accompanies.
+
+A validator MUST reject, before any future profile-defined canonicalization,
+any semantic artifact object that contains a property named `audit_timestamp`
+at any depth. It MUST NOT silently strip that property from an object already
+presented as semantic input. Enforcement constructs a fresh strict-JSON
+snapshot by descriptor inspection, deterministic key traversal, and exactly
+one capture of each accepted data-property value. No downstream operation may
+reread the caller-owned input. Review or packaging tooling keeps the enclosing
+manifest and its audit metadata outside the semantic snapshot.
+
+This exclusion does not make timestamp-bearing manifest files byte-stable. If
+the serialized bytes of a review or packaging manifest include
+`audit_timestamp`, those exact file bytes include its key and value. Changing or
+removing it may therefore change that manifest file's byte hash and any package
+inventory entry that honestly hashes the file. Such a byte-hash change does not
+change the semantic identity of the artifact described by the manifest.
+
+The reusable enforcement helpers are
+`snapshotCounterfactualSemanticJson` and
+`computeCounterfactualManifestFileSha256` in
+`src/receiptos/challenge/counterfactual-audit-boundary.ts`. A manifest string is
+encoded as UTF-8 exactly once before file-byte hashing; a `Uint8Array` is hashed
+as the exact supplied bytes.
+
+This repository rule freezes only the reserved-field exclusion boundary, the
+strict JSON snapshot boundary used to enforce that exclusion, and the exact
+raw manifest-byte hashing rule. It does not define or freeze challenge
+canonicalization, semantic artifact identity, `subject_bundle_root`,
+verifier-profile identity, or challenge-set identity. Any digest used only by
+tests to witness the exclusion behavior is non-normative execution evidence,
+not a Counterfactual artifact reference.
+
 ## 15. Initial challenge registry
 
 The future challenge set is likely to begin with a small registry aligned with the strongest current seams in the repository.
