@@ -13,6 +13,7 @@ const vectors=Object.fromEntries(vectorNames.map(name=>[name,json(`${pkg}/vector
 const schemaNames=["recursive-singleton-fold-stage-input-v0.schema.json","recursive-singleton-aggregate-v0.schema.json","recursive-singleton-fold-evaluation-v0.schema.json","recursive-singleton-fold-finding-v0.schema.json"]
 const registry:Registry=Object.fromEntries(schemaNames.map(name=>[name,json(`src/receiptos/schemas/${name}`)]))
 const contract=json(`${pkg}/contract.json`)
+const frozenNormativeMerge="985eee7d14d93589585d4d9364a1563b81684564"
 
 describe("RSF positions 18-28 normative closure",()=>{
   test("Git-index package audit is read-only and independently reconstructs every result",()=>{
@@ -119,9 +120,9 @@ describe("RSF positions 18-28 normative closure",()=>{
   })
 
   test("diff remains normative-only with no evaluator/runtime/export path",()=>{
-    const result=resolveChangedPathEvidence(root,contract.canonical_base,contract.changed_path_policy)
+    const result=resolveChangedPathEvidence(root,contract.canonical_base,contract.changed_path_policy,process.env,frozenNormativeMerge)
     expect(result.paths).toEqual([...contract.changed_path_policy.exact_paths].sort())
-    expect(["github-event-two-tree-diff","existing-two-tree-diff","pinned-changed-path-inventory"]).toContain(result.source)
+    expect(result.source).toBe("frozen-two-tree-diff")
   })
 
   test("runtime-blob evidence is exact-byte, topology-independent, and fail-closed",()=>{
