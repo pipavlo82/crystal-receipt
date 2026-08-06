@@ -9,7 +9,7 @@
       "schema": "recursive_singleton_fold_source_admission_bundle.v0",
       "bundle_version": "recursive-singleton-fold-source-admission-bundle-v0",
       "admission_profile_id": "receiptos-chronicle-admission-v0",
-      "admission_fixture_set_sha256": "ff35ca7a2ef40670c9b08bdbb6838dc675a97f920f3824a6033e9709be639f1d",
+      "admission_fixture_set_sha256": "ff35ca8ae5cef10009479d50c10e111869875f6f62fb9d6bcb00f5aa5a1b4b4f",
       "source_evidence": {
         "schema": "stealth.session.evidence.v1",
         "session_id": "session-demo-001",

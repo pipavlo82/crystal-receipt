@@ -6,12 +6,14 @@
 §17.4 and the reference package §12.1 is normative and frozen as an
 implementation contract. The profile outside that narrow exception remains a
 working draft, and no positions 18–28 production evaluator is implemented.
+The adopted package uses dependency model A: its four schemas are direct
+Git-index/blob manifest members rather than mutable external dependencies.
 
 **Classification:**
 
 - non-core candidate executable profile;
 - working draft;
-- not yet frozen;
+- not yet frozen outside the adopted positions 18–28 exception;
 - not yet a conformance standard;
 - not a ReceiptOS validity rule;
 - not a Chronicle schema change;
