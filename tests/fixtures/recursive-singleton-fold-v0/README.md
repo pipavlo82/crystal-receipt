@@ -11,3 +11,9 @@ repository-relative artifacts: this README, `contract.json`, four schemas, and
 `<repository-path>\t<file-sha256>\n` records and excludes the manifest itself.
 Semantic commitments hash canonical JSON, never file or checkout bytes.
 Verification is read-only; only `--generate` intentionally writes artifacts.
+
+`contract.json` is the sole machine-readable authority for vector execution
+classes. Exactly 32 vectors use the public complete entrypoint, V-28A1 uses the
+stage-continuation invariant seam, and V-GIT is package-integrity-only. Equal
+public `input` and `stage_input` bytes always imply equal canonical public
+evaluation bytes; fixture-only continuation data cannot change that result.

@@ -1,36 +1,274 @@
 [
-  { "vector_id": "V-18M", "prefix_result": "success", "stage_boundary_reached": true, "first_expected_position": 18, "intentionally_earlier": false },
-  { "vector_id": "V-18P", "prefix_result": "success", "stage_boundary_reached": true, "first_expected_position": 18, "intentionally_earlier": false },
-  { "vector_id": "V-19", "prefix_result": "success", "stage_boundary_reached": true, "first_expected_position": 19, "intentionally_earlier": false },
-  { "vector_id": "V-20A", "prefix_result": "success", "stage_boundary_reached": true, "first_expected_position": 20, "intentionally_earlier": false },
-  { "vector_id": "V-20B", "prefix_result": "success", "stage_boundary_reached": true, "first_expected_position": 20, "intentionally_earlier": false },
-  { "vector_id": "V-21A", "prefix_result": "success", "stage_boundary_reached": true, "first_expected_position": 21, "intentionally_earlier": false },
-  { "vector_id": "V-21B", "prefix_result": "success", "stage_boundary_reached": true, "first_expected_position": 21, "intentionally_earlier": false },
-  { "vector_id": "V-22", "prefix_result": "success", "stage_boundary_reached": true, "first_expected_position": 22, "intentionally_earlier": false },
-  { "vector_id": "V-23A", "prefix_result": "success", "stage_boundary_reached": true, "first_expected_position": 23, "intentionally_earlier": false },
-  { "vector_id": "V-23B", "prefix_result": "success", "stage_boundary_reached": true, "first_expected_position": 23, "intentionally_earlier": false },
-  { "vector_id": "V-23C", "prefix_result": "success", "stage_boundary_reached": true, "first_expected_position": 23, "intentionally_earlier": false },
-  { "vector_id": "V-24", "prefix_result": "success", "stage_boundary_reached": true, "first_expected_position": 24, "intentionally_earlier": false },
-  { "vector_id": "V-25", "prefix_result": "success", "stage_boundary_reached": true, "first_expected_position": 25, "intentionally_earlier": false },
-  { "vector_id": "V-26A", "prefix_result": "success", "stage_boundary_reached": true, "first_expected_position": 26, "intentionally_earlier": false },
-  { "vector_id": "V-26B", "prefix_result": "success", "stage_boundary_reached": true, "first_expected_position": 26, "intentionally_earlier": false },
-  { "vector_id": "V-27", "prefix_result": "success", "stage_boundary_reached": true, "first_expected_position": 27, "intentionally_earlier": false },
-  { "vector_id": "V-28A1", "prefix_result": "success", "stage_boundary_reached": true, "first_expected_position": 28, "intentionally_earlier": false },
-  { "vector_id": "V-28A2", "prefix_result": "success", "stage_boundary_reached": true, "first_expected_position": 28, "intentionally_earlier": false },
-  { "vector_id": "V-28B", "prefix_result": "success", "stage_boundary_reached": true, "first_expected_position": 28, "intentionally_earlier": false },
-  { "vector_id": "V-ADM", "prefix_result": "success", "stage_boundary_reached": true, "first_expected_position": 18, "intentionally_earlier": false },
-  { "vector_id": "V-ESCAPE", "prefix_result": "success", "stage_boundary_reached": true, "first_expected_position": null, "intentionally_earlier": false },
-  { "vector_id": "V-FALL", "prefix_result": "success", "stage_boundary_reached": true, "first_expected_position": 24, "intentionally_earlier": false },
-  { "vector_id": "V-GIT", "prefix_result": "success", "stage_boundary_reached": true, "first_expected_position": null, "intentionally_earlier": false },
-  { "vector_id": "V-INSERT", "prefix_result": "success", "stage_boundary_reached": true, "first_expected_position": null, "intentionally_earlier": false },
-  { "vector_id": "V-LABEL", "prefix_result": "success", "stage_boundary_reached": true, "first_expected_position": 24, "intentionally_earlier": false },
-  { "vector_id": "V-MAL-REJ", "prefix_result": "success", "stage_boundary_reached": true, "first_expected_position": 18, "intentionally_earlier": false },
-  { "vector_id": "V-MUTATE", "prefix_result": "success", "stage_boundary_reached": true, "first_expected_position": null, "intentionally_earlier": false },
-  { "vector_id": "V-NOPROOF", "prefix_result": "success", "stage_boundary_reached": true, "first_expected_position": 18, "intentionally_earlier": false },
-  { "vector_id": "V-OK", "prefix_result": "success", "stage_boundary_reached": true, "first_expected_position": null, "intentionally_earlier": false },
-  { "vector_id": "V-ORDER", "prefix_result": "success", "stage_boundary_reached": true, "first_expected_position": 20, "intentionally_earlier": false },
-  { "vector_id": "V-REPLAY", "prefix_result": "success", "stage_boundary_reached": true, "first_expected_position": null, "intentionally_earlier": false },
-  { "vector_id": "V-SCALAR", "prefix_result": "success", "stage_boundary_reached": true, "first_expected_position": 28, "intentionally_earlier": false },
-  { "vector_id": "V-TIME", "prefix_result": "success", "stage_boundary_reached": true, "first_expected_position": 19, "intentionally_earlier": false },
-  { "vector_id": "V-UNVER", "prefix_result": "source_admission_prerequisite_unavailable@8", "stage_boundary_reached": false, "first_expected_position": 8, "intentionally_earlier": true }
+  {
+    "vector_id": "V-18M",
+    "prefix_result": "success",
+    "stage_boundary_reached": true,
+    "first_expected_position": 18,
+    "intentionally_earlier": false,
+    "execution_class": "public-complete-entrypoint"
+  },
+  {
+    "vector_id": "V-18P",
+    "prefix_result": "success",
+    "stage_boundary_reached": true,
+    "first_expected_position": 18,
+    "intentionally_earlier": false,
+    "execution_class": "public-complete-entrypoint"
+  },
+  {
+    "vector_id": "V-19",
+    "prefix_result": "success",
+    "stage_boundary_reached": true,
+    "first_expected_position": 19,
+    "intentionally_earlier": false,
+    "execution_class": "public-complete-entrypoint"
+  },
+  {
+    "vector_id": "V-20A",
+    "prefix_result": "success",
+    "stage_boundary_reached": true,
+    "first_expected_position": 20,
+    "intentionally_earlier": false,
+    "execution_class": "public-complete-entrypoint"
+  },
+  {
+    "vector_id": "V-20B",
+    "prefix_result": "success",
+    "stage_boundary_reached": true,
+    "first_expected_position": 20,
+    "intentionally_earlier": false,
+    "execution_class": "public-complete-entrypoint"
+  },
+  {
+    "vector_id": "V-21A",
+    "prefix_result": "success",
+    "stage_boundary_reached": true,
+    "first_expected_position": 21,
+    "intentionally_earlier": false,
+    "execution_class": "public-complete-entrypoint"
+  },
+  {
+    "vector_id": "V-21B",
+    "prefix_result": "success",
+    "stage_boundary_reached": true,
+    "first_expected_position": 21,
+    "intentionally_earlier": false,
+    "execution_class": "public-complete-entrypoint"
+  },
+  {
+    "vector_id": "V-22",
+    "prefix_result": "success",
+    "stage_boundary_reached": true,
+    "first_expected_position": 22,
+    "intentionally_earlier": false,
+    "execution_class": "public-complete-entrypoint"
+  },
+  {
+    "vector_id": "V-23A",
+    "prefix_result": "success",
+    "stage_boundary_reached": true,
+    "first_expected_position": 23,
+    "intentionally_earlier": false,
+    "execution_class": "public-complete-entrypoint"
+  },
+  {
+    "vector_id": "V-23B",
+    "prefix_result": "success",
+    "stage_boundary_reached": true,
+    "first_expected_position": 23,
+    "intentionally_earlier": false,
+    "execution_class": "public-complete-entrypoint"
+  },
+  {
+    "vector_id": "V-23C",
+    "prefix_result": "success",
+    "stage_boundary_reached": true,
+    "first_expected_position": 23,
+    "intentionally_earlier": false,
+    "execution_class": "public-complete-entrypoint"
+  },
+  {
+    "vector_id": "V-24",
+    "prefix_result": "success",
+    "stage_boundary_reached": true,
+    "first_expected_position": 24,
+    "intentionally_earlier": false,
+    "execution_class": "public-complete-entrypoint"
+  },
+  {
+    "vector_id": "V-25",
+    "prefix_result": "success",
+    "stage_boundary_reached": true,
+    "first_expected_position": 25,
+    "intentionally_earlier": false,
+    "execution_class": "public-complete-entrypoint"
+  },
+  {
+    "vector_id": "V-26A",
+    "prefix_result": "success",
+    "stage_boundary_reached": true,
+    "first_expected_position": 26,
+    "intentionally_earlier": false,
+    "execution_class": "public-complete-entrypoint"
+  },
+  {
+    "vector_id": "V-26B",
+    "prefix_result": "success",
+    "stage_boundary_reached": true,
+    "first_expected_position": 26,
+    "intentionally_earlier": false,
+    "execution_class": "public-complete-entrypoint"
+  },
+  {
+    "vector_id": "V-27",
+    "prefix_result": "success",
+    "stage_boundary_reached": true,
+    "first_expected_position": 27,
+    "intentionally_earlier": false,
+    "execution_class": "public-complete-entrypoint"
+  },
+  {
+    "vector_id": "V-28A1",
+    "prefix_result": "success",
+    "stage_boundary_reached": true,
+    "first_expected_position": 28,
+    "intentionally_earlier": false,
+    "execution_class": "stage-continuation-invariant"
+  },
+  {
+    "vector_id": "V-28A2",
+    "prefix_result": "success",
+    "stage_boundary_reached": true,
+    "first_expected_position": 28,
+    "intentionally_earlier": false,
+    "execution_class": "public-complete-entrypoint"
+  },
+  {
+    "vector_id": "V-28B",
+    "prefix_result": "success",
+    "stage_boundary_reached": true,
+    "first_expected_position": 28,
+    "intentionally_earlier": false,
+    "execution_class": "public-complete-entrypoint"
+  },
+  {
+    "vector_id": "V-ADM",
+    "prefix_result": "success",
+    "stage_boundary_reached": true,
+    "first_expected_position": 18,
+    "intentionally_earlier": false,
+    "execution_class": "public-complete-entrypoint"
+  },
+  {
+    "vector_id": "V-ESCAPE",
+    "prefix_result": "success",
+    "stage_boundary_reached": true,
+    "first_expected_position": null,
+    "intentionally_earlier": false,
+    "execution_class": "public-complete-entrypoint"
+  },
+  {
+    "vector_id": "V-FALL",
+    "prefix_result": "success",
+    "stage_boundary_reached": true,
+    "first_expected_position": 24,
+    "intentionally_earlier": false,
+    "execution_class": "public-complete-entrypoint"
+  },
+  {
+    "vector_id": "V-GIT",
+    "prefix_result": "success",
+    "stage_boundary_reached": true,
+    "first_expected_position": null,
+    "intentionally_earlier": false,
+    "execution_class": "package-integrity-only"
+  },
+  {
+    "vector_id": "V-INSERT",
+    "prefix_result": "success",
+    "stage_boundary_reached": true,
+    "first_expected_position": null,
+    "intentionally_earlier": false,
+    "execution_class": "public-complete-entrypoint"
+  },
+  {
+    "vector_id": "V-LABEL",
+    "prefix_result": "success",
+    "stage_boundary_reached": true,
+    "first_expected_position": 24,
+    "intentionally_earlier": false,
+    "execution_class": "public-complete-entrypoint"
+  },
+  {
+    "vector_id": "V-MAL-REJ",
+    "prefix_result": "success",
+    "stage_boundary_reached": true,
+    "first_expected_position": 18,
+    "intentionally_earlier": false,
+    "execution_class": "public-complete-entrypoint"
+  },
+  {
+    "vector_id": "V-MUTATE",
+    "prefix_result": "success",
+    "stage_boundary_reached": true,
+    "first_expected_position": null,
+    "intentionally_earlier": false,
+    "execution_class": "public-complete-entrypoint"
+  },
+  {
+    "vector_id": "V-NOPROOF",
+    "prefix_result": "success",
+    "stage_boundary_reached": true,
+    "first_expected_position": 18,
+    "intentionally_earlier": false,
+    "execution_class": "public-complete-entrypoint"
+  },
+  {
+    "vector_id": "V-OK",
+    "prefix_result": "success",
+    "stage_boundary_reached": true,
+    "first_expected_position": null,
+    "intentionally_earlier": false,
+    "execution_class": "public-complete-entrypoint"
+  },
+  {
+    "vector_id": "V-ORDER",
+    "prefix_result": "success",
+    "stage_boundary_reached": true,
+    "first_expected_position": 20,
+    "intentionally_earlier": false,
+    "execution_class": "public-complete-entrypoint"
+  },
+  {
+    "vector_id": "V-REPLAY",
+    "prefix_result": "success",
+    "stage_boundary_reached": true,
+    "first_expected_position": null,
+    "intentionally_earlier": false,
+    "execution_class": "public-complete-entrypoint"
+  },
+  {
+    "vector_id": "V-SCALAR",
+    "prefix_result": "success",
+    "stage_boundary_reached": true,
+    "first_expected_position": 28,
+    "intentionally_earlier": false,
+    "execution_class": "public-complete-entrypoint"
+  },
+  {
+    "vector_id": "V-TIME",
+    "prefix_result": "success",
+    "stage_boundary_reached": true,
+    "first_expected_position": 19,
+    "intentionally_earlier": false,
+    "execution_class": "public-complete-entrypoint"
+  },
+  {
+    "vector_id": "V-UNVER",
+    "prefix_result": "source_admission_prerequisite_unavailable@8",
+    "stage_boundary_reached": false,
+    "first_expected_position": 8,
+    "intentionally_earlier": true,
+    "execution_class": "public-complete-entrypoint"
+  }
 ]

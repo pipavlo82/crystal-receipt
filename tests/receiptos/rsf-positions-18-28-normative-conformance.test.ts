@@ -66,7 +66,8 @@ describe("RSF positions 18-28 normative closure",()=>{
       if (intentional) expect(prefix).toMatchObject({success:false,finding:{code:"source_admission_prerequisite_unavailable",check_position:8}})
       else expect(prefix.success).toBe(true)
       report.push({vector_id:name,prefix_result:prefix.success?"success":`${prefix.finding.code}@${prefix.finding.check_position}`,
-        stage_boundary_reached:prefix.success,first_expected_position:vector.expected_check_position,intentionally_earlier:intentional})
+        stage_boundary_reached:prefix.success,first_expected_position:vector.expected_check_position,intentionally_earlier:intentional,
+        execution_class:contract.vector_execution_classes.vectors[name].execution_class})
     }
     expect(report.sort((a,b)=>a.vector_id.localeCompare(b.vector_id))).toEqual(json("conformance/recursive-singleton-fold-v0/reachability-report.json"))
   })
@@ -102,6 +103,30 @@ describe("RSF positions 18-28 normative closure",()=>{
     expect(contract.position_28_remaining_fields.map((x:any)=>x.field)).toEqual(["schema","profile_version","aggregate_id","source_entry_ref","semantic_statement","semantic_result_commitment","canonical_inclusion_set","inclusion_set_commitment","fold_policy_declaration","fold_policy_commitment","comparability_class_declaration","comparability_class_commitment","transition_rule_declaration","transition_rule_commitment","pre_aggregation_breakdown","pre_aggregation_breakdown_commitment","transition_result","no_stronger_semantic_class_created","profile_local_notes"])
   })
 
+  test("all vectors have one closed execution class and public determinism cannot be changed by fixture-only continuation",()=>{
+    const section=contract.vector_execution_classes, table=section.vectors
+    expect(section.allowed).toEqual(["public-complete-entrypoint","stage-continuation-invariant","package-integrity-only"])
+    expect(Object.keys(table).sort()).toEqual([...vectorNames].sort())
+    expect(Object.values(table).reduce((counts:any,item:any)=>({...counts,[item.execution_class]:(counts[item.execution_class]??0)+1}),{})).toEqual({
+      "public-complete-entrypoint":32,"stage-continuation-invariant":1,"package-integrity-only":1})
+    expect(Object.entries(table).filter(([,item]:any)=>item.execution_class==="stage-continuation-invariant").map(([id])=>id)).toEqual(["V-28A1"])
+    expect(Object.entries(table).filter(([,item]:any)=>item.execution_class==="package-integrity-only").map(([id])=>id)).toEqual(["V-GIT"])
+    expect(table["V-28A1"]).toEqual({execution_class:"stage-continuation-invariant",public_input_representable:false,
+      injected_continuation_field:"prefix_continuation.sourceEntryContentCommitment",
+      fresh_recomputation_source:"canonical_json_utf8_sha256(prefix_continuation.sourceEntry)",owned_position:28,owned_subcheck:"28a.1",
+      non_public_reason:"The public evaluator recomputes the position-14 commitment from raw input and accepts no caller-supplied prefix continuation; V-28A1 and V-OK therefore have byte-identical public arguments.",
+      expected_finding:{code:"source_entry_content_commitment_mismatch",check_position:28}})
+    expect(canonical(vectors["V-OK"].input)).toBe(canonical(vectors["V-28A1"].input))
+    expect(canonical(vectors["V-OK"].stage_input)).toBe(canonical(vectors["V-28A1"].stage_input))
+    expect(vectors["V-28A1"].expected_evaluation).toMatchObject({evaluation_state:"evaluated",profile_verdict:"rejected",aggregate:null,
+      finding:{code:"source_entry_content_commitment_mismatch",check_position:28}})
+    expect(table["V-28A2"]).toEqual({execution_class:"public-complete-entrypoint",owned_position:28,owned_subcheck:"28a.2",
+      public_operand_field:"stage_input.candidate_aggregate.source_entry_content_commitment",
+      expected_finding:{code:"source_entry_content_commitment_mismatch",check_position:28}})
+    expect(section.public_determinism_rule).toContain("Byte-identical public input and stage_input arguments MUST produce byte-identical canonical evaluation bytes")
+    expect(section.expected_evaluation_set_sha256).toBe("ecc1f4072e635c913343e017c59eb74094290537fe16c6b4e8a85fb5e36e6531")
+  })
+
   test("finding map is exact and positions 18-28 add no unverifiable code",()=>{
     const findingSchema=registry[schemaNames[3]], codes=findingSchema.properties.code.enum as string[]
     expect(codes.filter(code=>code.includes("unverifiable") && Object.keys(contract.finding_position_map).includes(code))).toEqual([])
@@ -117,6 +142,24 @@ describe("RSF positions 18-28 normative closure",()=>{
     expect(Object.keys(contract.positions_1_17_runtime_blobs)).toHaveLength(6)
     const result=verifyPinnedRuntimeBlobs(contract.positions_1_17_runtime_blobs,filesystemRuntimeEvidence(root))
     expect(result).toEqual({source:"git-index-blob",paths:Object.keys(contract.positions_1_17_runtime_blobs).sort()})
+  })
+
+  test("the public API and production evaluator architecture are byte-identical to the production merge",()=>{
+    expect(Object.keys(contract.production_architecture_blobs)).toHaveLength(4)
+    expect(verifyPinnedRuntimeBlobs(contract.production_architecture_blobs,filesystemRuntimeEvidence(root))).toEqual({
+      source:"git-index-blob",paths:Object.keys(contract.production_architecture_blobs).sort()})
+  })
+
+  test("the F-02 amendment has a closed normative/test/conformance-only path inventory",()=>{
+    const scope=contract.f02_normative_amendment_scope, paths=Object.keys(scope.paths)
+    expect(scope.base).toBe("d3bc93ffdf5e13ed56d988634afcdde943966058")
+    expect(paths).toHaveLength(13)
+    expect(scope.only_allowed_production_related_test).toBe("tests/receiptos/rsf-positions-18-through-28.test.ts")
+    expect(scope.production_source_forbidden).toBe(true)
+    expect(paths.filter((path:string)=>path.startsWith("src/")||path.startsWith(".github/")||path.includes("package.json"))).toEqual([])
+    expect(new Set(Object.values(scope.paths))).toEqual(new Set(["audit_record","independent_audit","independent_generator","generator_record",
+      "reachability_and_classification_record","normative_document","fixture_readme","normative_contract_metadata","fixture_manifest",
+      "normative_conformance_test","production_conformance_test"]))
   })
 
   test("diff remains normative-only with no evaluator/runtime/export path",()=>{
@@ -184,7 +227,7 @@ describe("RSF positions 18-28 normative closure",()=>{
     expect(validateSchema(impossible,registry[schemaNames[1]],registry).length).toBeGreaterThan(0) // accepted impossible literal
     expect(Object.keys(vectors)).toHaveLength(34) // missing vector
     const manifest=json(`${pkg}/manifest.json`)
-    expect(manifest.fixture_set_sha256).toBe("4549d3b58290d5eb79c285902f8fd91b99c8b6ffaee357d960754189bd5ab194") // wrong digest
+    expect(manifest.fixture_set_sha256).toBe("879e0caa5d26643755b5a0e4b8836f0215dec3463cb1fa9ab44a82aefe618ee7") // wrong digest
     expect(contract.position_24_descriptor.forbidden_inputs).toContain("candidate_boolean") // candidate boolean as proof
     expect(contract.position_28_remaining_fields[16].field).toBe("transition_result") // position-28 order swap
     expect(inspectImports({"x.ts":'import x from "../../src/receiptos/rsf/evaluate-positions-18"'}).violations.length).toBeGreaterThan(0) // production import

@@ -3,8 +3,15 @@
   "mode": "independent_reconstruction",
   "vector_count": 34,
   "package_inventory_count": 40,
-  "fixture_set_sha256": "4549d3b58290d5eb79c285902f8fd91b99c8b6ffaee357d960754189bd5ab194",
+  "fixture_set_sha256": "879e0caa5d26643755b5a0e4b8836f0215dec3463cb1fa9ab44a82aefe618ee7",
   "canonicalizer": "local recursive JSON canonicalizer; no production imports",
+  "execution_class_counts": {
+    "public-complete-entrypoint": 32,
+    "stage-continuation-invariant": 1,
+    "package-integrity-only": 1
+  },
+  "public_determinism_checks": 32,
+  "v_ok_v_28a1_public_arguments_byte_identical": true,
   "v_ok": {
     "source_entry_content_commitment": "sha256:64bbd7dab6869b9a71f810c5b3d6decaa7db6f076c245da7613ad40033937515",
     "semantic_result_commitment": "sha256:f707bc77cc29bb10c7dea5b109cf30bd932c7f80447b4f3c1ebf0bba68e29d5c",

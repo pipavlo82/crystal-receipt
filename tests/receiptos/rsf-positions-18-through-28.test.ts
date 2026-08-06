@@ -9,6 +9,9 @@ const root=resolve(import.meta.dir,"../..")
 const vectorIds=["V-OK","V-18M","V-18P","V-19","V-20A","V-20B","V-21A","V-21B","V-22","V-23A","V-23B","V-23C","V-24","V-25","V-26A","V-26B","V-27","V-28A1","V-28A2","V-28B","V-ORDER","V-ADM","V-TIME","V-LABEL","V-NOPROOF","V-UNVER","V-MAL-REJ","V-INSERT","V-ESCAPE","V-SCALAR","V-GIT","V-MUTATE","V-REPLAY","V-FALL"] as const
 const read=(path:string)=>JSON.parse(readFileSync(resolve(root,path),"utf8"))
 const vectors=Object.fromEntries(vectorIds.map(id=>[id,read(`tests/fixtures/recursive-singleton-fold-v0/vectors/${id}.json`)])) as Record<typeof vectorIds[number],any>
+const contract=read("tests/fixtures/recursive-singleton-fold-v0/contract.json")
+type ExecutionClass="public-complete-entrypoint"|"stage-continuation-invariant"|"package-integrity-only"
+const executionClassOf=(id:typeof vectorIds[number])=>contract.vector_execution_classes.vectors[id]?.execution_class as ExecutionClass|undefined
 const canonicalBytes=(value:unknown)=>Buffer.from(canonicalize(value),"utf8")
 const prefixOf=(vector:any)=>({
   verifiedSourceEntry:vector.prefix_continuation.sourceEntry,
@@ -24,20 +27,36 @@ const prefixOf=(vector:any)=>({
 
 function executeVector(id:typeof vectorIds[number]) {
   const vector=vectors[id]
-  if(id==="V-UNVER") return evaluateCompleteRsf(vector.input,vector.stage_input)
-  return evaluateCompleteRsfFromPrefix(prefixOf(vector),vector.stage_input)
+  switch(executionClassOf(id)){
+    case "public-complete-entrypoint": return evaluateCompleteRsf(vector.input,vector.stage_input)
+    case "stage-continuation-invariant": return evaluateCompleteRsfFromPrefix(prefixOf(vector),vector.stage_input)
+    case "package-integrity-only": throw new Error(`${id} is package-integrity-only and MUST NOT execute an RSF evaluator`)
+    default: throw new Error(`${id} has no closed execution class`)
+  }
 }
 
 describe("production RSF positions 18 through 28",()=>{
-  test("all frozen semantic vectors execute through production and match exact envelope bytes",()=>{
+  test("the closed execution-class table routes all 34 vectors through exactly one allowed seam",()=>{
     expect(vectorIds).toHaveLength(34)
+    expect(Object.keys(contract.vector_execution_classes.vectors).sort()).toEqual([...vectorIds].sort())
+    expect(contract.vector_execution_classes.allowed).toEqual(["public-complete-entrypoint","stage-continuation-invariant","package-integrity-only"])
+    expect(vectorIds.map(executionClassOf).reduce((counts:Record<string,number>,value)=>({...counts,[value!]:1+(counts[value!]??0)}),{})).toEqual({
+      "public-complete-entrypoint":32,
+      "stage-continuation-invariant":1,
+      "package-integrity-only":1,
+    })
     for(const id of vectorIds){
       const vector=vectors[id]
-      if(id==="V-GIT"){
+      const executionClass=executionClassOf(id)
+      expect(contract.vector_execution_classes.allowed).toContain(executionClass)
+      if(executionClass==="package-integrity-only"){
+        expect(id).toBe("V-GIT")
         expect(vector.expected_state).toBe("not_invoked")
         expect(vector.expected_evaluation).toBeNull()
+        expect(()=>executeVector(id)).toThrow("MUST NOT execute an RSF evaluator")
         continue
       }
+      if(executionClass==="stage-continuation-invariant") expect(id).toBe("V-28A1")
       const actual=executeVector(id)
       expect(canonicalize(actual),id).toBe(canonicalize(vector.expected_evaluation))
       expect(actual.evaluation_state).toBe(vector.expected_state)
@@ -48,6 +67,23 @@ describe("production RSF positions 18 through 28",()=>{
       if(actual.aggregate) expect(canonicalBytes(actual.aggregate)).toEqual(canonicalBytes(vector.expected_evaluation.aggregate))
       else expect(actual.aggregate).toBeNull()
     }
+  })
+
+  test("V-28A1 is a position-28 continuation invariant and cannot change public evaluation",()=>{
+    const ok=vectors["V-OK"], invariant=vectors["V-28A1"], classification=contract.vector_execution_classes.vectors["V-28A1"]
+    expect(classification).toMatchObject({execution_class:"stage-continuation-invariant",public_input_representable:false,
+      injected_continuation_field:"prefix_continuation.sourceEntryContentCommitment",owned_position:28,owned_subcheck:"28a.1",
+      expected_finding:{code:"source_entry_content_commitment_mismatch",check_position:28}})
+    expect(canonicalBytes(invariant.input)).toEqual(canonicalBytes(ok.input))
+    expect(canonicalBytes(invariant.stage_input)).toEqual(canonicalBytes(ok.stage_input))
+    const publicOk=evaluateCompleteRsf(ok.input,ok.stage_input)
+    const publicInvariant=evaluateCompleteRsf(invariant.input,invariant.stage_input)
+    expect(canonicalBytes(publicInvariant)).toEqual(canonicalBytes(publicOk))
+    expect(publicInvariant.profile_verdict).toBe("accepted")
+    const stageInvariant=executeVector("V-28A1")
+    expect(stageInvariant).toMatchObject({evaluation_state:"evaluated",profile_verdict:"rejected",aggregate:null,
+      finding:{code:"source_entry_content_commitment_mismatch",check_position:28}})
+    expect(canonicalBytes(stageInvariant)).toEqual(canonicalBytes(invariant.expected_evaluation))
   })
 
   test("the complete evaluator alone emits exactly the four frozen envelope tuples",()=>{
