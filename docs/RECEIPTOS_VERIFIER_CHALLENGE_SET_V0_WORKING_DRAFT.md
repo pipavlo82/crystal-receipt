@@ -329,6 +329,44 @@ At the same time, this design draft does not freeze any vector bytes or challeng
 
 The repository's existing byte-pinning discipline is relevant here, especially around Git-index-byte verification and manifest-bound artifact integrity. But this draft does not define a manifest or package format for the future challenge set.
 
+### 14.1 Normative `audit_timestamp` metadata boundary
+
+The following repository boundary is normative for any Counterfactual artifact
+or review manifest that permits an `audit_timestamp`, even though this document
+does not otherwise freeze a challenge schema, manifest format, or identity
+formula:
+
+`audit_timestamp` is non-semantic audit metadata.
+
+It MUST be outside the semantic artifact object. It MUST NOT participate in
+canonical semantic bytes, artifact identity, digest or external-reference
+derivation, equality or conformance comparison, mutation semantics,
+challenge-set semantics, or verifier-profile semantics. Its presence, absence,
+or value MUST NOT change the semantic artifact reference or conformance result
+of the artifact it accompanies.
+
+A validator MUST reject, before canonicalization, any semantic artifact object
+that contains a property named `audit_timestamp` at any depth. It MUST NOT
+silently strip that property from an object already presented as semantic
+input. Review or packaging tooling derives a semantic artifact reference only
+from the separately validated semantic artifact object; the enclosing manifest
+and its audit metadata are outside that derivation.
+
+This exclusion does not make timestamp-bearing manifest files byte-stable. If
+the serialized bytes of a review or packaging manifest include
+`audit_timestamp`, those exact file bytes include its key and value. Changing or
+removing it may therefore change that manifest file's byte hash and any package
+inventory entry that honestly hashes the file. Such a byte-hash change does not
+change the semantic identity of the artifact described by the manifest.
+
+The reusable enforcement helpers are
+`validateCounterfactualSemanticArtifact`,
+`computeCounterfactualSemanticArtifactRef`, and
+`computeCounterfactualManifestFileSha256` in
+`src/receiptos/challenge/counterfactual-audit-boundary.ts`. They establish only
+this byte-domain boundary; they do not freeze the open `subject_bundle_root`
+formula or any future challenge-set identity.
+
 ## 15. Initial challenge registry
 
 The future challenge set is likely to begin with a small registry aligned with the strongest current seams in the repository.
