@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "recursive-singleton-fold-evaluation-v0.schema.json",
+  "title": "Recursive Singleton Fold v0 closed evaluation envelope",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "evaluation_state", "profile_verdict", "aggregate", "finding"],
+  "properties": {
+    "schema": { "const": "recursive_singleton_fold_evaluation.v0" },
+    "evaluation_state": { "enum": ["evaluated", "unverifiable", "malformed"] },
+    "profile_verdict": { "type": ["string", "null"] },
+    "aggregate": { "type": ["object", "null"] }, "finding": { "type": ["object", "null"] }
+  },
+  "oneOf": [
+    { "properties": { "evaluation_state": { "const": "evaluated" }, "profile_verdict": { "const": "accepted" }, "aggregate": { "$ref": "recursive-singleton-aggregate-v0.schema.json" }, "finding": { "type": "null" } } },
+    { "properties": { "evaluation_state": { "const": "evaluated" }, "profile_verdict": { "const": "rejected" }, "aggregate": { "type": "null" }, "finding": { "$ref": "recursive-singleton-fold-finding-v0.schema.json" } } },
+    { "properties": { "evaluation_state": { "const": "unverifiable" }, "profile_verdict": { "type": "null" }, "aggregate": { "type": "null" }, "finding": { "$ref": "recursive-singleton-fold-finding-v0.schema.json" } } },
+    { "properties": { "evaluation_state": { "const": "malformed" }, "profile_verdict": { "type": "null" }, "aggregate": { "type": "null" }, "finding": { "$ref": "recursive-singleton-fold-finding-v0.schema.json" } } }
+  ]
+}
