@@ -348,6 +348,12 @@ repository-relative artifacts: this README, `contract.json`, four schemas, and
 `<repository-path>\\t<file-sha256>\\n` records and excludes the manifest itself.
 Semantic commitments hash canonical JSON, never file or checkout bytes.
 Verification is read-only; only `--generate` intentionally writes artifacts.
+
+`contract.json` is the sole machine-readable authority for vector execution
+classes. Exactly 32 vectors use the public complete entrypoint, V-28A1 uses the
+stage-continuation invariant seam, and V-GIT is package-integrity-only. Equal
+public `input` and `stage_input` bytes always imply equal canonical public
+evaluation bytes; fixture-only continuation data cannot change that result.
 """
 
 SCHEMA_PATHS = [
@@ -365,12 +371,75 @@ def package_paths(vectors):
     return sorted(SCHEMA_PATHS + [f"{prefix}/README.md", f"{prefix}/contract.json"] +
                   [f"{prefix}/vectors/{case}.json" for case in vectors], key=lambda x:x.encode("utf-8"))
 
-def result_record(vectors, fixture_hash):
+EXECUTION_CLASSES = ("public-complete-entrypoint", "stage-continuation-invariant", "package-integrity-only")
+
+def derived_execution_class(vector):
+    if vector["expected_evaluation"] is None:
+        return "package-integrity-only"
+    prefix=vector["prefix_continuation"]
+    fresh=digest(prefix["sourceEntry"])
+    if prefix["sourceEntryContentCommitment"] != fresh:
+        return "stage-continuation-invariant"
+    return "public-complete-entrypoint"
+
+def validate_execution_classes(vectors, contract):
+    scope=contract["f02_normative_amendment_scope"]
+    assert scope["base"] == "d3bc93ffdf5e13ed56d988634afcdde943966058"
+    assert len(scope["paths"]) == 13 and not any(path.startswith(("src/",".github/")) for path in scope["paths"])
+    assert scope["only_allowed_production_related_test"] == "tests/receiptos/rsf-positions-18-through-28.test.ts"
+    assert scope["production_source_forbidden"] is True
+    section=contract["vector_execution_classes"]
+    assert tuple(section["allowed"]) == EXECUTION_CLASSES
+    table=section["vectors"]
+    assert set(table) == set(vectors)
+    counts={name:0 for name in EXECUTION_CLASSES}
+    public_results={}
+    for case,vector in vectors.items():
+        actual=table[case]["execution_class"]
+        expected=derived_execution_class(vector)
+        assert actual == expected, f"{case}: {actual} != mechanically derived {expected}"
+        counts[actual]+=1
+        if actual == "public-complete-entrypoint":
+            public_key=canonical({"input":vector["input"],"stage_input":vector["stage_input"]})
+            result_bytes=canonical(vector["expected_evaluation"])
+            previous=public_results.setdefault(public_key,result_bytes)
+            assert previous == result_bytes, f"{case}: equal public arguments have unequal expected bytes"
+    assert counts == {"public-complete-entrypoint":32,"stage-continuation-invariant":1,"package-integrity-only":1}
+    invariant=table["V-28A1"]
+    assert invariant == {
+        "execution_class":"stage-continuation-invariant",
+        "public_input_representable":False,
+        "injected_continuation_field":"prefix_continuation.sourceEntryContentCommitment",
+        "fresh_recomputation_source":"canonical_json_utf8_sha256(prefix_continuation.sourceEntry)",
+        "non_public_reason":"The public evaluator recomputes the position-14 commitment from raw input and accepts no caller-supplied prefix continuation; V-28A1 and V-OK therefore have byte-identical public arguments.",
+        "owned_position":28,
+        "owned_subcheck":"28a.1",
+        "expected_finding":{"code":"source_entry_content_commitment_mismatch","check_position":28},
+    }
+    assert canonical(vectors["V-OK"]["input"]) == canonical(vectors["V-28A1"]["input"])
+    assert canonical(vectors["V-OK"]["stage_input"]) == canonical(vectors["V-28A1"]["stage_input"])
+    assert vectors["V-28A1"]["expected_evaluation"]["aggregate"] is None
+    assert table["V-28A2"] == {"execution_class":"public-complete-entrypoint","owned_position":28,"owned_subcheck":"28a.2",
+        "public_operand_field":"stage_input.candidate_aggregate.source_entry_content_commitment",
+        "expected_finding":{"code":"source_entry_content_commitment_mismatch","check_position":28}}
+    rows=[]
+    for case in sorted(vectors):
+        expected_hash=hashlib.sha256(canonical(vectors[case]["expected_evaluation"]).encode("utf-8")).hexdigest()
+        rows.append(f"{case}\t{expected_hash}\n")
+    expected_set_hash=hashlib.sha256("".join(rows).encode("utf-8")).hexdigest()
+    assert expected_set_hash == section["expected_evaluation_set_sha256"]
+    return counts
+
+def result_record(vectors, fixture_hash, contract):
+    class_counts=validate_execution_classes(vectors,contract)
     reconstructed = reconstruct_expected(vectors["V-OK"]["prefix_continuation"], vectors["V-OK"]["input"])
     aggregate = reconstructed["aggregate"]
     return {"generator":"python-independent-rsf-v0","mode":"independent_reconstruction",
             "vector_count":len(vectors),"package_inventory_count":40,"fixture_set_sha256":fixture_hash,
             "canonicalizer":"local recursive JSON canonicalizer; no production imports",
+            "execution_class_counts":class_counts,
+            "public_determinism_checks":32,
+            "v_ok_v_28a1_public_arguments_byte_identical":True,
             "v_ok":{"source_entry_content_commitment":aggregate["source_entry_content_commitment"],
                     "semantic_result_commitment":aggregate["semantic_result_commitment"],
                     "inclusion_set_commitment":aggregate["inclusion_set_commitment"],
@@ -381,6 +450,19 @@ def result_record(vectors, fixture_hash):
                     "aggregate_id":aggregate["aggregate_id"],
                     "aggregate_bytes_sha256":hashlib.sha256(canonical(aggregate).encode("utf-8")).hexdigest(),
                     "envelope_bytes_sha256":hashlib.sha256(canonical(reconstructed["envelope"]).encode("utf-8")).hexdigest()}}
+
+def reachability_record(vectors, contract):
+    rows=[]
+    for case in sorted(vectors):
+        vector=vectors[case]
+        intentional=case == "V-UNVER"
+        rows.append({"vector_id":case,
+            "prefix_result":"source_admission_prerequisite_unavailable@8" if intentional else "success",
+            "stage_boundary_reached":not intentional,
+            "first_expected_position":vector["expected_check_position"],
+            "intentionally_earlier":intentional,
+            "execution_class":contract["vector_execution_classes"]["vectors"][case]["execution_class"]})
+    return rows
 
 def generate():
     VECTORS.mkdir(parents=True, exist_ok=True)
@@ -400,12 +482,15 @@ def generate():
               "fixture_set_sha256":fixture_hash,"manifest_self_excluded":True,
               "path_order":"ascending UTF-8 bytes","byte_domain":"Git-index/blob bytes"}
     (OUT/"manifest.json").write_text(json.dumps(manifest,indent=2)+"\n",encoding="utf-8",newline="\n")
-    result=result_record(vectors, fixture_hash)
+    contract=json.loads(git_index_bytes("tests/fixtures/recursive-singleton-fold-v0/contract.json"))
+    result=result_record(vectors, fixture_hash, contract)
     (Path(__file__).parent/"python-generator-output.json").write_text(json.dumps(result,indent=2)+"\n",encoding="utf-8",newline="\n")
+    (Path(__file__).parent/"reachability-report.json").write_text(json.dumps(reachability_record(vectors,contract),indent=2)+"\n",encoding="utf-8",newline="\n")
     return result
 
 def verify():
     vectors=build_vectors()
+    contract=json.loads(git_index_bytes("tests/fixtures/recursive-singleton-fold-v0/contract.json"))
     manifest=json.loads(git_index_bytes("tests/fixtures/recursive-singleton-fold-v0/manifest.json"))
     expected_paths=package_paths(vectors)
     assert manifest["file_count"] == 40 and [x["path"] for x in manifest["files"]] == expected_paths
@@ -419,7 +504,9 @@ def verify():
     for case, expected in vectors.items():
         actual=json.loads(git_index_bytes(f"tests/fixtures/recursive-singleton-fold-v0/vectors/{case}.json"))
         assert actual == expected, case
-    result=result_record(vectors, fixture_hash)
+    result=result_record(vectors, fixture_hash, contract)
+    committed_reachability=json.loads(git_index_bytes("conformance/recursive-singleton-fold-v0/reachability-report.json"))
+    assert committed_reachability == reachability_record(vectors,contract)
     committed=json.loads(git_index_bytes("conformance/recursive-singleton-fold-v0/python-generator-output.json"))
     assert committed == result
     return result

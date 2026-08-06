@@ -907,8 +907,32 @@ The construction order in §17.4 is the adopted normative mapping to reference
 positions 18–28: policy 18, class 19, input statement 20, inclusion 21,
 identity nonreuse 22, output preservation 23, no-promotion proof 24,
 transition result 25, breakdown 26, aggregate ID 27, and terminal complete
-validation 28. This ordering is normative although the production evaluator
-for these positions remains intentionally absent.
+validation 28. This ordering is normative for the production complete
+evaluator and its internal positions-18-through-28 stage.
+
+Vector conformance uses three closed execution classes recorded authoritatively
+in the fixture `contract.json`. A `public-complete-entrypoint` vector executes
+`evaluateCompleteRsf(input, stage_input)` and may claim only a result fully
+determined by those public arguments. A `stage-continuation-invariant` vector
+executes a canonical or deliberately injected positions-1-through-17
+continuation plus the stage input through the internal composition seam, solely
+to test a stage-owned invariant unavailable on the public raw-input surface. A
+`package-integrity-only` vector executes no evaluator.
+
+The public evaluator recomputes positions 1–17 from raw input and accepts no
+caller-supplied prefix continuation. For a fixed public API version,
+byte-identical public input and stage-input bytes MUST yield byte-identical
+canonical evaluation bytes; no fixture-only continuation or hidden metadata may
+change that result. Internal seam execution MUST be explicitly classified and
+MUST NOT be reported as public complete-entrypoint conformance.
+
+V-28A1 is the single stage-continuation vector. It injects only the stored
+position-14 source-entry commitment and proves position-28 subcheck 28a.1
+against a fresh recomputation. Its expected rejection remains
+`source_entry_content_commitment_mismatch` at position 28 with a null aggregate.
+V-28A2 remains the public candidate-stored-commitment mismatch at 28a.2. Because
+V-28A1 and V-OK have byte-identical public arguments, V-28A1 does not define a
+second public result for those arguments.
 
 The preserved relation is:
 
