@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "recursive-singleton-aggregate-v0.schema.json",
+  "title": "Accepted Recursive Singleton Aggregate v0",
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "closedObject": { "type": "object" }
+  },
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "profile_version", "aggregate_id", "source_entry_ref", "source_entry_content_commitment", "semantic_statement", "semantic_result_commitment", "canonical_inclusion_set", "inclusion_set_commitment", "fold_policy_declaration", "fold_policy_commitment", "comparability_class_declaration", "comparability_class_commitment", "transition_rule_declaration", "transition_rule_commitment", "pre_aggregation_breakdown", "pre_aggregation_breakdown_commitment", "transition_result", "no_stronger_semantic_class_created", "profile_local_notes"],
+  "properties": {
+    "schema": { "const": "recursive_singleton_aggregate.v0" }, "profile_version": { "const": "recursive-singleton-fold-profile-v0" },
+    "aggregate_id": { "$ref": "#/$defs/digest" }, "source_entry_ref": { "type": "string" }, "source_entry_content_commitment": { "$ref": "#/$defs/digest" },
+    "semantic_statement": { "$ref": "recursive-singleton-fold-stage-input-v0.schema.json#/$defs/semanticStatementClaim" }, "semantic_result_commitment": { "$ref": "#/$defs/digest" },
+    "canonical_inclusion_set": { "type": "array", "minItems": 1, "maxItems": 1, "items": { "$ref": "recursive-singleton-fold-stage-input-v0.schema.json#/$defs/inclusionMemberClaim" } },
+    "inclusion_set_commitment": { "$ref": "#/$defs/digest" }, "fold_policy_declaration": { "$ref": "recursive-singleton-fold-stage-input-v0.schema.json#/$defs/foldPolicyClaim" }, "fold_policy_commitment": { "$ref": "#/$defs/digest" },
+    "comparability_class_declaration": { "$ref": "recursive-singleton-fold-stage-input-v0.schema.json#/$defs/classClaim" }, "comparability_class_commitment": { "$ref": "#/$defs/digest" },
+    "transition_rule_declaration": { "$ref": "recursive-singleton-fold-stage-input-v0.schema.json#/$defs/ruleClaim" }, "transition_rule_commitment": { "$ref": "#/$defs/digest" },
+    "pre_aggregation_breakdown": { "$ref": "recursive-singleton-fold-stage-input-v0.schema.json#/$defs/breakdownClaim" },
+    "pre_aggregation_breakdown_commitment": { "$ref": "#/$defs/digest" },
+    "transition_result": { "$ref": "recursive-singleton-fold-stage-input-v0.schema.json#/$defs/transitionClaim" },
+    "no_stronger_semantic_class_created": { "const": true }, "profile_local_notes": { "type": ["string", "null"] }
+  }
+}

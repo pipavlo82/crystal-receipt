@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "recursive-singleton-fold-finding-v0.schema.json",
+  "title": "Recursive Singleton Fold v0 primary finding",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "code", "check_position"],
+  "properties": {
+    "schema": { "const": "recursive_singleton_fold_finding.v0" },
+    "code": { "enum": ["malformed_evaluation_input", "malformed_source_admission_bundle", "malformed_source_entry_construction_options", "malformed_source_evidence", "malformed_portable_proof_object", "malformed_source_entry", "source_admission_prerequisite_unavailable", "source_receipt_root_mismatch", "cross_object_consistency_mismatch", "proof_object_identity_mismatch", "proof_reference_mismatch", "reconstructed_source_entry_mismatch", "source_entry_content_commitment_mismatch", "malformed_fold_policy_declaration", "fold_policy_commitment_mismatch", "malformed_comparability_class_declaration", "comparability_class_commitment_mismatch", "malformed_transition_rule_declaration", "transition_rule_commitment_mismatch", "malformed_rsf_stage_input", "singleton_policy_ineligible", "singleton_class_ineligible", "semantic_statement_mismatch", "semantic_result_commitment_mismatch", "inclusion_set_mismatch", "inclusion_set_commitment_mismatch", "forbidden_source_identity_reuse", "no_elevation_invariant_mismatch", "transition_result_mismatch", "breakdown_mismatch", "breakdown_commitment_mismatch", "aggregate_id_mismatch", "complete_aggregate_validation_mismatch"] },
+    "check_position": { "type": "integer", "minimum": 1, "maximum": 28 }
+  },
+  "allOf": [
+    { "if": { "properties": { "code": { "const": "malformed_evaluation_input" } } }, "then": { "properties": { "check_position": { "const": 1 } } } },
+    { "if": { "properties": { "code": { "const": "malformed_source_admission_bundle" } } }, "then": { "properties": { "check_position": { "enum": [2, 3] } } } },
+    { "if": { "properties": { "code": { "const": "malformed_source_entry_construction_options" } } }, "then": { "properties": { "check_position": { "const": 4 } } } },
+    { "if": { "properties": { "code": { "const": "malformed_source_evidence" } } }, "then": { "properties": { "check_position": { "const": 5 } } } },
+    { "if": { "properties": { "code": { "const": "malformed_portable_proof_object" } } }, "then": { "properties": { "check_position": { "const": 6 } } } },
+    { "if": { "properties": { "code": { "const": "malformed_source_entry" } } }, "then": { "properties": { "check_position": { "const": 7 } } } },
+    { "if": { "properties": { "code": { "enum": ["source_admission_prerequisite_unavailable", "source_receipt_root_mismatch"] } } }, "then": { "properties": { "check_position": { "const": 8 } } } },
+    { "if": { "properties": { "code": { "const": "cross_object_consistency_mismatch" } } }, "then": { "properties": { "check_position": { "const": 9 } } } },
+    { "if": { "properties": { "code": { "const": "proof_object_identity_mismatch" } } }, "then": { "properties": { "check_position": { "const": 10 } } } },
+    { "if": { "properties": { "code": { "const": "proof_reference_mismatch" } } }, "then": { "properties": { "check_position": { "const": 11 } } } },
+    { "if": { "properties": { "code": { "const": "reconstructed_source_entry_mismatch" } } }, "then": { "properties": { "check_position": { "const": 13 } } } },
+    { "if": { "properties": { "code": { "enum": ["malformed_fold_policy_declaration", "fold_policy_commitment_mismatch"] } } }, "then": { "properties": { "check_position": { "const": 15 } } } },
+    { "if": { "properties": { "code": { "enum": ["malformed_comparability_class_declaration", "comparability_class_commitment_mismatch"] } } }, "then": { "properties": { "check_position": { "const": 16 } } } },
+    { "if": { "properties": { "code": { "enum": ["malformed_transition_rule_declaration", "transition_rule_commitment_mismatch"] } } }, "then": { "properties": { "check_position": { "const": 17 } } } },
+    { "if": { "properties": { "code": { "const": "malformed_rsf_stage_input" } } }, "then": { "properties": { "check_position": { "const": 18 } } } },
+    { "if": { "properties": { "code": { "const": "singleton_policy_ineligible" } } }, "then": { "properties": { "check_position": { "const": 18 } } } },
+    { "if": { "properties": { "code": { "const": "singleton_class_ineligible" } } }, "then": { "properties": { "check_position": { "const": 19 } } } },
+    { "if": { "properties": { "code": { "const": "semantic_statement_mismatch" } } }, "then": { "properties": { "check_position": { "const": 20 } } } },
+    { "if": { "properties": { "code": { "const": "inclusion_set_mismatch" } } }, "then": { "properties": { "check_position": { "const": 21 } } } },
+    { "if": { "properties": { "code": { "const": "inclusion_set_commitment_mismatch" } } }, "then": { "properties": { "check_position": { "const": 21 } } } },
+    { "if": { "properties": { "code": { "const": "forbidden_source_identity_reuse" } } }, "then": { "properties": { "check_position": { "const": 22 } } } },
+    { "if": { "properties": { "code": { "const": "semantic_result_commitment_mismatch" } } }, "then": { "properties": { "check_position": { "enum": [20, 23] } } } },
+    { "if": { "properties": { "code": { "const": "no_elevation_invariant_mismatch" } } }, "then": { "properties": { "check_position": { "const": 24 } } } },
+    { "if": { "properties": { "code": { "const": "transition_result_mismatch" } } }, "then": { "properties": { "check_position": { "const": 25 } } } },
+    { "if": { "properties": { "code": { "enum": ["breakdown_mismatch", "breakdown_commitment_mismatch"] } } }, "then": { "properties": { "check_position": { "const": 26 } } } },
+    { "if": { "properties": { "code": { "const": "aggregate_id_mismatch" } } }, "then": { "properties": { "check_position": { "const": 27 } } } },
+    { "if": { "properties": { "code": { "enum": ["source_entry_content_commitment_mismatch", "complete_aggregate_validation_mismatch"] } } }, "then": { "properties": { "check_position": { "const": 28 } } } }
+  ]
+}

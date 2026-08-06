@@ -1,0 +1,8 @@
+{
+  "auditor": "typescript-independent-rsf-v0",
+  "vector_count": 34,
+  "fixture_set_sha256": "cd69d442e2ff948ca450f60f78f8437ae4ccbc3a8258a2133e94e84046402812",
+  "commitment_checks": 8,
+  "classification_checks": 34,
+  "production_imports": 0
+}
