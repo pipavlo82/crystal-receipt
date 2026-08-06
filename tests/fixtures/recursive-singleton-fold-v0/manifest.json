@@ -22,11 +22,11 @@
     },
     {
       "path": "tests/fixtures/recursive-singleton-fold-v0/README.md",
-      "sha256": "48b8aa36a008fa21586dac6054929acebb7456d5f09e45163943034c0af40d31"
+      "sha256": "9c42c24e07518f6ddc7bba7fb4b03b1889102283e91ca1506ef97c4124123b5b"
     },
     {
       "path": "tests/fixtures/recursive-singleton-fold-v0/contract.json",
-      "sha256": "9d2a312556d29b5fbb3056c280d27bfb931b804f005574b7df8c5f8b5da5691f"
+      "sha256": "a3fe53f5b3723adc6f3b4f454462cc51678c4a75ea4132bb60d32f9fe6e4261b"
     },
     {
       "path": "tests/fixtures/recursive-singleton-fold-v0/vectors/V-18M.json",
@@ -165,7 +165,7 @@
       "sha256": "a2674bba7a4f5b2d117b85e4e1832d28833f9a35c5d0e3ce1dfc6d31b1371441"
     }
   ],
-  "fixture_set_sha256": "4549d3b58290d5eb79c285902f8fd91b99c8b6ffaee357d960754189bd5ab194",
+  "fixture_set_sha256": "879e0caa5d26643755b5a0e4b8836f0215dec3463cb1fa9ab44a82aefe618ee7",
   "manifest_self_excluded": true,
   "path_order": "ascending UTF-8 bytes",
   "byte_domain": "Git-index/blob bytes"

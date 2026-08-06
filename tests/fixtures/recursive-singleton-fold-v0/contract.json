@@ -64,7 +64,99 @@
       "(^|/)(counterfactual|chronicle|crc|b5)(/|[-_.])"
     ]
   },
+  "f02_normative_amendment_scope": {
+    "base": "d3bc93ffdf5e13ed56d988634afcdde943966058",
+    "paths": {
+      "conformance/recursive-singleton-fold-v0/AUDIT.md": "audit_record",
+      "conformance/recursive-singleton-fold-v0/audit_expected.ts": "independent_audit",
+      "conformance/recursive-singleton-fold-v0/generate_expected.py": "independent_generator",
+      "conformance/recursive-singleton-fold-v0/python-generator-output.json": "generator_record",
+      "conformance/recursive-singleton-fold-v0/reachability-report.json": "reachability_and_classification_record",
+      "conformance/recursive-singleton-fold-v0/typescript-audit-output.json": "audit_record",
+      "docs/RECURSIVE_SINGLETON_FOLD_PROFILE_V0_WORKING_DRAFT.md": "normative_document",
+      "docs/RECURSIVE_SINGLETON_FOLD_REFERENCE_PACKAGE_V0_WORKING_DRAFT.md": "normative_document",
+      "tests/fixtures/recursive-singleton-fold-v0/README.md": "fixture_readme",
+      "tests/fixtures/recursive-singleton-fold-v0/contract.json": "normative_contract_metadata",
+      "tests/fixtures/recursive-singleton-fold-v0/manifest.json": "fixture_manifest",
+      "tests/receiptos/rsf-positions-18-28-normative-conformance.test.ts": "normative_conformance_test",
+      "tests/receiptos/rsf-positions-18-through-28.test.ts": "production_conformance_test"
+    },
+    "only_allowed_production_related_test": "tests/receiptos/rsf-positions-18-through-28.test.ts",
+    "production_source_forbidden": true
+  },
   "source_admission_fixture_set_sha256": "ff35ca8ae5cef10009479d50c10e111869875f6f62fb9d6bcb00f5aa5a1b4b4f",
+  "vector_execution_classes": {
+    "allowed": [
+      "public-complete-entrypoint",
+      "stage-continuation-invariant",
+      "package-integrity-only"
+    ],
+    "definitions": {
+      "public-complete-entrypoint": "Execute evaluateCompleteRsf(input, stage_input); the frozen result is fully determined by those public arguments.",
+      "stage-continuation-invariant": "Execute the canonical positions-1-through-17 continuation plus the positions-18-through-28 stage; the defect belongs to a stage invariant that cannot be represented by public raw input.",
+      "package-integrity-only": "Execute no RSF evaluator; the vector proves package-byte integrity only."
+    },
+    "public_determinism_rule": "Byte-identical public input and stage_input arguments MUST produce byte-identical canonical evaluation bytes. Fixture-only continuation fields MUST NOT alter public evaluation.",
+    "expected_evaluation_set_sha256": "ecc1f4072e635c913343e017c59eb74094290537fe16c6b4e8a85fb5e36e6531",
+    "expected_evaluation_set_recipe": "For vector IDs sorted lexically: <vector-id><TAB><sha256(canonical JSON UTF-8 expected_evaluation bytes)><LF>; SHA-256 the concatenated UTF-8 rows.",
+    "vectors": {
+      "V-OK": { "execution_class": "public-complete-entrypoint" },
+      "V-18M": { "execution_class": "public-complete-entrypoint" },
+      "V-18P": { "execution_class": "public-complete-entrypoint" },
+      "V-19": { "execution_class": "public-complete-entrypoint" },
+      "V-20A": { "execution_class": "public-complete-entrypoint" },
+      "V-20B": { "execution_class": "public-complete-entrypoint" },
+      "V-21A": { "execution_class": "public-complete-entrypoint" },
+      "V-21B": { "execution_class": "public-complete-entrypoint" },
+      "V-22": { "execution_class": "public-complete-entrypoint" },
+      "V-23A": { "execution_class": "public-complete-entrypoint" },
+      "V-23B": { "execution_class": "public-complete-entrypoint" },
+      "V-23C": { "execution_class": "public-complete-entrypoint" },
+      "V-24": { "execution_class": "public-complete-entrypoint" },
+      "V-25": { "execution_class": "public-complete-entrypoint" },
+      "V-26A": { "execution_class": "public-complete-entrypoint" },
+      "V-26B": { "execution_class": "public-complete-entrypoint" },
+      "V-27": { "execution_class": "public-complete-entrypoint" },
+      "V-28A1": {
+        "execution_class": "stage-continuation-invariant",
+        "public_input_representable": false,
+        "injected_continuation_field": "prefix_continuation.sourceEntryContentCommitment",
+        "fresh_recomputation_source": "canonical_json_utf8_sha256(prefix_continuation.sourceEntry)",
+        "non_public_reason": "The public evaluator recomputes the position-14 commitment from raw input and accepts no caller-supplied prefix continuation; V-28A1 and V-OK therefore have byte-identical public arguments.",
+        "owned_position": 28,
+        "owned_subcheck": "28a.1",
+        "expected_finding": {
+          "code": "source_entry_content_commitment_mismatch",
+          "check_position": 28
+        }
+      },
+      "V-28A2": {
+        "execution_class": "public-complete-entrypoint",
+        "owned_position": 28,
+        "owned_subcheck": "28a.2",
+        "public_operand_field": "stage_input.candidate_aggregate.source_entry_content_commitment",
+        "expected_finding": {
+          "code": "source_entry_content_commitment_mismatch",
+          "check_position": 28
+        }
+      },
+      "V-28B": { "execution_class": "public-complete-entrypoint" },
+      "V-ORDER": { "execution_class": "public-complete-entrypoint" },
+      "V-ADM": { "execution_class": "public-complete-entrypoint" },
+      "V-TIME": { "execution_class": "public-complete-entrypoint" },
+      "V-LABEL": { "execution_class": "public-complete-entrypoint" },
+      "V-NOPROOF": { "execution_class": "public-complete-entrypoint" },
+      "V-UNVER": { "execution_class": "public-complete-entrypoint" },
+      "V-MAL-REJ": { "execution_class": "public-complete-entrypoint" },
+      "V-INSERT": { "execution_class": "public-complete-entrypoint" },
+      "V-ESCAPE": { "execution_class": "public-complete-entrypoint" },
+      "V-SCALAR": { "execution_class": "public-complete-entrypoint" },
+      "V-GIT": { "execution_class": "package-integrity-only" },
+      "V-MUTATE": { "execution_class": "public-complete-entrypoint" },
+      "V-REPLAY": { "execution_class": "public-complete-entrypoint" },
+      "V-FALL": { "execution_class": "public-complete-entrypoint" }
+    }
+  },
   "position_order": [
     { "position": 18, "checks": ["stage_shape", "singleton_policy_eligibility"] },
     { "position": 19, "checks": ["singleton_comparability_eligibility"] },
@@ -159,5 +251,11 @@
     "src/receiptos/rsf/evaluation-input-shape.ts": "2565fa87fbe847aa2153f6202188b03a45f6121a",
     "src/receiptos/rsf/source-admission-recomputation.ts": "281c57ac54599b1efb1e53049f59c464040e0bbc",
     "src/receiptos/rsf/source-admission-shape.ts": "099a8bc95dbed7aa4eeec0d8fed3e56ba331aa1e"
+  },
+  "production_architecture_blobs": {
+    "src/receiptos/index.ts": "f24f3c4f4891f9ef6dbd163aea43d9b01b478a34",
+    "src/receiptos/rsf/evaluate-complete-rsf.ts": "bb5428815ea2d75798f4eec3c7621e66c81cf106",
+    "src/receiptos/rsf/evaluate-positions-18-through-28.ts": "0b3c184009824000cfd7c21fa727cb764b26d817",
+    "src/receiptos/rsf/strict-json-snapshot.ts": "b68c4c3d3e86cd6157b7f429d3df5002ae6ac9ab"
   }
 }

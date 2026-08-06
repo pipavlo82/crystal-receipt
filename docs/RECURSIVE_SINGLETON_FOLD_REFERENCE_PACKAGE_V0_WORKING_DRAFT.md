@@ -978,13 +978,49 @@ the 34-vector package and two independent expected-value implementations are
 under `tests/fixtures/recursive-singleton-fold-v0` and
 `conformance/recursive-singleton-fold-v0`.
 
+#### Vector execution classes and public determinism
+
+`contract.json` assigns every vector to exactly one member of this closed
+execution-class vocabulary:
+
+- `public-complete-entrypoint`: execute `evaluateCompleteRsf(input,
+  stage_input)`. This class is permitted only when those two public arguments
+  fully determine the expected result.
+- `stage-continuation-invariant`: execute a canonical or deliberately injected
+  positions-1-through-17 continuation plus `stage_input` through the internal
+  prefix-to-stage composition seam. This class is permitted only to test a
+  positions-18-through-28 invariant whose failing operand cannot be represented
+  on the public raw-input surface.
+- `package-integrity-only`: execute no RSF evaluator. V-GIT is in this class.
+
+For a fixed public API version, byte-identical public `input` and `stage_input`
+arguments MUST produce byte-identical canonical evaluation bytes. Fixture-only
+continuation values and hidden vector metadata MUST NOT affect public
+evaluation. The public evaluator always recomputes positions 1–17 from raw
+input and accepts no caller-supplied continuation. An internal seam execution
+therefore MUST be explicitly labeled `stage-continuation-invariant`, MUST NOT be
+counted as a public complete-entrypoint pass, and does not define a second
+public result for the same public arguments.
+
+V-28A1 is the sole `stage-continuation-invariant` vector. It injects a stored
+position-14 `prefix_continuation.sourceEntryContentCommitment` that differs
+from the fresh canonical-JSON/UTF-8/SHA-256 recomputation and proves position
+28 subcheck 28a.1. Its frozen result remains evaluated/rejected with null
+aggregate and `source_entry_content_commitment_mismatch` at position 28.
+V-28A2 remains a `public-complete-entrypoint` candidate-stored-commitment
+mismatch (28a.2). V-28A1 and V-OK have byte-identical public arguments, so the
+public evaluation of those arguments is the V-OK result; V-28A1 does not claim
+a different public envelope. This classification does not weaken 28a.1: the
+stage still compares the stored position-14 continuation commitment with a
+fresh source-entry commitment before checking the candidate stored commitment.
+
 Package dependency model A is frozen: the manifest directly includes this
 package's README and contract metadata, all four adopted schemas, and all 34
 vector JSON files, for exactly 40 repository-relative Git-index/blob members.
 The manifest excludes itself. Rows are sorted by UTF-8 repository path and are
 exactly `<path><TAB><lowercase-sha256><LF>` with `/` separators, UTF-8 encoding,
 a final LF, and no BOM. The current fixture-set digest is
-`4549d3b58290d5eb79c285902f8fd91b99c8b6ffaee357d960754189bd5ab194`.
+`879e0caa5d26643755b5a0e4b8836f0215dec3463cb1fa9ab44a82aefe618ee7`.
 
 For every compound position: subchecks execute left-to-right exactly as
 written; the first failing subcheck determines the one finding; shape
@@ -1059,9 +1095,10 @@ shape (RSF profile §6.2); the `recursive_singleton_aggregate.v0` shape (RSF
 profile §11.1); the closed 33-code finding vocabulary (§11); the 28-position
 count (§12) — still exactly 28 rows;
 first-finding semantics; the existing `canonicalize()`; the current
-implementation boundary (positions 1–17 implemented and wired into the ordered prefix
-evaluator `evaluateRsfPrefixThroughPosition17` — a prefix evaluator only, not the complete
-positions 1–28 evaluator; positions 18–28 remain unimplemented); package identity; or
+implementation boundary (the public complete evaluator recomputes positions
+1–17 through `evaluateRsfPrefixThroughPosition17`, then invokes the internal
+positions-18-through-28 stage, while no caller-supplied continuation is public);
+package identity; or
 Chronicle behavior. It introduces no new
 carrier, no `profile_sha256`, no package digest, and no runtime
 configuration.

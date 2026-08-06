@@ -3,9 +3,16 @@
   "mode": "read-only-git-index",
   "vector_count": 34,
   "package_inventory_count": 40,
-  "fixture_set_sha256": "4549d3b58290d5eb79c285902f8fd91b99c8b6ffaee357d960754189bd5ab194",
+  "fixture_set_sha256": "879e0caa5d26643755b5a0e4b8836f0215dec3463cb1fa9ab44a82aefe618ee7",
   "commitment_identity_checks": 10,
   "classification_checks": 34,
+  "execution_class_counts": {
+    "public-complete-entrypoint": 32,
+    "stage-continuation-invariant": 1,
+    "package-integrity-only": 1
+  },
+  "public_determinism_checks": 32,
+  "v_ok_v_28a1_public_arguments_byte_identical": true,
   "production_imports": 0,
   "import_graph": {
     "conformance/recursive-singleton-fold-v0/generate_expected.py": ["__future__", "argparse", "copy", "hashlib", "json", "subprocess", "pathlib"],
