@@ -3,7 +3,7 @@
   "mode": "independent_reconstruction",
   "vector_count": 34,
   "package_inventory_count": 40,
-  "fixture_set_sha256": "64b88bfbd578ee8399f6a78793f14fc71271937aef517afe8fab7822aaa46d4a",
+  "fixture_set_sha256": "4549d3b58290d5eb79c285902f8fd91b99c8b6ffaee357d960754189bd5ab194",
   "canonicalizer": "local recursive JSON canonicalizer; no production imports",
   "v_ok": {
     "source_entry_content_commitment": "sha256:64bbd7dab6869b9a71f810c5b3d6decaa7db6f076c245da7613ad40033937515",
