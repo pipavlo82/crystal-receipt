@@ -138,6 +138,11 @@ export {
   type EvaluateRsfPrefixThroughPosition17Result,
 } from "./rsf/evaluate-prefix-through-position-17"
 export {
+  evaluateCompleteRsf,
+  type RecursiveSingletonFoldFinding,
+  type RecursiveSingletonFoldEvaluation,
+} from "./rsf/evaluate-complete-rsf"
+export {
   buildRenderPlan,
   buildRenderPlanFromCapsule,
   getRenderPlanZoneDefinitions,
