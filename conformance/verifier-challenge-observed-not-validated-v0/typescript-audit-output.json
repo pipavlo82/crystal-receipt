@@ -3,7 +3,7 @@
   "mode": "read-only-filesystem",
   "vector_count": 1,
   "package_inventory_count": 3,
-  "fixture_set_sha256": "1191b95b2b3ed69f560ddc19ae31e03d4e387cd186075a4114a543a158b600de",
+  "fixture_set_sha256": "efeb64c3cc3809d604145ad7436a481baffd7aa9bdd798a1ddf2c1e5e38ae33f",
   "expected_result_set_sha256": "0979570c534e3808ac3d5a951902564e33b1a58f3263f1da45ceb344d0e85514",
   "execution_class_counts": {
     "production-verifier-binding": 1

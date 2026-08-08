@@ -30,11 +30,11 @@
   "verifier_entrypoint": {
     "name": "verifyHandoffReceiptRoot",
     "module_path": "src/receiptos/verify/verify-receipt.ts",
-    "git_blob_oid": "b453db974c3d49280f4adfc69d66002c20020277"
+    "git_blob_oid": "2e2e45bf30529de93eac58a04465f17ef81edeaa"
   },
   "source_fixture_identity": {
     "repository_path": "src/receiptos/fixtures/session-evidence.cyphes-workflow.sample.json",
-    "git_blob_oid": "879efae676e513db96f12e3c69774243525c822e"
+    "git_blob_oid": "b1be64dbb71898ab5ffa75660f8e07c3250d8be1"
   },
   "vector_inventory": [
     "V-OBSERVED-NOT-VALIDATED"

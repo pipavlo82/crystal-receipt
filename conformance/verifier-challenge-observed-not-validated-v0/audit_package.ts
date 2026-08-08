@@ -15,8 +15,13 @@ const assert = (condition: unknown, message: string): asserts condition => {
 }
 
 const shaBytes = (bytes: Uint8Array | Buffer) => createHash("sha256").update(bytes).digest("hex")
-const gitBlobOid = (repositoryPath: string) =>
-  execFileSync("git", ["hash-object", repositoryPath], { cwd: ROOT, encoding: "utf8" }).trim()
+const gitIndexBlobOid = (repositoryPath: string) => {
+  try {
+    return execFileSync("git", ["rev-parse", `:${repositoryPath}`], { cwd: ROOT, encoding: "utf8" }).trim()
+  } catch {
+    throw new Error(`untracked or unresolved git blob identity: ${repositoryPath}`)
+  }
+}
 const readBytes = (repositoryPath: string) => readFileSync(resolve(ROOT, repositoryPath))
 const readJson = (repositoryPath: string) => JSON.parse(readBytes(repositoryPath).toString("utf8")) as J
 
@@ -71,11 +76,16 @@ export function auditPackage(): J {
   assert(resultHash === contract.expected_result_set_sha256, "expected-result-set digest")
 
   const fixturePath = String((vector.source_fixture as J).repository_path)
-  assert(gitBlobOid(fixturePath) === (vector.source_fixture as J).git_blob_oid, "source fixture identity")
+  assert(gitIndexBlobOid(fixturePath) === (vector.source_fixture as J).git_blob_oid, "source fixture identity")
   assert(
-    gitBlobOid(String((vector.subject_verifier as J).module_path)) ===
+    gitIndexBlobOid(String((vector.subject_verifier as J).module_path)) ===
       (vector.subject_verifier as J).git_blob_oid,
     "subject verifier identity",
+  )
+  const profile = vector.receipt_root_profile as J
+  assert(
+    gitIndexBlobOid(String(profile.receipt_root_module_path)) === profile.receipt_root_module_git_blob_oid,
+    "receipt-root module identity",
   )
 
   return {
