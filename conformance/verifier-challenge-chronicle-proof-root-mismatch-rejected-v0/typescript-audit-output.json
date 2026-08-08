@@ -1,0 +1,17 @@
+{
+  "auditor": "typescript-independent-verifier-challenge-chronicle-proof-root-mismatch-rejected-v0",
+  "mode": "read-only-filesystem",
+  "vector_count": 1,
+  "package_inventory_count": 3,
+  "fixture_set_sha256": "6788b09f29917254a93faf6e85c2d6922fc6fc36995577cb1fd46e6a698ce457",
+  "expected_result_set_sha256": "d04a66073a965d19e380beed8426a3cfdccff11ce720244c4d0f5eb6f2a7bf08",
+  "execution_class_counts": {
+    "production-admission-binding": 1
+  },
+  "independence_scope": {
+    "package_identity": "Python and TypeScript auditors recompute member and expected-result digests without production imports.",
+    "challenge_semantics": "Independent verifier validates mutation scope, field classification, and encoded admission relation from frozen spec.",
+    "production_result": "Actual tryCreateChronicleEntryV0 execution is bound only by TypeScript production runner; no claim of independent full Chronicle admission recomputation."
+  },
+  "production_imports": 0
+}

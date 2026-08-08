@@ -1,0 +1,96 @@
+{
+  "schema": "verifier_challenge_chronicle_proof_root_mismatch_rejected_vector.v0",
+  "vector_id": "V-CHRONICLE-PROOF-ROOT-MISMATCH",
+  "package_version": "verifier-challenge-chronicle-proof-root-mismatch-rejected-v0",
+  "challenge_id": "proof_root_mismatch_rejected",
+  "execution_class": "production-admission-binding",
+  "subject_admission_verifier": {
+    "entrypoint": "tryCreateChronicleEntryV0",
+    "module_path": "src/receiptos/capsule/chronicle-portfolio-v0.ts",
+    "git_blob_oid": "0e790911092546c62344f980e6b611542bcd00fe"
+  },
+  "admission_profile": {
+    "first_failure_wins": true,
+    "receipt_root_recomputation_module_path": "src/receiptos/canon/receipt-root.ts",
+    "receipt_root_recomputation_module_git_blob_oid": "4dddf737b824cae91281a93eb563c9134cdc1bb0",
+    "portable_proof_object_module_path": "src/receiptos/capsule/portable-proof-object-v0.ts",
+    "portable_proof_object_module_git_blob_oid": "734df63bb397cf223eb5363a4f941e86fda021b8"
+  },
+  "source_fixture": {
+    "repository_path": "tests/fixtures/receiptos-chronicle-admission-v0/vectors/01-clean-admitted.json",
+    "git_blob_oid": "8577188aa93c03f14356ac2690f8e4143c362f23"
+  },
+  "baseline_input": {
+    "source": "source_fixture.input",
+    "evidence_anchor_receipt_root": "0x687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc",
+    "proof_object_receipt_root": "0x687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc",
+    "entry_id": "entry-shared-admission-v0"
+  },
+  "mutation": {
+    "operation": "set",
+    "path": ["proof_object", "receipt_root"],
+    "from": "0x687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc",
+    "to": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+  },
+  "field_classification": {
+    "cross_object_admission_binding": ["proof_object.receipt_root"],
+    "unchanged_handoff_evidence": true,
+    "excluded_from_mutation": [
+      "evidence",
+      "anchor.receipt_root",
+      "proof_object.proof_object_id",
+      "proof_object.proof_ref",
+      "proof_object.evidence_capsule",
+      "proof_object.provenance_summary"
+    ]
+  },
+  "receipt_root_control": {
+    "entrypoint": "verifyHandoffReceiptRoot",
+    "module_path": "src/receiptos/verify/verify-receipt.ts",
+    "note": "Separate receipt-root surface; not the subject admission verifier."
+  },
+  "expected": {
+    "outcomes": [
+      "baseline_admitted",
+      "challenged_rejected",
+      "receipt_root_control_valid",
+      "cross_object_proof_root_mismatch"
+    ],
+    "baseline_admission": {
+      "success": true,
+      "value": {
+        "schema": "chronicle_entry.v0",
+        "entry_id": "entry-shared-admission-v0",
+        "source_system": "ReceiptOS",
+        "receipt_root": "0x687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc",
+        "proof_object_ref": "receiptos://portable-proof-object/proofobj-687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc",
+        "evidence_capsule_ref": "shared-vector://clean/evidence-capsule",
+        "provenance_summary_ref": "shared-vector://clean/provenance-summary",
+        "created_from": "shared-vector://clean-evidence",
+        "labels": ["shared-vector", "receiptos"],
+        "notes": "ReceiptOS Chronicle shared admission vector v0"
+      }
+    },
+    "challenged_admission": {
+      "success": false,
+      "failure": {
+        "failure_class": "cross_object_inconsistency",
+        "reason_code": "proof_root_mismatch"
+      }
+    },
+    "receipt_root_control": {
+      "ok": true,
+      "receipt_root": "0x687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc",
+      "recomputed_root": "0x687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc"
+    },
+    "baseline_admitted": true,
+    "challenged_admitted": false,
+    "evidence_receipt_verification_unchanged": true,
+    "evidence_receipt_verification_ok": true,
+    "proof_object_receipt_root_changed_only": true,
+    "cross_object_root_mismatch_blocks_admission": true,
+    "failure_class_exact": "cross_object_inconsistency",
+    "reason_code_exact": "proof_root_mismatch",
+    "non_throwing": true
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "schema": "verifier_challenge_chronicle_proof_root_mismatch_rejected_fixture_manifest.v0",
+  "package_version": "verifier-challenge-chronicle-proof-root-mismatch-rejected-v0",
+  "file_count": 3,
+  "files": [
+    {
+      "path": "conformance/verifier-challenge-chronicle-proof-root-mismatch-rejected-v0/SPEC.md",
+      "sha256": "b7aa8d943b52cdc6475afe1e146f793529aa1fb4ab349550b003bdaf6256325a"
+    },
+    {
+      "path": "conformance/verifier-challenge-chronicle-proof-root-mismatch-rejected-v0/contract.json",
+      "sha256": "1a9b18f7d59cabda889eda04acfc8e77ef83fbb1efea3a4911a5294ad6a82047"
+    },
+    {
+      "path": "conformance/verifier-challenge-chronicle-proof-root-mismatch-rejected-v0/vectors/V-CHRONICLE-PROOF-ROOT-MISMATCH.json",
+      "sha256": "4c618fbdecaab6eb59bde652077a78dc5a750291917a6f5cc5238c6759717bb9"
+    }
+  ],
+  "fixture_set_sha256": "6788b09f29917254a93faf6e85c2d6922fc6fc36995577cb1fd46e6a698ce457"
+}
