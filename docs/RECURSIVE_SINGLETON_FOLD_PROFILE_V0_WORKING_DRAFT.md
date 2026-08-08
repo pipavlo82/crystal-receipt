@@ -4,8 +4,10 @@
 
 **Adopted exception:** the positions 18–28 construction/validation closure in
 §17.4 and the reference package §12.1 is normative and frozen as an
-implementation contract. The profile outside that narrow exception remains a
-working draft, and no positions 18–28 production evaluator is implemented.
+implementation contract. Positions 18–28 are implemented in production;
+`evaluateCompleteRsf` is the public complete evaluator. RSF 1–28 production
+closure passed at merge `7dbedb1f` (PR #158). The profile outside that narrow
+exception remains a working draft.
 The adopted package uses dependency model A: its four schemas are direct
 Git-index/blob manifest members rather than mutable external dependencies.
 
@@ -30,8 +32,9 @@ It does not alter source receipt validity.
 It does not alter Chronicle history.
 It does not add reputation to ReceiptOS.
 Except for the adopted positions 18–28 schemas, vectors, and normative-data
-conformance requirements, it does not create frozen package material. It does
-not create an evaluator.
+conformance requirements, it does not create frozen package material. This
+document does not, by itself, ship the evaluator; the repository exports
+`evaluateCompleteRsf` as the public complete entrypoint.
 
 ## 2. Parent artifacts and governing boundary
 
