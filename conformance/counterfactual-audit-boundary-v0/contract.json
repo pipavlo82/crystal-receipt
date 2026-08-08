@@ -1,0 +1,99 @@
+{
+  "schema": "counterfactual_audit_boundary_contract.v0",
+  "package_version": "counterfactual-audit-boundary-v0",
+  "profile_id": "counterfactual-audit-boundary-v0",
+  "authority": {
+    "normative_spec": "conformance/counterfactual-audit-boundary-v0/SPEC.md",
+    "production_binding": "src/receiptos/challenge/counterfactual-audit-boundary.ts",
+    "reference_draft_section": "docs/RECEIPTOS_VERIFIER_CHALLENGE_SET_V0_WORKING_DRAFT.md#141-normative-audit_timestamp-metadata-boundary"
+  },
+  "member_inventory": [
+    "conformance/counterfactual-audit-boundary-v0/SPEC.md",
+    "conformance/counterfactual-audit-boundary-v0/vectors/V-AT-ACCESSOR.json",
+    "conformance/counterfactual-audit-boundary-v0/vectors/V-AT-ISOLATE.json",
+    "conformance/counterfactual-audit-boundary-v0/vectors/V-AT-NEST-ARR.json",
+    "conformance/counterfactual-audit-boundary-v0/vectors/V-AT-NEST-OBJ.json",
+    "conformance/counterfactual-audit-boundary-v0/vectors/V-AT-ORDER.json",
+    "conformance/counterfactual-audit-boundary-v0/vectors/V-AT-ROOT.json",
+    "conformance/counterfactual-audit-boundary-v0/vectors/V-MAN-HASH-DIFF.json",
+    "conformance/counterfactual-audit-boundary-v0/vectors/V-MAN-UINT8-EXACT.json",
+    "conformance/counterfactual-audit-boundary-v0/vectors/V-MAN-UNICODE-DIFF.json",
+    "conformance/counterfactual-audit-boundary-v0/vectors/V-MAN-UTF8-ONCE.json",
+    "conformance/counterfactual-audit-boundary-v0/vectors/V-SEM-MANIFEST-INVARIANT.json",
+    "conformance/counterfactual-audit-boundary-v0/vectors/V-SEM-MUTATION-DIFFERS.json",
+    "conformance/counterfactual-audit-boundary-v0/contract.json",
+    "conformance/counterfactual-audit-boundary-v0/manifest.json"
+  ],
+  "vector_inventory": [
+    "V-AT-ACCESSOR",
+    "V-AT-ISOLATE",
+    "V-AT-NEST-ARR",
+    "V-AT-NEST-OBJ",
+    "V-AT-ORDER",
+    "V-AT-ROOT",
+    "V-MAN-HASH-DIFF",
+    "V-MAN-UINT8-EXACT",
+    "V-MAN-UNICODE-DIFF",
+    "V-MAN-UTF8-ONCE",
+    "V-SEM-MANIFEST-INVARIANT",
+    "V-SEM-MUTATION-DIFFERS"
+  ],
+  "byte_domain_rules": {
+    "semantic_bytes": "Fresh strict-JSON snapshot from descriptor inspection; reserved audit_timestamp forbidden at all depths.",
+    "manifest_file_bytes": "Exact serialized manifest bytes; string encoded UTF-8 once; Uint8Array hashed byte-exactly."
+  },
+  "hash_algorithm": "sha256-lowercase-hex",
+  "fixture_set_recipe": "Sorted member paths except manifest.json: <path>\\t<file-sha256>\\n concatenated UTF-8 then SHA-256.",
+  "expected_result_set_recipe": "Sorted vector IDs: <vector-id>\\t<sha256(canonical expected JSON)>\\n concatenated UTF-8 then SHA-256.",
+  "expected_result_set_sha256": "db664c5e8da2f0fb6d1d94a036eab572ae2941ffeb5193624365d4bdbaeec24a",
+  "vector_execution_classes": {
+    "allowed": [
+      "semantic-snapshot",
+      "manifest-file-hash",
+      "runtime-binding-required"
+    ],
+    "definitions": {
+      "semantic-snapshot": "Evaluate snapshotCounterfactualSemanticJson reserved-field rule.",
+      "manifest-file-hash": "Evaluate computeCounterfactualManifestFileSha256 byte-domain rule.",
+      "runtime-binding-required": "Vector requires production runtime construction; independently verified only through production binding runner."
+    },
+    "vectors": {
+      "V-AT-ACCESSOR": {
+        "execution_class": "runtime-binding-required"
+      },
+      "V-AT-ISOLATE": {
+        "execution_class": "runtime-binding-required"
+      },
+      "V-AT-NEST-ARR": {
+        "execution_class": "semantic-snapshot"
+      },
+      "V-AT-NEST-OBJ": {
+        "execution_class": "semantic-snapshot"
+      },
+      "V-AT-ORDER": {
+        "execution_class": "semantic-snapshot"
+      },
+      "V-AT-ROOT": {
+        "execution_class": "semantic-snapshot"
+      },
+      "V-MAN-HASH-DIFF": {
+        "execution_class": "manifest-file-hash"
+      },
+      "V-MAN-UINT8-EXACT": {
+        "execution_class": "manifest-file-hash"
+      },
+      "V-MAN-UNICODE-DIFF": {
+        "execution_class": "manifest-file-hash"
+      },
+      "V-MAN-UTF8-ONCE": {
+        "execution_class": "manifest-file-hash"
+      },
+      "V-SEM-MANIFEST-INVARIANT": {
+        "execution_class": "semantic-snapshot"
+      },
+      "V-SEM-MUTATION-DIFFERS": {
+        "execution_class": "semantic-snapshot"
+      }
+    }
+  }
+}

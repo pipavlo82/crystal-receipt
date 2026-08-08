@@ -1,0 +1,20 @@
+{
+  "schema": "counterfactual_audit_boundary_vector.v0",
+  "vector_id": "V-MAN-HASH-DIFF",
+  "package_version": "counterfactual-audit-boundary-v0",
+  "execution_class": "manifest-file-hash",
+  "operation": "manifest_file_sha256",
+  "inputs": [
+    {
+      "encoding": "utf8_string",
+      "value": "{\n  \"semantic_artifact\": {\n    \"challenge_id\": \"observed_not_validated\",\n    \"profile_id\": \"counterfactual-review-v0\",\n    \"expected_conformance_observation\": \"preserve semantic non-elevation\"\n  },\n  \"audit_timestamp\": \"2026-07-27T12:00:00Z\"\n}\n"
+    },
+    {
+      "encoding": "utf8_string",
+      "value": "{\n  \"semantic_artifact\": {\n    \"challenge_id\": \"observed_not_validated\",\n    \"profile_id\": \"counterfactual-review-v0\",\n    \"expected_conformance_observation\": \"preserve semantic non-elevation\"\n  },\n  \"audit_timestamp\": \"2026-08-05T12:00:00Z\"\n}\n"
+    }
+  ],
+  "expected": {
+    "outcome": "manifest_hash_differs"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "schema": "counterfactual_audit_boundary_vector.v0",
+  "vector_id": "V-AT-ISOLATE",
+  "package_version": "counterfactual-audit-boundary-v0",
+  "execution_class": "semantic-snapshot",
+  "operation": "semantic_snapshot",
+  "runtime_construction": {
+    "kind": "post_snapshot_mutation",
+    "initial": {
+      "nested": {
+        "value": "original"
+      },
+      "items": [1, 2]
+    },
+    "mutations": [
+      {
+        "set": ["nested", "value"],
+        "value": "changed"
+      },
+      {
+        "set": ["nested", "audit_timestamp"],
+        "value": "added later"
+      },
+      {
+        "append": ["items"],
+        "value": 3
+      }
+    ]
+  },
+  "expected": {
+    "outcome": "accepted_snapshot",
+    "canonical_snapshot_json": "{\"items\":[1,2],\"nested\":{\"value\":\"original\"}}",
+    "snapshot_unchanged_after_mutations": true,
+    "canonical_excludes": "audit_timestamp"
+  }
+}

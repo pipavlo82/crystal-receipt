@@ -1,0 +1,19 @@
+{
+  "schema": "counterfactual_audit_boundary_vector.v0",
+  "vector_id": "V-AT-NEST-ARR",
+  "package_version": "counterfactual-audit-boundary-v0",
+  "execution_class": "semantic-snapshot",
+  "operation": "semantic_snapshot",
+  "input": {
+    "nested": [
+      {
+        "audit_timestamp": "array"
+      }
+    ]
+  },
+  "expected": {
+    "outcome": "rejected",
+    "error_path": "$semantic_artifact[\"nested\"][0][\"audit_timestamp\"]",
+    "error_message_contains": "non-semantic audit metadata is forbidden in semantic input"
+  }
+}
