@@ -1,0 +1,52 @@
+{
+  "schema": "verifier_challenge_observed_not_validated_vector.v0",
+  "vector_id": "V-OBSERVED-NOT-VALIDATED",
+  "package_version": "verifier-challenge-observed-not-validated-v0",
+  "challenge_id": "observed_not_validated",
+  "execution_class": "production-verifier-binding",
+  "subject_verifier": {
+    "entrypoint": "verifyHandoffReceiptRoot",
+    "module_path": "src/receiptos/verify/verify-receipt.ts",
+    "git_blob_oid": "b453db974c3d49280f4adfc69d66002c20020277"
+  },
+  "receipt_root_profile": {
+    "strip_anchor_rule": "entire_top_level_anchor_removed_before_canonicalization",
+    "canonicalization_module_path": "src/receiptos/canon/canonicalize.ts",
+    "receipt_root_module_path": "src/receiptos/canon/receipt-root.ts",
+    "receipt_root_module_git_blob_oid": "e7a31026131e3302eeebc6ac4cefe074998824a5"
+  },
+  "source_fixture": {
+    "repository_path": "src/receiptos/fixtures/session-evidence.cyphes-workflow.sample.json",
+    "git_blob_oid": "879efae676e513db96f12e3c69774243525c822e"
+  },
+  "baseline_input": {
+    "source": "source_fixture",
+    "anchor_verifier_status": "not verified"
+  },
+  "mutation": {
+    "operation": "set",
+    "path": ["anchor", "verifier_status"],
+    "from": "not verified",
+    "to": "verified"
+  },
+  "field_classification": {
+    "observation_only": ["anchor.verifier_status"],
+    "excluded_from_recomputation": ["anchor"],
+    "decisive_for_comparison": ["anchor.receipt_root"]
+  },
+  "expected": {
+    "outcomes": ["verification_equal", "anchor_receipt_root_unchanged"],
+    "baseline_verification": {
+      "ok": true,
+      "receipt_root": "0xfe6ee94aed3ee6158c296e2d2d41ab7b31028259a99105c872adb4fdc30196d0",
+      "recomputed_root": "0xfe6ee94aed3ee6158c296e2d2d41ab7b31028259a99105c872adb4fdc30196d0"
+    },
+    "challenged_verification": {
+      "ok": true,
+      "receipt_root": "0xfe6ee94aed3ee6158c296e2d2d41ab7b31028259a99105c872adb4fdc30196d0",
+      "recomputed_root": "0xfe6ee94aed3ee6158c296e2d2d41ab7b31028259a99105c872adb4fdc30196d0"
+    },
+    "challenged_must_equal_baseline": true,
+    "observation_cannot_establish_validity": true
+  }
+}
