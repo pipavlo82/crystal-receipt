@@ -1,0 +1,17 @@
+{
+  "auditor": "typescript-independent-verifier-challenge-missing-required-input-unverifiable-v0",
+  "mode": "read-only-filesystem",
+  "vector_count": 1,
+  "package_inventory_count": 3,
+  "fixture_set_sha256": "525bed2d6b2dcd735be96b3faba11c045a24a24189787ce8d5d398b3def23e04",
+  "expected_result_set_sha256": "7e32bc856b317574d38c8d036c5a352bb83b4f2a04c00ed4e52de53b378a2184",
+  "execution_class_counts": {
+    "production-verifier-binding": 1
+  },
+  "independence_scope": {
+    "package_identity": "Python and TypeScript auditors recompute member and expected-result digests without production imports.",
+    "challenge_semantics": "Independent verifier validates mutation scope, field classification, and encoded missing-input unverifiability relation from frozen spec.",
+    "production_result": "Actual verifyHandoffReceiptRoot execution is bound only by TypeScript production runner; no claim of independent full receipt recomputation."
+  },
+  "production_imports": 0
+}
