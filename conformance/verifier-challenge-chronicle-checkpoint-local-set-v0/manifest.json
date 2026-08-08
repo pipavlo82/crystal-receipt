@@ -1,0 +1,22 @@
+{
+  "schema": "verifier_challenge_chronicle_checkpoint_local_set_fixture_manifest.v0",
+  "set_id": "verifier-challenge-chronicle-checkpoint-local-set-v0",
+  "version": "v0",
+  "file_count": 2,
+  "files": [
+    {
+      "path": "conformance/verifier-challenge-chronicle-checkpoint-local-set-v0/SPEC.md",
+      "sha256": "aacc3d2939acc984e3be651233dc0dd67a35cb132e6c5b7c5b8a08cec8e0a319"
+    },
+    {
+      "path": "conformance/verifier-challenge-chronicle-checkpoint-local-set-v0/contract.json",
+      "sha256": "57726642d31d7933a294bc5142ba0f351fdc1613b2789efedb7d2b05e5793f63"
+    }
+  ],
+  "fixture_set_sha256": "2c5b171806a253c32495a819d011087c46f4cfb8bad27b0821f6abd280a6ef89",
+  "child_identity_set_sha256": "5bcdef8fa4fdb24287e29efb273b4e1998e443047ea1251ec12e3c8097269e28",
+  "subject_local_checkpoint_verifier_git_blob_oid": "0e790911092546c62344f980e6b611542bcd00fe",
+  "normative_spec_git_blob_oid": "327898f793116681646e424f6a7cfc9f9887f2fb",
+  "aggregate_vector_count": 0,
+  "child_vector_count": 2
+}
