@@ -1,0 +1,69 @@
+{
+  "schema": "verifier_challenge_set_contract.v0",
+  "set_id": "verifier-challenge-set-v0",
+  "version": "v0",
+  "subject_verifier": {
+    "entrypoint": "verifyHandoffReceiptRoot",
+    "module_path": "src/receiptos/verify/verify-receipt.ts",
+    "git_blob_oid": "2e2e45bf30529de93eac58a04465f17ef81edeaa"
+  },
+  "children": [
+    {
+      "ordinal": 1,
+      "challenge_id": "observed_not_validated",
+      "package_path": "conformance/verifier-challenge-observed-not-validated-v0",
+      "vector_count": 1,
+      "execution_class": "production-verifier-binding",
+      "fixture_set_sha256": "efeb64c3cc3809d604145ad7436a481baffd7aa9bdd798a1ddf2c1e5e38ae33f",
+      "expected_result_set_sha256": "0979570c534e3808ac3d5a951902564e33b1a58f3263f1da45ceb344d0e85514"
+    },
+    {
+      "ordinal": 2,
+      "challenge_id": "missing_required_input_unverifiable",
+      "package_path": "conformance/verifier-challenge-missing-required-input-unverifiable-v0",
+      "vector_count": 1,
+      "execution_class": "production-verifier-binding",
+      "fixture_set_sha256": "525bed2d6b2dcd735be96b3faba11c045a24a24189787ce8d5d398b3def23e04",
+      "expected_result_set_sha256": "7e32bc856b317574d38c8d036c5a352bb83b4f2a04c00ed4e52de53b378a2184"
+    },
+    {
+      "ordinal": 3,
+      "challenge_id": "integrity_mismatch_rejected",
+      "package_path": "conformance/verifier-challenge-integrity-mismatch-rejected-v0",
+      "vector_count": 1,
+      "execution_class": "production-verifier-binding",
+      "fixture_set_sha256": "6844b0554d71bee8c650fcc949e23f730980d75d22a8483f1c4f50e722de941d",
+      "expected_result_set_sha256": "b755108edac9dc607b7b6b7f30d845f381cac13100194741a451b1c7cb7162a5"
+    }
+  ],
+  "aggregate": {
+    "child_count": 3,
+    "vector_count": 3,
+    "execution_class_counts": {
+      "production-verifier-binding": 3
+    },
+    "child_identity_set_recipe": "Ordered children from contract.children encoded as canonical JSON array (sort_keys=true, compact separators), UTF-8, SHA-256 lowercase hex.",
+    "child_identity_set_sha256": "945ec30015490b3d92c01177124be5eddcee18b99308d3aed7701fedff67d326"
+  },
+  "hash_algorithm": "sha256-lowercase-hex",
+  "fixture_set_recipe": "Sorted member paths except manifest.json: <path>\\t<file-sha256>\\n concatenated UTF-8 then SHA-256.",
+  "independence_scope": {
+    "package_identity": "Python and TypeScript auditors recompute aggregate fixture and child-reference digests without production imports.",
+    "challenge_semantics": "Child packages remain authoritative for vector semantics; aggregate verifies inventory, order, and declared child digests only.",
+    "production_result": "Child production-binding tests remain separate; aggregate binding verifies index references only."
+  },
+  "forbidden_semantics": [
+    "new_verifier_challenge_semantics",
+    "fourth_challenge",
+    "verifier_challenge_set_completeness",
+    "timing_semantics",
+    "chronicle_admission",
+    "tee_verifier_surfaces",
+    "host_error_conformance",
+    "semantic_neighbors",
+    "dcn",
+    "verifier_of_verifier",
+    "general_schema_validation",
+    "full_tamper_proofing"
+  ]
+}

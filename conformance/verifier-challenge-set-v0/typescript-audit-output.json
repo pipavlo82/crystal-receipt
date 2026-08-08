@@ -1,0 +1,19 @@
+{
+  "auditor": "typescript-independent-verifier-challenge-set-v0",
+  "mode": "read-only-filesystem",
+  "set_id": "verifier-challenge-set-v0",
+  "child_count": 3,
+  "vector_count": 3,
+  "package_inventory_count": 2,
+  "fixture_set_sha256": "6a4f84a109f633559c7df2e9dd86092e00ce52a81c4a3dcd46c112175748e284",
+  "child_identity_set_sha256": "945ec30015490b3d92c01177124be5eddcee18b99308d3aed7701fedff67d326",
+  "execution_class_counts": {
+    "production-verifier-binding": 3
+  },
+  "independence_scope": {
+    "package_identity": "Python and TypeScript auditors recompute aggregate fixture and child-reference digests without production imports.",
+    "challenge_semantics": "Child packages remain authoritative for vector semantics; aggregate verifies inventory, order, and declared child digests only.",
+    "production_result": "Child production-binding tests remain separate; aggregate binding verifies index references only."
+  },
+  "production_imports": 0
+}
