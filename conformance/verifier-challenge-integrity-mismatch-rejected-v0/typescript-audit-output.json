@@ -1,0 +1,17 @@
+{
+  "auditor": "typescript-independent-verifier-challenge-integrity-mismatch-rejected-v0",
+  "mode": "read-only-filesystem",
+  "vector_count": 1,
+  "package_inventory_count": 3,
+  "fixture_set_sha256": "6844b0554d71bee8c650fcc949e23f730980d75d22a8483f1c4f50e722de941d",
+  "expected_result_set_sha256": "b755108edac9dc607b7b6b7f30d845f381cac13100194741a451b1c7cb7162a5",
+  "execution_class_counts": {
+    "production-verifier-binding": 1
+  },
+  "independence_scope": {
+    "package_identity": "Python and TypeScript auditors recompute member and expected-result digests without production imports.",
+    "challenge_semantics": "Independent verifier validates mutation scope, field classification, and encoded integrity-mismatch relation from frozen spec.",
+    "production_result": "Actual verifyHandoffReceiptRoot execution is bound only by TypeScript production runner; no claim of independent full receipt recomputation."
+  },
+  "production_imports": 0
+}
