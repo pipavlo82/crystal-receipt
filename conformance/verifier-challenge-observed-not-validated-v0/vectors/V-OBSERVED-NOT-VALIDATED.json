@@ -7,17 +7,17 @@
   "subject_verifier": {
     "entrypoint": "verifyHandoffReceiptRoot",
     "module_path": "src/receiptos/verify/verify-receipt.ts",
-    "git_blob_oid": "b453db974c3d49280f4adfc69d66002c20020277"
+    "git_blob_oid": "2e2e45bf30529de93eac58a04465f17ef81edeaa"
   },
   "receipt_root_profile": {
     "strip_anchor_rule": "entire_top_level_anchor_removed_before_canonicalization",
     "canonicalization_module_path": "src/receiptos/canon/canonicalize.ts",
     "receipt_root_module_path": "src/receiptos/canon/receipt-root.ts",
-    "receipt_root_module_git_blob_oid": "e7a31026131e3302eeebc6ac4cefe074998824a5"
+    "receipt_root_module_git_blob_oid": "4dddf737b824cae91281a93eb563c9134cdc1bb0"
   },
   "source_fixture": {
     "repository_path": "src/receiptos/fixtures/session-evidence.cyphes-workflow.sample.json",
-    "git_blob_oid": "879efae676e513db96f12e3c69774243525c822e"
+    "git_blob_oid": "b1be64dbb71898ab5ffa75660f8e07c3250d8be1"
   },
   "baseline_input": {
     "source": "source_fixture",

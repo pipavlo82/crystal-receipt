@@ -5,16 +5,16 @@
   "files": [
     {
       "path": "conformance/verifier-challenge-observed-not-validated-v0/SPEC.md",
-      "sha256": "a4bae73c3894024ab053668eaa77ffd74c10e5442746d9390ea5d499dacecca3"
+      "sha256": "bfa7f5c1a89c064b7d50830f320d750c32e59aa843bf2ccf31fa482a82c73453"
     },
     {
       "path": "conformance/verifier-challenge-observed-not-validated-v0/contract.json",
-      "sha256": "198c743cd4ea907073ab638749dd78d61443bf41a450dd77e477e641e79b9aee"
+      "sha256": "03f3553eb33aec7db2ea5b84741cf914613556ca246173c1edc48fffc87bba10"
     },
     {
       "path": "conformance/verifier-challenge-observed-not-validated-v0/vectors/V-OBSERVED-NOT-VALIDATED.json",
-      "sha256": "401a9cbe7a185fe947394d09eb0e482406fb8b5f2798e8ef65acf780f1029815"
+      "sha256": "5130527a09df8c9b7154f4921755dd3675c9bdd0df1be398aa4748c1d3d9fd93"
     }
   ],
-  "fixture_set_sha256": "1191b95b2b3ed69f560ddc19ae31e03d4e387cd186075a4114a543a158b600de"
+  "fixture_set_sha256": "efeb64c3cc3809d604145ad7436a481baffd7aa9bdd798a1ddf2c1e5e38ae33f"
 }

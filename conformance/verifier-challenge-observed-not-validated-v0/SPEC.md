@@ -17,6 +17,10 @@ or host-error taxonomy.
 - Module: `src/receiptos/verify/verify-receipt.ts`
 - Pinned by Git blob OID in the vector and contract.
 
+Git blob pins in this package refer to tracked Git index/object-store blob
+identities. They do not refer to platform-normalized working-tree bytes.
+Independent auditors resolve pins with `git rev-parse :<repository-relative-path>`.
+
 ## Challenge semantics
 
 ### Governed input

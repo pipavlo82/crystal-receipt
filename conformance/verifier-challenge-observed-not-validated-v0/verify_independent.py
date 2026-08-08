@@ -22,12 +22,15 @@ def sha256_hex(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def git_blob_oid(repository_path: str) -> str:
-    return subprocess.check_output(
-        ["git", "hash-object", repository_path],
-        cwd=ROOT,
-        text=True,
-    ).strip()
+def git_index_blob_oid(repository_path: str) -> str:
+    try:
+        return subprocess.check_output(
+            ["git", "rev-parse", f":{repository_path}"],
+            cwd=ROOT,
+            text=True,
+        ).strip()
+    except subprocess.CalledProcessError as error:
+        raise ValueError(f"untracked or unresolved git blob identity: {repository_path}") from error
 
 
 def canonical_expected(value: object) -> str:
@@ -96,8 +99,19 @@ def audit_package() -> dict:
     assert result_hash == contract["expected_result_set_sha256"]
 
     fixture_path = ROOT / vector["source_fixture"]["repository_path"]
-    assert git_blob_oid(str(vector["source_fixture"]["repository_path"])) == vector["source_fixture"]["git_blob_oid"]
-    assert git_blob_oid(str(vector["subject_verifier"]["module_path"])) == vector["subject_verifier"]["git_blob_oid"]
+    assert (
+        git_index_blob_oid(str(vector["source_fixture"]["repository_path"]))
+        == vector["source_fixture"]["git_blob_oid"]
+    )
+    assert (
+        git_index_blob_oid(str(vector["subject_verifier"]["module_path"]))
+        == vector["subject_verifier"]["git_blob_oid"]
+    )
+    profile = vector["receipt_root_profile"]
+    assert (
+        git_index_blob_oid(str(profile["receipt_root_module_path"]))
+        == profile["receipt_root_module_git_blob_oid"]
+    )
 
     baseline = json.loads(fixture_path.read_bytes().decode("utf-8"))
     challenged = apply_mutation(baseline, vector["mutation"])
