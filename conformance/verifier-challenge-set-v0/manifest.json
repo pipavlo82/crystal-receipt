@@ -1,0 +1,17 @@
+{
+  "schema": "verifier_challenge_set_fixture_manifest.v0",
+  "set_id": "verifier-challenge-set-v0",
+  "version": "v0",
+  "file_count": 2,
+  "files": [
+    {
+      "path": "conformance/verifier-challenge-set-v0/SPEC.md",
+      "sha256": "076cff6499bc59e6c2dcdf36a4a1f07bb5f7471f692630df913b553d6bd1ed79"
+    },
+    {
+      "path": "conformance/verifier-challenge-set-v0/contract.json",
+      "sha256": "18b4fb33a2a62eb41b5a150756946483a4fa1ad213b5b9fdeff235ad64645b57"
+    }
+  ],
+  "fixture_set_sha256": "6a4f84a109f633559c7df2e9dd86092e00ce52a81c4a3dcd46c112175748e284"
+}
