@@ -1,0 +1,16 @@
+{
+  "auditor": "typescript-independent-counterfactual-audit-boundary-v0",
+  "mode": "read-only-filesystem",
+  "vector_count": 12,
+  "package_inventory_count": 14,
+  "fixture_set_sha256": "7503d5cac003a23489f194c5521ef90b01ac0b2ce345a2cec57ad12ffeb274f8",
+  "expected_result_set_sha256": "db664c5e8da2f0fb6d1d94a036eab572ae2941ffeb5193624365d4bdbaeec24a",
+  "independently_evaluated_vectors": 10,
+  "runtime_binding_vectors": 2,
+  "execution_class_counts": {
+    "semantic-snapshot": 6,
+    "manifest-file-hash": 4,
+    "runtime-binding-required": 2
+  },
+  "production_imports": 0
+}
