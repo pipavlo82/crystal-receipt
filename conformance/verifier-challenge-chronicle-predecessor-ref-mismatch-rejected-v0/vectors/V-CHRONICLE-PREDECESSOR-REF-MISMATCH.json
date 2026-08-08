@@ -1,0 +1,178 @@
+{
+  "schema": "verifier_challenge_chronicle_predecessor_ref_mismatch_rejected_vector.v0",
+  "vector_id": "V-CHRONICLE-PREDECESSOR-REF-MISMATCH",
+  "package_version": "verifier-challenge-chronicle-predecessor-ref-mismatch-rejected-v0",
+  "challenge_id": "predecessor_ref_mismatch_rejected",
+  "execution_class": "production-continuity-binding",
+  "subject_continuity_evaluator": {
+    "entrypoint": "evaluateChronicleCheckpointContinuityV0",
+    "module_path": "src/receiptos/capsule/chronicle-checkpoint-continuity-v0.ts",
+    "git_blob_oid": "428923f10aac54bfaaebedfad494118cbb17d744"
+  },
+  "local_checkpoint_verifier": {
+    "entrypoint": "verifyChronicleCheckpointV0",
+    "module_path": "src/receiptos/capsule/chronicle-portfolio-v0.ts",
+    "git_blob_oid": "0e790911092546c62344f980e6b611542bcd00fe"
+  },
+  "continuity_profile": {
+    "continuity_gate_order": [
+      "current_shape_malformed",
+      "current_local_verifier_failed",
+      "genesis",
+      "predecessor_unknown",
+      "predecessor_shape_malformed",
+      "predecessor_local_verifier_failed",
+      "predecessor_ref_mismatch",
+      "sequence_gap",
+      "predecessor_same_sequence",
+      "predecessor_higher_sequence"
+    ],
+    "challenged_first_failure_gate": "predecessor_ref_mismatch",
+    "normative_spec_path": "docs/CHRONICLE_CHECKPOINT_CONTINUITY_V0.md",
+    "normative_spec_git_blob_oid": "ada3f0f5d5e13eccf6588ee1a9828efa6a7b1703"
+  },
+  "source_fixture": {
+    "repository_path": "tests/fixtures/chronicle-checkpoint-continuity-v0.json",
+    "git_blob_oid": "88a41845d6b5fa16d057b884f113c9df3f4a9e28",
+    "baseline_vector_name": "valid_successor",
+    "precedent_vector_name": "predecessor_ref_mismatch"
+  },
+  "baseline_pair": {
+    "current": {
+      "schema": "chronicle_checkpoint.v0",
+      "checkpoint_id": "checkpoint-2",
+      "collection_ref": "/collection/demo",
+      "entry_refs": [
+        "entry-alpha",
+        "entry-beta"
+      ],
+      "prev_checkpoint": "sha256:eaa7aef9bbfeec0250b0faef4caf3c8b39fca154c07e185deb305e39bf9b7be7",
+      "sequence": 2,
+      "checkpoint_root": "sha256:bbdbfd5c38f8b7981361a2826f428c4e401ef983aa89c74c30da2ba348bad6ca"
+    },
+    "predecessor": {
+      "schema": "chronicle_checkpoint.v0",
+      "checkpoint_id": "checkpoint-1",
+      "collection_ref": "/collection/demo",
+      "entry_refs": [
+        "entry-alpha"
+      ],
+      "prev_checkpoint": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "sequence": 1,
+      "checkpoint_root": "sha256:eaa7aef9bbfeec0250b0faef4caf3c8b39fca154c07e185deb305e39bf9b7be7"
+    }
+  },
+  "substitution": {
+    "operation": "replace_predecessor_argument",
+    "from_checkpoint_id": "checkpoint-1",
+    "to_checkpoint_id": "checkpoint-1-other",
+    "precedent_vector_name": "predecessor_ref_mismatch",
+    "unchanged_fields": [
+      "current"
+    ]
+  },
+  "challenged_pair": {
+    "current": {
+      "schema": "chronicle_checkpoint.v0",
+      "checkpoint_id": "checkpoint-2",
+      "collection_ref": "/collection/demo",
+      "entry_refs": [
+        "entry-alpha",
+        "entry-beta"
+      ],
+      "prev_checkpoint": "sha256:eaa7aef9bbfeec0250b0faef4caf3c8b39fca154c07e185deb305e39bf9b7be7",
+      "sequence": 2,
+      "checkpoint_root": "sha256:bbdbfd5c38f8b7981361a2826f428c4e401ef983aa89c74c30da2ba348bad6ca"
+    },
+    "predecessor": {
+      "schema": "chronicle_checkpoint.v0",
+      "checkpoint_id": "checkpoint-1-other",
+      "collection_ref": "/collection/demo",
+      "entry_refs": [
+        "entry-alpha"
+      ],
+      "prev_checkpoint": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "sequence": 1,
+      "checkpoint_root": "sha256:da9afc6391379c981f6f48faed6e2c855acb7340fcab29eff73e0535e9c23cab"
+    }
+  },
+  "field_classification": {
+    "predecessor_argument_changed_only": true,
+    "current_checkpoint_unchanged": true,
+    "unchanged_current_fields": [
+      "schema",
+      "checkpoint_id",
+      "collection_ref",
+      "entry_refs",
+      "prev_checkpoint",
+      "sequence",
+      "checkpoint_root"
+    ],
+    "excluded_from_mutation": [
+      "current",
+      "current.prev_checkpoint",
+      "current.checkpoint_root",
+      "current.sequence",
+      "current.entry_refs",
+      "predecessor.checkpoint_root",
+      "predecessor.prev_checkpoint",
+      "predecessor.sequence",
+      "predecessor.entry_refs"
+    ]
+  },
+  "local_verification_controls": {
+    "current": {
+      "ok": true,
+      "checkpoint_root": "sha256:bbdbfd5c38f8b7981361a2826f428c4e401ef983aa89c74c30da2ba348bad6ca",
+      "recomputed_checkpoint_root": "sha256:bbdbfd5c38f8b7981361a2826f428c4e401ef983aa89c74c30da2ba348bad6ca"
+    },
+    "baseline_predecessor": {
+      "ok": true,
+      "checkpoint_root": "sha256:eaa7aef9bbfeec0250b0faef4caf3c8b39fca154c07e185deb305e39bf9b7be7",
+      "recomputed_checkpoint_root": "sha256:eaa7aef9bbfeec0250b0faef4caf3c8b39fca154c07e185deb305e39bf9b7be7"
+    },
+    "challenged_predecessor": {
+      "ok": true,
+      "checkpoint_root": "sha256:da9afc6391379c981f6f48faed6e2c855acb7340fcab29eff73e0535e9c23cab",
+      "recomputed_checkpoint_root": "sha256:da9afc6391379c981f6f48faed6e2c855acb7340fcab29eff73e0535e9c23cab"
+    }
+  },
+  "expected": {
+    "outcomes": [
+      "baseline_valid_successor",
+      "challenged_predecessor_ref_mismatch",
+      "current_checkpoint_unchanged",
+      "both_predecessors_locally_valid",
+      "current_locally_valid",
+      "predecessor_ref_mismatch_first_failure"
+    ],
+    "baseline_continuity": {
+      "evaluation_state": "evaluated",
+      "verdict": "valid",
+      "relation": "successor",
+      "reason_code": "direct_successor"
+    },
+    "challenged_continuity": {
+      "evaluation_state": "evaluated",
+      "verdict": "invalid",
+      "relation": null,
+      "reason_code": "predecessor_ref_mismatch"
+    },
+    "baseline_evaluation_state": "evaluated",
+    "baseline_verdict": "valid",
+    "baseline_relation": "successor",
+    "baseline_reason_code": "direct_successor",
+    "challenged_evaluation_state": "evaluated",
+    "challenged_verdict": "invalid",
+    "challenged_relation": null,
+    "challenged_reason_code": "predecessor_ref_mismatch",
+    "current_checkpoint_unchanged": true,
+    "baseline_predecessor_locally_valid": true,
+    "challenged_predecessor_locally_valid": true,
+    "current_checkpoint_locally_valid": true,
+    "predecessor_argument_changed_only": true,
+    "predecessor_ref_mismatch_blocks_continuity": true,
+    "sequence_gate_not_first_failure": true,
+    "non_throwing": true
+  }
+}

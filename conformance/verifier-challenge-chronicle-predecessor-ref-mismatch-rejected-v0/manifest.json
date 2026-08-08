@@ -1,0 +1,20 @@
+{
+  "schema": "verifier_challenge_chronicle_predecessor_ref_mismatch_rejected_fixture_manifest.v0",
+  "package_version": "verifier-challenge-chronicle-predecessor-ref-mismatch-rejected-v0",
+  "file_count": 3,
+  "files": [
+    {
+      "path": "conformance/verifier-challenge-chronicle-predecessor-ref-mismatch-rejected-v0/SPEC.md",
+      "sha256": "bd3652f6ec68d4cad44f3ae01d7328a93861db645586902904dd7e223c1d527c"
+    },
+    {
+      "path": "conformance/verifier-challenge-chronicle-predecessor-ref-mismatch-rejected-v0/contract.json",
+      "sha256": "190b368d914e8d59e8b050dbbe5747e937467ebbaf94d31fb9d04aa54b0f89a0"
+    },
+    {
+      "path": "conformance/verifier-challenge-chronicle-predecessor-ref-mismatch-rejected-v0/vectors/V-CHRONICLE-PREDECESSOR-REF-MISMATCH.json",
+      "sha256": "dfb0a25811cec8a71b0295b88aec3b0991f58f1e83c204d0e9d54673563e54c6"
+    }
+  ],
+  "fixture_set_sha256": "88a372217a30759262127f21b45a6470837d5c3275baa0718cd2fc99fd85cc5c"
+}
