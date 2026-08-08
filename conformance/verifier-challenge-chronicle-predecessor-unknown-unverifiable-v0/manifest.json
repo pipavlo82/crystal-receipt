@@ -1,0 +1,20 @@
+{
+  "schema": "verifier_challenge_chronicle_predecessor_unknown_unverifiable_fixture_manifest.v0",
+  "package_version": "verifier-challenge-chronicle-predecessor-unknown-unverifiable-v0",
+  "file_count": 3,
+  "files": [
+    {
+      "path": "conformance/verifier-challenge-chronicle-predecessor-unknown-unverifiable-v0/SPEC.md",
+      "sha256": "bfd33245aa445371ec50e7c9c6457dcce7ba24f62cb85269d37eb45774d7d004"
+    },
+    {
+      "path": "conformance/verifier-challenge-chronicle-predecessor-unknown-unverifiable-v0/contract.json",
+      "sha256": "2604472bdcfed4ec75f7b8dbdba0b5003e4847e985e916c1e738b0eab8f53f21"
+    },
+    {
+      "path": "conformance/verifier-challenge-chronicle-predecessor-unknown-unverifiable-v0/vectors/V-CHRONICLE-PREDECESSOR-UNKNOWN.json",
+      "sha256": "fa499821db732d4a18221b95cc84bb18b9a30790837ba36203052963f58128dd"
+    }
+  ],
+  "fixture_set_sha256": "e7a45ad8aa0d81fd0146212f545a7ae15e0645f40345cd2e1ca9f67e4b2b0128"
+}
