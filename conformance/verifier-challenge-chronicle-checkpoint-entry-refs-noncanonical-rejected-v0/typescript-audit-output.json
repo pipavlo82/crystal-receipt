@@ -1,0 +1,17 @@
+{
+  "auditor": "typescript-independent-verifier-challenge-chronicle-checkpoint-entry-refs-noncanonical-rejected-v0",
+  "mode": "read-only-filesystem",
+  "vector_count": 1,
+  "package_inventory_count": 3,
+  "fixture_set_sha256": "69c3f877c6f7be51d49751141f688af7ab5bf57023da046576402dcbaac7afda",
+  "expected_result_set_sha256": "b1d56d206b71790b0f0d53f9c3d38844855125638ec932a30706c67ba40c3964",
+  "execution_class_counts": {
+    "production-checkpoint-local-binding": 1
+  },
+  "independence_scope": {
+    "package_identity": "Python and TypeScript auditors recompute member and expected-result digests without production imports.",
+    "challenge_semantics": "Independent verifier validates substitution scope, canonical-order relation, and encoded local verification results from frozen spec.",
+    "production_result": "Actual verifyChronicleCheckpointV0 execution is bound only by TypeScript production runner; no claim of independent full checkpoint local verification recomputation."
+  },
+  "production_imports": 0
+}
