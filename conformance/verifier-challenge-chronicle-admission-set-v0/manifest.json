@@ -1,0 +1,17 @@
+{
+  "schema": "verifier_challenge_chronicle_admission_set_fixture_manifest.v0",
+  "set_id": "verifier-challenge-chronicle-admission-set-v0",
+  "version": "v0",
+  "file_count": 2,
+  "files": [
+    {
+      "path": "conformance/verifier-challenge-chronicle-admission-set-v0/SPEC.md",
+      "sha256": "ab7a11358ebf8b9c469a7b68a9303fcca18936acd62d77e871502742e9c7b3b7"
+    },
+    {
+      "path": "conformance/verifier-challenge-chronicle-admission-set-v0/contract.json",
+      "sha256": "9b8944bbc6f813f179164e8f8ac0b234e0e070536023d4780e7564426a4d4b4f"
+    }
+  ],
+  "fixture_set_sha256": "dbf062131278b8164373725442e069eb53328729058960b52213dd74b78c83c5"
+}
