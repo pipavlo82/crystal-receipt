@@ -1,0 +1,17 @@
+{
+  "auditor": "typescript-independent-verifier-challenge-chronicle-predecessor-ref-mismatch-rejected-v0",
+  "mode": "read-only-filesystem",
+  "vector_count": 1,
+  "package_inventory_count": 3,
+  "fixture_set_sha256": "88a372217a30759262127f21b45a6470837d5c3275baa0718cd2fc99fd85cc5c",
+  "expected_result_set_sha256": "a7108e666496a9d32bc0b2e490bddf5a1df51ffd5d04263321ee907c880298b9",
+  "execution_class_counts": {
+    "production-continuity-binding": 1
+  },
+  "independence_scope": {
+    "package_identity": "Python and TypeScript auditors recompute member and expected-result digests without production imports.",
+    "challenge_semantics": "Independent verifier validates substitution scope, gate-order relation, and encoded continuity relation from frozen spec.",
+    "production_result": "Actual evaluateChronicleCheckpointContinuityV0 execution is bound only by TypeScript production runner; no claim of independent full continuity recomputation."
+  },
+  "production_imports": 0
+}
