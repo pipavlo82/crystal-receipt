@@ -1,0 +1,64 @@
+{
+  "schema": "verifier_challenge_observed_not_validated_contract.v0",
+  "package_version": "verifier-challenge-observed-not-validated-v0",
+  "profile_id": "verifier-challenge-observed-not-validated-v0",
+  "challenge_id": "observed_not_validated",
+  "authority": {
+    "normative_spec": "conformance/verifier-challenge-observed-not-validated-v0/SPEC.md",
+    "production_binding": "src/receiptos/verify/verify-receipt.ts",
+    "prototype_precedent": "tests/receiptos/verifier-challenge-observed-not-validated.prototype.test.ts"
+  },
+  "required_vector_fields": [
+    "vector_id",
+    "package_version",
+    "challenge_id",
+    "execution_class",
+    "subject_verifier",
+    "receipt_root_profile",
+    "source_fixture",
+    "baseline_input",
+    "mutation",
+    "field_classification",
+    "expected"
+  ],
+  "forbidden_semantics": [
+    "semantic_neighbors",
+    "subject_bundle_root",
+    "host_error_taxonomy",
+    "capsule_output_comparison"
+  ],
+  "verifier_entrypoint": {
+    "name": "verifyHandoffReceiptRoot",
+    "module_path": "src/receiptos/verify/verify-receipt.ts",
+    "git_blob_oid": "b453db974c3d49280f4adfc69d66002c20020277"
+  },
+  "source_fixture_identity": {
+    "repository_path": "src/receiptos/fixtures/session-evidence.cyphes-workflow.sample.json",
+    "git_blob_oid": "879efae676e513db96f12e3c69774243525c822e"
+  },
+  "vector_inventory": [
+    "V-OBSERVED-NOT-VALIDATED"
+  ],
+  "hash_algorithm": "sha256-lowercase-hex",
+  "fixture_set_recipe": "Sorted member paths except manifest.json: <path>\\t<file-sha256>\\n concatenated UTF-8 then SHA-256.",
+  "expected_result_set_recipe": "<vector-id>\\t<sha256(canonical expected JSON)>\\n concatenated UTF-8 then SHA-256.",
+  "expected_result_set_sha256": "0979570c534e3808ac3d5a951902564e33b1a58f3263f1da45ceb344d0e85514",
+  "vector_execution_classes": {
+    "allowed": [
+      "production-verifier-binding"
+    ],
+    "definitions": {
+      "production-verifier-binding": "Execute verifyHandoffReceiptRoot on baseline and challenged inputs; compare frozen result fields."
+    },
+    "vectors": {
+      "V-OBSERVED-NOT-VALIDATED": {
+        "execution_class": "production-verifier-binding"
+      }
+    }
+  },
+  "independence_scope": {
+    "package_identity": "Python and TypeScript auditors recompute member and expected-result digests without production imports.",
+    "challenge_semantics": "Independent verifier validates mutation scope, field classification, and encoded non-elevation relation from frozen spec.",
+    "production_result": "Actual verifyHandoffReceiptRoot execution is bound only by TypeScript production runner; no claim of independent full receipt recomputation."
+  }
+}

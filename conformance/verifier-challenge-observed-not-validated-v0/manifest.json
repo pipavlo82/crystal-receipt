@@ -1,0 +1,20 @@
+{
+  "schema": "verifier_challenge_observed_not_validated_fixture_manifest.v0",
+  "package_version": "verifier-challenge-observed-not-validated-v0",
+  "file_count": 3,
+  "files": [
+    {
+      "path": "conformance/verifier-challenge-observed-not-validated-v0/SPEC.md",
+      "sha256": "a4bae73c3894024ab053668eaa77ffd74c10e5442746d9390ea5d499dacecca3"
+    },
+    {
+      "path": "conformance/verifier-challenge-observed-not-validated-v0/contract.json",
+      "sha256": "198c743cd4ea907073ab638749dd78d61443bf41a450dd77e477e641e79b9aee"
+    },
+    {
+      "path": "conformance/verifier-challenge-observed-not-validated-v0/vectors/V-OBSERVED-NOT-VALIDATED.json",
+      "sha256": "401a9cbe7a185fe947394d09eb0e482406fb8b5f2798e8ef65acf780f1029815"
+    }
+  ],
+  "fixture_set_sha256": "1191b95b2b3ed69f560ddc19ae31e03d4e387cd186075a4114a543a158b600de"
+}
