@@ -1,0 +1,26 @@
+{
+  "schema": "counterfactual_audit_boundary_vector.v0",
+  "vector_id": "V-SEM-MANIFEST-INVARIANT",
+  "package_version": "counterfactual-audit-boundary-v0",
+  "execution_class": "semantic-snapshot",
+  "operation": "semantic_snapshot",
+  "semantic_artifact": {
+    "challenge_id": "observed_not_validated",
+    "profile_id": "counterfactual-review-v0",
+    "expected_conformance_observation": "preserve semantic non-elevation"
+  },
+  "manifest_variants": [
+    {
+      "audit_timestamp": "2026-07-27T12:00:00Z"
+    },
+    {
+      "audit_timestamp": "2026-08-05T12:00:00Z"
+    },
+    {}
+  ],
+  "expected": {
+    "outcome": "accepted_snapshot",
+    "semantic_snapshots_must_match": true,
+    "canonical_snapshot_json": "{\"challenge_id\":\"observed_not_validated\",\"expected_conformance_observation\":\"preserve semantic non-elevation\",\"profile_id\":\"counterfactual-review-v0\"}"
+  }
+}
