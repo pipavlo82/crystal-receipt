@@ -1,0 +1,20 @@
+{
+  "schema": "verifier_challenge_chronicle_capsule_label_inconsistent_rejected_fixture_manifest.v0",
+  "package_version": "verifier-challenge-chronicle-capsule-label-inconsistent-rejected-v0",
+  "file_count": 3,
+  "files": [
+    {
+      "path": "conformance/verifier-challenge-chronicle-capsule-label-inconsistent-rejected-v0/SPEC.md",
+      "sha256": "632c4f9a6f8b2a7486a1758df3ce1f2f2a80e75417ff9ee291410a56c3424fca"
+    },
+    {
+      "path": "conformance/verifier-challenge-chronicle-capsule-label-inconsistent-rejected-v0/contract.json",
+      "sha256": "26f1aaaf464b117a9893fa692db9529dc5423e810e0c082e5aa391f4a1f22dc5"
+    },
+    {
+      "path": "conformance/verifier-challenge-chronicle-capsule-label-inconsistent-rejected-v0/vectors/V-CHRONICLE-CAPSULE-LABEL-INCONSISTENT.json",
+      "sha256": "f9ef131952e0064d1940eb6d99c3c1a5f1523a9ec9086a30de5c86df4b73fb72"
+    }
+  ],
+  "fixture_set_sha256": "7c35e0d99afe34edfe1143de03589ca07dc35aa7c6fdaa320c3d456ac4bc48cf"
+}
