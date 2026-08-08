@@ -1,0 +1,20 @@
+{
+  "auditor": "typescript-independent-verifier-challenge-chronicle-continuity-set-v0",
+  "mode": "read-only-filesystem",
+  "set_id": "verifier-challenge-chronicle-continuity-set-v0",
+  "child_count": 3,
+  "vector_count": 0,
+  "child_vector_count": 3,
+  "package_inventory_count": 2,
+  "fixture_set_sha256": "77261f48e3a712536e3cd37f4384c0b62a5063a3c6be7cf14ac648848feea716",
+  "child_identity_set_sha256": "4448c728b264cc51d369de7b42430205b9dfdabedb09a282c619e5a42e0d61ac",
+  "execution_class_counts": {
+    "production-continuity-binding": 3
+  },
+  "independence_scope": {
+    "package_identity": "Python and TypeScript auditors recompute aggregate fixture and child-reference digests without production imports.",
+    "challenge_semantics": "Child packages remain authoritative for vector semantics; aggregate verifies inventory, order, and declared child digests only.",
+    "production_result": "Child production-binding tests remain separate; aggregate binding verifies index references only."
+  },
+  "production_imports": 0
+}
