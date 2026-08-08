@@ -1,0 +1,54 @@
+{
+  "schema": "verifier_challenge_missing_required_input_unverifiable_vector.v0",
+  "vector_id": "V-MISSING-REQUIRED-INPUT",
+  "package_version": "verifier-challenge-missing-required-input-unverifiable-v0",
+  "challenge_id": "missing_required_input_unverifiable",
+  "execution_class": "production-verifier-binding",
+  "subject_verifier": {
+    "entrypoint": "verifyHandoffReceiptRoot",
+    "module_path": "src/receiptos/verify/verify-receipt.ts",
+    "git_blob_oid": "2e2e45bf30529de93eac58a04465f17ef81edeaa"
+  },
+  "receipt_root_profile": {
+    "strip_anchor_rule": "entire_top_level_anchor_removed_before_canonicalization",
+    "canonicalization_module_path": "src/receiptos/canon/canonicalize.ts",
+    "canonicalization_module_git_blob_oid": "fb4a037a6dedad4c8d1555db649bb9fce529e01e",
+    "receipt_root_module_path": "src/receiptos/canon/receipt-root.ts",
+    "receipt_root_module_git_blob_oid": "4dddf737b824cae91281a93eb563c9134cdc1bb0",
+    "missing_operand_behavior": "return_ok_false_null_roots_without_throw"
+  },
+  "source_fixture": {
+    "repository_path": "src/receiptos/fixtures/session-evidence.cyphes-workflow.sample.json",
+    "git_blob_oid": "b1be64dbb71898ab5ffa75660f8e07c3250d8be1"
+  },
+  "baseline_input": {
+    "source": "source_fixture",
+    "anchor_receipt_root": "0xfe6ee94aed3ee6158c296e2d2d41ab7b31028259a99105c872adb4fdc30196d0"
+  },
+  "mutation": {
+    "operation": "set",
+    "path": ["anchor", "receipt_root"],
+    "from": "0xfe6ee94aed3ee6158c296e2d2d41ab7b31028259a99105c872adb4fdc30196d0",
+    "to": null
+  },
+  "field_classification": {
+    "required_decisive_operand": ["anchor.receipt_root"],
+    "excluded_from_recomputation": ["anchor"],
+    "absent_operand_prevents_comparison": true
+  },
+  "expected": {
+    "outcomes": ["verification_differs", "missing_input_unverifiable", "non_throwing_fail_closed"],
+    "baseline_verification": {
+      "ok": true,
+      "receipt_root": "0xfe6ee94aed3ee6158c296e2d2d41ab7b31028259a99105c872adb4fdc30196d0",
+      "recomputed_root": "0xfe6ee94aed3ee6158c296e2d2d41ab7b31028259a99105c872adb4fdc30196d0"
+    },
+    "challenged_verification": {
+      "ok": false,
+      "receipt_root": null,
+      "recomputed_root": null
+    },
+    "challenged_must_equal_baseline": false,
+    "missing_input_cannot_establish_validity": true
+  }
+}
