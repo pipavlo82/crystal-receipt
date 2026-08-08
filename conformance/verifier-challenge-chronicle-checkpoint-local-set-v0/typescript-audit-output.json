@@ -1,0 +1,20 @@
+{
+  "auditor": "typescript-independent-verifier-challenge-chronicle-checkpoint-local-set-v0",
+  "mode": "read-only-filesystem",
+  "set_id": "verifier-challenge-chronicle-checkpoint-local-set-v0",
+  "child_count": 2,
+  "vector_count": 0,
+  "child_vector_count": 2,
+  "package_inventory_count": 2,
+  "fixture_set_sha256": "2c5b171806a253c32495a819d011087c46f4cfb8bad27b0821f6abd280a6ef89",
+  "child_identity_set_sha256": "5bcdef8fa4fdb24287e29efb273b4e1998e443047ea1251ec12e3c8097269e28",
+  "execution_class_counts": {
+    "production-checkpoint-local-binding": 2
+  },
+  "independence_scope": {
+    "package_identity": "Python and TypeScript auditors recompute aggregate fixture and child-reference digests without production imports.",
+    "challenge_semantics": "Child packages remain authoritative for vector semantics; aggregate verifies inventory, order, and declared child digests only.",
+    "production_result": "Child production-binding tests remain separate; aggregate binding verifies index references and pinned two-property verifier surface only."
+  },
+  "production_imports": 0
+}
