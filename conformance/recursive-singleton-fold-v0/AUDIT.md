@@ -31,7 +31,18 @@
   accepted-only-after-position-28 fallthrough proof all pass.
 - Positions 1–17: six exact base Git blob OIDs are pinned in `contract.json`;
   no runtime byte is changed.
+- `production_architecture_blobs` in `contract.json`: historical Git blob OIDs
+  frozen with this 40-member package at amendment base `d3bc93ff`. They record
+  the production merge that introduced positions 18–28, not the post-#158
+  hardened runtime. Only `src/receiptos/index.ts` is live-verified against
+  those pins in the normative conformance test; the hardened files
+  `evaluate-positions-18-through-28.ts` and `strict-json-snapshot.ts` changed at
+  merge `7dbedb1f` and are outside this frozen package digest.
 
-This is normative conformance evidence, not a production evaluator or a claim
-that F-01 (Proxy snapshot instability) or F-03 (incomplete mutation guards) is
-closed. Both remain separate production-closure blockers.
+This record is normative conformance evidence for the frozen positions 18–28
+package. When this audit was first written, independent review had identified
+F-01 (Proxy snapshot instability) and F-03 (incomplete mutation guards) as
+separate production-closure blockers. PR #158 (`7f01cdf2`, merge `7dbedb1f`)
+closed both without changing this package’s fixture-set digest
+(`879e0caa5d26643755b5a0e4b8836f0215dec3463cb1fa9ab44a82aefe618ee7`). Final RSF
+1–28 production closure passed at `7dbedb1f`.
