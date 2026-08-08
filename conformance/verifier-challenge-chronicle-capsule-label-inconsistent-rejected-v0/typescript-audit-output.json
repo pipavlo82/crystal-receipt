@@ -1,0 +1,17 @@
+{
+  "auditor": "typescript-independent-verifier-challenge-chronicle-capsule-label-inconsistent-rejected-v0",
+  "mode": "read-only-filesystem",
+  "vector_count": 1,
+  "package_inventory_count": 3,
+  "fixture_set_sha256": "7c35e0d99afe34edfe1143de03589ca07dc35aa7c6fdaa320c3d456ac4bc48cf",
+  "expected_result_set_sha256": "a0560da2071f483b76bcc8aee3b5c543ae87ef57093a67ff2a18b485be512cc3",
+  "execution_class_counts": {
+    "production-admission-binding": 1
+  },
+  "independence_scope": {
+    "package_identity": "Python and TypeScript auditors recompute member and expected-result digests without production imports.",
+    "challenge_semantics": "Independent verifier validates mutation scope, gate-order relation, and encoded reported-state admission relation from frozen spec.",
+    "production_result": "Actual tryCreateChronicleEntryV0 execution is bound only by TypeScript production runner; no claim of independent full Chronicle admission recomputation."
+  },
+  "production_imports": 0
+}
