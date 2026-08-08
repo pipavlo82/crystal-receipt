@@ -1,0 +1,21 @@
+{
+  "schema": "verifier_challenge_chronicle_continuity_set_fixture_manifest.v0",
+  "set_id": "verifier-challenge-chronicle-continuity-set-v0",
+  "version": "v0",
+  "file_count": 2,
+  "files": [
+    {
+      "path": "conformance/verifier-challenge-chronicle-continuity-set-v0/SPEC.md",
+      "sha256": "0c104736db37697f8458501478c054c46036899d78bd5ec6548a4ce844bd05f8"
+    },
+    {
+      "path": "conformance/verifier-challenge-chronicle-continuity-set-v0/contract.json",
+      "sha256": "dca6b96f0384073dd11cd6dad6e29e60ac322cba6762bf80ac515570f59196b5"
+    }
+  ],
+  "fixture_set_sha256": "77261f48e3a712536e3cd37f4384c0b62a5063a3c6be7cf14ac648848feea716",
+  "child_identity_set_sha256": "4448c728b264cc51d369de7b42430205b9dfdabedb09a282c619e5a42e0d61ac",
+  "subject_continuity_evaluator_git_blob_oid": "428923f10aac54bfaaebedfad494118cbb17d744",
+  "aggregate_vector_count": 0,
+  "child_vector_count": 3
+}
