@@ -1,0 +1,20 @@
+{
+  "schema": "verifier_challenge_missing_required_input_unverifiable_fixture_manifest.v0",
+  "package_version": "verifier-challenge-missing-required-input-unverifiable-v0",
+  "file_count": 3,
+  "files": [
+    {
+      "path": "conformance/verifier-challenge-missing-required-input-unverifiable-v0/SPEC.md",
+      "sha256": "c53ca12218056857964b5410b13f7c36073da5ba50030f01a06ae1580a43b867"
+    },
+    {
+      "path": "conformance/verifier-challenge-missing-required-input-unverifiable-v0/contract.json",
+      "sha256": "b5eb68da73994326fca7017dd46ebd32dfcb25d67272a651519c2e2c9ca1fac7"
+    },
+    {
+      "path": "conformance/verifier-challenge-missing-required-input-unverifiable-v0/vectors/V-MISSING-REQUIRED-INPUT.json",
+      "sha256": "aa04de87a65c4408ffd17308a6d488889e99c3b8e33e68517a155c0c6dcc32b8"
+    }
+  ],
+  "fixture_set_sha256": "525bed2d6b2dcd735be96b3faba11c045a24a24189787ce8d5d398b3def23e04"
+}
