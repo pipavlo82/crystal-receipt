@@ -1,0 +1,20 @@
+{
+  "schema": "verifier_challenge_chronicle_proof_object_id_invalid_rejected_fixture_manifest.v0",
+  "package_version": "verifier-challenge-chronicle-proof-object-id-invalid-rejected-v0",
+  "file_count": 3,
+  "files": [
+    {
+      "path": "conformance/verifier-challenge-chronicle-proof-object-id-invalid-rejected-v0/SPEC.md",
+      "sha256": "24569a5d0f5a06c97063225d80012ee66ad2bd6a5962b62a1e22946ccf7d4ce4"
+    },
+    {
+      "path": "conformance/verifier-challenge-chronicle-proof-object-id-invalid-rejected-v0/contract.json",
+      "sha256": "7e2ea3228b83dc490f0ef743a1da640178a5189d33e1ec52b6295d13e30f30f1"
+    },
+    {
+      "path": "conformance/verifier-challenge-chronicle-proof-object-id-invalid-rejected-v0/vectors/V-CHRONICLE-PROOF-OBJECT-ID-INVALID.json",
+      "sha256": "d5023ed8380a1a896fc7f35c33013b98881302a68cbea23ee6df846305ccb06d"
+    }
+  ],
+  "fixture_set_sha256": "5a58f5b676699ea0bdb591c5bb92ec5ea2cee451521a093e020c55f9f261f85e"
+}
