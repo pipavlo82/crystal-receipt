@@ -1,0 +1,17 @@
+{
+  "auditor": "typescript-independent-verifier-challenge-chronicle-proof-object-id-invalid-rejected-v0",
+  "mode": "read-only-filesystem",
+  "vector_count": 1,
+  "package_inventory_count": 3,
+  "fixture_set_sha256": "5a58f5b676699ea0bdb591c5bb92ec5ea2cee451521a093e020c55f9f261f85e",
+  "expected_result_set_sha256": "273d04333671345e7c30ea4bd78d668157edf9605d61fe0a4d092c33f64ab1a6",
+  "execution_class_counts": {
+    "production-admission-binding": 1
+  },
+  "independence_scope": {
+    "package_identity": "Python and TypeScript auditors recompute member and expected-result digests without production imports.",
+    "challenge_semantics": "Independent verifier validates mutation scope, identity derivation encoding, gate-order relation, and encoded admission relation from frozen spec.",
+    "production_result": "Actual tryCreateChronicleEntryV0 execution is bound only by TypeScript production runner; no claim of independent full Chronicle admission recomputation."
+  },
+  "production_imports": 0
+}
