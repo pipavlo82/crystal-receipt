@@ -1,0 +1,78 @@
+{
+  "schema": "verifier_challenge_chronicle_admission_set_contract.v0",
+  "set_id": "verifier-challenge-chronicle-admission-set-v0",
+  "version": "v0",
+  "subject_admission_verifier": {
+    "entrypoint": "tryCreateChronicleEntryV0",
+    "module_path": "src/receiptos/capsule/chronicle-portfolio-v0.ts",
+    "git_blob_oid": "0e790911092546c62344f980e6b611542bcd00fe"
+  },
+  "trust_boundary_mapping": {
+    "cross-object-consistency": "proof_root_mismatch_rejected",
+    "identity-consistency": "proof_object_id_invalid_rejected",
+    "reported-state-consistency": "capsule_label_inconsistent_rejected"
+  },
+  "children": [
+    {
+      "ordinal": 1,
+      "challenge_id": "proof_root_mismatch_rejected",
+      "package_path": "conformance/verifier-challenge-chronicle-proof-root-mismatch-rejected-v0",
+      "trust_boundary": "cross-object-consistency",
+      "vector_count": 1,
+      "execution_class": "production-admission-binding",
+      "fixture_set_sha256": "6788b09f29917254a93faf6e85c2d6922fc6fc36995577cb1fd46e6a698ce457",
+      "expected_result_set_sha256": "d04a66073a965d19e380beed8426a3cfdccff11ce720244c4d0f5eb6f2a7bf08"
+    },
+    {
+      "ordinal": 2,
+      "challenge_id": "proof_object_id_invalid_rejected",
+      "package_path": "conformance/verifier-challenge-chronicle-proof-object-id-invalid-rejected-v0",
+      "trust_boundary": "identity-consistency",
+      "vector_count": 1,
+      "execution_class": "production-admission-binding",
+      "fixture_set_sha256": "5a58f5b676699ea0bdb591c5bb92ec5ea2cee451521a093e020c55f9f261f85e",
+      "expected_result_set_sha256": "273d04333671345e7c30ea4bd78d668157edf9605d61fe0a4d092c33f64ab1a6"
+    },
+    {
+      "ordinal": 3,
+      "challenge_id": "capsule_label_inconsistent_rejected",
+      "package_path": "conformance/verifier-challenge-chronicle-capsule-label-inconsistent-rejected-v0",
+      "trust_boundary": "reported-state-consistency",
+      "vector_count": 1,
+      "execution_class": "production-admission-binding",
+      "fixture_set_sha256": "7c35e0d99afe34edfe1143de03589ca07dc35aa7c6fdaa320c3d456ac4bc48cf",
+      "expected_result_set_sha256": "a0560da2071f483b76bcc8aee3b5c543ae87ef57093a67ff2a18b485be512cc3"
+    }
+  ],
+  "aggregate": {
+    "child_count": 3,
+    "vector_count": 3,
+    "execution_class_counts": {
+      "production-admission-binding": 3
+    },
+    "child_identity_set_recipe": "Ordered children from contract.children encoded as canonical JSON array containing only ordinal, challenge_id, package_path, vector_count, execution_class, fixture_set_sha256, expected_result_set_sha256 (sort_keys=true, compact separators), UTF-8, SHA-256 lowercase hex.",
+    "child_identity_set_sha256": "55c8f203255bf97c40ab76255a95db3447bc2dc30ec961fd65f6a39eba12f22a"
+  },
+  "hash_algorithm": "sha256-lowercase-hex",
+  "fixture_set_recipe": "Sorted member paths except manifest.json: <path>\\t<file-sha256>\\n concatenated UTF-8 then SHA-256.",
+  "independence_scope": {
+    "package_identity": "Python and TypeScript auditors recompute aggregate fixture and child-reference digests without production imports.",
+    "challenge_semantics": "Child packages remain authoritative for vector semantics; aggregate verifies inventory, order, and declared child digests only.",
+    "production_result": "Child production-binding tests remain separate; aggregate binding verifies index references only."
+  },
+  "forbidden_semantics": [
+    "new_chronicle_admission_challenge_semantics",
+    "fourth_challenge",
+    "chronicle_admission_set_completeness",
+    "every_admission_reason_code_frozen",
+    "timing_semantics",
+    "tee_admission",
+    "host_error_conformance",
+    "semantic_neighbors",
+    "dcn",
+    "verifier_of_verifier",
+    "legal_admissibility",
+    "settlement_correctness",
+    "aggregate_expected_result_set"
+  ]
+}
