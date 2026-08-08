@@ -1,0 +1,88 @@
+{
+  "schema": "verifier_challenge_chronicle_checkpoint_root_mismatch_rejected_contract.v0",
+  "package_version": "verifier-challenge-chronicle-checkpoint-root-mismatch-rejected-v0",
+  "profile_id": "verifier-challenge-chronicle-checkpoint-root-mismatch-rejected-v0",
+  "challenge_id": "checkpoint_root_mismatch_rejected",
+  "authority": {
+    "normative_spec": "conformance/verifier-challenge-chronicle-checkpoint-root-mismatch-rejected-v0/SPEC.md",
+    "production_binding": "src/receiptos/capsule/chronicle-portfolio-v0.ts",
+    "baseline_authority": "tests/receiptos/chronicle-checkpoint-v0.test.ts"
+  },
+  "required_vector_fields": [
+    "vector_id",
+    "package_version",
+    "challenge_id",
+    "execution_class",
+    "subject_local_checkpoint_verifier",
+    "checkpoint_construction_authority",
+    "local_verification_profile",
+    "baseline_authority",
+    "baseline_checkpoint",
+    "substitution",
+    "challenged_checkpoint",
+    "field_classification",
+    "canonical_order_control",
+    "root_integrity_control",
+    "expected"
+  ],
+  "forbidden_semantics": [
+    "noncanonical_entry_refs_order",
+    "field_specific_root_input_mutations",
+    "missing_null_checkpoint_root",
+    "duplicate_entry_refs_prohibition",
+    "shape_validation",
+    "collection_root_verification",
+    "portfolio_root_verification",
+    "chronicle_entry_admission",
+    "pairwise_checkpoint_continuity",
+    "global_checkpoint_chain",
+    "predecessor_discovery",
+    "canonical_head_selection",
+    "duplicate_replay_detection",
+    "equivocation_detection",
+    "legal_admissibility",
+    "settlement_correctness"
+  ],
+  "local_checkpoint_verifier": {
+    "name": "verifyChronicleCheckpointV0",
+    "module_path": "src/receiptos/capsule/chronicle-portfolio-v0.ts",
+    "git_blob_oid": "0e790911092546c62344f980e6b611542bcd00fe"
+  },
+  "checkpoint_construction_entrypoint": {
+    "name": "createChronicleCheckpointV0",
+    "module_path": "src/receiptos/capsule/chronicle-portfolio-v0.ts",
+    "git_blob_oid": "0e790911092546c62344f980e6b611542bcd00fe"
+  },
+  "normative_spec_identity": {
+    "repository_path": "docs/CHRONICLE.md",
+    "git_blob_oid": "327898f793116681646e424f6a7cfc9f9887f2fb"
+  },
+  "baseline_authority_identity": {
+    "repository_path": "tests/receiptos/chronicle-checkpoint-v0.test.ts"
+  },
+  "vector_inventory": [
+    "V-CHRONICLE-CHECKPOINT-ROOT-MISMATCH"
+  ],
+  "hash_algorithm": "sha256-lowercase-hex",
+  "fixture_set_recipe": "Sorted member paths except manifest.json: <path>\\t<file-sha256>\\n concatenated UTF-8 then SHA-256.",
+  "expected_result_set_recipe": "<vector-id>\\t<sha256(canonical expected JSON)>\\n concatenated UTF-8 then SHA-256.",
+  "expected_result_set_sha256": "4fe0a2cac4d3c23f233274e5b23a15eb7b9689e3b0e75719588fc41873d8de7d",
+  "vector_execution_classes": {
+    "allowed": [
+      "production-checkpoint-local-binding"
+    ],
+    "definitions": {
+      "production-checkpoint-local-binding": "Execute verifyChronicleCheckpointV0 on baseline and challenged checkpoints; compare frozen local verification result fields."
+    },
+    "vectors": {
+      "V-CHRONICLE-CHECKPOINT-ROOT-MISMATCH": {
+        "execution_class": "production-checkpoint-local-binding"
+      }
+    }
+  },
+  "independence_scope": {
+    "package_identity": "Python and TypeScript auditors recompute member and expected-result digests without production imports.",
+    "challenge_semantics": "Independent verifier validates substitution scope, canonical-order controls, root-integrity relations, and encoded local verification results from frozen spec.",
+    "production_result": "Actual verifyChronicleCheckpointV0 execution is bound only by TypeScript production runner; no claim of independent full checkpoint local verification recomputation."
+  }
+}
