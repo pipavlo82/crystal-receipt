@@ -1,0 +1,129 @@
+{
+  "schema": "verifier_challenge_chronicle_checkpoint_root_mismatch_rejected_vector.v0",
+  "vector_id": "V-CHRONICLE-CHECKPOINT-ROOT-MISMATCH",
+  "package_version": "verifier-challenge-chronicle-checkpoint-root-mismatch-rejected-v0",
+  "challenge_id": "checkpoint_root_mismatch_rejected",
+  "execution_class": "production-checkpoint-local-binding",
+  "subject_local_checkpoint_verifier": {
+    "entrypoint": "verifyChronicleCheckpointV0",
+    "module_path": "src/receiptos/capsule/chronicle-portfolio-v0.ts",
+    "git_blob_oid": "0e790911092546c62344f980e6b611542bcd00fe"
+  },
+  "checkpoint_construction_authority": {
+    "entrypoint": "createChronicleCheckpointV0",
+    "module_path": "src/receiptos/capsule/chronicle-portfolio-v0.ts",
+    "git_blob_oid": "0e790911092546c62344f980e6b611542bcd00fe"
+  },
+  "local_verification_profile": {
+    "canonical_entry_refs_order": "codepoint ascending sort via sortEntryRefs",
+    "verification_mechanism": [
+      "explicit canonical stored-order check (entryRefsAreCanonical)",
+      "stored-order root recomputation via computeChronicleCheckpointRootFromStoredOrder"
+    ],
+    "ok_requires_both": true,
+    "normative_spec_path": "docs/CHRONICLE.md",
+    "normative_spec_git_blob_oid": "327898f793116681646e424f6a7cfc9f9887f2fb"
+  },
+  "baseline_authority": {
+    "repository_test_path": "tests/receiptos/chronicle-checkpoint-v0.test.ts",
+    "pattern": "createChronicleCheckpointV0 sorted three-ref checkpoint",
+    "construction_input": {
+      "checkpointId": "checkpoint-demo",
+      "collectionRef": "/collection/demo",
+      "entryRefs": [
+        "entry-alpha",
+        "entry-beta",
+        "entry-gamma"
+      ],
+      "prevCheckpoint": "sha256:abcdef",
+      "sequence": 2
+    }
+  },
+  "baseline_checkpoint": {
+    "schema": "chronicle_checkpoint.v0",
+    "checkpoint_id": "checkpoint-demo",
+    "collection_ref": "/collection/demo",
+    "entry_refs": [
+      "entry-alpha",
+      "entry-beta",
+      "entry-gamma"
+    ],
+    "prev_checkpoint": "sha256:abcdef",
+    "sequence": 2,
+    "checkpoint_root": "sha256:32423e924c8f5e540bf7a36e2e2f969eb07e537885688e1affda37b5be808e87"
+  },
+  "substitution": {
+    "operation": "mutate_checkpoint_root_only",
+    "unchanged_fields": [
+      "schema",
+      "checkpoint_id",
+      "collection_ref",
+      "entry_refs",
+      "prev_checkpoint",
+      "sequence"
+    ],
+    "baseline_checkpoint_root": "sha256:32423e924c8f5e540bf7a36e2e2f969eb07e537885688e1affda37b5be808e87",
+    "challenged_checkpoint_root": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+  },
+  "challenged_checkpoint": {
+    "schema": "chronicle_checkpoint.v0",
+    "checkpoint_id": "checkpoint-demo",
+    "collection_ref": "/collection/demo",
+    "entry_refs": [
+      "entry-alpha",
+      "entry-beta",
+      "entry-gamma"
+    ],
+    "prev_checkpoint": "sha256:abcdef",
+    "sequence": 2,
+    "checkpoint_root": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+  },
+  "field_classification": {
+    "checkpoint_root_changed_only": true,
+    "semantic_fields_unchanged": true,
+    "entry_refs_unchanged": true,
+    "all_other_fields_unchanged": true
+  },
+  "canonical_order_control": {
+    "ordering_rule": "sortEntryRefs codepoint ascending",
+    "baseline_entry_refs_canonical": true,
+    "challenged_entry_refs_canonical": true,
+    "entry_refs_identical": true
+  },
+  "root_integrity_control": {
+    "baseline_root": "sha256:32423e924c8f5e540bf7a36e2e2f969eb07e537885688e1affda37b5be808e87",
+    "challenged_stored_root": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "baseline_root_matches": true,
+    "challenged_root_matches": false,
+    "challenged_recomputed_root_equals_baseline": true
+  },
+  "expected": {
+    "outcomes": [
+      "baseline_local_verification_ok",
+      "challenged_local_verification_rejected",
+      "checkpoint_root_only_change",
+      "semantic_fields_unchanged"
+    ],
+    "baseline_verification": {
+      "ok": true,
+      "checkpoint_root": "sha256:32423e924c8f5e540bf7a36e2e2f969eb07e537885688e1affda37b5be808e87",
+      "recomputed_checkpoint_root": "sha256:32423e924c8f5e540bf7a36e2e2f969eb07e537885688e1affda37b5be808e87"
+    },
+    "challenged_verification": {
+      "ok": false,
+      "checkpoint_root": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "recomputed_checkpoint_root": "sha256:32423e924c8f5e540bf7a36e2e2f969eb07e537885688e1affda37b5be808e87"
+    },
+    "baseline_entry_refs_canonical": true,
+    "challenged_entry_refs_canonical": true,
+    "semantic_fields_unchanged": true,
+    "checkpoint_root_changed_only": true,
+    "baseline_root_matches": true,
+    "challenged_root_matches": false,
+    "challenged_recomputed_root_equals_baseline": true,
+    "baseline_local_verification_ok": true,
+    "challenged_local_verification_ok": false,
+    "challenged_stored_root_differs_from_recomputed": true,
+    "non_throwing": true
+  }
+}
