@@ -1,0 +1,68 @@
+{
+  "schema": "verifier_challenge_integrity_mismatch_rejected_vector.v0",
+  "vector_id": "V-INTEGRITY-MISMATCH",
+  "package_version": "verifier-challenge-integrity-mismatch-rejected-v0",
+  "challenge_id": "integrity_mismatch_rejected",
+  "execution_class": "production-verifier-binding",
+  "subject_verifier": {
+    "entrypoint": "verifyHandoffReceiptRoot",
+    "module_path": "src/receiptos/verify/verify-receipt.ts",
+    "git_blob_oid": "2e2e45bf30529de93eac58a04465f17ef81edeaa"
+  },
+  "receipt_root_profile": {
+    "strip_anchor_rule": "entire_top_level_anchor_removed_before_canonicalization",
+    "canonicalization_module_path": "src/receiptos/canon/canonicalize.ts",
+    "canonicalization_module_git_blob_oid": "fb4a037a6dedad4c8d1555db649bb9fce529e01e",
+    "receipt_root_module_path": "src/receiptos/canon/receipt-root.ts",
+    "receipt_root_module_git_blob_oid": "4dddf737b824cae91281a93eb563c9134cdc1bb0"
+  },
+  "source_fixture": {
+    "repository_path": "src/receiptos/fixtures/session-evidence.cyphes-workflow.sample.json",
+    "git_blob_oid": "b1be64dbb71898ab5ffa75660f8e07c3250d8be1"
+  },
+  "baseline_input": {
+    "source": "source_fixture",
+    "task_title": "CYPHES workflow proof boundary sample",
+    "anchor_receipt_root": "0xfe6ee94aed3ee6158c296e2d2d41ab7b31028259a99105c872adb4fdc30196d0"
+  },
+  "mutation": {
+    "operation": "set",
+    "path": ["task", "title"],
+    "from": "CYPHES workflow proof boundary sample",
+    "to": "CYPHES workflow proof boundary sample (tampered)"
+  },
+  "field_classification": {
+    "decisive_receipt_body_fields": ["task.title"],
+    "required_comparison_operand": ["anchor.receipt_root"],
+    "excluded_from_recomputation": ["anchor"],
+    "observation_only_anchor_fields": [
+      "anchor.verifier_status",
+      "anchor.merkle_proof_status",
+      "anchor.onchain_anchor_status"
+    ]
+  },
+  "expected": {
+    "outcomes": [
+      "verification_differs",
+      "integrity_mismatch_detected",
+      "anchor_receipt_root_unchanged",
+      "non_throwing_fail_closed"
+    ],
+    "baseline_verification": {
+      "ok": true,
+      "receipt_root": "0xfe6ee94aed3ee6158c296e2d2d41ab7b31028259a99105c872adb4fdc30196d0",
+      "recomputed_root": "0xfe6ee94aed3ee6158c296e2d2d41ab7b31028259a99105c872adb4fdc30196d0"
+    },
+    "challenged_verification": {
+      "ok": false,
+      "receipt_root": "0xfe6ee94aed3ee6158c296e2d2d41ab7b31028259a99105c872adb4fdc30196d0",
+      "recomputed_root": "0x509634c85344fd81345db5efd84a286bcdb3d1b2010cdaf4ea01a9de2e7f5f4e"
+    },
+    "challenged_must_equal_baseline": false,
+    "integrity_mismatch_cannot_retain_validity": true,
+    "anchor_receipt_root_unchanged": true,
+    "recomputed_root_must_differ_from_anchor_root": true,
+    "challenged_ok_must_be_false": true,
+    "non_throwing": true
+  }
+}

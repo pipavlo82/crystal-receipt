@@ -1,0 +1,20 @@
+{
+  "schema": "verifier_challenge_integrity_mismatch_rejected_fixture_manifest.v0",
+  "package_version": "verifier-challenge-integrity-mismatch-rejected-v0",
+  "file_count": 3,
+  "files": [
+    {
+      "path": "conformance/verifier-challenge-integrity-mismatch-rejected-v0/SPEC.md",
+      "sha256": "d896c39788593118ba256b8fa709af2956f7ca753d46daf801436a548713b4b9"
+    },
+    {
+      "path": "conformance/verifier-challenge-integrity-mismatch-rejected-v0/contract.json",
+      "sha256": "47792c46b34c591511b1c3f1682b7c83f0ce33098c2fe3613cd1df0f264b3f9f"
+    },
+    {
+      "path": "conformance/verifier-challenge-integrity-mismatch-rejected-v0/vectors/V-INTEGRITY-MISMATCH.json",
+      "sha256": "13909d8705c8c31a3af1eb75df6dfb73f39f633d0bf1e5f5e2183cb085dab71e"
+    }
+  ],
+  "fixture_set_sha256": "6844b0554d71bee8c650fcc949e23f730980d75d22a8483f1c4f50e722de941d"
+}
