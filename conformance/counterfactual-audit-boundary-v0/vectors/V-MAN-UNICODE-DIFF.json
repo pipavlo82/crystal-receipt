@@ -1,0 +1,20 @@
+{
+  "schema": "counterfactual_audit_boundary_vector.v0",
+  "vector_id": "V-MAN-UNICODE-DIFF",
+  "package_version": "counterfactual-audit-boundary-v0",
+  "execution_class": "manifest-file-hash",
+  "operation": "manifest_file_sha256",
+  "inputs": [
+    {
+      "encoding": "utf8_string",
+      "value": "{\"audit_timestamp\":\"епоха-α\",\"audit_note\":\"перевірка\"}"
+    },
+    {
+      "encoding": "utf8_string",
+      "value": "{\"audit_timestamp\":\"епоха-β\",\"audit_note\":\"перевірка!\"}"
+    }
+  ],
+  "expected": {
+    "outcome": "manifest_hash_differs"
+  }
+}

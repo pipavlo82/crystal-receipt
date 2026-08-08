@@ -1,0 +1,64 @@
+{
+  "schema": "counterfactual_audit_boundary_fixture_manifest.v0",
+  "package_version": "counterfactual-audit-boundary-v0",
+  "file_count": 14,
+  "files": [
+    {
+      "path": "conformance/counterfactual-audit-boundary-v0/SPEC.md",
+      "sha256": "9c17bd826c4a789464dab80c78a136153f3d9ce2f253198d0cf386bdef3a6d0b"
+    },
+    {
+      "path": "conformance/counterfactual-audit-boundary-v0/contract.json",
+      "sha256": "855df7f191a7de161e45b49ccade3086396098e7350e5c0ff5e12f24e1bed990"
+    },
+    {
+      "path": "conformance/counterfactual-audit-boundary-v0/vectors/V-AT-ACCESSOR.json",
+      "sha256": "84e03464c4dbcbc5150e30505dcc06d271dda2ae0098986110f056682b333bae"
+    },
+    {
+      "path": "conformance/counterfactual-audit-boundary-v0/vectors/V-AT-ISOLATE.json",
+      "sha256": "54206baa516588186c465330362f0a4e814d1c319eb98768bb9fd95784907b90"
+    },
+    {
+      "path": "conformance/counterfactual-audit-boundary-v0/vectors/V-AT-NEST-ARR.json",
+      "sha256": "b08851d5d4589331a90fa0cf64a4427c11332c9469c34682fcde9293bb2722eb"
+    },
+    {
+      "path": "conformance/counterfactual-audit-boundary-v0/vectors/V-AT-NEST-OBJ.json",
+      "sha256": "02a872d9f1271095a7fe34f370f3c03e675b70db6f8fd7114f690491c0cd5132"
+    },
+    {
+      "path": "conformance/counterfactual-audit-boundary-v0/vectors/V-AT-ORDER.json",
+      "sha256": "206fad7799d076c4e6d8406a4e35e8e913ac3fc8544745c195abcd051d20e712"
+    },
+    {
+      "path": "conformance/counterfactual-audit-boundary-v0/vectors/V-AT-ROOT.json",
+      "sha256": "af3a9604462bd33a5ecb9c4d667f85ae3765365e83f0e0d2634c2721c352b594"
+    },
+    {
+      "path": "conformance/counterfactual-audit-boundary-v0/vectors/V-MAN-HASH-DIFF.json",
+      "sha256": "181a52a9936d3dcecff948c8ffa75e86b9cdf43c8ff7e513ba54310bc6fb134a"
+    },
+    {
+      "path": "conformance/counterfactual-audit-boundary-v0/vectors/V-MAN-UINT8-EXACT.json",
+      "sha256": "e97d74ce91426fad981fab2d9f54874206170b1e5402c92a5750c14a35ec2a34"
+    },
+    {
+      "path": "conformance/counterfactual-audit-boundary-v0/vectors/V-MAN-UNICODE-DIFF.json",
+      "sha256": "1a1742af60e4b3c5593689defee11dd9faf5428359e18d1513b0da56de9d1747"
+    },
+    {
+      "path": "conformance/counterfactual-audit-boundary-v0/vectors/V-MAN-UTF8-ONCE.json",
+      "sha256": "22df18db07fb746e55629d38db4bf8deb571828e7310f6e94364a14aea0d2678"
+    },
+    {
+      "path": "conformance/counterfactual-audit-boundary-v0/vectors/V-SEM-MANIFEST-INVARIANT.json",
+      "sha256": "9330a797b15b74d8c3372b866e9bc9f9e842e142de9a6f6b47581bbf92004749"
+    },
+    {
+      "path": "conformance/counterfactual-audit-boundary-v0/vectors/V-SEM-MUTATION-DIFFERS.json",
+      "sha256": "c92915e29cda954db6c0aaa44bbcb958c741e51a86fd7bca7bd9f767434c433d"
+    }
+  ],
+  "fixture_set_sha256": "7503d5cac003a23489f194c5521ef90b01ac0b2ce345a2cec57ad12ffeb274f8"
+}

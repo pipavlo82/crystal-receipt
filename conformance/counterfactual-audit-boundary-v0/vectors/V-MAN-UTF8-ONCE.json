@@ -1,0 +1,20 @@
+{
+  "schema": "counterfactual_audit_boundary_vector.v0",
+  "vector_id": "V-MAN-UTF8-ONCE",
+  "package_version": "counterfactual-audit-boundary-v0",
+  "execution_class": "manifest-file-hash",
+  "operation": "manifest_file_sha256",
+  "inputs": [
+    {
+      "encoding": "utf8_string",
+      "value": "аудит Δ😀 2026-08-05T12:00:00Z"
+    },
+    {
+      "encoding": "uint8_array",
+      "utf8_bytes_of": "аудит Δ😀 2026-08-05T12:00:00Z"
+    }
+  ],
+  "expected": {
+    "outcome": "manifest_hash_equals"
+  }
+}
