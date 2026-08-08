@@ -1,0 +1,17 @@
+{
+  "auditor": "typescript-independent-verifier-challenge-chronicle-sequence-gap-rejected-v0",
+  "mode": "read-only-filesystem",
+  "vector_count": 1,
+  "package_inventory_count": 3,
+  "fixture_set_sha256": "3fa071610dea0e06ece35349aa6b6df3da7955b6e8eea9eeb78a2a3be007ea0c",
+  "expected_result_set_sha256": "0484c8dde064a5002d07243bb7fdc964e8c680756db14ac65a794eeab8788bce",
+  "execution_class_counts": {
+    "production-continuity-binding": 1
+  },
+  "independence_scope": {
+    "package_identity": "Python and TypeScript auditors recompute member and expected-result digests without production imports.",
+    "challenge_semantics": "Independent verifier validates current substitution scope, ref-match control, sequence relation, and encoded continuity results from frozen spec.",
+    "production_result": "Actual evaluateChronicleCheckpointContinuityV0 execution is bound only by TypeScript production runner; no claim of independent full continuity recomputation."
+  },
+  "production_imports": 0
+}

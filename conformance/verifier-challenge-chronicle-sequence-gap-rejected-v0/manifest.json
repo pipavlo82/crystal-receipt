@@ -1,0 +1,20 @@
+{
+  "schema": "verifier_challenge_chronicle_sequence_gap_rejected_fixture_manifest.v0",
+  "package_version": "verifier-challenge-chronicle-sequence-gap-rejected-v0",
+  "file_count": 3,
+  "files": [
+    {
+      "path": "conformance/verifier-challenge-chronicle-sequence-gap-rejected-v0/SPEC.md",
+      "sha256": "963de80a93f16d89609d6afa9496f8f118fc5d7ff65ffbf6990ddf679406d355"
+    },
+    {
+      "path": "conformance/verifier-challenge-chronicle-sequence-gap-rejected-v0/contract.json",
+      "sha256": "886ef7699af71ad1e7a87876602f68aa9505d71e5b24ef2327ab9492c553189e"
+    },
+    {
+      "path": "conformance/verifier-challenge-chronicle-sequence-gap-rejected-v0/vectors/V-CHRONICLE-SEQUENCE-GAP.json",
+      "sha256": "301d1809aed3a66c136f34acf70af4eb6d5d8f5849490511eaf9e6484d4c844b"
+    }
+  ],
+  "fixture_set_sha256": "3fa071610dea0e06ece35349aa6b6df3da7955b6e8eea9eeb78a2a3be007ea0c"
+}
