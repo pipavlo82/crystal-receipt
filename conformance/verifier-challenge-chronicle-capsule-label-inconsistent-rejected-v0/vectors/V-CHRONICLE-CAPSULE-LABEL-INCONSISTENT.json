@@ -1,0 +1,131 @@
+{
+  "schema": "verifier_challenge_chronicle_capsule_label_inconsistent_rejected_vector.v0",
+  "vector_id": "V-CHRONICLE-CAPSULE-LABEL-INCONSISTENT",
+  "package_version": "verifier-challenge-chronicle-capsule-label-inconsistent-rejected-v0",
+  "challenge_id": "capsule_label_inconsistent_rejected",
+  "execution_class": "production-admission-binding",
+  "subject_admission_verifier": {
+    "entrypoint": "tryCreateChronicleEntryV0",
+    "module_path": "src/receiptos/capsule/chronicle-portfolio-v0.ts",
+    "git_blob_oid": "0e790911092546c62344f980e6b611542bcd00fe"
+  },
+  "admission_profile": {
+    "first_failure_wins": true,
+    "admission_gate_order": [
+      "evidence_root_missing",
+      "evidence_root_mismatch",
+      "proof_root_mismatch",
+      "capsule_stored_mismatch",
+      "capsule_computed_mismatch",
+      "capsule_label_inconsistent",
+      "verifier_result_inconsistent",
+      "proof_object_id_invalid",
+      "proof_ref_invalid"
+    ],
+    "challenged_first_failure_gate": "capsule_label_inconsistent",
+    "receipt_root_recomputation_module_path": "src/receiptos/canon/receipt-root.ts",
+    "receipt_root_recomputation_module_git_blob_oid": "4dddf737b824cae91281a93eb563c9134cdc1bb0"
+  },
+  "identity_control_authority": {
+    "module_path": "src/receiptos/capsule/portable-proof-object-v0.ts",
+    "git_blob_oid": "734df63bb397cf223eb5363a4f941e86fda021b8",
+    "note": "Frozen only as control relation; identity gates are not reached as first failure."
+  },
+  "source_fixture": {
+    "repository_path": "tests/fixtures/receiptos-chronicle-admission-v0/vectors/01-clean-admitted.json",
+    "git_blob_oid": "8577188aa93c03f14356ac2690f8e4143c362f23"
+  },
+  "baseline_input": {
+    "source": "source_fixture.input",
+    "evidence_anchor_receipt_root": "0x687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc",
+    "proof_object_receipt_root": "0x687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc",
+    "capsule_receipt_root_match": true,
+    "capsule_receipt_root_status": "verified",
+    "entry_id": "entry-shared-admission-v0"
+  },
+  "mutation": {
+    "operation": "set",
+    "path": ["proof_object", "evidence_capsule", "receipt_root", "match"],
+    "from": true,
+    "to": false
+  },
+  "field_classification": {
+    "reported_state_admission_binding": ["proof_object.evidence_capsule.receipt_root.match"],
+    "unchanged_handoff_evidence": true,
+    "unchanged_proof_object_receipt_root": true,
+    "unchanged_capsule_root_values": true,
+    "unchanged_capsule_status": true,
+    "unchanged_verifier_result": true,
+    "unchanged_identity_fields": true,
+    "excluded_from_mutation": [
+      "evidence",
+      "anchor.receipt_root",
+      "proof_object.receipt_root",
+      "proof_object.evidence_capsule.receipt_root.stored",
+      "proof_object.evidence_capsule.receipt_root.computed",
+      "proof_object.evidence_capsule.receipt_root.status",
+      "proof_object.evidence_capsule.verifier_result",
+      "proof_object.proof_object_id",
+      "proof_object.proof_ref",
+      "proof_object.provenance_summary",
+      "options"
+    ]
+  },
+  "receipt_root_control": {
+    "entrypoint": "verifyHandoffReceiptRoot",
+    "module_path": "src/receiptos/verify/verify-receipt.ts",
+    "note": "Separate receipt-root surface; not the subject admission verifier."
+  },
+  "expected": {
+    "outcomes": [
+      "baseline_admitted",
+      "challenged_rejected",
+      "receipt_root_control_valid",
+      "reported_state_label_mismatch"
+    ],
+    "baseline_admission": {
+      "success": true,
+      "value": {
+        "schema": "chronicle_entry.v0",
+        "entry_id": "entry-shared-admission-v0",
+        "source_system": "ReceiptOS",
+        "receipt_root": "0x687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc",
+        "proof_object_ref": "receiptos://portable-proof-object/proofobj-687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc",
+        "evidence_capsule_ref": "shared-vector://clean/evidence-capsule",
+        "provenance_summary_ref": "shared-vector://clean/provenance-summary",
+        "created_from": "shared-vector://clean-evidence",
+        "labels": ["shared-vector", "receiptos"],
+        "notes": "ReceiptOS Chronicle shared admission vector v0"
+      }
+    },
+    "challenged_admission": {
+      "success": false,
+      "failure": {
+        "failure_class": "reported_state_inconsistency",
+        "reason_code": "capsule_label_inconsistent"
+      }
+    },
+    "receipt_root_control": {
+      "ok": true,
+      "receipt_root": "0x687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc",
+      "recomputed_root": "0x687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc"
+    },
+    "baseline_admitted": true,
+    "challenged_admitted": false,
+    "evidence_receipt_verification_unchanged": true,
+    "evidence_receipt_verification_ok": true,
+    "proof_object_receipt_root_unchanged": true,
+    "capsule_stored_root_unchanged": true,
+    "capsule_computed_root_unchanged": true,
+    "capsule_match_changed_only": true,
+    "capsule_status_unchanged": true,
+    "verifier_result_unchanged": true,
+    "proof_object_id_unchanged": true,
+    "proof_ref_unchanged": true,
+    "cross_object_gates_pass": true,
+    "reported_state_blocks_admission": true,
+    "failure_class_exact": "reported_state_inconsistency",
+    "reason_code_exact": "capsule_label_inconsistent",
+    "non_throwing": true
+  }
+}
