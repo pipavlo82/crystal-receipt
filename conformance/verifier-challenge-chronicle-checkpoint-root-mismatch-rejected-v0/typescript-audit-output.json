@@ -1,0 +1,17 @@
+{
+  "auditor": "typescript-independent-verifier-challenge-chronicle-checkpoint-root-mismatch-rejected-v0",
+  "mode": "read-only-filesystem",
+  "vector_count": 1,
+  "package_inventory_count": 3,
+  "fixture_set_sha256": "aa29ca815795af11fb2a0f17f4591ba882bb4513882ad1d0142d192e3b95b1c2",
+  "expected_result_set_sha256": "4fe0a2cac4d3c23f233274e5b23a15eb7b9689e3b0e75719588fc41873d8de7d",
+  "execution_class_counts": {
+    "production-checkpoint-local-binding": 1
+  },
+  "independence_scope": {
+    "package_identity": "Python and TypeScript auditors recompute member and expected-result digests without production imports.",
+    "challenge_semantics": "Independent verifier validates substitution scope, canonical-order controls, root-integrity relations, and encoded local verification results from frozen spec.",
+    "production_result": "Actual verifyChronicleCheckpointV0 execution is bound only by TypeScript production runner; no claim of independent full checkpoint local verification recomputation."
+  },
+  "production_imports": 0
+}
