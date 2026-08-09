@@ -598,7 +598,7 @@ describe("counterfactual conformance evaluator v0", () => {
     expect(badHash.mismatch?.kind).toBe("cab_result_mismatch")
   })
 
-  test("CAB audit_timestamp throw → execution_unresolved with verdict null", async () => {
+  test("CAB audit_timestamp typed rejection → evaluated conformant", async () => {
     const vector = readJson("conformance/counterfactual-audit-boundary-v0/vectors/V-AT-ROOT.json") as Record<
       string,
       unknown
@@ -613,11 +613,20 @@ describe("counterfactual conformance evaluator v0", () => {
       lane_a_model: model,
       input: { value: vector.input },
     })
-    expect(result.evaluation_state).toBe("execution_unresolved")
-    if (result.evaluation_state !== "execution_unresolved") throw new Error("unreachable")
-    expect(result.verdict).toBeNull()
-    expect(result.execution_failure.safe_message).toBe("subject invocation failed")
-    expect(JSON.stringify(result)).not.toContain("nonconformant")
+    expect(result.evaluation_state).toBe("evaluated")
+    if (result.evaluation_state !== "evaluated") throw new Error("unreachable")
+    expect(result.verdict).toBe("conformant")
+    expect(result.actual_observation).toBeNull()
+    expect(result.mismatch).toBeNull()
+    expect(result.subject_contract_rejection).toEqual({
+      contract: "counterfactual_audit_boundary.semantic_snapshot.v0",
+      code: "reserved_audit_timestamp",
+      path: '$semantic_artifact["audit_timestamp"]',
+    })
+    // Frozen expected payload may retain error_message_contains; typed rejection evidence must not.
+    expect(JSON.stringify(result.subject_contract_rejection)).not.toContain(
+      "non-semantic audit metadata",
+    )
     expect(JSON.stringify(result)).not.toContain("source_validity")
   })
 
@@ -717,7 +726,7 @@ describe("counterfactual conformance evaluator v0", () => {
       unknown
     >
     const { model: cabModel, challenge: cabChallenge } = identityFromVector(cab)
-    const unresolved = await evaluateVerifierChallengeConformance({
+    const cabRejected = await evaluateVerifierChallengeConformance({
       schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
       surface: "counterfactual_audit_boundary",
       subject: null,
@@ -726,16 +735,34 @@ describe("counterfactual conformance evaluator v0", () => {
       lane_a_model: cabModel,
       input: { value: cab.input },
     })
+    const unresolved = await evaluateVerifierChallengeConformance({
+      schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
+      surface: "counterfactual_audit_boundary",
+      subject: null,
+      operation: "semantic_snapshot",
+      challenge: cabChallenge,
+      lane_a_model: cabModel,
+      input: { value: { fn: () => "not-cloneable" } },
+    })
     expect(a.evaluation_state).toBe("evaluated")
+    expect(cabRejected.evaluation_state).toBe("evaluated")
     expect(unresolved.evaluation_state).toBe("execution_unresolved")
-    if (a.evaluation_state !== "evaluated" || unresolved.evaluation_state !== "execution_unresolved") {
+    if (
+      a.evaluation_state !== "evaluated" ||
+      cabRejected.evaluation_state !== "evaluated" ||
+      unresolved.evaluation_state !== "execution_unresolved"
+    ) {
       throw new Error("unreachable")
     }
+    expect(cabRejected.verdict).toBe("conformant")
+    expect(cabRejected.subject_contract_rejection?.code).toBe("reserved_audit_timestamp")
     expect(a.verdict).not.toBe(unresolved.verdict)
     expect(unresolved.verdict).toBeNull()
     expect(JSON.stringify(a)).not.toContain("source_validity")
+    expect(JSON.stringify(cabRejected)).not.toContain("source_validity")
     expect(JSON.stringify(unresolved)).not.toContain("source_validity")
     expect(a.expected_observation.schema).toBe(COUNTERFACTUAL_OBSERVATION_SCHEMA)
+    expect(a.subject_contract_rejection).toBeNull()
   })
 
   test("Lane B neighborhood SHA256 and frozen digests remain unchanged", () => {
