@@ -1,0 +1,22 @@
+{
+  "schema": "counterfactual_conformance_package_fixture_manifest.v0",
+  "package_id": "counterfactual-conformance-v0",
+  "version": "v0",
+  "file_count": 3,
+  "files": [
+    {
+      "path": "conformance/counterfactual-conformance-v0/SPEC.md",
+      "sha256": "d1d3a0dbeeed8eb49756f919d95f5ba8c7d283ddc5ca263449c73cbd74f0536b"
+    },
+    {
+      "path": "conformance/counterfactual-conformance-v0/contract.json",
+      "sha256": "bebc536164a347627c2312310ad067d4b4f6739360ce1d8b2dc155e8909782f9"
+    },
+    {
+      "path": "conformance/counterfactual-conformance-v0/dcn/neighborhood.json",
+      "sha256": "4837af4927da6b1efa81bb40ba3b47a1aa5ec085b751bab0382ccf6683e016e2"
+    }
+  ],
+  "fixture_set_sha256": "264870b880e3b37ff8f0d9bdbaa9a4f64242e92f6485316477d32bbf9b81904a",
+  "dcn_sha256": "37a213cff7a34e28df165c282f2b9e7460e31fbd37794bf5020c1e91158ed36d"
+}

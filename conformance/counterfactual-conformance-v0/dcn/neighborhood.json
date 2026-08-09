@@ -1,0 +1,278 @@
+{
+  "schema": "receiptos.counterfactual_neighborhood.v0",
+  "neighborhood_id": "receiptos-counterfactual-neighborhood-lane-b-fixture-v0",
+  "version": "v0",
+  "members": [
+    {
+      "schema": "receiptos.counterfactual_challenge_identity.v0",
+      "native_schema": "verifier_challenge_observed_not_validated_vector.v0",
+      "package_version": "verifier-challenge-observed-not-validated-v0",
+      "vector_id": "V-OBSERVED-NOT-VALIDATED",
+      "challenge_id": "observed_not_validated",
+      "execution_class": "production-verifier-binding",
+      "surface": "verify_handoff_receipt_root",
+      "subject": {
+        "entrypoint": "verifyHandoffReceiptRoot",
+        "module_path": "src/receiptos/verify/verify-receipt.ts",
+        "git_blob_oid": "2e2e45bf30529de93eac58a04465f17ef81edeaa"
+      },
+      "source": {
+        "repository_path": "src/receiptos/fixtures/session-evidence.cyphes-workflow.sample.json",
+        "git_blob_oid": "b1be64dbb71898ab5ffa75660f8e07c3250d8be1"
+      },
+      "derivation": {
+        "kind": "path_mutation",
+        "operation": "set",
+        "path": [
+          "anchor",
+          "verifier_status"
+        ],
+        "from": "not verified",
+        "to": "verified"
+      }
+    },
+    {
+      "schema": "receiptos.counterfactual_challenge_identity.v0",
+      "native_schema": "verifier_challenge_missing_required_input_unverifiable_vector.v0",
+      "package_version": "verifier-challenge-missing-required-input-unverifiable-v0",
+      "vector_id": "V-MISSING-REQUIRED-INPUT",
+      "challenge_id": "missing_required_input_unverifiable",
+      "execution_class": "production-verifier-binding",
+      "surface": "verify_handoff_receipt_root",
+      "subject": {
+        "entrypoint": "verifyHandoffReceiptRoot",
+        "module_path": "src/receiptos/verify/verify-receipt.ts",
+        "git_blob_oid": "2e2e45bf30529de93eac58a04465f17ef81edeaa"
+      },
+      "source": {
+        "repository_path": "src/receiptos/fixtures/session-evidence.cyphes-workflow.sample.json",
+        "git_blob_oid": "b1be64dbb71898ab5ffa75660f8e07c3250d8be1"
+      },
+      "derivation": {
+        "kind": "path_mutation",
+        "operation": "set",
+        "path": [
+          "anchor",
+          "receipt_root"
+        ],
+        "from": "0xfe6ee94aed3ee6158c296e2d2d41ab7b31028259a99105c872adb4fdc30196d0",
+        "to": null
+      }
+    },
+    {
+      "schema": "receiptos.counterfactual_challenge_identity.v0",
+      "native_schema": "verifier_challenge_integrity_mismatch_rejected_vector.v0",
+      "package_version": "verifier-challenge-integrity-mismatch-rejected-v0",
+      "vector_id": "V-INTEGRITY-MISMATCH",
+      "challenge_id": "integrity_mismatch_rejected",
+      "execution_class": "production-verifier-binding",
+      "surface": "verify_handoff_receipt_root",
+      "subject": {
+        "entrypoint": "verifyHandoffReceiptRoot",
+        "module_path": "src/receiptos/verify/verify-receipt.ts",
+        "git_blob_oid": "2e2e45bf30529de93eac58a04465f17ef81edeaa"
+      },
+      "source": {
+        "repository_path": "src/receiptos/fixtures/session-evidence.cyphes-workflow.sample.json",
+        "git_blob_oid": "b1be64dbb71898ab5ffa75660f8e07c3250d8be1"
+      },
+      "derivation": {
+        "kind": "path_mutation",
+        "operation": "set",
+        "path": [
+          "task",
+          "title"
+        ],
+        "from": "CYPHES workflow proof boundary sample",
+        "to": "CYPHES workflow proof boundary sample (tampered)"
+      }
+    },
+    {
+      "schema": "receiptos.counterfactual_challenge_identity.v0",
+      "native_schema": "verifier_challenge_chronicle_proof_root_mismatch_rejected_vector.v0",
+      "package_version": "verifier-challenge-chronicle-proof-root-mismatch-rejected-v0",
+      "vector_id": "V-CHRONICLE-PROOF-ROOT-MISMATCH",
+      "challenge_id": "proof_root_mismatch_rejected",
+      "execution_class": "production-admission-binding",
+      "surface": "chronicle_admission",
+      "subject": {
+        "entrypoint": "tryCreateChronicleEntryV0",
+        "module_path": "src/receiptos/capsule/chronicle-portfolio-v0.ts",
+        "git_blob_oid": "0e790911092546c62344f980e6b611542bcd00fe"
+      },
+      "source": {
+        "repository_path": "tests/fixtures/receiptos-chronicle-admission-v0/vectors/01-clean-admitted.json",
+        "git_blob_oid": "8577188aa93c03f14356ac2690f8e4143c362f23"
+      },
+      "derivation": {
+        "kind": "path_mutation",
+        "operation": "set",
+        "path": [
+          "proof_object",
+          "receipt_root"
+        ],
+        "from": "0x687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc",
+        "to": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      }
+    },
+    {
+      "schema": "receiptos.counterfactual_challenge_identity.v0",
+      "native_schema": "verifier_challenge_chronicle_predecessor_unknown_unverifiable_vector.v0",
+      "package_version": "verifier-challenge-chronicle-predecessor-unknown-unverifiable-v0",
+      "vector_id": "V-CHRONICLE-PREDECESSOR-UNKNOWN",
+      "challenge_id": "predecessor_unknown_unverifiable",
+      "execution_class": "production-continuity-binding",
+      "surface": "chronicle_continuity",
+      "subject": {
+        "entrypoint": "evaluateChronicleCheckpointContinuityV0",
+        "module_path": "src/receiptos/capsule/chronicle-checkpoint-continuity-v0.ts",
+        "git_blob_oid": "428923f10aac54bfaaebedfad494118cbb17d744"
+      },
+      "source": {
+        "repository_path": "tests/fixtures/chronicle-checkpoint-continuity-v0.json",
+        "git_blob_oid": "88a41845d6b5fa16d057b884f113c9df3f4a9e28"
+      },
+      "derivation": {
+        "kind": "substitution",
+        "value": {
+          "operation": "remove_predecessor_argument",
+          "from_checkpoint_id": "checkpoint-1",
+          "to": null,
+          "unchanged_fields": [
+            "current"
+          ]
+        }
+      }
+    },
+    {
+      "schema": "receiptos.counterfactual_challenge_identity.v0",
+      "native_schema": "verifier_challenge_chronicle_sequence_gap_rejected_vector.v0",
+      "package_version": "verifier-challenge-chronicle-sequence-gap-rejected-v0",
+      "vector_id": "V-CHRONICLE-SEQUENCE-GAP",
+      "challenge_id": "sequence_gap_rejected",
+      "execution_class": "production-continuity-binding",
+      "surface": "chronicle_continuity",
+      "subject": {
+        "entrypoint": "evaluateChronicleCheckpointContinuityV0",
+        "module_path": "src/receiptos/capsule/chronicle-checkpoint-continuity-v0.ts",
+        "git_blob_oid": "428923f10aac54bfaaebedfad494118cbb17d744"
+      },
+      "source": {
+        "repository_path": "tests/fixtures/chronicle-checkpoint-continuity-v0.json",
+        "git_blob_oid": "88a41845d6b5fa16d057b884f113c9df3f4a9e28"
+      },
+      "derivation": {
+        "kind": "substitution",
+        "value": {
+          "operation": "replace_current_argument",
+          "from_checkpoint_id": "checkpoint-2",
+          "to_checkpoint_id": "checkpoint-4",
+          "precedent_vector_name": "sequence_gap",
+          "unchanged_fields": [
+            "predecessor"
+          ]
+        }
+      }
+    },
+    {
+      "schema": "receiptos.counterfactual_challenge_identity.v0",
+      "native_schema": "verifier_challenge_chronicle_checkpoint_root_mismatch_rejected_vector.v0",
+      "package_version": "verifier-challenge-chronicle-checkpoint-root-mismatch-rejected-v0",
+      "vector_id": "V-CHRONICLE-CHECKPOINT-ROOT-MISMATCH",
+      "challenge_id": "checkpoint_root_mismatch_rejected",
+      "execution_class": "production-checkpoint-local-binding",
+      "surface": "chronicle_checkpoint_local",
+      "subject": {
+        "entrypoint": "verifyChronicleCheckpointV0",
+        "module_path": "src/receiptos/capsule/chronicle-portfolio-v0.ts",
+        "git_blob_oid": "0e790911092546c62344f980e6b611542bcd00fe"
+      },
+      "source": null,
+      "derivation": {
+        "kind": "substitution",
+        "value": {
+          "operation": "mutate_checkpoint_root_only",
+          "unchanged_fields": [
+            "schema",
+            "checkpoint_id",
+            "collection_ref",
+            "entry_refs",
+            "prev_checkpoint",
+            "sequence"
+          ],
+          "baseline_checkpoint_root": "sha256:32423e924c8f5e540bf7a36e2e2f969eb07e537885688e1affda37b5be808e87",
+          "challenged_checkpoint_root": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        }
+      }
+    },
+    {
+      "schema": "receiptos.counterfactual_challenge_identity.v0",
+      "native_schema": "verifier_challenge_chronicle_checkpoint_entry_refs_noncanonical_rejected_vector.v0",
+      "package_version": "verifier-challenge-chronicle-checkpoint-entry-refs-noncanonical-rejected-v0",
+      "vector_id": "V-CHRONICLE-CHECKPOINT-ENTRY-REFS-NONCANONICAL",
+      "challenge_id": "checkpoint_entry_refs_noncanonical_rejected",
+      "execution_class": "production-checkpoint-local-binding",
+      "surface": "chronicle_checkpoint_local",
+      "subject": {
+        "entrypoint": "verifyChronicleCheckpointV0",
+        "module_path": "src/receiptos/capsule/chronicle-portfolio-v0.ts",
+        "git_blob_oid": "0e790911092546c62344f980e6b611542bcd00fe"
+      },
+      "source": null,
+      "derivation": {
+        "kind": "substitution",
+        "value": {
+          "operation": "permute_entry_refs_order_only",
+          "unchanged_fields": [
+            "schema",
+            "checkpoint_id",
+            "collection_ref",
+            "prev_checkpoint",
+            "sequence",
+            "checkpoint_root"
+          ],
+          "baseline_entry_refs": [
+            "entry-alpha",
+            "entry-beta",
+            "entry-gamma"
+          ],
+          "challenged_entry_refs": [
+            "entry-gamma",
+            "entry-alpha",
+            "entry-beta"
+          ]
+        }
+      }
+    },
+    {
+      "schema": "receiptos.counterfactual_challenge_identity.v0",
+      "native_schema": "counterfactual_audit_boundary_vector.v0",
+      "package_version": "counterfactual-audit-boundary-v0",
+      "vector_id": "V-AT-NEST-OBJ",
+      "challenge_id": null,
+      "execution_class": "semantic-snapshot",
+      "surface": "counterfactual_audit_boundary",
+      "subject": null,
+      "source": null,
+      "derivation": {
+        "kind": "audit_boundary_operation",
+        "operation": "semantic_snapshot"
+      }
+    },
+    {
+      "schema": "receiptos.counterfactual_challenge_identity.v0",
+      "native_schema": "counterfactual_audit_boundary_vector.v0",
+      "package_version": "counterfactual-audit-boundary-v0",
+      "vector_id": "V-MAN-HASH-DIFF",
+      "challenge_id": null,
+      "execution_class": "manifest-file-hash",
+      "surface": "counterfactual_audit_boundary",
+      "subject": null,
+      "source": null,
+      "derivation": {
+        "kind": "audit_boundary_operation",
+        "operation": "manifest_file_sha256"
+      }
+    }
+  ]
+}
