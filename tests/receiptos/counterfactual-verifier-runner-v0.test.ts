@@ -15,6 +15,8 @@ import {
   normalizeSubjectReturnedResult,
   type VerifierChallengeRunRequestV0,
 } from "../../src/receiptos/challenge/counterfactual-verifier-runner"
+import { evaluateVerifierChallengeConformance } from "../../src/receiptos/challenge/counterfactual-conformance-evaluator"
+import { snapshotCounterfactualSemanticJson } from "../../src/receiptos/challenge/counterfactual-audit-boundary"
 import {
   NormalizationContractError,
   normalizeChronicleAdmissionResult,
@@ -661,6 +663,239 @@ describe("counterfactual verifier runner v0", () => {
     const a = await runVerifierChallenge(handoffRequest(challenge, challenged))
     const b = await runVerifierChallenge(handoffRequest(challenge, challenged))
     expect(a).toEqual(b)
+  })
+
+  test("all surfaces resolve input materialization failures as execution_failure", async () => {
+    function poison<T extends object>(value: T): T {
+      return Object.defineProperty(value, "__clone_poison", {
+        enumerable: true,
+        configurable: true,
+        get() {
+          throw new Error("clone-stage diagnostic leak")
+        },
+      }) as T
+    }
+
+    async function assertInputMaterializationFailure(
+      label: string,
+      request: VerifierChallengeRunRequestV0,
+      beforeChallenge: CounterfactualChallengeIdentityV0,
+      beforeModel: VerifierChallengeVectorModelV0 | undefined,
+    ) {
+      const result = await runVerifierChallenge(request)
+      expect(result.execution_state, label).toBe("execution_failure")
+      if (result.execution_state !== "execution_failure") throw new Error("unreachable")
+      expect(result.failure.failure_stage, label).toBe("input_materialization")
+      expect(result.failure.safe_message, label).toBe("input materialization failed")
+      expect(result).not.toHaveProperty("rejection")
+      expect(result).not.toHaveProperty("native_result")
+      const serialized = JSON.stringify(result)
+      expect(serialized).not.toContain("clone-stage diagnostic leak")
+      expect(serialized).not.toContain("stack")
+      expect(serialized).not.toContain("\n")
+      expect(serialized).not.toMatch(/[A-Za-z]:\\/)
+      expect(serialized).not.toMatch(/\/Users\//)
+      expect(request.challenge).toEqual(beforeChallenge)
+      if (beforeModel !== undefined && request.lane_a_model !== undefined) {
+        expect(request.lane_a_model).toEqual(beforeModel)
+      }
+      const unresolved = await evaluateVerifierChallengeConformance({
+        ...request,
+        lane_a_model: request.lane_a_model ?? beforeModel!,
+      })
+      expect(unresolved.evaluation_state, label).toBe("execution_unresolved")
+      if (unresolved.evaluation_state !== "execution_unresolved") throw new Error("unreachable")
+      expect(unresolved.verdict).toBeNull()
+      expect(unresolved.execution_failure.failure_stage).toBe("input_materialization")
+    }
+
+    // verify_handoff_receipt_root
+    {
+      const { challenged, challenge, model } = loadHandoffEvidence(
+        "conformance/verifier-challenge-integrity-mismatch-rejected-v0/vectors/V-INTEGRITY-MISMATCH.json",
+      )
+      const beforeChallenge = structuredClone(challenge)
+      const beforeModel = structuredClone(model)
+      const beforeInput = structuredClone(challenged)
+      await assertInputMaterializationFailure(
+        "verify_handoff",
+        {
+          ...handoffRequest(challenge, poison(structuredClone(challenged) as object) as HandoffEvidence, {
+            lane_a_model: model,
+          }),
+        },
+        beforeChallenge,
+        beforeModel,
+      )
+      expect(challenged).toEqual(beforeInput)
+    }
+
+    // chronicle_admission
+    {
+      const vector = readJson(
+        "conformance/verifier-challenge-chronicle-proof-root-mismatch-rejected-v0/vectors/V-CHRONICLE-PROOF-ROOT-MISMATCH.json",
+      ) as Record<string, unknown>
+      const { challenge, model } = identityFromVector(vector)
+      const source = vector.source_fixture as { repository_path: string }
+      const sourcePayload = readJson(source.repository_path) as {
+        input: {
+          evidence: HandoffEvidence
+          proof_object: PortableProofObjectV0
+          options?: Record<string, unknown>
+        }
+      }
+      const beforeChallenge = structuredClone(challenge)
+      const beforeModel = structuredClone(model)
+      await assertInputMaterializationFailure(
+        "chronicle_admission",
+        {
+          schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
+          surface: "chronicle_admission",
+          subject: {
+            entrypoint: CHRONICLE_ADMISSION_ADAPTER_IDENTITY.entrypoint,
+            module_path: CHRONICLE_ADMISSION_ADAPTER_IDENTITY.module_path,
+            git_blob_oid: CHRONICLE_ADMISSION_ADAPTER_IDENTITY.git_blob_oid,
+          },
+          challenge,
+          lane_a_model: model,
+          input: {
+            evidence: poison(structuredClone(sourcePayload.input.evidence) as object) as HandoffEvidence,
+            proof_object: sourcePayload.input.proof_object,
+            options: sourcePayload.input.options as never,
+          },
+        },
+        beforeChallenge,
+        beforeModel,
+      )
+    }
+
+    // chronicle_continuity
+    {
+      const vector = readJson(
+        "conformance/verifier-challenge-chronicle-sequence-gap-rejected-v0/vectors/V-CHRONICLE-SEQUENCE-GAP.json",
+      ) as Record<string, unknown>
+      const { challenge, model } = identityFromVector(vector)
+      const pair = vector.challenged_pair as {
+        current: ChronicleCheckpointV0
+        predecessor: ChronicleCheckpointV0 | null
+      }
+      const beforeChallenge = structuredClone(challenge)
+      const beforeModel = structuredClone(model)
+      await assertInputMaterializationFailure(
+        "chronicle_continuity",
+        {
+          schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
+          surface: "chronicle_continuity",
+          subject: {
+            entrypoint: CHRONICLE_CONTINUITY_ADAPTER_IDENTITY.entrypoint,
+            module_path: CHRONICLE_CONTINUITY_ADAPTER_IDENTITY.module_path,
+            git_blob_oid: CHRONICLE_CONTINUITY_ADAPTER_IDENTITY.git_blob_oid,
+          },
+          challenge,
+          lane_a_model: model,
+          input: {
+            current: poison(structuredClone(pair.current) as object) as ChronicleCheckpointV0,
+            predecessor: pair.predecessor,
+          },
+        },
+        beforeChallenge,
+        beforeModel,
+      )
+    }
+
+    // chronicle_checkpoint_local
+    {
+      const vector = readJson(
+        "conformance/verifier-challenge-chronicle-checkpoint-root-mismatch-rejected-v0/vectors/V-CHRONICLE-CHECKPOINT-ROOT-MISMATCH.json",
+      ) as Record<string, unknown>
+      const { challenge, model } = identityFromVector(vector)
+      const beforeChallenge = structuredClone(challenge)
+      const beforeModel = structuredClone(model)
+      await assertInputMaterializationFailure(
+        "chronicle_checkpoint_local",
+        {
+          schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
+          surface: "chronicle_checkpoint_local",
+          subject: {
+            entrypoint: CHRONICLE_CHECKPOINT_LOCAL_ADAPTER_IDENTITY.entrypoint,
+            module_path: CHRONICLE_CHECKPOINT_LOCAL_ADAPTER_IDENTITY.module_path,
+            git_blob_oid: CHRONICLE_CHECKPOINT_LOCAL_ADAPTER_IDENTITY.git_blob_oid,
+          },
+          challenge,
+          lane_a_model: model,
+          input: {
+            checkpoint: poison(
+              structuredClone(vector.challenged_checkpoint) as object,
+            ) as ChronicleCheckpointV0,
+          },
+        },
+        beforeChallenge,
+        beforeModel,
+      )
+    }
+
+    // CAB input materialization stage label
+    {
+      const vector = readJson("conformance/counterfactual-audit-boundary-v0/vectors/V-AT-ROOT.json") as Record<
+        string,
+        unknown
+      >
+      const { challenge, model } = identityFromVector(vector)
+      const beforeChallenge = structuredClone(challenge)
+      const beforeModel = structuredClone(model)
+      await assertInputMaterializationFailure(
+        "cab",
+        {
+          schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
+          surface: "counterfactual_audit_boundary",
+          subject: null,
+          operation: "semantic_snapshot",
+          challenge,
+          lane_a_model: model,
+          input: {
+            value: Object.defineProperty({}, "payload", {
+              enumerable: true,
+              get() {
+                throw new Error("clone-stage diagnostic leak")
+              },
+            }),
+          },
+        },
+        beforeChallenge,
+        beforeModel,
+      )
+    }
+
+    // Authentic CAB error replayed through a non-CAB input getter cannot become typed rejection.
+    {
+      let authentic: unknown
+      try {
+        snapshotCounterfactualSemanticJson({ audit_timestamp: "root" })
+      } catch (error) {
+        authentic = error
+      }
+      const { challenged, challenge, model } = loadHandoffEvidence(
+        "conformance/verifier-challenge-integrity-mismatch-rejected-v0/vectors/V-INTEGRITY-MISMATCH.json",
+      )
+      const poisoned = Object.defineProperty(structuredClone(challenged) as object, "__cab_replay", {
+        enumerable: true,
+        get() {
+          throw authentic
+        },
+      }) as HandoffEvidence
+      const result = await runVerifierChallenge(
+        handoffRequest(challenge, poisoned, { lane_a_model: model }),
+      )
+      expect(result.execution_state).toBe("execution_failure")
+      if (result.execution_state !== "execution_failure") throw new Error("unreachable")
+      expect(result.failure.failure_stage).toBe("input_materialization")
+      expect(result).not.toHaveProperty("rejection")
+      expect(JSON.stringify(result)).not.toContain("subject_contract_rejected")
+    }
+
+    // Output-materialization catch is stage-separated in source; closed production outputs are
+    // plain JSON-cloneable objects, so a live output-clone failure is currently unreachable
+    // without inventing production throws or exposing internal hooks.
   })
 
   test("Lane B neighborhood SHA256 and frozen digests remain unchanged", () => {
