@@ -105,6 +105,8 @@ describe("counterfactual verifier runner v0", () => {
     expect(RunnerModule).not.toHaveProperty("__laneDTestOnly_withInvokerOverrides")
     expect(RunnerModule).not.toHaveProperty("testInvokerOverrides")
     expect(RunnerModule).not.toHaveProperty("PRODUCTION_INVOKERS")
+    expect(RunnerModule).not.toHaveProperty("captureCabSubjectInvocationThrow")
+    expect(RunnerModule).not.toHaveProperty("isRecognizedCabContractRejection")
     expect(typeof RunnerModule.runVerifierChallenge).toBe("function")
   })
 
