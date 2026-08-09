@@ -4,9 +4,8 @@
  * Maps native verifier/challenge observations into a shared observation_class
  * without evaluating conformance, running verifiers, or capturing host errors.
  *
- * Explicit separation:
- * - observation_class describes verifier/operation observation only
- * - source_validity_effect is always "none" (never synthesizes source validity)
+ * observation_class describes verifier/operation observation only. Lane C does
+ * not synthesize source-artifact validity fields or conclusions.
  *
  * Host/runtime failures (thrown Error, invalid non-result inputs) are NOT mapped
  * to semantic classes — normalizers throw NormalizationContractError instead.
@@ -17,9 +16,12 @@ import type {
   ChronicleCheckpointContinuityResultV0,
   ChronicleCheckpointContinuityEvaluationState,
   ChronicleCheckpointContinuityReasonCode,
+  ChronicleCheckpointContinuityVerdict,
+  ChronicleCheckpointContinuityRelation,
 } from "../capsule/chronicle-checkpoint-continuity-v0"
 import type {
   ChronicleCheckpointVerification,
+  ChronicleEntryAdmissionFailureV0,
   TryCreateChronicleEntryV0Result,
 } from "../capsule/chronicle-portfolio-v0"
 
@@ -54,11 +56,6 @@ export interface CounterfactualObservationV0 {
   readonly schema: CounterfactualObservationSchema
   readonly surface: CounterfactualObservationSurfaceV0
   readonly observation_class: CounterfactualObservationClassV0
-  /**
-   * Lane C never asserts source-artifact validity.
-   * Always "none" — challenge/admission/local failures do not rewrite source validity.
-   */
-  readonly source_validity_effect: "none"
   /** Compact native status token for audit (not a universal enum). */
   readonly native_status: string
   /** Native reason/reason_code when the surface provides one; otherwise null. */
@@ -101,7 +98,6 @@ function observation(input: {
     schema: COUNTERFACTUAL_OBSERVATION_SCHEMA,
     surface: input.surface,
     observation_class: input.observation_class,
-    source_validity_effect: "none",
     native_status: input.native_status,
     native_reason_code: input.native_reason_code,
     native_detail: structuredClone(input.native_detail),
@@ -113,15 +109,12 @@ function observation(input: {
 /**
  * Runtime/actual normalization for verifyHandoffReceiptRoot.
  *
- * Limitation: the production result is only `{ok, receipt_root, recomputed_root}`.
- * Distinguishes:
- * - ok:true → affirmative
- * - ok:false with both roots null → unverifiable (missing comparison operand)
- * - ok:false with roots present → rejected (integrity mismatch)
+ * Production contract (verifyHandoffReceiptRoot):
+ * - missing required root → {ok:false, receipt_root:null, recomputed_root:null}
+ * - otherwise → {ok, receipt_root:string, recomputed_root:string} with ok iff equal
  *
- * It cannot encode challenge-level non-elevation semantics (observed_not_validated);
- * those remain challenge expected/context concerns. When ok:true, observation is
- * affirmative even if an observation-only field was mutated.
+ * Challenge-level non-elevation (observed_not_validated) remains Lane A context;
+ * runtime ok:true is affirmative and cannot invent that challenge story.
  */
 export function normalizeVerifyHandoffReceiptRootResult(
   result: HandoffReceiptVerification,
@@ -140,6 +133,14 @@ export function normalizeVerifyHandoffReceiptRootResult(
     throw new NormalizationContractError("recomputed_root must be string|null")
   }
 
+  const bothNull = receiptRoot === null && recomputedRoot === null
+  const bothString = typeof receiptRoot === "string" && typeof recomputedRoot === "string"
+  if (!bothNull && !bothString) {
+    throw new NormalizationContractError(
+      "HandoffReceiptVerification roots must both be null or both be strings",
+    )
+  }
+
   const detail = {
     ok,
     receipt_root: receiptRoot,
@@ -147,6 +148,12 @@ export function normalizeVerifyHandoffReceiptRootResult(
   }
 
   if (ok) {
+    if (!bothString) {
+      throw new NormalizationContractError("ok:true requires non-null receipt roots")
+    }
+    if (receiptRoot.toLowerCase() !== recomputedRoot.toLowerCase()) {
+      throw new NormalizationContractError("ok:true requires equal receipt roots")
+    }
     return observation({
       surface: "verify_handoff_receipt_root",
       observation_class: "affirmative",
@@ -156,7 +163,7 @@ export function normalizeVerifyHandoffReceiptRootResult(
     })
   }
 
-  if (receiptRoot === null && recomputedRoot === null) {
+  if (bothNull) {
     return observation({
       surface: "verify_handoff_receipt_root",
       observation_class: "unverifiable",
@@ -164,6 +171,10 @@ export function normalizeVerifyHandoffReceiptRootResult(
       native_reason_code: "missing_required_receipt_root",
       native_detail: detail,
     })
+  }
+
+  if (receiptRoot.toLowerCase() === recomputedRoot.toLowerCase()) {
+    throw new NormalizationContractError("ok:false with equal roots is outside production contract")
   }
 
   return observation({
@@ -192,6 +203,62 @@ export function normalizeVerifyHandoffChallengeExpected(expected: unknown): Coun
 
 // --- Chronicle admission -----------------------------------------------------
 
+/**
+ * Exact production pairs from ChronicleEntryAdmissionFailureV0.
+ * No open-ended fallback: unknown class/reason throws.
+ */
+const ADMISSION_FAILURE_CONTRACT: {
+  readonly [K in ChronicleEntryAdmissionFailureV0["failure_class"]]: {
+    readonly observation_class: Extract<CounterfactualObservationClassV0, "unverifiable" | "rejected">
+    readonly reason_codes: ReadonlySet<
+      Extract<ChronicleEntryAdmissionFailureV0, { failure_class: K }>["reason_code"]
+    >
+  }
+} = {
+  unverifiable: {
+    observation_class: "unverifiable",
+    reason_codes: new Set(["evidence_root_missing"]),
+  },
+  evidence_mismatch: {
+    observation_class: "rejected",
+    reason_codes: new Set(["evidence_root_mismatch"]),
+  },
+  cross_object_inconsistency: {
+    observation_class: "rejected",
+    reason_codes: new Set([
+      "proof_root_mismatch",
+      "capsule_stored_mismatch",
+      "capsule_computed_mismatch",
+    ]),
+  },
+  reported_state_inconsistency: {
+    observation_class: "rejected",
+    reason_codes: new Set(["capsule_label_inconsistent", "verifier_result_inconsistent"]),
+  },
+  identity_inconsistency: {
+    observation_class: "rejected",
+    reason_codes: new Set(["proof_object_id_invalid", "proof_ref_invalid"]),
+  },
+}
+
+function parseAdmissionFailure(failure: Record<string, unknown>): ChronicleEntryAdmissionFailureV0 {
+  const failureClass = failure.failure_class
+  const reasonCode = failure.reason_code
+  if (typeof failureClass !== "string" || typeof reasonCode !== "string") {
+    throw new NormalizationContractError("admission failure requires failure_class and reason_code")
+  }
+  if (!(failureClass in ADMISSION_FAILURE_CONTRACT)) {
+    throw new NormalizationContractError(`unknown admission failure_class: ${failureClass}`)
+  }
+  const contract = ADMISSION_FAILURE_CONTRACT[failureClass as keyof typeof ADMISSION_FAILURE_CONTRACT]
+  if (!contract.reason_codes.has(reasonCode as never)) {
+    throw new NormalizationContractError(
+      `invalid admission reason_code ${reasonCode} for failure_class ${failureClass}`,
+    )
+  }
+  return { failure_class: failureClass, reason_code: reasonCode } as ChronicleEntryAdmissionFailureV0
+}
+
 export function normalizeChronicleAdmissionResult(
   result: TryCreateChronicleEntryV0Result,
 ): CounterfactualObservationV0 {
@@ -204,6 +271,9 @@ export function normalizeChronicleAdmissionResult(
     if (!("value" in object)) {
       throw new NormalizationContractError("successful admission missing value")
     }
+    if ("failure" in object && object.failure !== undefined) {
+      throw new NormalizationContractError("successful admission must not include failure")
+    }
     return observation({
       surface: "chronicle_admission",
       observation_class: "affirmative",
@@ -213,21 +283,20 @@ export function normalizeChronicleAdmissionResult(
     })
   }
 
-  const failure = asObject(object.failure, "admission failure")
-  const failureClass = failure.failure_class
-  const reasonCode = failure.reason_code
-  if (typeof failureClass !== "string" || typeof reasonCode !== "string") {
-    throw new NormalizationContractError("admission failure requires failure_class and reason_code")
+  if (!("failure" in object)) {
+    throw new NormalizationContractError("failed admission missing failure")
   }
-
-  const observationClass: CounterfactualObservationClassV0 =
-    failureClass === "unverifiable" ? "unverifiable" : "rejected"
+  if ("value" in object && object.value !== undefined) {
+    throw new NormalizationContractError("failed admission must not include value")
+  }
+  const failure = parseAdmissionFailure(asObject(object.failure, "admission failure"))
+  const contract = ADMISSION_FAILURE_CONTRACT[failure.failure_class]
 
   return observation({
     surface: "chronicle_admission",
-    observation_class: observationClass,
-    native_status: `admission_${failureClass}`,
-    native_reason_code: reasonCode,
+    observation_class: contract.observation_class,
+    native_status: `admission_${failure.failure_class}`,
+    native_reason_code: failure.reason_code,
     native_detail: {
       success: false,
       failure: structuredClone(failure),
@@ -249,12 +318,86 @@ export function normalizeChronicleAdmissionChallengeExpected(expected: unknown):
 
 // --- Chronicle continuity ----------------------------------------------------
 
-const CONTINUITY_STATES = new Set<ChronicleCheckpointContinuityEvaluationState>([
-  "evaluated",
-  "unverifiable",
-  "malformed",
-  "not_evaluated",
-])
+/**
+ * Exact production pairs from evaluateChronicleCheckpointContinuityV0 returns.
+ */
+type ContinuityContractEntry = {
+  readonly evaluation_state: ChronicleCheckpointContinuityEvaluationState
+  readonly verdict: ChronicleCheckpointContinuityVerdict
+  readonly relation: ChronicleCheckpointContinuityRelation
+  readonly observation_class: CounterfactualObservationClassV0
+}
+
+const CONTINUITY_REASON_CONTRACT: Readonly<
+  Record<ChronicleCheckpointContinuityReasonCode, ContinuityContractEntry>
+> = {
+  current_shape_malformed: {
+    evaluation_state: "malformed",
+    verdict: null,
+    relation: null,
+    observation_class: "malformed",
+  },
+  predecessor_shape_malformed: {
+    evaluation_state: "malformed",
+    verdict: null,
+    relation: null,
+    observation_class: "malformed",
+  },
+  current_local_verifier_failed: {
+    evaluation_state: "not_evaluated",
+    verdict: null,
+    relation: null,
+    observation_class: "rejected",
+  },
+  predecessor_local_verifier_failed: {
+    evaluation_state: "not_evaluated",
+    verdict: null,
+    relation: null,
+    observation_class: "rejected",
+  },
+  predecessor_unknown: {
+    evaluation_state: "unverifiable",
+    verdict: null,
+    relation: null,
+    observation_class: "unverifiable",
+  },
+  genesis: {
+    evaluation_state: "evaluated",
+    verdict: "valid",
+    relation: "genesis",
+    observation_class: "affirmative",
+  },
+  direct_successor: {
+    evaluation_state: "evaluated",
+    verdict: "valid",
+    relation: "successor",
+    observation_class: "affirmative",
+  },
+  predecessor_ref_mismatch: {
+    evaluation_state: "evaluated",
+    verdict: "invalid",
+    relation: null,
+    observation_class: "rejected",
+  },
+  sequence_gap: {
+    evaluation_state: "evaluated",
+    verdict: "invalid",
+    relation: null,
+    observation_class: "rejected",
+  },
+  predecessor_same_sequence: {
+    evaluation_state: "evaluated",
+    verdict: "invalid",
+    relation: null,
+    observation_class: "rejected",
+  },
+  predecessor_higher_sequence: {
+    evaluation_state: "evaluated",
+    verdict: "invalid",
+    relation: null,
+    observation_class: "rejected",
+  },
+}
 
 export function normalizeChronicleContinuityResult(
   result: ChronicleCheckpointContinuityResultV0,
@@ -262,42 +405,47 @@ export function normalizeChronicleContinuityResult(
   const object = asObject(result, "ChronicleCheckpointContinuityResultV0")
   const evaluationState = object.evaluation_state
   const reasonCode = object.reason_code
-  if (typeof evaluationState !== "string" || !CONTINUITY_STATES.has(evaluationState as ChronicleCheckpointContinuityEvaluationState)) {
-    throw new NormalizationContractError("invalid continuity evaluation_state")
+  const verdict = object.verdict === undefined ? null : object.verdict
+  const relation = object.relation === undefined ? null : object.relation
+
+  if (typeof evaluationState !== "string") {
+    throw new NormalizationContractError("continuity evaluation_state must be a string")
   }
   if (typeof reasonCode !== "string") {
     throw new NormalizationContractError("continuity reason_code must be a string")
   }
-
-  const detail = {
-    evaluation_state: evaluationState,
-    verdict: object.verdict ?? null,
-    relation: object.relation ?? null,
-    reason_code: reasonCode as ChronicleCheckpointContinuityReasonCode,
+  if (!(reasonCode in CONTINUITY_REASON_CONTRACT)) {
+    throw new NormalizationContractError(`unknown continuity reason_code: ${reasonCode}`)
   }
 
-  let observationClass: CounterfactualObservationClassV0
-  if (evaluationState === "malformed") {
-    observationClass = "malformed"
-  } else if (evaluationState === "unverifiable") {
-    observationClass = "unverifiable"
-  } else if (evaluationState === "not_evaluated") {
-    // Local checkpoint verifier failed before continuity gates — scoped failure.
-    observationClass = "rejected"
-  } else if (object.verdict === "valid") {
-    observationClass = "affirmative"
-  } else if (object.verdict === "invalid") {
-    observationClass = "rejected"
-  } else {
-    throw new NormalizationContractError("evaluated continuity requires verdict valid|invalid")
+  const contract = CONTINUITY_REASON_CONTRACT[reasonCode as ChronicleCheckpointContinuityReasonCode]
+  if (evaluationState !== contract.evaluation_state) {
+    throw new NormalizationContractError(
+      `continuity evaluation_state ${evaluationState} incompatible with reason_code ${reasonCode}`,
+    )
+  }
+  if (verdict !== contract.verdict) {
+    throw new NormalizationContractError(
+      `continuity verdict ${String(verdict)} incompatible with reason_code ${reasonCode}`,
+    )
+  }
+  if (relation !== contract.relation) {
+    throw new NormalizationContractError(
+      `continuity relation ${String(relation)} incompatible with reason_code ${reasonCode}`,
+    )
   }
 
   return observation({
     surface: "chronicle_continuity",
-    observation_class: observationClass,
+    observation_class: contract.observation_class,
     native_status: `${evaluationState}:${reasonCode}`,
     native_reason_code: reasonCode,
-    native_detail: detail,
+    native_detail: {
+      evaluation_state: evaluationState,
+      verdict,
+      relation,
+      reason_code: reasonCode,
+    },
   })
 }
 
@@ -327,6 +475,10 @@ export function normalizeChronicleCheckpointLocalResult(
   // When ok is false and roots match, entry-ref canonicity is the failing predicate.
   // When roots differ, entryRefsAreCanonical is not fully recoverable from the result alone.
   const entryRefsAreCanonical = ok ? true : rootMatches ? false : null
+
+  if (ok && !rootMatches) {
+    throw new NormalizationContractError("checkpoint ok:true requires matching roots")
+  }
 
   const detail = {
     ok,
