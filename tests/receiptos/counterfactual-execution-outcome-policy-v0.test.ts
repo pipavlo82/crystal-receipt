@@ -12,6 +12,7 @@ import {
 } from "../../src/receiptos/challenge/counterfactual-audit-boundary"
 import * as RunnerModule from "../../src/receiptos/challenge/counterfactual-verifier-runner"
 import {
+  ExpectedResultSetBindingError,
   compareCabSubjectContractRejection,
   evaluateVerifierChallengeConformance,
 } from "../../src/receiptos/challenge/counterfactual-conformance-evaluator"
@@ -63,6 +64,20 @@ function buildAccessorTrap(construction: {
     },
   })
   return { input, reads: () => reads }
+}
+
+async function expectExpectedResultSetBindingError(
+  promise: Promise<unknown>,
+  reason: ExpectedResultSetBindingError["reason"],
+): Promise<void> {
+  let thrown: unknown
+  try {
+    await promise
+  } catch (error) {
+    thrown = error
+  }
+  expect(thrown).toBeInstanceOf(ExpectedResultSetBindingError)
+  expect((thrown as ExpectedResultSetBindingError).reason).toBe(reason)
 }
 
 describe("counterfactual execution outcome policy v0 (Lane F)", () => {
@@ -434,40 +449,36 @@ describe("counterfactual execution outcome policy v0 (Lane F)", () => {
     expect(matching.actual_observation).toBeNull()
     expect(matching.mismatch).toBeNull()
 
-    // Wrong code token (ACCESSOR expected token vs audit_timestamp throw).
+    // Wrong code/path expected mutations fail Lane G binding (not evaluated mismatch).
     const wrongCodeModel = structuredClone(rootModel)
     wrongCodeModel.expected = structuredClone(accessor.expected)
-    const wrongCode = await evaluateVerifierChallengeConformance({
-      schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
-      surface: "counterfactual_audit_boundary",
-      subject: null,
-      operation: "semantic_snapshot",
-      challenge: rootChallenge,
-      lane_a_model: wrongCodeModel,
-      input: { value: rootVector.input },
-    })
-    expect(wrongCode.evaluation_state).toBe("evaluated")
-    if (wrongCode.evaluation_state !== "evaluated") throw new Error("unreachable")
-    expect(wrongCode.verdict).toBe("nonconformant")
-    expect(wrongCode.mismatch?.kind).toBe("subject_contract_rejection_mismatch")
-    expect(wrongCode.subject_contract_rejection?.code).toBe("reserved_audit_timestamp")
+    await expectExpectedResultSetBindingError(
+      evaluateVerifierChallengeConformance({
+        schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
+        surface: "counterfactual_audit_boundary",
+        subject: null,
+        operation: "semantic_snapshot",
+        challenge: rootChallenge,
+        lane_a_model: wrongCodeModel,
+        input: { value: rootVector.input },
+      }),
+      "expected_content_mismatch",
+    )
 
-    // Wrong path.
     const wrongPathModel = structuredClone(rootModel)
     wrongPathModel.expected = structuredClone(nest.expected)
-    const wrongPath = await evaluateVerifierChallengeConformance({
-      schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
-      surface: "counterfactual_audit_boundary",
-      subject: null,
-      operation: "semantic_snapshot",
-      challenge: rootChallenge,
-      lane_a_model: wrongPathModel,
-      input: { value: rootVector.input },
-    })
-    expect(wrongPath.evaluation_state).toBe("evaluated")
-    if (wrongPath.evaluation_state !== "evaluated") throw new Error("unreachable")
-    expect(wrongPath.verdict).toBe("nonconformant")
-    expect(wrongPath.mismatch?.kind).toBe("subject_contract_rejection_mismatch")
+    await expectExpectedResultSetBindingError(
+      evaluateVerifierChallengeConformance({
+        schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
+        surface: "counterfactual_audit_boundary",
+        subject: null,
+        operation: "semantic_snapshot",
+        challenge: rootChallenge,
+        lane_a_model: wrongPathModel,
+        input: { value: rootVector.input },
+      }),
+      "expected_content_mismatch",
+    )
 
     // Expected operation success + typed rejection.
     const { model: isolateModel, challenge: isolateChallenge } = identityFromVector(isolate)
