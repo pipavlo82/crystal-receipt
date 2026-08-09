@@ -1,5 +1,5 @@
 /**
- * Bound per-challenge counterfactual conformance evaluator v0 (Lane E/F).
+ * Bound per-challenge counterfactual conformance evaluator v0 (Lane E/F/G).
  *
  * Executes one canonical Lane D request, normalizes the supplied Lane A
  * expected observation and the returned native observation through Lane C
@@ -12,10 +12,14 @@
  * CAB expected rejection via closed code→token mapping + deterministic path.
  * Untyped execution_failure remains unresolved (never conformant/nonconformant).
  *
+ * Lane G: before expected-versus-actual comparison, authenticate lane_a_model
+ * expected material as a complete-set member of the frozen package
+ * expected_result_set_sha256 authority. Binding failure emits no verdict.
+ *
  * Does not:
  * - accept detached/precomputed execution results for bound verdicts
  * - treat execution_failure as verifier rejection/nonconformance
- * - validate expected_result_set_sha256
+ * - trust caller-supplied digests or arbitrary package paths
  * - prove materialized input was derived from source/derivation
  * - synthesize source-artifact validity
  * - parse raw exception strings for classification or comparison
@@ -43,6 +47,11 @@ import {
   canonicalIdentityJson,
   type CounterfactualChallengeIdentityV0,
 } from "./counterfactual-neighborhood"
+import {
+  ExpectedResultSetBindingError,
+  bindExpectedResultSet,
+  type AuthenticatedExpectedResultSetBindingV0,
+} from "./counterfactual-expected-result-set"
 import type { ChallengeSurfaceKind, VerifierChallengeVectorModelV0 } from "./verifier-challenge-model"
 import {
   RunnerContractError,
@@ -63,8 +72,9 @@ export type CounterfactualConformanceEvaluationSchema =
   typeof COUNTERFACTUAL_CONFORMANCE_EVALUATION_SCHEMA
 
 /**
- * Expected observation authority is the supplied Lane A model only.
- * Lane E does not independently validate aggregate expected_result_set_sha256.
+ * Expected observation material is still read from lane_a_model, but Lane G
+ * authenticates that material against the frozen package expected-result set
+ * before any conformant/nonconformant verdict.
  */
 export type ExpectedObservationSourceV0 = "lane_a_model"
 
@@ -91,6 +101,7 @@ export type EvaluatedConformanceResultV0 = {
   readonly challenge: CounterfactualChallengeIdentityV0
   readonly surface: ChallengeSurfaceKind
   readonly expected_observation_source: ExpectedObservationSourceV0
+  readonly expected_result_set_binding: AuthenticatedExpectedResultSetBindingV0
   readonly expected_observation: CounterfactualObservationV0
   readonly actual_observation: CounterfactualObservationV0 | null
   readonly subject_contract_rejection: SubjectContractRejectionV0 | null
@@ -469,6 +480,7 @@ function evaluatedResult(input: {
   challenge: CounterfactualChallengeIdentityV0
   surface: ChallengeSurfaceKind
   verdict: "conformant" | "nonconformant"
+  expected_result_set_binding: AuthenticatedExpectedResultSetBindingV0
   expected_observation: CounterfactualObservationV0
   actual_observation: CounterfactualObservationV0 | null
   subject_contract_rejection: SubjectContractRejectionV0 | null
@@ -481,6 +493,7 @@ function evaluatedResult(input: {
     challenge: cloneJson(input.challenge),
     surface: input.surface,
     expected_observation_source: "lane_a_model",
+    expected_result_set_binding: cloneJson(input.expected_result_set_binding),
     expected_observation: cloneJson(input.expected_observation),
     actual_observation: input.actual_observation === null ? null : cloneJson(input.actual_observation),
     subject_contract_rejection:
@@ -491,17 +504,29 @@ function evaluatedResult(input: {
 }
 
 /**
- * Bound evaluator: validates via Lane D, requires Lane A model, executes the
- * same request, then compares expected vs actual for that invocation only.
+ * Bound evaluator: requires Lane A model, authenticates expected material
+ * against the frozen package expected-result set, executes via Lane D, then
+ * compares expected vs actual for that invocation only.
  */
 export async function evaluateVerifierChallengeConformance(
   request: VerifierChallengeRunRequestV0,
 ): Promise<CounterfactualConformanceEvaluationV0> {
   const model = requireLaneAModel(request)
   const expectedNative = resolveExpectedPayload(request, model)
+
+  // Lane G: authenticate expected before any comparison/verdict.
+  let expectedResultSetBinding: AuthenticatedExpectedResultSetBindingV0
+  try {
+    expectedResultSetBinding = bindExpectedResultSet(model)
+  } catch (error) {
+    if (error instanceof ExpectedResultSetBindingError) throw error
+    throw error
+  }
+
   const expectedObservation = normalizeExpectedObservation(request.surface, expectedNative)
 
   // Lane D validates challenge/subject/lane_a_model identity and executes.
+  // Expected material is never consulted for dispatch.
   let execution: VerifierChallengeExecutionResultV0
   try {
     execution = await runVerifierChallenge(request)
@@ -543,6 +568,7 @@ export async function evaluateVerifierChallengeConformance(
       challenge,
       surface: request.surface,
       verdict: cab.verdict,
+      expected_result_set_binding: expectedResultSetBinding,
       expected_observation: cab.expected_observation,
       actual_observation: cab.actual_observation,
       subject_contract_rejection: cab.subject_contract_rejection,
@@ -560,6 +586,7 @@ export async function evaluateVerifierChallengeConformance(
       challenge,
       surface: request.surface,
       verdict: cab.verdict,
+      expected_result_set_binding: expectedResultSetBinding,
       expected_observation: cab.expected_observation,
       actual_observation: cab.actual_observation,
       subject_contract_rejection: cab.subject_contract_rejection,
@@ -573,6 +600,7 @@ export async function evaluateVerifierChallengeConformance(
       challenge,
       surface: request.surface,
       verdict: "nonconformant",
+      expected_result_set_binding: expectedResultSetBinding,
       expected_observation: expectedObservation,
       actual_observation: null,
       subject_contract_rejection: null,
@@ -586,6 +614,7 @@ export async function evaluateVerifierChallengeConformance(
       challenge,
       surface: request.surface,
       verdict: "conformant",
+      expected_result_set_binding: expectedResultSetBinding,
       expected_observation: expectedObservation,
       actual_observation: actual.observation,
       subject_contract_rejection: null,
@@ -596,6 +625,7 @@ export async function evaluateVerifierChallengeConformance(
     challenge,
     surface: request.surface,
     verdict: "nonconformant",
+    expected_result_set_binding: expectedResultSetBinding,
     expected_observation: expectedObservation,
     actual_observation: actual.observation,
     subject_contract_rejection: null,
@@ -603,5 +633,4 @@ export async function evaluateVerifierChallengeConformance(
   })
 }
 
-// Re-export RunnerContractError for callers that only import the evaluator.
-export { RunnerContractError }
+export { ExpectedResultSetBindingError, RunnerContractError }

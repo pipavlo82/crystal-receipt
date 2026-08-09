@@ -6,6 +6,7 @@ import * as EvaluatorModule from "../../src/receiptos/challenge/counterfactual-c
 import {
   COUNTERFACTUAL_CONFORMANCE_EVALUATION_SCHEMA,
   ConformanceEvaluatorContractError,
+  ExpectedResultSetBindingError,
   compareNormalizedObservations,
   evaluateVerifierChallengeConformance,
   RunnerContractError,
@@ -95,6 +96,20 @@ function handoffEvalRequest(
   }
 }
 
+async function expectExpectedResultSetBindingError(
+  promise: Promise<unknown>,
+  reason: ExpectedResultSetBindingError["reason"],
+): Promise<void> {
+  let thrown: unknown
+  try {
+    await promise
+  } catch (error) {
+    thrown = error
+  }
+  expect(thrown).toBeInstanceOf(ExpectedResultSetBindingError)
+  expect((thrown as ExpectedResultSetBindingError).reason).toBe(reason)
+}
+
 describe("counterfactual conformance evaluator v0", () => {
   test("no detached-execution bound evaluator API is exported", () => {
     const keys = Object.keys(EvaluatorModule)
@@ -134,8 +149,8 @@ describe("counterfactual conformance evaluator v0", () => {
     }
   })
 
-  test("verifyHandoff expected mismatch and same-class different detail → nonconformant", async () => {
-    const { model, challenge, challenged } = loadHandoff(
+  test("verifyHandoff expected mutation binds; authentic expected + baseline input → nonconformant", async () => {
+    const { model, challenge, baseline, challenged } = loadHandoff(
       "conformance/verifier-challenge-integrity-mismatch-rejected-v0/vectors/V-INTEGRITY-MISMATCH.json",
     )
     const wrongExpectedModel = structuredClone(model)
@@ -144,30 +159,31 @@ describe("counterfactual conformance evaluator v0", () => {
       receipt_root: "0xaa",
       recomputed_root: "0xaa",
     } as never
+    await expectExpectedResultSetBindingError(
+      evaluateVerifierChallengeConformance(handoffEvalRequest(challenge, wrongExpectedModel, challenged)),
+      "expected_content_mismatch",
+    )
+
+    const sameClass = structuredClone(model)
+    ;(sameClass.expected as { challenged_verification: { recomputed_root: string } }).challenged_verification.recomputed_root =
+      "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    await expectExpectedResultSetBindingError(
+      evaluateVerifierChallengeConformance(handoffEvalRequest(challenge, sameClass, challenged)),
+      "expected_content_mismatch",
+    )
+
+    // Authentic integrity-mismatch expected vs baseline (affirmative) runtime input.
     const mismatched = await evaluateVerifierChallengeConformance(
-      handoffEvalRequest(challenge, wrongExpectedModel, challenged),
+      handoffEvalRequest(challenge, model, baseline),
     )
     expect(mismatched.evaluation_state).toBe("evaluated")
     if (mismatched.evaluation_state !== "evaluated") throw new Error("unreachable")
     expect(mismatched.verdict).toBe("nonconformant")
     expect(mismatched.mismatch?.kind).toBe("observation_class_mismatch")
-
-    const sameClass = structuredClone(model)
-    ;(sameClass.expected as { challenged_verification: { recomputed_root: string } }).challenged_verification.recomputed_root =
-      "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
-    const detailMismatch = await evaluateVerifierChallengeConformance(
-      handoffEvalRequest(challenge, sameClass, challenged),
-    )
-    expect(detailMismatch.evaluation_state).toBe("evaluated")
-    if (detailMismatch.evaluation_state !== "evaluated") throw new Error("unreachable")
-    expect(detailMismatch.verdict).toBe("nonconformant")
-    expect(detailMismatch.expected_observation.observation_class).toBe(
-      detailMismatch.actual_observation?.observation_class,
-    )
-    expect(detailMismatch.mismatch?.kind).toBe("native_detail_mismatch")
+    expect(mismatched.expected_result_set_binding.membership).toBe("complete_set_member")
   })
 
-  test("Chronicle admission admitted / rejected / unverifiable evaluate conformant", async () => {
+  test("Chronicle admission rejected conformant; baseline/mutations bind or nonconform", async () => {
     const vector = readJson(
       "conformance/verifier-challenge-chronicle-proof-root-mismatch-rejected-v0/vectors/V-CHRONICLE-PROOF-ROOT-MISMATCH.json",
     ) as Record<string, unknown>
@@ -180,26 +196,23 @@ describe("counterfactual conformance evaluator v0", () => {
       }
     }
 
-    const admittedModel = structuredClone(model)
-    admittedModel.expected = {
-      challenged_admission: (vector.expected as { baseline_admission: unknown }).baseline_admission,
-    }
-    const admitted = await evaluateVerifierChallengeConformance({
+    // Authentic rejected expected vs baseline (admitted) runtime input → nonconformant.
+    const baselineMismatch = await evaluateVerifierChallengeConformance({
       schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
       surface: "chronicle_admission",
       subject: challenge.subject!,
       challenge,
-      lane_a_model: admittedModel,
+      lane_a_model: model,
       input: {
         evidence: source.input.evidence,
         proof_object: source.input.proof_object,
         options: source.input.options as never,
       },
     })
-    expect(admitted.evaluation_state).toBe("evaluated")
-    if (admitted.evaluation_state !== "evaluated") throw new Error("unreachable")
-    expect(admitted.verdict).toBe("conformant")
-    expect(admitted.actual_observation?.native_detail.admission_scope).toBeUndefined()
+    expect(baselineMismatch.evaluation_state).toBe("evaluated")
+    if (baselineMismatch.evaluation_state !== "evaluated") throw new Error("unreachable")
+    expect(baselineMismatch.verdict).toBe("nonconformant")
+    expect(baselineMismatch.mismatch?.kind).toBe("observation_class_mismatch")
 
     const rejectedInput = structuredClone(source.input)
     rejectedInput.proof_object.receipt_root = (vector.mutation as { to: string }).to
@@ -220,6 +233,7 @@ describe("counterfactual conformance evaluator v0", () => {
     expect(rejected.verdict).toBe("conformant")
     expect(rejected.actual_observation?.observation_class).toBe("rejected")
     expect(rejected.actual_observation?.native_detail.admission_scope).toBe("chronicle_entry_local")
+    expect(rejected.expected_result_set_binding.membership).toBe("complete_set_member")
 
     const fixture = readJson(
       "tests/fixtures/receiptos-chronicle-admission-v0/vectors/02-evidence-root-missing.json",
@@ -272,80 +286,53 @@ describe("counterfactual conformance evaluator v0", () => {
       },
       native: {},
     } as unknown as VerifierChallengeVectorModelV0
-    const unverifiable = await evaluateVerifierChallengeConformance({
-      schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
-      surface: "chronicle_admission",
-      subject: unverifiableChallenge.subject!,
-      challenge: unverifiableChallenge,
-      lane_a_model: unverifiableModel,
-      input: {
-        evidence: fixture.input.evidence,
-        proof_object: fixture.input.proof_object,
-        options: fixture.input.options as never,
-      },
-    })
-    expect(unverifiable.evaluation_state).toBe("evaluated")
-    if (unverifiable.evaluation_state !== "evaluated") throw new Error("unreachable")
-    expect(unverifiable.verdict).toBe("conformant")
-    expect(unverifiable.actual_observation?.observation_class).toBe("unverifiable")
+    await expectExpectedResultSetBindingError(
+      evaluateVerifierChallengeConformance({
+        schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
+        surface: "chronicle_admission",
+        subject: unverifiableChallenge.subject!,
+        challenge: unverifiableChallenge,
+        lane_a_model: unverifiableModel,
+        input: {
+          evidence: fixture.input.evidence,
+          proof_object: fixture.input.proof_object,
+          options: fixture.input.options as never,
+        },
+      }),
+      "unknown_package_authority",
+    )
 
     const wrongReasonModel = structuredClone(model)
     ;(wrongReasonModel.expected as { challenged_admission: { failure: { reason_code: string } } })
       .challenged_admission.failure.reason_code = "capsule_stored_mismatch"
-    const reasonMismatch = await evaluateVerifierChallengeConformance({
-      schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
-      surface: "chronicle_admission",
-      subject: challenge.subject!,
-      challenge,
-      lane_a_model: wrongReasonModel,
-      input: {
-        evidence: rejectedInput.evidence,
-        proof_object: rejectedInput.proof_object,
-        options: rejectedInput.options as never,
-      },
-    })
-    expect(reasonMismatch.evaluation_state).toBe("evaluated")
-    if (reasonMismatch.evaluation_state !== "evaluated") throw new Error("unreachable")
-    expect(reasonMismatch.verdict).toBe("nonconformant")
-    expect(reasonMismatch.mismatch?.kind).toBe("native_reason_mismatch")
+    await expectExpectedResultSetBindingError(
+      evaluateVerifierChallengeConformance({
+        schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
+        surface: "chronicle_admission",
+        subject: challenge.subject!,
+        challenge,
+        lane_a_model: wrongReasonModel,
+        input: {
+          evidence: rejectedInput.evidence,
+          proof_object: rejectedInput.proof_object,
+          options: rejectedInput.options as never,
+        },
+      }),
+      "expected_content_mismatch",
+    )
   })
 
-  test("Chronicle continuity frozen cases evaluate conformant; wrong reason nonconformant", async () => {
-    const cases: Array<{
-      path: string
-      pair: "baseline_pair" | "challenged_pair"
-      expectedKey: "baseline_continuity" | "challenged_continuity"
-    }> = [
-      {
-        path: "conformance/verifier-challenge-chronicle-predecessor-unknown-unverifiable-v0/vectors/V-CHRONICLE-PREDECESSOR-UNKNOWN.json",
-        pair: "baseline_pair",
-        expectedKey: "baseline_continuity",
-      },
-      {
-        path: "conformance/verifier-challenge-chronicle-predecessor-unknown-unverifiable-v0/vectors/V-CHRONICLE-PREDECESSOR-UNKNOWN.json",
-        pair: "challenged_pair",
-        expectedKey: "challenged_continuity",
-      },
-      {
-        path: "conformance/verifier-challenge-chronicle-predecessor-ref-mismatch-rejected-v0/vectors/V-CHRONICLE-PREDECESSOR-REF-MISMATCH.json",
-        pair: "challenged_pair",
-        expectedKey: "challenged_continuity",
-      },
-      {
-        path: "conformance/verifier-challenge-chronicle-sequence-gap-rejected-v0/vectors/V-CHRONICLE-SEQUENCE-GAP.json",
-        pair: "challenged_pair",
-        expectedKey: "challenged_continuity",
-      },
+  test("Chronicle continuity challenged_pair conformant; baseline/bindings reject mutations", async () => {
+    const challengedPaths = [
+      "conformance/verifier-challenge-chronicle-predecessor-unknown-unverifiable-v0/vectors/V-CHRONICLE-PREDECESSOR-UNKNOWN.json",
+      "conformance/verifier-challenge-chronicle-predecessor-ref-mismatch-rejected-v0/vectors/V-CHRONICLE-PREDECESSOR-REF-MISMATCH.json",
+      "conformance/verifier-challenge-chronicle-sequence-gap-rejected-v0/vectors/V-CHRONICLE-SEQUENCE-GAP.json",
     ]
 
-    for (const entry of cases) {
-      const vector = readJson(entry.path) as Record<string, unknown>
+    for (const path of challengedPaths) {
+      const vector = readJson(path) as Record<string, unknown>
       const { model, challenge } = identityFromVector(vector)
-      const evalModel = structuredClone(model)
-      evalModel.expected = {
-        challenged_continuity: (vector.expected as Record<string, unknown>)[entry.expectedKey],
-      }
-      const pair = vector[entry.pair] as {
+      const pair = vector.challenged_pair as {
         current: ChronicleCheckpointV0
         predecessor: ChronicleCheckpointV0 | null
       }
@@ -358,13 +345,38 @@ describe("counterfactual conformance evaluator v0", () => {
           git_blob_oid: CHRONICLE_CONTINUITY_ADAPTER_IDENTITY.git_blob_oid,
         },
         challenge,
-        lane_a_model: evalModel,
+        lane_a_model: model,
         input: { current: pair.current, predecessor: pair.predecessor },
       })
       expect(result.evaluation_state).toBe("evaluated")
       if (result.evaluation_state !== "evaluated") throw new Error("unreachable")
       expect(result.verdict).toBe("conformant")
+      expect(result.expected_result_set_binding.membership).toBe("complete_set_member")
     }
+
+    const unknown = readJson(
+      "conformance/verifier-challenge-chronicle-predecessor-unknown-unverifiable-v0/vectors/V-CHRONICLE-PREDECESSOR-UNKNOWN.json",
+    ) as Record<string, unknown>
+    const { model: unknownModel, challenge: unknownChallenge } = identityFromVector(unknown)
+    const baselinePair = unknown.baseline_pair as {
+      current: ChronicleCheckpointV0
+      predecessor: ChronicleCheckpointV0 | null
+    }
+    const baselineResult = await evaluateVerifierChallengeConformance({
+      schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
+      surface: "chronicle_continuity",
+      subject: {
+        entrypoint: CHRONICLE_CONTINUITY_ADAPTER_IDENTITY.entrypoint,
+        module_path: CHRONICLE_CONTINUITY_ADAPTER_IDENTITY.module_path,
+        git_blob_oid: CHRONICLE_CONTINUITY_ADAPTER_IDENTITY.git_blob_oid,
+      },
+      challenge: unknownChallenge,
+      lane_a_model: unknownModel,
+      input: { current: baselinePair.current, predecessor: baselinePair.predecessor },
+    })
+    expect(baselineResult.evaluation_state).toBe("evaluated")
+    if (baselineResult.evaluation_state !== "evaluated") throw new Error("unreachable")
+    expect(baselineResult.verdict).toBe("nonconformant")
 
     const fixture = readJson("tests/fixtures/chronicle-checkpoint-continuity-v0.json") as {
       vectors: Array<{
@@ -406,17 +418,17 @@ describe("counterfactual conformance evaluator v0", () => {
       expected: { challenged_continuity: malformed.expected },
       native: {},
     } as unknown as VerifierChallengeVectorModelV0
-    const malformedResult = await evaluateVerifierChallengeConformance({
-      schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
-      surface: "chronicle_continuity",
-      subject: malformedChallenge.subject!,
-      challenge: malformedChallenge,
-      lane_a_model: malformedModel,
-      input: { current: malformed.current, predecessor: malformed.predecessor },
-    })
-    expect(malformedResult.evaluation_state).toBe("evaluated")
-    if (malformedResult.evaluation_state !== "evaluated") throw new Error("unreachable")
-    expect(malformedResult.verdict).toBe("conformant")
+    await expectExpectedResultSetBindingError(
+      evaluateVerifierChallengeConformance({
+        schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
+        surface: "chronicle_continuity",
+        subject: malformedChallenge.subject!,
+        challenge: malformedChallenge,
+        lane_a_model: malformedModel,
+        input: { current: malformed.current, predecessor: malformed.predecessor },
+      }),
+      "unknown_package_authority",
+    )
 
     const gap = readJson(
       "conformance/verifier-challenge-chronicle-sequence-gap-rejected-v0/vectors/V-CHRONICLE-SEQUENCE-GAP.json",
@@ -425,28 +437,23 @@ describe("counterfactual conformance evaluator v0", () => {
     const wrong = structuredClone(gapModel)
     ;(wrong.expected as { challenged_continuity: { reason_code: string } }).challenged_continuity.reason_code =
       "predecessor_ref_mismatch"
-    const wrongResult = await evaluateVerifierChallengeConformance({
-      schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
-      surface: "chronicle_continuity",
-      subject: gapChallenge.subject!,
-      challenge: gapChallenge,
-      lane_a_model: wrong,
-      input: {
-        current: (gap.challenged_pair as { current: ChronicleCheckpointV0 }).current,
-        predecessor: (gap.challenged_pair as { predecessor: ChronicleCheckpointV0 }).predecessor,
-      },
-    })
-    expect(wrongResult.evaluation_state).toBe("evaluated")
-    if (wrongResult.evaluation_state !== "evaluated") throw new Error("unreachable")
-    expect(wrongResult.verdict).toBe("nonconformant")
-    // Same observation_class (rejected) but native_status encodes reason_code.
-    expect(wrongResult.mismatch?.kind).toBe("native_status_mismatch")
-    expect(wrongResult.expected_observation.observation_class).toBe(
-      wrongResult.actual_observation?.observation_class,
+    await expectExpectedResultSetBindingError(
+      evaluateVerifierChallengeConformance({
+        schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
+        surface: "chronicle_continuity",
+        subject: gapChallenge.subject!,
+        challenge: gapChallenge,
+        lane_a_model: wrong,
+        input: {
+          current: (gap.challenged_pair as { current: ChronicleCheckpointV0 }).current,
+          predecessor: (gap.challenged_pair as { predecessor: ChronicleCheckpointV0 }).predecessor,
+        },
+      }),
+      "expected_content_mismatch",
     )
   })
 
-  test("checkpoint-local frozen cases evaluate conformant; predicate mismatch nonconformant", async () => {
+  test("checkpoint-local challenged conformant; baseline/mutations bind or nonconform", async () => {
     const rootMismatch = readJson(
       "conformance/verifier-challenge-chronicle-checkpoint-root-mismatch-rejected-v0/vectors/V-CHRONICLE-CHECKPOINT-ROOT-MISMATCH.json",
     ) as Record<string, unknown>
@@ -454,31 +461,8 @@ describe("counterfactual conformance evaluator v0", () => {
       "conformance/verifier-challenge-chronicle-checkpoint-entry-refs-noncanonical-rejected-v0/vectors/V-CHRONICLE-CHECKPOINT-ENTRY-REFS-NONCANONICAL.json",
     ) as Record<string, unknown>
 
-    for (const [vector, checkpointKey, expectedKey] of [
-      [rootMismatch, "baseline_checkpoint", "baseline_verification"],
-      [rootMismatch, "challenged_checkpoint", "challenged_verification"],
-      [entryRefs, "challenged_checkpoint", "challenged_verification"],
-    ] as const) {
+    for (const vector of [rootMismatch, entryRefs]) {
       const { model, challenge } = identityFromVector(vector)
-      const evalModel = structuredClone(model)
-      evalModel.expected = {
-        challenged_verification: (vector.expected as Record<string, unknown>)[expectedKey],
-        ...(typeof (vector.expected as { challenged_root_matches?: boolean }).challenged_root_matches ===
-        "boolean" && expectedKey === "challenged_verification"
-          ? {
-              challenged_root_matches: (vector.expected as { challenged_root_matches: boolean })
-                .challenged_root_matches,
-            }
-          : {}),
-        ...(typeof (vector.expected as { challenged_entry_refs_canonical?: boolean })
-          .challenged_entry_refs_canonical === "boolean" && expectedKey === "challenged_verification"
-          ? {
-              challenged_entry_refs_canonical: (
-                vector.expected as { challenged_entry_refs_canonical: boolean }
-              ).challenged_entry_refs_canonical,
-            }
-          : {}),
-      }
       const result = await evaluateVerifierChallengeConformance({
         schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
         surface: "chronicle_checkpoint_local",
@@ -488,24 +472,36 @@ describe("counterfactual conformance evaluator v0", () => {
           git_blob_oid: CHRONICLE_CHECKPOINT_LOCAL_ADAPTER_IDENTITY.git_blob_oid,
         },
         challenge,
-        lane_a_model: evalModel,
-        input: { checkpoint: vector[checkpointKey] as ChronicleCheckpointV0 },
+        lane_a_model: model,
+        input: { checkpoint: vector.challenged_checkpoint as ChronicleCheckpointV0 },
       })
       expect(result.evaluation_state).toBe("evaluated")
       if (result.evaluation_state !== "evaluated") throw new Error("unreachable")
       expect(result.verdict).toBe("conformant")
       expect(result.actual_observation?.native_detail.local_scope).toBe("chronicle_checkpoint_local")
+      expect(result.expected_result_set_binding.membership).toBe("complete_set_member")
     }
 
     const { model, challenge } = identityFromVector(rootMismatch)
+    const baselineMismatch = await evaluateVerifierChallengeConformance({
+      schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
+      surface: "chronicle_checkpoint_local",
+      subject: challenge.subject!,
+      challenge,
+      lane_a_model: model,
+      input: { checkpoint: rootMismatch.baseline_checkpoint as ChronicleCheckpointV0 },
+    })
+    expect(baselineMismatch.evaluation_state).toBe("evaluated")
+    if (baselineMismatch.evaluation_state !== "evaluated") throw new Error("unreachable")
+    expect(baselineMismatch.verdict).toBe("nonconformant")
+    expect(baselineMismatch.mismatch?.kind).toBe("observation_class_mismatch")
+
     const storedRoot = (
       rootMismatch.expected as {
         challenged_verification: { checkpoint_root: string }
       }
     ).challenged_verification.checkpoint_root
     const wrong = structuredClone(model)
-    // Affirmative expected (matching roots) vs actual root-mismatch rejection.
-    // Omit challenged_root_matches to avoid expected-side contract disagreement.
     wrong.expected = {
       challenged_verification: {
         ok: true,
@@ -513,18 +509,17 @@ describe("counterfactual conformance evaluator v0", () => {
         recomputed_checkpoint_root: storedRoot,
       },
     }
-    const mismatch = await evaluateVerifierChallengeConformance({
-      schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
-      surface: "chronicle_checkpoint_local",
-      subject: challenge.subject!,
-      challenge,
-      lane_a_model: wrong,
-      input: { checkpoint: rootMismatch.challenged_checkpoint as ChronicleCheckpointV0 },
-    })
-    expect(mismatch.evaluation_state).toBe("evaluated")
-    if (mismatch.evaluation_state !== "evaluated") throw new Error("unreachable")
-    expect(mismatch.verdict).toBe("nonconformant")
-    expect(mismatch.mismatch?.kind).toBe("observation_class_mismatch")
+    await expectExpectedResultSetBindingError(
+      evaluateVerifierChallengeConformance({
+        schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
+        surface: "chronicle_checkpoint_local",
+        subject: challenge.subject!,
+        challenge,
+        lane_a_model: wrong,
+        input: { checkpoint: rootMismatch.challenged_checkpoint as ChronicleCheckpointV0 },
+      }),
+      "expected_content_mismatch",
+    )
   })
 
   test("CAB accepted snapshot and manifest hash evaluate conformant; mismatch nonconformant", async () => {
@@ -545,18 +540,32 @@ describe("counterfactual conformance evaluator v0", () => {
     expect(ok.evaluation_state).toBe("evaluated")
     if (ok.evaluation_state !== "evaluated") throw new Error("unreachable")
     expect(ok.verdict).toBe("conformant")
+    expect(ok.expected_result_set_binding.membership).toBe("complete_set_member")
 
     const wrongSnapshotModel = structuredClone(model)
     ;(wrongSnapshotModel.expected as { canonical_snapshot_json: string }).canonical_snapshot_json =
       "{\"tampered\":true}"
+    await expectExpectedResultSetBindingError(
+      evaluateVerifierChallengeConformance({
+        schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
+        surface: "counterfactual_audit_boundary",
+        subject: null,
+        operation: "semantic_snapshot",
+        challenge,
+        lane_a_model: wrongSnapshotModel,
+        input: { value: isolate.runtime_construction.initial },
+      }),
+      "expected_content_mismatch",
+    )
+
     const badSnapshot = await evaluateVerifierChallengeConformance({
       schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
       surface: "counterfactual_audit_boundary",
       subject: null,
       operation: "semantic_snapshot",
       challenge,
-      lane_a_model: wrongSnapshotModel,
-      input: { value: isolate.runtime_construction.initial },
+      lane_a_model: model,
+      input: { value: { nested: { value: "tampered" }, items: [1, 2] } },
     })
     expect(badSnapshot.evaluation_state).toBe("evaluated")
     if (badSnapshot.evaluation_state !== "evaluated") throw new Error("unreachable")
@@ -583,14 +592,27 @@ describe("counterfactual conformance evaluator v0", () => {
     const wrongHash = structuredClone(mModel)
     ;(wrongHash.expected as { sha256_hex: string }).sha256_hex =
       "0000000000000000000000000000000000000000000000000000000000000000"
+    await expectExpectedResultSetBindingError(
+      evaluateVerifierChallengeConformance({
+        schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
+        surface: "counterfactual_audit_boundary",
+        subject: null,
+        operation: "manifest_file_sha256",
+        challenge: mChallenge,
+        lane_a_model: wrongHash,
+        input: { bytes: Uint8Array.from(manifest.inputs[0]!.bytes) },
+      }),
+      "expected_content_mismatch",
+    )
+
     const badHash = await evaluateVerifierChallengeConformance({
       schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
       surface: "counterfactual_audit_boundary",
       subject: null,
       operation: "manifest_file_sha256",
       challenge: mChallenge,
-      lane_a_model: wrongHash,
-      input: { bytes: Uint8Array.from(manifest.inputs[0]!.bytes) },
+      lane_a_model: mModel,
+      input: { bytes: Uint8Array.from([1, 2, 3]) },
     })
     expect(badHash.evaluation_state).toBe("evaluated")
     if (badHash.evaluation_state !== "evaluated") throw new Error("unreachable")
@@ -666,9 +688,10 @@ describe("counterfactual conformance evaluator v0", () => {
 
     const wrongModel = structuredClone(model)
     wrongModel.vector_id = "different"
-    await expect(
+    await expectExpectedResultSetBindingError(
       evaluateVerifierChallengeConformance(handoffEvalRequest(challenge, wrongModel, challenged)),
-    ).rejects.toBeInstanceOf(RunnerContractError)
+      "vector_missing",
+    )
 
     await expect(
       evaluateVerifierChallengeConformance(
@@ -678,9 +701,10 @@ describe("counterfactual conformance evaluator v0", () => {
 
     const badExpected = structuredClone(model)
     badExpected.expected = { not_a_valid_expected: true }
-    await expect(
+    await expectExpectedResultSetBindingError(
       evaluateVerifierChallengeConformance(handoffEvalRequest(challenge, badExpected, challenged)),
-    ).rejects.toBeInstanceOf(ConformanceEvaluatorContractError)
+      "expected_content_mismatch",
+    )
 
     await expect(
       evaluateVerifierChallengeConformance({
