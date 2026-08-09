@@ -2,14 +2,17 @@
  * Bounded generalized verifier adapter/runner v0 (Lane D).
  *
  * Executes explicitly registered pinned ReceiptOS adapters for the current
- * frozen verifier-challenge surfaces. Returns either a native subject result
- * or a separate execution_failure.
+ * frozen verifier-challenge surfaces. Returns one of:
+ * - subject_returned
+ * - subject_contract_rejected (typed CAB contract rejection only, v0)
+ * - execution_failure
  *
  * Production boundary:
  * - immutable closed adapter registry (no caller-supplied invoker overrides)
  * - request bound to canonical Lane A/B challenge identity
  * - expected outcomes never consulted for dispatch
  * - execution_failure diagnostics are bounded and host-string-safe
+ * - typed subject-contract rejection is recognized by class + closed code only
  */
 
 import type { HandoffEvidence, HandoffReceiptVerification } from "../schema/types"
@@ -28,8 +31,13 @@ import {
   type ChronicleCheckpointContinuityResultV0,
 } from "../capsule/chronicle-checkpoint-continuity-v0"
 import {
+  COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT,
+  COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT_CODES,
+  CounterfactualAuditBoundaryContractError,
   computeCounterfactualManifestFileSha256,
+  isCabContractErrorInstance,
   snapshotCounterfactualSemanticJson,
+  type CounterfactualAuditBoundaryContractCodeV0,
   type CounterfactualSemanticJson,
 } from "./counterfactual-audit-boundary"
 import type {
@@ -54,6 +62,16 @@ import {
 export const COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA = "receiptos.counterfactual_verifier_runner.v0" as const
 
 export type CounterfactualVerifierRunnerSchema = typeof COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA
+
+/** Explicit v0 identifier for the Lane D/F execution-outcome union. */
+export const COUNTERFACTUAL_EXECUTION_OUTCOME_SCHEMA =
+  "receiptos.counterfactual_execution_outcome.v0" as const
+
+export type CounterfactualExecutionOutcomeSchema = typeof COUNTERFACTUAL_EXECUTION_OUTCOME_SCHEMA
+
+const CAB_CONTRACT_CODES = new Set<CounterfactualAuditBoundaryContractCodeV0>(
+  COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT_CODES,
+)
 
 // --- Registered adapter identities (finite, production-closed) ----------------
 
@@ -240,7 +258,26 @@ export type ExecutionFailureV0 = {
   }
 }
 
-export type VerifierChallengeExecutionResultV0 = SubjectReturnedResultV0 | ExecutionFailureV0
+/**
+ * Bounded typed CAB subject-contract rejection evidence.
+ * Identity is contract + code + path — never Error.message / stack.
+ */
+export type SubjectContractRejectionV0 = {
+  readonly contract: typeof COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT
+  readonly code: CounterfactualAuditBoundaryContractCodeV0
+  readonly path: string | null
+}
+
+export type SubjectContractRejectedResultV0 = {
+  readonly execution_state: "subject_contract_rejected"
+  readonly surface: "counterfactual_audit_boundary"
+  readonly rejection: SubjectContractRejectionV0
+}
+
+export type VerifierChallengeExecutionResultV0 =
+  | SubjectReturnedResultV0
+  | SubjectContractRejectedResultV0
+  | ExecutionFailureV0
 
 export class RunnerContractError extends Error {
   readonly code = "runner_contract_error" as const
@@ -489,6 +526,43 @@ function toExecutionFailure(surface: ChallengeSurfaceKind, thrown: unknown): Exe
   }
 }
 
+/**
+ * Recognize only constructor-minted CounterfactualAuditBoundaryContractError
+ * instances with a closed v0 code. Does not inspect Error.message / name
+ * strings / forged `{code}` shapes / Object.create prototype copies.
+ */
+export function isRecognizedCabContractRejection(
+  thrown: unknown,
+): thrown is CounterfactualAuditBoundaryContractError {
+  if (!isCabContractErrorInstance(thrown)) return false
+  if (thrown.contract !== COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT) return false
+  if (!CAB_CONTRACT_CODES.has(thrown.code)) return false
+  if (!(thrown.path === null || typeof thrown.path === "string")) return false
+  return true
+}
+
+/**
+ * Pure CAB catch-boundary classifier (no registry mutation).
+ * Recognized typed CAB contract error → subject_contract_rejected;
+ * anything else → execution_failure.
+ */
+export function captureCabSubjectInvocationThrow(
+  thrown: unknown,
+): SubjectContractRejectedResultV0 | ExecutionFailureV0 {
+  if (isRecognizedCabContractRejection(thrown)) {
+    return {
+      execution_state: "subject_contract_rejected",
+      surface: "counterfactual_audit_boundary",
+      rejection: {
+        contract: COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT,
+        code: thrown.code,
+        path: thrown.path,
+      },
+    }
+  }
+  return toExecutionFailure("counterfactual_audit_boundary", thrown)
+}
+
 function cloneJson<T>(value: T): T {
   return structuredClone(value)
 }
@@ -590,8 +664,10 @@ function runCab(
 ): VerifierChallengeExecutionResultV0 {
   validateCabBinding(request, challenge)
   if (request.operation === "semantic_snapshot") {
-    const value = cloneJson(request.input.value)
     try {
+      // Clone is inside the catch boundary so host clone failures stay
+      // execution_failure (not typed CAB contract rejection).
+      const value = cloneJson(request.input.value)
       const snapshot = PRODUCTION_INVOKERS.cab_semantic_snapshot(value)
       return {
         execution_state: "subject_returned",
@@ -599,12 +675,12 @@ function runCab(
         native_result: { operation: "semantic_snapshot", snapshot: cloneJson(snapshot) },
       }
     } catch (error) {
-      return toExecutionFailure("counterfactual_audit_boundary", error)
+      return captureCabSubjectInvocationThrow(error)
     }
   }
-  const bytes =
-    typeof request.input.bytes === "string" ? request.input.bytes : new Uint8Array(request.input.bytes)
   try {
+    const bytes =
+      typeof request.input.bytes === "string" ? request.input.bytes : new Uint8Array(request.input.bytes)
     const sha256_hex = PRODUCTION_INVOKERS.cab_manifest_hash(bytes)
     return {
       execution_state: "subject_returned",
@@ -612,7 +688,7 @@ function runCab(
       native_result: { operation: "manifest_file_sha256", sha256_hex },
     }
   } catch (error) {
-    return toExecutionFailure("counterfactual_audit_boundary", error)
+    return captureCabSubjectInvocationThrow(error)
   }
 }
 
@@ -699,7 +775,9 @@ export function normalizeSubjectReturnedResult(
   result: VerifierChallengeExecutionResultV0,
 ): CounterfactualObservationV0 {
   if (result.execution_state !== "subject_returned") {
-    throw new RunnerContractError("cannot normalize execution_failure through Lane C")
+    throw new RunnerContractError(
+      "cannot normalize non-subject_returned execution outcomes through Lane C",
+    )
   }
   switch (result.surface) {
     case "verify_handoff_receipt_root":
@@ -727,7 +805,10 @@ export async function runAndNormalizeVerifierChallenge(request: VerifierChalleng
   readonly observation: CounterfactualObservationV0 | null
 }> {
   const execution = await runVerifierChallenge(request)
-  if (execution.execution_state === "execution_failure") {
+  if (
+    execution.execution_state === "execution_failure" ||
+    execution.execution_state === "subject_contract_rejected"
+  ) {
     return { execution, observation: null }
   }
   if (execution.surface === "counterfactual_audit_boundary") {

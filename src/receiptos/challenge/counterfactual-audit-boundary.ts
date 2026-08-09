@@ -8,18 +8,87 @@ export type CounterfactualSemanticJson =
   | CounterfactualSemanticJson[]
   | { [key: string]: CounterfactualSemanticJson }
 
+/**
+ * Closed v0 CAB semantic-snapshot contract rejection codes.
+ * Derived from exact production control-flow branches in this module.
+ */
+export const COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT_CODES = [
+  "reserved_audit_timestamp",
+  "unstable_own_keys_snapshot",
+  "unstable_property_descriptor",
+  "property_snapshot_changed",
+  "unstable_prototype",
+  "symbol_keyed_property_forbidden",
+  "inherited_enumerable_symbol_forbidden",
+  "inherited_enumerable_property_forbidden",
+  "accessor_property_forbidden",
+  "non_enumerable_property_forbidden",
+  "array_prototype_required",
+  "extra_array_property_forbidden",
+  "invalid_array_length_descriptor",
+  "invalid_array_length",
+  "sparse_array_forbidden",
+  "object_prototype_required",
+  "non_finite_number",
+  "value_outside_json_domain",
+  "cyclic_value_forbidden",
+  "unstable_container_type",
+] as const
+
+export type CounterfactualAuditBoundaryContractCodeV0 =
+  (typeof COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT_CODES)[number]
+
+export const COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT =
+  "counterfactual_audit_boundary.semantic_snapshot.v0" as const
+
+/** Instances constructed through the CAB typed-error constructor only. */
+const CAB_CONTRACT_ERROR_INSTANCES = new WeakSet<object>()
+
+/**
+ * Typed intentional CAB subject-contract rejection.
+ * Machine identity is `code` + `path` — not Error.message.
+ * Message text is preserved for existing human-readable test compatibility.
+ */
+export class CounterfactualAuditBoundaryContractError extends Error {
+  readonly contract = COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT
+  readonly code: CounterfactualAuditBoundaryContractCodeV0
+  /** Deterministic semantic path, or null when the branch has no path operand. */
+  readonly path: string | null
+
+  constructor(
+    code: CounterfactualAuditBoundaryContractCodeV0,
+    path: string | null,
+    detail: string,
+  ) {
+    super(path === null ? detail : `${path}: ${detail}`)
+    this.name = "CounterfactualAuditBoundaryContractError"
+    this.code = code
+    this.path = path
+    CAB_CONTRACT_ERROR_INSTANCES.add(this)
+  }
+}
+
+/** True only for constructor-minted CAB contract errors (not prototype forgeries). */
+export function isCabContractErrorInstance(value: unknown): value is CounterfactualAuditBoundaryContractError {
+  return value instanceof CounterfactualAuditBoundaryContractError && CAB_CONTRACT_ERROR_INSTANCES.has(value)
+}
+
 const AUDIT_TIMESTAMP = "audit_timestamp"
 const ARRAY_INDEX_LIMIT = 2 ** 32 - 1
 
-function fail(path: string, message: string): never {
-  throw new Error(`${path}: ${message}`)
+function fail(
+  code: CounterfactualAuditBoundaryContractCodeV0,
+  path: string | null,
+  detail: string,
+): never {
+  throw new CounterfactualAuditBoundaryContractError(code, path, detail)
 }
 
 function inspectOwnKeys(value: object, path: string): PropertyKey[] {
   try {
     return Reflect.ownKeys(value)
   } catch {
-    return fail(path, "unable to obtain a stable own-property snapshot")
+    return fail("unstable_own_keys_snapshot", path, "unable to obtain a stable own-property snapshot")
   }
 }
 
@@ -28,9 +97,11 @@ function inspectDescriptor(value: object, key: PropertyKey, path: string): Prope
   try {
     descriptor = Object.getOwnPropertyDescriptor(value, key)
   } catch {
-    return fail(path, "unable to obtain a stable own-property descriptor")
+    return fail("unstable_property_descriptor", path, "unable to obtain a stable own-property descriptor")
   }
-  if (descriptor === undefined) return fail(path, "own-property snapshot changed during inspection")
+  if (descriptor === undefined) {
+    return fail("property_snapshot_changed", path, "own-property snapshot changed during inspection")
+  }
   return descriptor
 }
 
@@ -38,13 +109,13 @@ function inspectPrototype(value: object, path: string): object | null {
   try {
     return Object.getPrototypeOf(value)
   } catch {
-    return fail(path, "unable to inspect prototype")
+    return fail("unstable_prototype", path, "unable to inspect prototype")
   }
 }
 
 function rejectSymbols(keys: PropertyKey[], path: string): void {
   if (keys.some((key) => typeof key === "symbol")) {
-    fail(path, "symbol-keyed own properties are forbidden")
+    fail("symbol_keyed_property_forbidden", path, "symbol-keyed own properties are forbidden")
   }
 }
 
@@ -61,16 +132,26 @@ function rejectInheritedEnumerableState(prototype: object | null, path: string):
     }
     current = inspectPrototype(current, path)
   }
-  if (hasInheritedSymbol) fail(path, "inherited enumerable symbol properties are forbidden")
+  if (hasInheritedSymbol) {
+    fail("inherited_enumerable_symbol_forbidden", path, "inherited enumerable symbol properties are forbidden")
+  }
   inheritedStringKeys.sort()
   if (inheritedStringKeys.length > 0) {
-    fail(path, `inherited enumerable property ${JSON.stringify(inheritedStringKeys[0])} is forbidden`)
+    fail(
+      "inherited_enumerable_property_forbidden",
+      path,
+      `inherited enumerable property ${JSON.stringify(inheritedStringKeys[0])} is forbidden`,
+    )
   }
 }
 
 function dataValue(descriptor: PropertyDescriptor, path: string): unknown {
-  if ("get" in descriptor || "set" in descriptor) fail(path, "accessor properties are forbidden")
-  if (!descriptor.enumerable) fail(path, "non-enumerable properties are forbidden")
+  if ("get" in descriptor || "set" in descriptor) {
+    fail("accessor_property_forbidden", path, "accessor properties are forbidden")
+  }
+  if (!descriptor.enumerable) {
+    fail("non_enumerable_property_forbidden", path, "non-enumerable properties are forbidden")
+  }
   return descriptor.value
 }
 
@@ -85,27 +166,41 @@ function snapshotArray(
   active: WeakSet<object>,
 ): CounterfactualSemanticJson[] {
   const prototype = inspectPrototype(value, path)
-  if (prototype !== Array.prototype) fail(path, "arrays must use Array.prototype")
+  if (prototype !== Array.prototype) {
+    fail("array_prototype_required", path, "arrays must use Array.prototype")
+  }
   rejectInheritedEnumerableState(prototype, path)
 
   const keys = inspectOwnKeys(value, path)
   rejectSymbols(keys, path)
   const stringKeys = (keys as string[]).sort()
   const extraKey = stringKeys.find((key) => key !== "length" && !isCanonicalArrayIndex(key))
-  if (extraKey !== undefined) fail(`${path}[${JSON.stringify(extraKey)}]`, "extra array properties are forbidden")
+  if (extraKey !== undefined) {
+    fail(
+      "extra_array_property_forbidden",
+      `${path}[${JSON.stringify(extraKey)}]`,
+      "extra array properties are forbidden",
+    )
+  }
 
   const lengthDescriptor = inspectDescriptor(value, "length", `${path}.length`)
   if ("get" in lengthDescriptor || "set" in lengthDescriptor || lengthDescriptor.enumerable) {
-    fail(`${path}.length`, "array length must be an ordinary non-enumerable data property")
+    fail(
+      "invalid_array_length_descriptor",
+      `${path}.length`,
+      "array length must be an ordinary non-enumerable data property",
+    )
   }
   const length = lengthDescriptor.value
   if (!Number.isInteger(length) || length < 0 || length >= ARRAY_INDEX_LIMIT) {
-    fail(`${path}.length`, "array length is invalid")
+    fail("invalid_array_length", `${path}.length`, "array length is invalid")
   }
 
   const keySet = new Set(stringKeys)
   for (let index = 0; index < length; index += 1) {
-    if (!keySet.has(String(index))) fail(`${path}[${index}]`, "sparse arrays are forbidden")
+    if (!keySet.has(String(index))) {
+      fail("sparse_array_forbidden", `${path}[${index}]`, "sparse arrays are forbidden")
+    }
   }
   const out: CounterfactualSemanticJson[] = []
   for (let index = 0; index < length; index += 1) {
@@ -124,7 +219,7 @@ function snapshotObject(
 ): { [key: string]: CounterfactualSemanticJson } {
   const prototype = inspectPrototype(value, path)
   if (prototype !== Object.prototype && prototype !== null) {
-    fail(path, "objects must use Object.prototype or null")
+    fail("object_prototype_required", path, "objects must use Object.prototype or null")
   }
   rejectInheritedEnumerableState(prototype, path)
 
@@ -135,7 +230,11 @@ function snapshotObject(
   for (const key of stringKeys) {
     const childPath = `${path}[${JSON.stringify(key)}]`
     if (key === AUDIT_TIMESTAMP) {
-      fail(childPath, "non-semantic audit metadata is forbidden in semantic input")
+      fail(
+        "reserved_audit_timestamp",
+        childPath,
+        "non-semantic audit metadata is forbidden in semantic input",
+      )
     }
     const descriptor = inspectDescriptor(value, key, childPath)
     const child = dataValue(descriptor, childPath)
@@ -147,11 +246,13 @@ function snapshotObject(
 function snapshotValue(value: unknown, path: string, active: WeakSet<object>): CounterfactualSemanticJson {
   if (value === null || typeof value === "string" || typeof value === "boolean") return value
   if (typeof value === "number") {
-    if (!Number.isFinite(value)) fail(path, "numbers must be finite")
+    if (!Number.isFinite(value)) fail("non_finite_number", path, "numbers must be finite")
     return value
   }
-  if (typeof value !== "object") fail(path, "value is outside the JSON domain")
-  if (active.has(value)) fail(path, "cyclic values are forbidden")
+  if (typeof value !== "object") {
+    fail("value_outside_json_domain", path, "value is outside the JSON domain")
+  }
+  if (active.has(value)) fail("cyclic_value_forbidden", path, "cyclic values are forbidden")
 
   active.add(value)
   try {
@@ -159,7 +260,7 @@ function snapshotValue(value: unknown, path: string, active: WeakSet<object>): C
     try {
       isArray = Array.isArray(value)
     } catch {
-      return fail(path, "unable to determine a stable JSON container type")
+      return fail("unstable_container_type", path, "unable to determine a stable JSON container type")
     }
     return isArray
       ? snapshotArray(value, path, active)
@@ -186,3 +287,18 @@ export function computeCounterfactualManifestFileSha256(input: string | Uint8Arr
   const bytes = typeof input === "string" ? new TextEncoder().encode(input) : input
   return createHash("sha256").update(bytes).digest("hex")
 }
+
+/**
+ * Finite mapping from typed CAB rejection codes to frozen expected
+ * `error_message_contains` semantic tokens. Used by Lane E without reading
+ * runtime Error.message.
+ */
+export const CAB_CONTRACT_CODE_TO_EXPECTED_MESSAGE_TOKEN = Object.freeze({
+  reserved_audit_timestamp: "non-semantic audit metadata is forbidden in semantic input",
+  accessor_property_forbidden: "accessor properties are forbidden",
+} as const satisfies Partial<
+  Record<CounterfactualAuditBoundaryContractCodeV0, string>
+>)
+
+export type CabExpectedMessageTokenV0 =
+  (typeof CAB_CONTRACT_CODE_TO_EXPECTED_MESSAGE_TOKEN)[keyof typeof CAB_CONTRACT_CODE_TO_EXPECTED_MESSAGE_TOKEN]

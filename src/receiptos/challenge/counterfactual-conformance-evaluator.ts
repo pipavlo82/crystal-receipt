@@ -1,5 +1,5 @@
 /**
- * Bound per-challenge counterfactual conformance evaluator v0 (Lane E).
+ * Bound per-challenge counterfactual conformance evaluator v0 (Lane E/F).
  *
  * Executes one canonical Lane D request, normalizes the supplied Lane A
  * expected observation and the returned native observation through Lane C
@@ -8,14 +8,23 @@
  * - evaluated nonconformant
  * - execution_unresolved (verdict null)
  *
+ * Lane F: typed CAB subject_contract_rejected is comparable against frozen
+ * CAB expected rejection via closed code→token mapping + deterministic path.
+ * Untyped execution_failure remains unresolved (never conformant/nonconformant).
+ *
  * Does not:
  * - accept detached/precomputed execution results for bound verdicts
  * - treat execution_failure as verifier rejection/nonconformance
  * - validate expected_result_set_sha256
  * - prove materialized input was derived from source/derivation
  * - synthesize source-artifact validity
+ * - parse raw exception strings for classification or comparison
  */
 
+import {
+  CAB_CONTRACT_CODE_TO_EXPECTED_MESSAGE_TOKEN,
+  COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT,
+} from "./counterfactual-audit-boundary"
 import {
   COUNTERFACTUAL_OBSERVATION_SCHEMA,
   NormalizationContractError,
@@ -40,6 +49,8 @@ import {
   runVerifierChallenge,
   type CabNativeResultV0,
   type ExecutionFailureV0,
+  type SubjectContractRejectionV0,
+  type SubjectContractRejectedResultV0,
   type SubjectReturnedResultV0,
   type VerifierChallengeExecutionResultV0,
   type VerifierChallengeRunRequestV0,
@@ -65,6 +76,9 @@ export type ConformanceMismatchKindV0 =
   | "actual_result_out_of_contract"
   | "cab_operation_mismatch"
   | "cab_result_mismatch"
+  | "unexpected_subject_contract_rejection"
+  | "expected_subject_contract_rejection_missing"
+  | "subject_contract_rejection_mismatch"
 
 export type ConformanceMismatchV0 = {
   readonly kind: ConformanceMismatchKindV0
@@ -79,6 +93,7 @@ export type EvaluatedConformanceResultV0 = {
   readonly expected_observation_source: ExpectedObservationSourceV0
   readonly expected_observation: CounterfactualObservationV0
   readonly actual_observation: CounterfactualObservationV0 | null
+  readonly subject_contract_rejection: SubjectContractRejectionV0 | null
   readonly mismatch: ConformanceMismatchV0 | null
   /**
    * Inherited Lane D limitation: materialized input was executed as supplied;
@@ -265,18 +280,71 @@ function cabActualObservation(
   }
 }
 
+/**
+ * Compare typed CAB rejection against frozen expected rejection fields without
+ * reading runtime Error.message. Uses closed code→token mapping + optional path.
+ */
+export function compareCabSubjectContractRejection(
+  expectedNative: unknown,
+  rejection: SubjectContractRejectionV0,
+): { readonly match: true } | { readonly match: false; readonly mismatch: ConformanceMismatchV0 } {
+  if (expectedNative === null || typeof expectedNative !== "object" || Array.isArray(expectedNative)) {
+    throw new ConformanceEvaluatorContractError("CAB expected must be a JSON object")
+  }
+  const expectedObject = expectedNative as Record<string, unknown>
+  const outcome = expectedObject.outcome
+  if (typeof outcome !== "string") {
+    throw new ConformanceEvaluatorContractError("CAB expected.outcome must be a string")
+  }
+  if (outcome !== "rejected") {
+    return { match: false, mismatch: { kind: "unexpected_subject_contract_rejection" } }
+  }
+  if (rejection.contract !== COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT) {
+    return { match: false, mismatch: { kind: "subject_contract_rejection_mismatch" } }
+  }
+  const token = CAB_CONTRACT_CODE_TO_EXPECTED_MESSAGE_TOKEN[
+    rejection.code as keyof typeof CAB_CONTRACT_CODE_TO_EXPECTED_MESSAGE_TOKEN
+  ]
+  if (token === undefined) {
+    return { match: false, mismatch: { kind: "subject_contract_rejection_mismatch" } }
+  }
+  if (expectedObject.error_message_contains !== token) {
+    return { match: false, mismatch: { kind: "subject_contract_rejection_mismatch" } }
+  }
+  if (typeof expectedObject.error_path === "string") {
+    if (rejection.path !== expectedObject.error_path) {
+      return { match: false, mismatch: { kind: "subject_contract_rejection_mismatch" } }
+    }
+  }
+  return { match: true }
+}
+
 function evaluateCabSubjectReturned(
   expectedNative: unknown,
   expectedObservation: CounterfactualObservationV0,
   native: CabNativeResultV0,
 ): Pick<
   EvaluatedConformanceResultV0,
-  "verdict" | "expected_observation" | "actual_observation" | "mismatch"
+  | "verdict"
+  | "expected_observation"
+  | "actual_observation"
+  | "subject_contract_rejection"
+  | "mismatch"
 > {
   const expectedObject = expectedNative as Record<string, unknown>
   const outcome = expectedObject.outcome
   if (typeof outcome !== "string") {
     throw new ConformanceEvaluatorContractError("CAB expected.outcome must be a string")
+  }
+
+  if (outcome === "rejected") {
+    return {
+      verdict: "nonconformant",
+      expected_observation: expectedObservation,
+      actual_observation: cabActualObservation(native, expectedObservation),
+      subject_contract_rejection: null,
+      mismatch: { kind: "expected_subject_contract_rejection_missing" },
+    }
   }
 
   if (native.operation === "semantic_snapshot") {
@@ -285,6 +353,7 @@ function evaluateCabSubjectReturned(
         verdict: "nonconformant",
         expected_observation: expectedObservation,
         actual_observation: cabActualObservation(native, expectedObservation),
+        subject_contract_rejection: null,
         mismatch: { kind: "cab_operation_mismatch" },
       }
     }
@@ -308,6 +377,7 @@ function evaluateCabSubjectReturned(
         verdict: "conformant",
         expected_observation: expectedObservation,
         actual_observation: actualObservation,
+        subject_contract_rejection: null,
         mismatch: null,
       }
     }
@@ -315,6 +385,7 @@ function evaluateCabSubjectReturned(
       verdict: "nonconformant",
       expected_observation: expectedObservation,
       actual_observation: actualObservation,
+      subject_contract_rejection: null,
       mismatch: { kind: "cab_result_mismatch" },
     }
   }
@@ -331,6 +402,7 @@ function evaluateCabSubjectReturned(
         verdict: "conformant",
         expected_observation: expectedObservation,
         actual_observation: actualObservation,
+        subject_contract_rejection: null,
         mismatch: null,
       }
     }
@@ -338,6 +410,7 @@ function evaluateCabSubjectReturned(
       verdict: "nonconformant",
       expected_observation: expectedObservation,
       actual_observation: actualObservation,
+      subject_contract_rejection: null,
       mismatch: { kind: "cab_result_mismatch" },
     }
   }
@@ -348,16 +421,48 @@ function evaluateCabSubjectReturned(
     )
   }
 
-  if (outcome === "accepted_snapshot" || outcome === "rejected") {
+  if (outcome === "accepted_snapshot") {
     return {
       verdict: "nonconformant",
       expected_observation: expectedObservation,
       actual_observation: cabActualObservation(native, expectedObservation),
+      subject_contract_rejection: null,
       mismatch: { kind: "cab_operation_mismatch" },
     }
   }
 
   throw new ConformanceEvaluatorContractError(`unsupported CAB expected outcome: ${outcome}`)
+}
+
+function evaluateCabSubjectContractRejected(
+  expectedNative: unknown,
+  expectedObservation: CounterfactualObservationV0,
+  execution: SubjectContractRejectedResultV0,
+): Pick<
+  EvaluatedConformanceResultV0,
+  | "verdict"
+  | "expected_observation"
+  | "actual_observation"
+  | "subject_contract_rejection"
+  | "mismatch"
+> {
+  const compared = compareCabSubjectContractRejection(expectedNative, execution.rejection)
+  if (compared.match) {
+    return {
+      verdict: "conformant",
+      expected_observation: expectedObservation,
+      actual_observation: null,
+      subject_contract_rejection: cloneJson(execution.rejection),
+      mismatch: null,
+    }
+  }
+  return {
+    verdict: "nonconformant",
+    expected_observation: expectedObservation,
+    actual_observation: null,
+    subject_contract_rejection: cloneJson(execution.rejection),
+    mismatch: compared.mismatch,
+  }
 }
 
 function evaluatedResult(input: {
@@ -366,6 +471,7 @@ function evaluatedResult(input: {
   verdict: "conformant" | "nonconformant"
   expected_observation: CounterfactualObservationV0
   actual_observation: CounterfactualObservationV0 | null
+  subject_contract_rejection: SubjectContractRejectionV0 | null
   mismatch: ConformanceMismatchV0 | null
 }): EvaluatedConformanceResultV0 {
   return {
@@ -377,6 +483,8 @@ function evaluatedResult(input: {
     expected_observation_source: "lane_a_model",
     expected_observation: cloneJson(input.expected_observation),
     actual_observation: input.actual_observation === null ? null : cloneJson(input.actual_observation),
+    subject_contract_rejection:
+      input.subject_contract_rejection === null ? null : cloneJson(input.subject_contract_rejection),
     mismatch: input.mismatch === null ? null : cloneJson(input.mismatch),
     materialized_input_binding: "caller_supplied_unproven",
   }
@@ -424,6 +532,24 @@ export async function evaluateVerifierChallengeConformance(
     throw new ConformanceEvaluatorContractError("execution surface does not match request.surface")
   }
 
+  if (execution.execution_state === "subject_contract_rejected") {
+    if (execution.surface !== "counterfactual_audit_boundary") {
+      throw new ConformanceEvaluatorContractError(
+        "subject_contract_rejected is only defined for counterfactual_audit_boundary in v0",
+      )
+    }
+    const cab = evaluateCabSubjectContractRejected(expectedNative, expectedObservation, execution)
+    return evaluatedResult({
+      challenge,
+      surface: request.surface,
+      verdict: cab.verdict,
+      expected_observation: cab.expected_observation,
+      actual_observation: cab.actual_observation,
+      subject_contract_rejection: cab.subject_contract_rejection,
+      mismatch: cab.mismatch,
+    })
+  }
+
   if (execution.surface === "counterfactual_audit_boundary") {
     const cab = evaluateCabSubjectReturned(
       expectedNative,
@@ -436,6 +562,7 @@ export async function evaluateVerifierChallengeConformance(
       verdict: cab.verdict,
       expected_observation: cab.expected_observation,
       actual_observation: cab.actual_observation,
+      subject_contract_rejection: cab.subject_contract_rejection,
       mismatch: cab.mismatch,
     })
   }
@@ -448,6 +575,7 @@ export async function evaluateVerifierChallengeConformance(
       verdict: "nonconformant",
       expected_observation: expectedObservation,
       actual_observation: null,
+      subject_contract_rejection: null,
       mismatch: actual.mismatch,
     })
   }
@@ -460,6 +588,7 @@ export async function evaluateVerifierChallengeConformance(
       verdict: "conformant",
       expected_observation: expectedObservation,
       actual_observation: actual.observation,
+      subject_contract_rejection: null,
       mismatch: null,
     })
   }
@@ -469,6 +598,7 @@ export async function evaluateVerifierChallengeConformance(
     verdict: "nonconformant",
     expected_observation: expectedObservation,
     actual_observation: actual.observation,
+    subject_contract_rejection: null,
     mismatch: compared.mismatch,
   })
 }

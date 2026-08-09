@@ -433,7 +433,7 @@ describe("counterfactual verifier runner v0", () => {
     }
   })
 
-  test("CAB production audit_timestamp throw → bounded execution_failure", async () => {
+  test("CAB production audit_timestamp throw → subject_contract_rejected", async () => {
     const vector = readJson("conformance/counterfactual-audit-boundary-v0/vectors/V-AT-ROOT.json") as Record<
       string,
       unknown
@@ -451,14 +451,14 @@ describe("counterfactual verifier runner v0", () => {
       expected: vector.expected,
     })
     expect(challenge).toEqual(beforeChallenge)
-    expect(result.execution_state).toBe("execution_failure")
-    if (result.execution_state !== "execution_failure") throw new Error("unreachable")
+    expect(result.execution_state).toBe("subject_contract_rejected")
+    if (result.execution_state !== "subject_contract_rejected") throw new Error("unreachable")
     expect(result).not.toHaveProperty("native_result")
-    expect(result.failure).toEqual({
-      failure_stage: "subject_invocation",
-      failure_kind: "thrown_error",
-      error_name: "Error",
-      safe_message: "subject invocation failed",
+    expect(result).not.toHaveProperty("failure")
+    expect(result.rejection).toEqual({
+      contract: "counterfactual_audit_boundary.semantic_snapshot.v0",
+      code: "reserved_audit_timestamp",
+      path: '$semantic_artifact["audit_timestamp"]',
     })
     const serialized = JSON.stringify(result)
     expect(serialized).not.toMatch(/[A-Za-z]:\\/)
@@ -479,7 +479,7 @@ describe("counterfactual verifier runner v0", () => {
       challenge,
       input: { value: vector.input },
     })
-    expect(bundled.execution.execution_state).toBe("execution_failure")
+    expect(bundled.execution.execution_state).toBe("subject_contract_rejected")
     expect(bundled.observation).toBeNull()
   })
 
