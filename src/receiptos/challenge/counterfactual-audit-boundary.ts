@@ -41,18 +41,31 @@ export type CounterfactualAuditBoundaryContractCodeV0 =
 export const COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT =
   "counterfactual_audit_boundary.semantic_snapshot.v0" as const
 
-/** Instances constructed through the CAB typed-error constructor only. */
+/**
+ * Bounded typed CAB rejection evidence extracted for runner consumption.
+ * Immutable; carries no Error.message / stack.
+ */
+export type CabContractRejectionEvidenceV0 = {
+  readonly contract: typeof COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT
+  readonly code: CounterfactualAuditBoundaryContractCodeV0
+  readonly path: string | null
+}
+
+const CAB_CONTRACT_CODE_SET = new Set<CounterfactualAuditBoundaryContractCodeV0>(
+  COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT_CODES,
+)
+
+/** Private minting authority: only this module's fail() path may create instances. */
 const CAB_CONTRACT_ERROR_INSTANCES = new WeakSet<object>()
 
 /**
- * Typed intentional CAB subject-contract rejection.
- * Machine identity is `code` + `path` — not Error.message.
- * Message text is preserved for existing human-readable test compatibility.
+ * Module-private typed CAB subject-contract rejection.
+ * Not exported — callers must not mint recognized rejections.
+ * Machine identity is `code` + `path`; message text remains for human tests only.
  */
-export class CounterfactualAuditBoundaryContractError extends Error {
+class CounterfactualAuditBoundaryContractError extends Error {
   readonly contract = COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT
   readonly code: CounterfactualAuditBoundaryContractCodeV0
-  /** Deterministic semantic path, or null when the branch has no path operand. */
   readonly path: string | null
 
   constructor(
@@ -68,9 +81,22 @@ export class CounterfactualAuditBoundaryContractError extends Error {
   }
 }
 
-/** True only for constructor-minted CAB contract errors (not prototype forgeries). */
-export function isCabContractErrorInstance(value: unknown): value is CounterfactualAuditBoundaryContractError {
-  return value instanceof CounterfactualAuditBoundaryContractError && CAB_CONTRACT_ERROR_INSTANCES.has(value)
+/**
+ * Opaque read-only extractor for private authentic CAB contract errors.
+ * Returns frozen bounded rejection evidence or null.
+ * Cannot mint, register, mutate, or promote arbitrary values.
+ */
+export function extractCabContractRejection(thrown: unknown): CabContractRejectionEvidenceV0 | null {
+  if (!(thrown instanceof CounterfactualAuditBoundaryContractError)) return null
+  if (!CAB_CONTRACT_ERROR_INSTANCES.has(thrown)) return null
+  if (thrown.contract !== COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT) return null
+  if (!CAB_CONTRACT_CODE_SET.has(thrown.code)) return null
+  if (!(thrown.path === null || typeof thrown.path === "string")) return null
+  return Object.freeze({
+    contract: COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT,
+    code: thrown.code,
+    path: thrown.path,
+  })
 }
 
 const AUDIT_TIMESTAMP = "audit_timestamp"

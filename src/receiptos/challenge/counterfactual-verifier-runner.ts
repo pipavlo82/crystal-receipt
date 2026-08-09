@@ -12,7 +12,8 @@
  * - request bound to canonical Lane A/B challenge identity
  * - expected outcomes never consulted for dispatch
  * - execution_failure diagnostics are bounded and host-string-safe
- * - typed subject-contract rejection is recognized by class + closed code only
+ * - CAB stages separated: binding → input materialization → subject → output clone
+ * - typed CAB rejection only from the subject-invocation catch via opaque extractor
  */
 
 import type { HandoffEvidence, HandoffReceiptVerification } from "../schema/types"
@@ -31,13 +32,10 @@ import {
   type ChronicleCheckpointContinuityResultV0,
 } from "../capsule/chronicle-checkpoint-continuity-v0"
 import {
-  COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT,
-  COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT_CODES,
-  CounterfactualAuditBoundaryContractError,
   computeCounterfactualManifestFileSha256,
-  isCabContractErrorInstance,
+  extractCabContractRejection,
   snapshotCounterfactualSemanticJson,
-  type CounterfactualAuditBoundaryContractCodeV0,
+  type CabContractRejectionEvidenceV0,
   type CounterfactualSemanticJson,
 } from "./counterfactual-audit-boundary"
 import type {
@@ -68,10 +66,6 @@ export const COUNTERFACTUAL_EXECUTION_OUTCOME_SCHEMA =
   "receiptos.counterfactual_execution_outcome.v0" as const
 
 export type CounterfactualExecutionOutcomeSchema = typeof COUNTERFACTUAL_EXECUTION_OUTCOME_SCHEMA
-
-const CAB_CONTRACT_CODES = new Set<CounterfactualAuditBoundaryContractCodeV0>(
-  COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT_CODES,
-)
 
 // --- Registered adapter identities (finite, production-closed) ----------------
 
@@ -262,11 +256,7 @@ export type ExecutionFailureV0 = {
  * Bounded typed CAB subject-contract rejection evidence.
  * Identity is contract + code + path — never Error.message / stack.
  */
-export type SubjectContractRejectionV0 = {
-  readonly contract: typeof COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT
-  readonly code: CounterfactualAuditBoundaryContractCodeV0
-  readonly path: string | null
-}
+export type SubjectContractRejectionV0 = CabContractRejectionEvidenceV0
 
 export type SubjectContractRejectedResultV0 = {
   readonly execution_state: "subject_contract_rejected"
@@ -527,37 +517,18 @@ function toExecutionFailure(surface: ChallengeSurfaceKind, thrown: unknown): Exe
 }
 
 /**
- * Recognize only constructor-minted CounterfactualAuditBoundaryContractError
- * instances with a closed v0 code. Does not inspect Error.message / name
- * strings / forged `{code}` shapes / Object.create prototype copies.
+ * Classify a throw that crossed the CAB production subject-invocation boundary
+ * only. Adapter-stage failures must never call this.
  */
-export function isRecognizedCabContractRejection(
-  thrown: unknown,
-): thrown is CounterfactualAuditBoundaryContractError {
-  if (!isCabContractErrorInstance(thrown)) return false
-  if (thrown.contract !== COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT) return false
-  if (!CAB_CONTRACT_CODES.has(thrown.code)) return false
-  if (!(thrown.path === null || typeof thrown.path === "string")) return false
-  return true
-}
-
-/**
- * Pure CAB catch-boundary classifier (no registry mutation).
- * Recognized typed CAB contract error → subject_contract_rejected;
- * anything else → execution_failure.
- */
-export function captureCabSubjectInvocationThrow(
+function classifyCabSubjectInvocationThrow(
   thrown: unknown,
 ): SubjectContractRejectedResultV0 | ExecutionFailureV0 {
-  if (isRecognizedCabContractRejection(thrown)) {
+  const rejection = extractCabContractRejection(thrown)
+  if (rejection !== null) {
     return {
       execution_state: "subject_contract_rejected",
       surface: "counterfactual_audit_boundary",
-      rejection: {
-        contract: COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT,
-        code: thrown.code,
-        path: thrown.path,
-      },
+      rejection,
     }
   }
   return toExecutionFailure("counterfactual_audit_boundary", thrown)
@@ -662,33 +633,59 @@ function runCab(
   request: CabSemanticSnapshotRunRequestV0 | CabManifestHashRunRequestV0,
   challenge: CounterfactualChallengeIdentityV0,
 ): VerifierChallengeExecutionResultV0 {
+  // Stage 1: request binding/validation (throws RunnerContractError).
   validateCabBinding(request, challenge)
+
   if (request.operation === "semantic_snapshot") {
+    // Stage 2: input materialization/cloning — never typed CAB rejection.
+    let value: unknown
     try {
-      // Clone is inside the catch boundary so host clone failures stay
-      // execution_failure (not typed CAB contract rejection).
-      const value = cloneJson(request.input.value)
-      const snapshot = PRODUCTION_INVOKERS.cab_semantic_snapshot(value)
+      value = cloneJson(request.input.value)
+    } catch (error) {
+      return toExecutionFailure("counterfactual_audit_boundary", error)
+    }
+
+    // Stage 3: production subject invocation — sole typed-rejection boundary.
+    let snapshot: CounterfactualSemanticJson
+    try {
+      snapshot = PRODUCTION_INVOKERS.cab_semantic_snapshot(value)
+    } catch (error) {
+      return classifyCabSubjectInvocationThrow(error)
+    }
+
+    // Stage 4: output cloning/serialization — never typed CAB rejection.
+    try {
       return {
         execution_state: "subject_returned",
         surface: "counterfactual_audit_boundary",
         native_result: { operation: "semantic_snapshot", snapshot: cloneJson(snapshot) },
       }
     } catch (error) {
-      return captureCabSubjectInvocationThrow(error)
+      return toExecutionFailure("counterfactual_audit_boundary", error)
     }
   }
+
+  // Stage 2: manifest input conversion/materialization.
+  let bytes: string | Uint8Array
   try {
-    const bytes =
+    bytes =
       typeof request.input.bytes === "string" ? request.input.bytes : new Uint8Array(request.input.bytes)
-    const sha256_hex = PRODUCTION_INVOKERS.cab_manifest_hash(bytes)
-    return {
-      execution_state: "subject_returned",
-      surface: "counterfactual_audit_boundary",
-      native_result: { operation: "manifest_file_sha256", sha256_hex },
-    }
   } catch (error) {
-    return captureCabSubjectInvocationThrow(error)
+    return toExecutionFailure("counterfactual_audit_boundary", error)
+  }
+
+  // Stage 3: manifest subject — file-byte hash only; no invented semantic rejection.
+  let sha256_hex: string
+  try {
+    sha256_hex = PRODUCTION_INVOKERS.cab_manifest_hash(bytes)
+  } catch (error) {
+    return toExecutionFailure("counterfactual_audit_boundary", error)
+  }
+
+  return {
+    execution_state: "subject_returned",
+    surface: "counterfactual_audit_boundary",
+    native_result: { operation: "manifest_file_sha256", sha256_hex },
   }
 }
 

@@ -2,13 +2,15 @@ import { describe, expect, test } from "bun:test"
 import { readFileSync, readdirSync } from "node:fs"
 import { resolve } from "node:path"
 import { spawnSync } from "node:child_process"
+import * as CabModule from "../../src/receiptos/challenge/counterfactual-audit-boundary"
 import {
   CAB_CONTRACT_CODE_TO_EXPECTED_MESSAGE_TOKEN,
   COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT,
   COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT_CODES,
-  CounterfactualAuditBoundaryContractError,
+  extractCabContractRejection,
   snapshotCounterfactualSemanticJson,
 } from "../../src/receiptos/challenge/counterfactual-audit-boundary"
+import * as RunnerModule from "../../src/receiptos/challenge/counterfactual-verifier-runner"
 import {
   compareCabSubjectContractRejection,
   evaluateVerifierChallengeConformance,
@@ -17,8 +19,6 @@ import {
   COUNTERFACTUAL_EXECUTION_OUTCOME_SCHEMA,
   COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
   RunnerContractError,
-  captureCabSubjectInvocationThrow,
-  isRecognizedCabContractRejection,
   normalizeSubjectReturnedResult,
   runVerifierChallenge,
 } from "../../src/receiptos/challenge/counterfactual-verifier-runner"
@@ -109,12 +109,14 @@ describe("counterfactual execution outcome policy v0 (Lane F)", () => {
         } catch (error) {
           thrown = error
         }
-        expect(thrown).toBeInstanceOf(CounterfactualAuditBoundaryContractError)
-        if (!(thrown instanceof CounterfactualAuditBoundaryContractError)) throw new Error("unreachable")
-        expect(thrown.code).toBe("accessor_property_forbidden")
-        expect(thrown.path).toBe('$semantic_artifact["payload"]')
-        expect(thrown.contract).toBe(COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT)
-        expect(thrown.message).toContain(expected.error_message_contains)
+        const rejection = extractCabContractRejection(thrown)
+        expect(rejection).toEqual({
+          contract: COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT,
+          code: "accessor_property_forbidden",
+          path: '$semantic_artifact["payload"]',
+        })
+        expect(thrown).toBeInstanceOf(Error)
+        expect((thrown as Error).message).toContain(expected.error_message_contains)
         expect(reads()).toBe(expected.property_get_invocation_count ?? 0)
         continue
       }
@@ -130,15 +132,17 @@ describe("counterfactual execution outcome policy v0 (Lane F)", () => {
         } catch (error) {
           thrown = error
         }
-        expect(thrown).toBeInstanceOf(CounterfactualAuditBoundaryContractError)
-        if (!(thrown instanceof CounterfactualAuditBoundaryContractError)) throw new Error("unreachable")
-        expect(thrown.code).toBe("reserved_audit_timestamp")
-        expect(thrown.path).toBe(expected.error_path)
-        expect(thrown.contract).toBe(COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT)
-        expect(thrown.message).toContain(expected.error_message_contains)
-        expect(thrown.message).toContain(expected.error_path!)
+        const rejection = extractCabContractRejection(thrown)
+        expect(rejection).toEqual({
+          contract: COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT,
+          code: "reserved_audit_timestamp",
+          path: expected.error_path,
+        })
+        expect(thrown).toBeInstanceOf(Error)
+        expect((thrown as Error).message).toContain(expected.error_message_contains)
+        expect((thrown as Error).message).toContain(expected.error_path!)
         // Machine identity is not the message text.
-        expect(thrown.code).not.toBe(thrown.message)
+        expect(rejection!.code).not.toBe((thrown as Error).message)
       }
     }
   })
@@ -197,52 +201,153 @@ describe("counterfactual execution outcome policy v0 (Lane F)", () => {
     }
   })
 
-  test("Lane D pure classifier: unrecognized Error / non-error / forged shapes → execution_failure", () => {
-    const ordinary = captureCabSubjectInvocationThrow(new Error("non-semantic audit metadata is forbidden"))
-    expect(ordinary.execution_state).toBe("execution_failure")
-    if (ordinary.execution_state !== "execution_failure") throw new Error("unreachable")
-    expect(ordinary.failure.safe_message).toBe("subject invocation failed")
-    expect(JSON.stringify(ordinary)).not.toContain("non-semantic audit metadata")
+  test("CAB module exposes no constructible contract-error class or mint helper", () => {
+    expect(CabModule).not.toHaveProperty("CounterfactualAuditBoundaryContractError")
+    expect(CabModule).not.toHaveProperty("isCabContractErrorInstance")
+    expect(typeof CabModule.extractCabContractRejection).toBe("function")
+    expect(typeof CabModule.snapshotCounterfactualSemanticJson).toBe("function")
+    expect(RunnerModule).not.toHaveProperty("captureCabSubjectInvocationThrow")
+    expect(RunnerModule).not.toHaveProperty("isRecognizedCabContractRejection")
+    expect(RunnerModule).not.toHaveProperty("CounterfactualAuditBoundaryContractError")
 
-    const nonError = captureCabSubjectInvocationThrow("string-throw")
-    expect(nonError.execution_state).toBe("execution_failure")
-    if (nonError.execution_state !== "execution_failure") throw new Error("unreachable")
-    expect(nonError.failure.failure_kind).toBe("non_error_throw")
+    // Opaque extractor cannot mint or promote structural forgeries.
+    expect(
+      extractCabContractRejection({
+        name: "CounterfactualAuditBoundaryContractError",
+        contract: COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT,
+        code: "reserved_audit_timestamp",
+        path: '$semantic_artifact["audit_timestamp"]',
+      }),
+    ).toBeNull()
+    expect(extractCabContractRejection(new Error("non-semantic audit metadata is forbidden"))).toBeNull()
+    expect(extractCabContractRejection("string-throw")).toBeNull()
+  })
 
-    const forgedShape = captureCabSubjectInvocationThrow({
-      name: "CounterfactualAuditBoundaryContractError",
-      code: "reserved_audit_timestamp",
-      path: "$semantic_artifact",
-      message: "forged",
-    })
-    expect(forgedShape.execution_state).toBe("execution_failure")
-
-    const protoForgery = Object.create(CounterfactualAuditBoundaryContractError.prototype) as {
+  test("prototype-style forgery from authentic error prototype is not recognized", () => {
+    let authentic: unknown
+    try {
+      snapshotCounterfactualSemanticJson({ audit_timestamp: "root" })
+    } catch (error) {
+      authentic = error
+    }
+    const proto = Object.getPrototypeOf(authentic as object)
+    const forgery = Object.create(proto) as {
       code: string
       path: string
       contract: string
       message: string
     }
-    protoForgery.code = "reserved_audit_timestamp"
-    protoForgery.path = "$semantic_artifact"
-    protoForgery.contract = COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT
-    protoForgery.message = "forged via prototype"
-    expect(isRecognizedCabContractRejection(protoForgery)).toBe(false)
-    expect(captureCabSubjectInvocationThrow(protoForgery).execution_state).toBe("execution_failure")
-
-    const minted = new CounterfactualAuditBoundaryContractError(
-      "reserved_audit_timestamp",
-      '$semantic_artifact["audit_timestamp"]',
-      "non-semantic audit metadata is forbidden in semantic input",
-    )
-    expect(isRecognizedCabContractRejection(minted)).toBe(true)
-    expect(captureCabSubjectInvocationThrow(minted).execution_state).toBe("subject_contract_rejected")
+    forgery.code = "reserved_audit_timestamp"
+    forgery.path = '$semantic_artifact["audit_timestamp"]'
+    forgery.contract = COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT
+    forgery.message = "forged via prototype"
+    expect(extractCabContractRejection(forgery)).toBeNull()
+    expect(extractCabContractRejection(authentic)).toEqual({
+      contract: COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT,
+      code: "reserved_audit_timestamp",
+      path: '$semantic_artifact["audit_timestamp"]',
+    })
   })
 
-  test("Lane D host clone failure remains execution_failure (not typed CAB rejection)", async () => {
+  test("adapter-stage clone getter failures are execution_failure, including authentic CAB error replay", async () => {
     const vector = readJson(`${CAB_PKG}/vectors/V-AT-ROOT.json`) as Record<string, unknown>
     const { challenge, model } = identityFromVector(vector)
-    const result = await runVerifierChallenge({
+    const beforeChallenge = structuredClone(challenge)
+    const beforeModel = structuredClone(model)
+
+    const ordinaryGetter = Object.defineProperty({}, "payload", {
+      enumerable: true,
+      get() {
+        throw new Error("caller-controlled clone diagnostic")
+      },
+    })
+    const ordinary = await runVerifierChallenge({
+      schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
+      surface: "counterfactual_audit_boundary",
+      subject: null,
+      operation: "semantic_snapshot",
+      challenge,
+      lane_a_model: model,
+      input: { value: ordinaryGetter },
+    })
+    expect(ordinary.execution_state).toBe("execution_failure")
+    if (ordinary.execution_state !== "execution_failure") throw new Error("unreachable")
+    expect(ordinary.failure.safe_message).toBe("subject invocation failed")
+    expect(JSON.stringify(ordinary)).not.toContain("caller-controlled clone diagnostic")
+    expect(JSON.stringify(ordinary)).not.toContain("\n")
+    expect(ordinary).not.toHaveProperty("rejection")
+
+    const structuralGetter = Object.defineProperty({}, "payload", {
+      enumerable: true,
+      get() {
+        throw {
+          name: "CounterfactualAuditBoundaryContractError",
+          contract: COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT,
+          code: "reserved_audit_timestamp",
+          path: '$semantic_artifact["audit_timestamp"]',
+        }
+      },
+    })
+    const structural = await runVerifierChallenge({
+      schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
+      surface: "counterfactual_audit_boundary",
+      subject: null,
+      operation: "semantic_snapshot",
+      challenge,
+      lane_a_model: model,
+      input: { value: structuralGetter },
+    })
+    expect(structural.execution_state).toBe("execution_failure")
+
+    // Mandatory: capture authentic private CAB error, rethrow from clone getter.
+    let authentic: unknown
+    try {
+      snapshotCounterfactualSemanticJson({ audit_timestamp: "root" })
+    } catch (error) {
+      authentic = error
+    }
+    expect(extractCabContractRejection(authentic)).not.toBeNull()
+    const replayGetter = Object.defineProperty({}, "payload", {
+      enumerable: true,
+      get() {
+        throw authentic
+      },
+    })
+    const replay = await runVerifierChallenge({
+      schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
+      surface: "counterfactual_audit_boundary",
+      subject: null,
+      operation: "semantic_snapshot",
+      challenge,
+      lane_a_model: model,
+      input: { value: replayGetter },
+    })
+    expect(replay.execution_state).toBe("execution_failure")
+    if (replay.execution_state !== "execution_failure") throw new Error("unreachable")
+    expect(replay).not.toHaveProperty("rejection")
+    expect(JSON.stringify(replay)).not.toContain("non-semantic audit metadata")
+    expect(JSON.stringify(replay)).not.toContain("stack")
+
+    // Same authentic validation during real subject invocation remains typed rejection.
+    const subject = await runVerifierChallenge({
+      schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
+      surface: "counterfactual_audit_boundary",
+      subject: null,
+      operation: "semantic_snapshot",
+      challenge,
+      lane_a_model: model,
+      input: { value: vector.input },
+    })
+    expect(subject.execution_state).toBe("subject_contract_rejected")
+    if (subject.execution_state !== "subject_contract_rejected") throw new Error("unreachable")
+    expect(subject.rejection).toEqual({
+      contract: COUNTERFACTUAL_AUDIT_BOUNDARY_CONTRACT,
+      code: "reserved_audit_timestamp",
+      path: '$semantic_artifact["audit_timestamp"]',
+    })
+
+    // Non-cloneable host values remain execution_failure.
+    const nonCloneable = await runVerifierChallenge({
       schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
       surface: "counterfactual_audit_boundary",
       subject: null,
@@ -251,10 +356,10 @@ describe("counterfactual execution outcome policy v0 (Lane F)", () => {
       lane_a_model: model,
       input: { value: { fn: () => 1 } },
     })
-    expect(result.execution_state).toBe("execution_failure")
-    if (result.execution_state !== "execution_failure") throw new Error("unreachable")
-    expect(result.failure.safe_message).toBe("subject invocation failed")
-    expect(result).not.toHaveProperty("rejection")
+    expect(nonCloneable.execution_state).toBe("execution_failure")
+
+    expect(challenge).toEqual(beforeChallenge)
+    expect(model).toEqual(beforeModel)
   })
 
   test("native verifier-local rejection remains subject_returned; RunnerContractError remains thrown", async () => {
@@ -396,7 +501,7 @@ describe("counterfactual execution outcome policy v0 (Lane F)", () => {
     expect(missing.actual_observation?.observation_class).toBe("operation")
   })
 
-  test("Lane E: untyped execution_failure → execution_unresolved; never conformant/nonconformant", async () => {
+  test("Lane E: adapter-stage failures → execution_unresolved; never conformant/nonconformant", async () => {
     const vector = readJson(`${CAB_PKG}/vectors/V-AT-ROOT.json`) as Record<string, unknown>
     const { model, challenge } = identityFromVector(vector)
     const result = await evaluateVerifierChallengeConformance({
@@ -413,9 +518,37 @@ describe("counterfactual execution outcome policy v0 (Lane F)", () => {
     expect(result.verdict).toBeNull()
     expect(result.execution_failure.safe_message).toBe("subject invocation failed")
     const serialized = JSON.stringify(result)
-    expect(serialized).not.toContain("conformant")
+    expect(serialized).not.toContain('"conformant"')
     expect(serialized).not.toContain("nonconformant")
     expect(serialized).not.toContain("subject_contract_rejection")
+
+    let authentic: unknown
+    try {
+      snapshotCounterfactualSemanticJson({ audit_timestamp: "root" })
+    } catch (error) {
+      authentic = error
+    }
+    const replayUnresolved = await evaluateVerifierChallengeConformance({
+      schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
+      surface: "counterfactual_audit_boundary",
+      subject: null,
+      operation: "semantic_snapshot",
+      challenge,
+      lane_a_model: model,
+      input: {
+        value: Object.defineProperty({}, "payload", {
+          enumerable: true,
+          get() {
+            throw authentic
+          },
+        }),
+      },
+    })
+    expect(replayUnresolved.evaluation_state).toBe("execution_unresolved")
+    if (replayUnresolved.evaluation_state !== "execution_unresolved") throw new Error("unreachable")
+    expect(replayUnresolved.verdict).toBeNull()
+    expect(JSON.stringify(replayUnresolved)).not.toContain("nonconformant")
+    expect(JSON.stringify(replayUnresolved)).not.toContain("subject_contract_rejection")
   })
 
   test("comparison never uses raw exception strings; typed rejection never enters Lane C normalizer", () => {
@@ -464,7 +597,22 @@ describe("counterfactual execution outcome policy v0 (Lane F)", () => {
       lane_a_model: model,
       input: { value: vector.input },
     })
-    const failure = captureCabSubjectInvocationThrow(new Error("boom"))
+    const failure = await runVerifierChallenge({
+      schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
+      surface: "counterfactual_audit_boundary",
+      subject: null,
+      operation: "semantic_snapshot",
+      challenge,
+      lane_a_model: model,
+      input: {
+        value: Object.defineProperty({}, "payload", {
+          enumerable: true,
+          get() {
+            throw new Error("boom")
+          },
+        }),
+      },
+    })
     const isolate = readJson(`${CAB_PKG}/vectors/V-AT-ISOLATE.json`) as Record<string, unknown> & {
       runtime_construction: { initial: unknown }
     }
