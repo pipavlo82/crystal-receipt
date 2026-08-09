@@ -16,6 +16,10 @@
  * expected material as a complete-set member of the frozen package
  * expected_result_set_sha256 authority. Binding failure emits no verdict.
  *
+ * CAB manifest_hash_differs requires two materialized Lane D operands; use
+ * evaluateCabManifestHashDiffConformance (composite carrier). Single-operand
+ * evaluateVerifierChallengeConformance remains unsupported for that outcome.
+ *
  * Does not:
  * - accept detached/precomputed execution results for bound verdicts
  * - treat execution_failure as verifier rejection/nonconformance
@@ -86,6 +90,7 @@ export type ConformanceMismatchKindV0 =
   | "actual_result_out_of_contract"
   | "cab_operation_mismatch"
   | "cab_result_mismatch"
+  | "cab_manifest_hash_difference_mismatch"
   | "unexpected_subject_contract_rejection"
   | "expected_subject_contract_rejection_missing"
   | "subject_contract_rejection_mismatch"
@@ -634,3 +639,11 @@ export async function evaluateVerifierChallengeConformance(
 }
 
 export { ExpectedResultSetBindingError, RunnerContractError }
+
+export {
+  CAB_MANIFEST_HASH_DIFF_EVALUATION_REQUEST_SCHEMA,
+  CabManifestHashDiffContractError,
+  evaluateCabManifestHashDiffConformance,
+  type CabManifestHashDiffContractReasonV0,
+  type CabManifestHashDiffEvaluationRequestV0,
+} from "./counterfactual-cab-manifest-hash-diff-evaluator"
