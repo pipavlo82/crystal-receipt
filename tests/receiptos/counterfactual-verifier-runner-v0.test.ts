@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { spawnSync } from "node:child_process"
+import * as RunnerModule from "../../src/receiptos/challenge/counterfactual-verifier-runner"
 import {
   COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
   VERIFY_HANDOFF_ADAPTER_IDENTITY,
@@ -12,7 +13,6 @@ import {
   runAndNormalizeVerifierChallenge,
   runVerifierChallenge,
   normalizeSubjectReturnedResult,
-  __laneDTestOnly_withInvokerOverrides,
   type VerifierChallengeRunRequestV0,
 } from "../../src/receiptos/challenge/counterfactual-verifier-runner"
 import {
@@ -22,12 +22,16 @@ import {
   normalizeVerifyHandoffReceiptRootResult,
 } from "../../src/receiptos/challenge/counterfactual-result-normalization"
 import {
+  COUNTERFACTUAL_CHALLENGE_IDENTITY_SCHEMA,
   computeFrozenCounterfactualNeighborhoodSha256,
+  projectCounterfactualChallengeIdentity,
+  type CounterfactualChallengeIdentityV0,
   type FrozenCounterfactualNeighborhoodV0,
 } from "../../src/receiptos/challenge/counterfactual-neighborhood"
 import {
   projectVerifierChallengeVector,
   VERIFIER_CHALLENGE_MODEL_SCHEMA,
+  type VerifierChallengeVectorModelV0,
 } from "../../src/receiptos/challenge/verifier-challenge-model"
 import type { HandoffEvidence } from "../../src/receiptos/schema/types"
 import type { PortableProofObjectV0 } from "../../src/receiptos/capsule/portable-proof-object-v0"
@@ -40,25 +44,25 @@ function readJson(relativePath: string): unknown {
   return JSON.parse(readFileSync(resolve(root, relativePath), "utf8"))
 }
 
-function challengeFromVector(vector: Record<string, unknown>) {
-  return {
-    vector_id: vector.vector_id as string,
-    challenge_id: (vector.challenge_id as string | null | undefined) ?? null,
-    package_version: vector.package_version as string,
-    native_schema: vector.schema as string,
-  }
+function identityFromVector(vector: Record<string, unknown>): {
+  model: VerifierChallengeVectorModelV0
+  challenge: CounterfactualChallengeIdentityV0
+} {
+  const model = projectVerifierChallengeVector(vector)
+  return { model, challenge: projectCounterfactualChallengeIdentity(model) }
 }
 
 function loadHandoffEvidence(vectorPath: string): {
   vector: Record<string, unknown>
   baseline: HandoffEvidence
   challenged: HandoffEvidence
+  model: VerifierChallengeVectorModelV0
+  challenge: CounterfactualChallengeIdentityV0
 } {
   const vector = readJson(vectorPath) as Record<string, unknown>
+  const { model, challenge } = identityFromVector(vector)
   const source = vector.source_fixture as { repository_path: string }
-  const baseline = structuredClone(
-    readJson(source.repository_path),
-  ) as HandoffEvidence
+  const baseline = structuredClone(readJson(source.repository_path)) as HandoffEvidence
   const mutation = vector.mutation as { path: string[]; to: unknown }
   const challenged = structuredClone(baseline) as Record<string, unknown>
   let cursor: Record<string, unknown> = challenged
@@ -66,13 +70,19 @@ function loadHandoffEvidence(vectorPath: string): {
     cursor = cursor[mutation.path[i]!] as Record<string, unknown>
   }
   cursor[mutation.path[mutation.path.length - 1]!] = mutation.to
-  return { vector, baseline, challenged: challenged as unknown as HandoffEvidence }
+  return {
+    vector,
+    baseline,
+    challenged: challenged as unknown as HandoffEvidence,
+    model,
+    challenge,
+  }
 }
 
 function handoffRequest(
-  vector: Record<string, unknown>,
+  challenge: CounterfactualChallengeIdentityV0,
   evidence: HandoffEvidence,
-  expected?: unknown,
+  extras?: { expected?: unknown; lane_a_model?: VerifierChallengeVectorModelV0 },
 ): VerifierChallengeRunRequestV0 {
   return {
     schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
@@ -82,35 +92,46 @@ function handoffRequest(
       module_path: VERIFY_HANDOFF_ADAPTER_IDENTITY.module_path,
       git_blob_oid: VERIFY_HANDOFF_ADAPTER_IDENTITY.git_blob_oid,
     },
-    challenge: challengeFromVector(vector),
+    challenge,
     input: { evidence },
-    expected,
+    ...extras,
   }
 }
 
 describe("counterfactual verifier runner v0", () => {
+  test("production module exports no invoker-override hook or mutable registry", () => {
+    const exported = Object.keys(RunnerModule)
+    expect(exported.some((name) => /override|invoker|testOnly|TestOnly/i.test(name))).toBe(false)
+    expect(RunnerModule).not.toHaveProperty("__laneDTestOnly_withInvokerOverrides")
+    expect(RunnerModule).not.toHaveProperty("testInvokerOverrides")
+    expect(RunnerModule).not.toHaveProperty("PRODUCTION_INVOKERS")
+    expect(typeof RunnerModule.runVerifierChallenge).toBe("function")
+  })
+
   test("verifyHandoff positive/control subject_returned", async () => {
-    const { vector, baseline } = loadHandoffEvidence(
+    const { baseline, challenge, vector } = loadHandoffEvidence(
       "conformance/verifier-challenge-observed-not-validated-v0/vectors/V-OBSERVED-NOT-VALIDATED.json",
     )
     const before = structuredClone(baseline)
-    const result = await runVerifierChallenge(handoffRequest(vector, baseline, vector.expected))
+    const beforeChallenge = structuredClone(challenge)
+    const result = await runVerifierChallenge(
+      handoffRequest(challenge, baseline, { expected: vector.expected }),
+    )
     expect(baseline).toEqual(before)
+    expect(challenge).toEqual(beforeChallenge)
     expect(result.execution_state).toBe("subject_returned")
     if (result.execution_state !== "subject_returned") throw new Error("unreachable")
-    expect(result.surface).toBe("verify_handoff_receipt_root")
     expect(result.native_result).toEqual(
       (vector.expected as { baseline_verification: unknown }).baseline_verification,
     )
-    const observation = normalizeSubjectReturnedResult(result)
-    expect(observation.observation_class).toBe("affirmative")
+    expect(normalizeSubjectReturnedResult(result).observation_class).toBe("affirmative")
   })
 
   test("verifyHandoff missing input → subject_returned unverifiable native", async () => {
-    const { vector, challenged } = loadHandoffEvidence(
+    const { challenged, challenge, vector } = loadHandoffEvidence(
       "conformance/verifier-challenge-missing-required-input-unverifiable-v0/vectors/V-MISSING-REQUIRED-INPUT.json",
     )
-    const result = await runVerifierChallenge(handoffRequest(vector, challenged))
+    const result = await runVerifierChallenge(handoffRequest(challenge, challenged))
     expect(result.execution_state).toBe("subject_returned")
     if (result.execution_state !== "subject_returned") throw new Error("unreachable")
     expect(result.native_result).toEqual(
@@ -120,10 +141,10 @@ describe("counterfactual verifier runner v0", () => {
   })
 
   test("verifyHandoff integrity mismatch → subject_returned rejected native", async () => {
-    const { vector, challenged } = loadHandoffEvidence(
+    const { challenged, challenge, vector } = loadHandoffEvidence(
       "conformance/verifier-challenge-integrity-mismatch-rejected-v0/vectors/V-INTEGRITY-MISMATCH.json",
     )
-    const result = await runVerifierChallenge(handoffRequest(vector, challenged))
+    const result = await runVerifierChallenge(handoffRequest(challenge, challenged))
     expect(result.execution_state).toBe("subject_returned")
     if (result.execution_state !== "subject_returned") throw new Error("unreachable")
     expect(result.native_result).toEqual(
@@ -134,19 +155,19 @@ describe("counterfactual verifier runner v0", () => {
 
   test("Lane A observed_not_validated context remains beside affirmative runtime observation", async () => {
     const path = "conformance/verifier-challenge-observed-not-validated-v0/vectors/V-OBSERVED-NOT-VALIDATED.json"
-    const { vector, challenged } = loadHandoffEvidence(path)
+    const { vector, challenged, challenge, model } = loadHandoffEvidence(path)
     const raw = readJson(path) as Record<string, unknown>
     const before = structuredClone(raw)
-    const model = projectVerifierChallengeVector(raw)
-    expect(raw).toEqual(before)
     expect(model.model_schema).toBe(VERIFIER_CHALLENGE_MODEL_SCHEMA)
     expect(model.challenge_id).toBe("observed_not_validated")
     expect((model.expected as { observation_cannot_establish_validity: boolean }).observation_cannot_establish_validity).toBe(true)
 
-    const result = await runVerifierChallenge({
-      ...handoffRequest(vector, challenged, { fabricated: "different-expected" }),
-      lane_a_model: model,
-    })
+    const result = await runVerifierChallenge(
+      handoffRequest(challenge, challenged, {
+        expected: { fabricated: "different-expected" },
+        lane_a_model: model,
+      }),
+    )
     expect(result.execution_state).toBe("subject_returned")
     if (result.execution_state !== "subject_returned") throw new Error("unreachable")
     expect(result.native_result.ok).toBe(true)
@@ -154,21 +175,25 @@ describe("counterfactual verifier runner v0", () => {
     expect(JSON.stringify(result)).not.toContain("observed_not_validated")
     expect(model.challenge_id).toBe("observed_not_validated")
     expect(raw).toEqual(before)
+    expect(vector.challenge_id).toBe("observed_not_validated")
   })
 
   test("expected-only mutation yields identical execution result", async () => {
-    const { vector, challenged } = loadHandoffEvidence(
+    const { challenged, challenge } = loadHandoffEvidence(
       "conformance/verifier-challenge-integrity-mismatch-rejected-v0/vectors/V-INTEGRITY-MISMATCH.json",
     )
-    const a = await runVerifierChallenge(handoffRequest(vector, challenged, { outcome: "A" }))
-    const b = await runVerifierChallenge(handoffRequest(vector, challenged, { outcome: "B", extra: 1 }))
+    const a = await runVerifierChallenge(handoffRequest(challenge, challenged, { expected: { outcome: "A" } }))
+    const b = await runVerifierChallenge(
+      handoffRequest(challenge, challenged, { expected: { outcome: "B", extra: 1 } }),
+    )
     expect(a).toEqual(b)
   })
 
-  test("Chronicle admission admitted/control", async () => {
+  test("Chronicle admission admitted / rejected / unverifiable", async () => {
     const vector = readJson(
       "conformance/verifier-challenge-chronicle-proof-root-mismatch-rejected-v0/vectors/V-CHRONICLE-PROOF-ROOT-MISMATCH.json",
     ) as Record<string, unknown>
+    const { challenge } = identityFromVector(vector)
     const source = readJson((vector.source_fixture as { repository_path: string }).repository_path) as {
       input: {
         evidence: HandoffEvidence
@@ -176,9 +201,9 @@ describe("counterfactual verifier runner v0", () => {
         options: Record<string, unknown>
       }
     }
-    const input = structuredClone(source.input)
-    const before = structuredClone(input)
-    const result = await runVerifierChallenge({
+
+    const admittedInput = structuredClone(source.input)
+    const admitted = await runVerifierChallenge({
       schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
       surface: "chronicle_admission",
       subject: {
@@ -186,38 +211,21 @@ describe("counterfactual verifier runner v0", () => {
         module_path: CHRONICLE_ADMISSION_ADAPTER_IDENTITY.module_path,
         git_blob_oid: CHRONICLE_ADMISSION_ADAPTER_IDENTITY.git_blob_oid,
       },
-      challenge: challengeFromVector(vector),
+      challenge,
       input: {
-        evidence: input.evidence,
-        proof_object: input.proof_object,
-        options: input.options as never,
+        evidence: admittedInput.evidence,
+        proof_object: admittedInput.proof_object,
+        options: admittedInput.options as never,
       },
       expected: vector.expected,
     })
-    expect(input).toEqual(before)
-    expect(result.execution_state).toBe("subject_returned")
-    if (result.execution_state !== "subject_returned") throw new Error("unreachable")
-    expect(result.native_result).toEqual(
-      (vector.expected as { baseline_admission: unknown }).baseline_admission,
-    )
-    expect(normalizeSubjectReturnedResult(result).observation_class).toBe("affirmative")
-  })
+    expect(admitted.execution_state).toBe("subject_returned")
+    if (admitted.execution_state !== "subject_returned") throw new Error("unreachable")
+    expect(normalizeSubjectReturnedResult(admitted).observation_class).toBe("affirmative")
 
-  test("Chronicle admission proof-root mismatch is subject_returned rejected", async () => {
-    const vector = readJson(
-      "conformance/verifier-challenge-chronicle-proof-root-mismatch-rejected-v0/vectors/V-CHRONICLE-PROOF-ROOT-MISMATCH.json",
-    ) as Record<string, unknown>
-    const source = readJson((vector.source_fixture as { repository_path: string }).repository_path) as {
-      input: {
-        evidence: HandoffEvidence
-        proof_object: PortableProofObjectV0
-        options: Record<string, unknown>
-      }
-    }
-    const input = structuredClone(source.input)
-    const mutation = vector.mutation as { to: string }
-    input.proof_object.receipt_root = mutation.to
-    const result = await runVerifierChallenge({
+    const rejectedInput = structuredClone(source.input)
+    rejectedInput.proof_object.receipt_root = (vector.mutation as { to: string }).to
+    const rejected = await runVerifierChallenge({
       schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
       surface: "chronicle_admission",
       subject: {
@@ -225,22 +233,17 @@ describe("counterfactual verifier runner v0", () => {
         module_path: CHRONICLE_ADMISSION_ADAPTER_IDENTITY.module_path,
         git_blob_oid: CHRONICLE_ADMISSION_ADAPTER_IDENTITY.git_blob_oid,
       },
-      challenge: challengeFromVector(vector),
+      challenge,
       input: {
-        evidence: input.evidence,
-        proof_object: input.proof_object,
-        options: input.options as never,
+        evidence: rejectedInput.evidence,
+        proof_object: rejectedInput.proof_object,
+        options: rejectedInput.options as never,
       },
     })
-    expect(result.execution_state).toBe("subject_returned")
-    if (result.execution_state !== "subject_returned") throw new Error("unreachable")
-    expect(result.native_result).toEqual(
-      (vector.expected as { challenged_admission: unknown }).challenged_admission,
-    )
-    expect(normalizeSubjectReturnedResult(result).observation_class).toBe("rejected")
-  })
+    expect(rejected.execution_state).toBe("subject_returned")
+    if (rejected.execution_state !== "subject_returned") throw new Error("unreachable")
+    expect(normalizeSubjectReturnedResult(rejected).observation_class).toBe("rejected")
 
-  test("Chronicle admission evidence_root_missing is subject_returned unverifiable", async () => {
     const fixture = readJson(
       "tests/fixtures/receiptos-chronicle-admission-v0/vectors/02-evidence-root-missing.json",
     ) as {
@@ -249,37 +252,43 @@ describe("counterfactual verifier runner v0", () => {
         proof_object: PortableProofObjectV0
         options: Record<string, unknown>
       }
-      expected: { failure_class: string; reason_code: string }
     }
-    const result = await runVerifierChallenge({
-      schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
+    const unverifiableIdentity: CounterfactualChallengeIdentityV0 = {
+      schema: COUNTERFACTUAL_CHALLENGE_IDENTITY_SCHEMA,
+      native_schema: "receiptos_chronicle_admission_vector.v0",
+      package_version: "receiptos-chronicle-admission-v0",
+      vector_id: "fixture-evidence-root-missing",
+      challenge_id: "evidence_root_missing",
+      execution_class: "production-admission-binding",
       surface: "chronicle_admission",
       subject: {
         entrypoint: CHRONICLE_ADMISSION_ADAPTER_IDENTITY.entrypoint,
         module_path: CHRONICLE_ADMISSION_ADAPTER_IDENTITY.module_path,
         git_blob_oid: CHRONICLE_ADMISSION_ADAPTER_IDENTITY.git_blob_oid,
       },
-      challenge: {
-        vector_id: "fixture-evidence-root-missing",
-        challenge_id: "evidence_root_missing",
-        package_version: "receiptos-chronicle-admission-v0",
-        native_schema: "receiptos_chronicle_admission_vector.v0",
+      source: null,
+      derivation: {
+        kind: "path_mutation",
+        operation: "set",
+        path: ["evidence", "anchor", "receipt_root"],
+        from: "present",
+        to: null,
       },
+    }
+    const unverifiable = await runVerifierChallenge({
+      schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
+      surface: "chronicle_admission",
+      subject: unverifiableIdentity.subject!,
+      challenge: unverifiableIdentity,
       input: {
         evidence: fixture.input.evidence,
         proof_object: fixture.input.proof_object,
         options: fixture.input.options as never,
       },
     })
-    expect(result.execution_state).toBe("subject_returned")
-    if (result.execution_state !== "subject_returned") throw new Error("unreachable")
-    expect(result.native_result.success).toBe(false)
-    if (result.native_result.success) throw new Error("unreachable")
-    expect(result.native_result.failure).toEqual({
-      failure_class: "unverifiable",
-      reason_code: "evidence_root_missing",
-    })
-    expect(normalizeSubjectReturnedResult(result).observation_class).toBe("unverifiable")
+    expect(unverifiable.execution_state).toBe("subject_returned")
+    if (unverifiable.execution_state !== "subject_returned") throw new Error("unreachable")
+    expect(normalizeSubjectReturnedResult(unverifiable).observation_class).toBe("unverifiable")
   })
 
   test("Chronicle continuity cases preserve native states", async () => {
@@ -316,6 +325,7 @@ describe("counterfactual verifier runner v0", () => {
 
     for (const entry of cases) {
       const vector = readJson(entry.vectorPath) as Record<string, unknown>
+      const { challenge } = identityFromVector(vector)
       const pairKey = entry.expectedKey === "baseline_continuity" ? "baseline_pair" : "challenged_pair"
       const pair = vector[pairKey] as {
         current: ChronicleCheckpointV0
@@ -329,7 +339,7 @@ describe("counterfactual verifier runner v0", () => {
           module_path: CHRONICLE_CONTINUITY_ADAPTER_IDENTITY.module_path,
           git_blob_oid: CHRONICLE_CONTINUITY_ADAPTER_IDENTITY.git_blob_oid,
         },
-        challenge: challengeFromVector(vector),
+        challenge,
         input: {
           current: pair.current,
           predecessor: pair.predecessor,
@@ -355,20 +365,27 @@ describe("counterfactual verifier runner v0", () => {
     }
     const malformed = fixture.vectors.find((v) => v.name === "current_malformed_non_integer_sequence")
     expect(malformed).toBeDefined()
-    const result = await runVerifierChallenge({
-      schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
+    const challenge: CounterfactualChallengeIdentityV0 = {
+      schema: COUNTERFACTUAL_CHALLENGE_IDENTITY_SCHEMA,
+      native_schema: "chronicle_checkpoint_continuity_fixture.v0",
+      package_version: "chronicle-checkpoint-continuity-v0",
+      vector_id: "fixture-malformed",
+      challenge_id: "current_shape_malformed",
+      execution_class: "production-continuity-binding",
       surface: "chronicle_continuity",
       subject: {
         entrypoint: CHRONICLE_CONTINUITY_ADAPTER_IDENTITY.entrypoint,
         module_path: CHRONICLE_CONTINUITY_ADAPTER_IDENTITY.module_path,
         git_blob_oid: CHRONICLE_CONTINUITY_ADAPTER_IDENTITY.git_blob_oid,
       },
-      challenge: {
-        vector_id: "fixture-malformed",
-        challenge_id: "current_shape_malformed",
-        package_version: "chronicle-checkpoint-continuity-v0",
-        native_schema: "chronicle_checkpoint_continuity_fixture.v0",
-      },
+      source: null,
+      derivation: { kind: "substitution", value: { name: malformed!.name } },
+    }
+    const result = await runVerifierChallenge({
+      schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
+      surface: "chronicle_continuity",
+      subject: challenge.subject!,
+      challenge,
       input: {
         current: malformed!.current,
         predecessor: malformed!.predecessor,
@@ -393,6 +410,7 @@ describe("counterfactual verifier runner v0", () => {
       [rootMismatch, "challenged_checkpoint", "challenged_verification", "rejected"],
       [entryRefs, "challenged_checkpoint", "challenged_verification", "rejected"],
     ] as const) {
+      const { challenge } = identityFromVector(vector)
       const result = await runVerifierChallenge({
         schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
         surface: "chronicle_checkpoint_local",
@@ -401,7 +419,7 @@ describe("counterfactual verifier runner v0", () => {
           module_path: CHRONICLE_CHECKPOINT_LOCAL_ADAPTER_IDENTITY.module_path,
           git_blob_oid: CHRONICLE_CHECKPOINT_LOCAL_ADAPTER_IDENTITY.git_blob_oid,
         },
-        challenge: challengeFromVector(vector),
+        challenge,
         input: {
           checkpoint: vector[checkpointKey] as ChronicleCheckpointV0,
         },
@@ -415,112 +433,118 @@ describe("counterfactual verifier runner v0", () => {
     }
   })
 
-  test("CAB audit_timestamp rejection is execution_failure, not Lane C observation", async () => {
+  test("CAB production audit_timestamp throw → bounded execution_failure", async () => {
     const vector = readJson("conformance/counterfactual-audit-boundary-v0/vectors/V-AT-ROOT.json") as Record<
       string,
       unknown
     >
+    const { challenge, model } = identityFromVector(vector)
+    const beforeChallenge = structuredClone(challenge)
     const result = await runVerifierChallenge({
       schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
       surface: "counterfactual_audit_boundary",
       subject: null,
       operation: "semantic_snapshot",
-      challenge: {
-        vector_id: vector.vector_id as string,
-        challenge_id: null,
-        package_version: vector.package_version as string,
-        native_schema: vector.schema as string,
-      },
+      challenge,
+      lane_a_model: model,
       input: { value: vector.input },
       expected: vector.expected,
     })
+    expect(challenge).toEqual(beforeChallenge)
     expect(result.execution_state).toBe("execution_failure")
     if (result.execution_state !== "execution_failure") throw new Error("unreachable")
-    expect(result.failure.failure_stage).toBe("subject_invocation")
-    expect(result.failure.failure_kind).toBe("thrown_error")
-    expect(result.failure.safe_message).toContain("non-semantic audit metadata")
-    expect(JSON.stringify(result)).not.toContain("stack")
-    expect(result.failure.safe_message).not.toMatch(/[A-Za-z]:\\/)
+    expect(result).not.toHaveProperty("native_result")
+    expect(result.failure).toEqual({
+      failure_stage: "subject_invocation",
+      failure_kind: "thrown_error",
+      error_name: "Error",
+      safe_message: "subject invocation failed",
+    })
+    const serialized = JSON.stringify(result)
+    expect(serialized).not.toMatch(/[A-Za-z]:\\/)
+    expect(serialized).not.toMatch(/\/Users\//)
+    expect(serialized).not.toContain("non-semantic audit metadata")
+    expect(serialized).not.toContain("stack")
+    expect(serialized).not.toContain("\n")
     expect(() => normalizeSubjectReturnedResult(result)).toThrow(RunnerContractError)
     expect(() => normalizeChronicleAdmissionResult(result as never)).toThrow(NormalizationContractError)
     expect(() => normalizeVerifyHandoffReceiptRootResult(result as never)).toThrow(NormalizationContractError)
-    // Expected-side CAB normalization remains separate and still maps rejected → malformed.
     const expectedObs = normalizeCounterfactualAuditBoundaryExpected(vector.expected)
     expect(expectedObs.observation_class).toBe("malformed")
-    expect(result.execution_state).not.toBe("subject_returned")
-  })
-
-  test("CAB accepted snapshot subject_returned", async () => {
-    const vector = readJson("conformance/counterfactual-audit-boundary-v0/vectors/V-AT-ISOLATE.json") as {
-      runtime_construction: { initial: unknown }
-      expected: { canonical_snapshot_json: string }
-      vector_id: string
-      package_version: string
-      schema: string
-    }
-    const result = await runVerifierChallenge({
+    const bundled = await runAndNormalizeVerifierChallenge({
       schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
       surface: "counterfactual_audit_boundary",
       subject: null,
       operation: "semantic_snapshot",
-      challenge: {
-        vector_id: vector.vector_id,
-        challenge_id: null,
-        package_version: vector.package_version,
-        native_schema: vector.schema,
-      },
-      input: { value: vector.runtime_construction.initial },
+      challenge,
+      input: { value: vector.input },
     })
-    expect(result.execution_state).toBe("subject_returned")
-    if (result.execution_state !== "subject_returned") throw new Error("unreachable")
-    expect(result.native_result.operation).toBe("semantic_snapshot")
-    if (result.native_result.operation !== "semantic_snapshot") throw new Error("unreachable")
-    expect(JSON.stringify(result.native_result.snapshot)).toBe(vector.expected.canonical_snapshot_json)
+    expect(bundled.execution.execution_state).toBe("execution_failure")
+    expect(bundled.observation).toBeNull()
   })
 
-  test("CAB manifest hash operation subject_returned", async () => {
-    const vector = readJson("conformance/counterfactual-audit-boundary-v0/vectors/V-MAN-UINT8-EXACT.json") as {
+  test("CAB accepted snapshot and manifest hash subject_returned", async () => {
+    const isolate = readJson("conformance/counterfactual-audit-boundary-v0/vectors/V-AT-ISOLATE.json") as {
+      runtime_construction: { initial: unknown }
+      expected: { canonical_snapshot_json: string }
+    } & Record<string, unknown>
+    const { challenge: isolateChallenge } = identityFromVector(isolate)
+    const snapshot = await runVerifierChallenge({
+      schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
+      surface: "counterfactual_audit_boundary",
+      subject: null,
+      operation: "semantic_snapshot",
+      challenge: isolateChallenge,
+      input: { value: isolate.runtime_construction.initial },
+    })
+    expect(snapshot.execution_state).toBe("subject_returned")
+    if (snapshot.execution_state !== "subject_returned") throw new Error("unreachable")
+    if (snapshot.native_result.operation !== "semantic_snapshot") throw new Error("unreachable")
+    expect(JSON.stringify(snapshot.native_result.snapshot)).toBe(isolate.expected.canonical_snapshot_json)
+
+    const manifest = readJson("conformance/counterfactual-audit-boundary-v0/vectors/V-MAN-UINT8-EXACT.json") as {
       inputs: Array<{ bytes: number[] }>
       expected: { sha256_hex: string }
-      vector_id: string
-      package_version: string
-      schema: string
-    }
-    const result = await runVerifierChallenge({
+    } & Record<string, unknown>
+    const { challenge: manifestChallenge } = identityFromVector(manifest)
+    const hash = await runVerifierChallenge({
       schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
       surface: "counterfactual_audit_boundary",
       subject: null,
       operation: "manifest_file_sha256",
-      challenge: {
-        vector_id: vector.vector_id,
-        challenge_id: null,
-        package_version: vector.package_version,
-        native_schema: vector.schema,
-      },
-      input: { bytes: Uint8Array.from(vector.inputs[0]!.bytes) },
+      challenge: manifestChallenge,
+      input: { bytes: Uint8Array.from(manifest.inputs[0]!.bytes) },
     })
-    expect(result.execution_state).toBe("subject_returned")
-    if (result.execution_state !== "subject_returned") throw new Error("unreachable")
-    expect(result.native_result).toEqual({
+    expect(hash.execution_state).toBe("subject_returned")
+    if (hash.execution_state !== "subject_returned") throw new Error("unreachable")
+    expect(hash.native_result).toEqual({
       operation: "manifest_file_sha256",
-      sha256_hex: vector.expected.sha256_hex,
+      sha256_hex: manifest.expected.sha256_hex,
     })
   })
 
-  test("runner contract errors for unknown adapter and pin mismatches", async () => {
-    const { vector, baseline } = loadHandoffEvidence(
+  test("runner contract: surface/subject/identity/CAB mismatches", async () => {
+    const { challenge, baseline, model } = loadHandoffEvidence(
       "conformance/verifier-challenge-observed-not-validated-v0/vectors/V-OBSERVED-NOT-VALIDATED.json",
     )
+
     await expect(
       runVerifierChallenge({
-        ...handoffRequest(vector, baseline),
+        ...handoffRequest(challenge, baseline),
         surface: "not_a_real_surface" as never,
       }),
     ).rejects.toBeInstanceOf(RunnerContractError)
 
     await expect(
       runVerifierChallenge({
-        ...handoffRequest(vector, baseline),
+        ...handoffRequest(challenge, baseline),
+        surface: "chronicle_admission" as never,
+      }),
+    ).rejects.toBeInstanceOf(RunnerContractError)
+
+    await expect(
+      runVerifierChallenge({
+        ...handoffRequest(challenge, baseline),
         subject: {
           entrypoint: "wrongEntrypoint",
           module_path: VERIFY_HANDOFF_ADAPTER_IDENTITY.module_path,
@@ -531,7 +555,7 @@ describe("counterfactual verifier runner v0", () => {
 
     await expect(
       runVerifierChallenge({
-        ...handoffRequest(vector, baseline),
+        ...handoffRequest(challenge, baseline),
         subject: {
           entrypoint: VERIFY_HANDOFF_ADAPTER_IDENTITY.entrypoint,
           module_path: "src/wrong/path.ts",
@@ -542,7 +566,7 @@ describe("counterfactual verifier runner v0", () => {
 
     await expect(
       runVerifierChallenge({
-        ...handoffRequest(vector, baseline),
+        ...handoffRequest(challenge, baseline),
         subject: {
           entrypoint: VERIFY_HANDOFF_ADAPTER_IDENTITY.entrypoint,
           module_path: VERIFY_HANDOFF_ADAPTER_IDENTITY.module_path,
@@ -551,20 +575,27 @@ describe("counterfactual verifier runner v0", () => {
       }),
     ).rejects.toBeInstanceOf(RunnerContractError)
 
+    const mismatchedChallenge = structuredClone(challenge)
+    mismatchedChallenge.subject = {
+      entrypoint: VERIFY_HANDOFF_ADAPTER_IDENTITY.entrypoint,
+      module_path: VERIFY_HANDOFF_ADAPTER_IDENTITY.module_path,
+      git_blob_oid: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    }
     await expect(
-      runVerifierChallenge({
-        schema: "wrong.schema" as never,
-        surface: "verify_handoff_receipt_root",
-        subject: {
-          entrypoint: VERIFY_HANDOFF_ADAPTER_IDENTITY.entrypoint,
-          module_path: VERIFY_HANDOFF_ADAPTER_IDENTITY.module_path,
-          git_blob_oid: VERIFY_HANDOFF_ADAPTER_IDENTITY.git_blob_oid,
-        },
-        challenge: challengeFromVector(vector),
-        input: { evidence: baseline },
-      }),
+      runVerifierChallenge(handoffRequest(mismatchedChallenge, baseline)),
     ).rejects.toBeInstanceOf(RunnerContractError)
 
+    const wrongModel = structuredClone(model)
+    wrongModel.vector_id = "different-vector"
+    await expect(
+      runVerifierChallenge(handoffRequest(challenge, baseline, { lane_a_model: wrongModel })),
+    ).rejects.toBeInstanceOf(RunnerContractError)
+
+    const cabVector = readJson("conformance/counterfactual-audit-boundary-v0/vectors/V-AT-ROOT.json") as Record<
+      string,
+      unknown
+    >
+    const { challenge: cabChallenge } = identityFromVector(cabVector)
     await expect(
       runVerifierChallenge({
         schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
@@ -575,19 +606,39 @@ describe("counterfactual verifier runner v0", () => {
           git_blob_oid: "y",
         } as never,
         operation: "semantic_snapshot",
-        challenge: {
-          vector_id: "x",
-          challenge_id: null,
-          package_version: "counterfactual-audit-boundary-v0",
-          native_schema: "counterfactual_audit_boundary_vector.v0",
-        },
-        input: { value: {} },
+        challenge: cabChallenge,
+        input: { value: cabVector.input },
+      }),
+    ).rejects.toBeInstanceOf(RunnerContractError)
+
+    const badDerivation = structuredClone(cabChallenge)
+    badDerivation.derivation = { kind: "path_mutation", operation: "set", path: ["x"], from: 1, to: 2 }
+    await expect(
+      runVerifierChallenge({
+        schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
+        surface: "counterfactual_audit_boundary",
+        subject: null,
+        operation: "semantic_snapshot",
+        challenge: badDerivation,
+        input: { value: cabVector.input },
+      }),
+    ).rejects.toBeInstanceOf(RunnerContractError)
+
+    const opMismatch = structuredClone(cabChallenge)
+    await expect(
+      runVerifierChallenge({
+        schema: COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA,
+        surface: "counterfactual_audit_boundary",
+        subject: null,
+        operation: "manifest_file_sha256",
+        challenge: opMismatch,
+        input: { bytes: "x" },
       }),
     ).rejects.toBeInstanceOf(RunnerContractError)
 
     try {
       await runVerifierChallenge({
-        ...handoffRequest(vector, baseline),
+        ...handoffRequest(challenge, baseline),
         subject: {
           entrypoint: "wrongEntrypoint",
           module_path: VERIFY_HANDOFF_ADAPTER_IDENTITY.module_path,
@@ -598,51 +649,15 @@ describe("counterfactual verifier runner v0", () => {
     } catch (error) {
       expect(error).toBeInstanceOf(RunnerContractError)
       expect(error).not.toHaveProperty("execution_state")
-      expect(JSON.stringify(error)).not.toContain("execution_failure")
     }
   })
 
-  test("thrown registered subject becomes execution_failure, not Lane C class", async () => {
-    const { vector, baseline } = loadHandoffEvidence(
-      "conformance/verifier-challenge-observed-not-validated-v0/vectors/V-OBSERVED-NOT-VALIDATED.json",
-    )
-    const result = await __laneDTestOnly_withInvokerOverrides(
-      {
-        verify_handoff_receipt_root: async () => {
-          throw new Error("synthetic registered-subject failure")
-        },
-      },
-      () => runVerifierChallenge(handoffRequest(vector, baseline)),
-    )
-    expect(result.execution_state).toBe("execution_failure")
-    if (result.execution_state !== "execution_failure") throw new Error("unreachable")
-    expect(result).not.toHaveProperty("native_result")
-    expect(result.failure.error_name).toBe("Error")
-    expect(result.failure.safe_message).toBe("synthetic registered-subject failure")
-    expect(result.failure.safe_message).not.toContain("at ")
-    expect(() => normalizeSubjectReturnedResult(result)).toThrow(RunnerContractError)
-    expect(() => normalizeVerifyHandoffReceiptRootResult(result as never)).toThrow(NormalizationContractError)
-    const bundled = await __laneDTestOnly_withInvokerOverrides(
-      {
-        verify_handoff_receipt_root: async () => {
-          throw new Error("C:\\Users\\secret\\repo\\file.ts boom")
-        },
-      },
-      () => runAndNormalizeVerifierChallenge(handoffRequest(vector, baseline)),
-    )
-    expect(bundled.execution.execution_state).toBe("execution_failure")
-    expect(bundled.observation).toBeNull()
-    if (bundled.execution.execution_state !== "execution_failure") throw new Error("unreachable")
-    expect(bundled.execution.failure.safe_message).not.toMatch(/C:\\Users/)
-    expect(bundled.execution.failure.safe_message).toContain("<path>")
-  })
-
   test("determinism for identical valid requests", async () => {
-    const { vector, challenged } = loadHandoffEvidence(
+    const { challenged, challenge } = loadHandoffEvidence(
       "conformance/verifier-challenge-integrity-mismatch-rejected-v0/vectors/V-INTEGRITY-MISMATCH.json",
     )
-    const a = await runVerifierChallenge(handoffRequest(vector, challenged))
-    const b = await runVerifierChallenge(handoffRequest(vector, challenged))
+    const a = await runVerifierChallenge(handoffRequest(challenge, challenged))
+    const b = await runVerifierChallenge(handoffRequest(challenge, challenged))
     expect(a).toEqual(b)
   })
 

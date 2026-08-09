@@ -5,12 +5,11 @@
  * frozen verifier-challenge surfaces. Returns either a native subject result
  * or a separate execution_failure.
  *
- * Does not:
- * - compare expected vs actual
- * - decide conformance
- * - normalize host/runtime failure into Lane C observation classes
- * - generate counterfactual neighbors
- * - dynamically load arbitrary modules/functions
+ * Production boundary:
+ * - immutable closed adapter registry (no caller-supplied invoker overrides)
+ * - request bound to canonical Lane A/B challenge identity
+ * - expected outcomes never consulted for dispatch
+ * - execution_failure diagnostics are bounded and host-string-safe
  */
 
 import type { HandoffEvidence, HandoffReceiptVerification } from "../schema/types"
@@ -39,6 +38,12 @@ import type {
   VerifierChallengeVectorModelV0,
 } from "./verifier-challenge-model"
 import {
+  COUNTERFACTUAL_CHALLENGE_IDENTITY_SCHEMA,
+  canonicalIdentityJson,
+  projectCounterfactualChallengeIdentity,
+  type CounterfactualChallengeIdentityV0,
+} from "./counterfactual-neighborhood"
+import {
   normalizeChronicleAdmissionResult,
   normalizeChronicleCheckpointLocalResult,
   normalizeChronicleContinuityResult,
@@ -52,63 +57,54 @@ export type CounterfactualVerifierRunnerSchema = typeof COUNTERFACTUAL_VERIFIER_
 
 // --- Registered adapter identities (finite, production-closed) ----------------
 
-export const VERIFY_HANDOFF_ADAPTER_IDENTITY = {
+export const VERIFY_HANDOFF_ADAPTER_IDENTITY = Object.freeze({
   surface: "verify_handoff_receipt_root",
   entrypoint: "verifyHandoffReceiptRoot",
   module_path: "src/receiptos/verify/verify-receipt.ts",
   git_blob_oid: "2e2e45bf30529de93eac58a04465f17ef81edeaa",
-} as const satisfies SubjectEntrypointIdentity & { surface: ChallengeSurfaceKind }
+} as const satisfies SubjectEntrypointIdentity & { surface: ChallengeSurfaceKind })
 
-export const CHRONICLE_ADMISSION_ADAPTER_IDENTITY = {
+export const CHRONICLE_ADMISSION_ADAPTER_IDENTITY = Object.freeze({
   surface: "chronicle_admission",
   entrypoint: "tryCreateChronicleEntryV0",
   module_path: "src/receiptos/capsule/chronicle-portfolio-v0.ts",
   git_blob_oid: "0e790911092546c62344f980e6b611542bcd00fe",
-} as const satisfies SubjectEntrypointIdentity & { surface: ChallengeSurfaceKind }
+} as const satisfies SubjectEntrypointIdentity & { surface: ChallengeSurfaceKind })
 
-export const CHRONICLE_CONTINUITY_ADAPTER_IDENTITY = {
+export const CHRONICLE_CONTINUITY_ADAPTER_IDENTITY = Object.freeze({
   surface: "chronicle_continuity",
   entrypoint: "evaluateChronicleCheckpointContinuityV0",
   module_path: "src/receiptos/capsule/chronicle-checkpoint-continuity-v0.ts",
   git_blob_oid: "428923f10aac54bfaaebedfad494118cbb17d744",
-} as const satisfies SubjectEntrypointIdentity & { surface: ChallengeSurfaceKind }
+} as const satisfies SubjectEntrypointIdentity & { surface: ChallengeSurfaceKind })
 
-export const CHRONICLE_CHECKPOINT_LOCAL_ADAPTER_IDENTITY = {
+export const CHRONICLE_CHECKPOINT_LOCAL_ADAPTER_IDENTITY = Object.freeze({
   surface: "chronicle_checkpoint_local",
   entrypoint: "verifyChronicleCheckpointV0",
   module_path: "src/receiptos/capsule/chronicle-portfolio-v0.ts",
   git_blob_oid: "0e790911092546c62344f980e6b611542bcd00fe",
-} as const satisfies SubjectEntrypointIdentity & { surface: ChallengeSurfaceKind }
+} as const satisfies SubjectEntrypointIdentity & { surface: ChallengeSurfaceKind })
 
-export const CAB_ADAPTER_OPERATIONS = ["semantic_snapshot", "manifest_file_sha256"] as const
+export const CAB_ADAPTER_OPERATIONS = Object.freeze(["semantic_snapshot", "manifest_file_sha256"] as const)
 export type CabAdapterOperationV0 = (typeof CAB_ADAPTER_OPERATIONS)[number]
 
-export const CAB_ADAPTER_IDENTITY = {
+export const CAB_ADAPTER_IDENTITY = Object.freeze({
   surface: "counterfactual_audit_boundary",
   subject: null,
   challenge_id: null,
   module_path: "src/receiptos/challenge/counterfactual-audit-boundary.ts",
   operations: CAB_ADAPTER_OPERATIONS,
-} as const
-
-/** Bounded challenge identity carried for continuity; ignored by execution branching. */
-export type VerifierChallengeIdentityProjectionV0 = {
-  readonly vector_id: string
-  readonly challenge_id: string | null
-  readonly package_version: string
-  readonly native_schema: string
-}
+} as const)
 
 type ChallengeCarrier = {
-  readonly challenge: VerifierChallengeIdentityProjectionV0
+  /** Canonical Lane B challenge identity (identity-significant fields only). */
+  readonly challenge: CounterfactualChallengeIdentityV0
   /**
-   * Optional Lane A model for caller identity continuity.
-   * Execution never reads expected / field_classification / derivation.
+   * Optional Lane A model. If present, its Lane B projection must equal
+   * `challenge` exactly. Expected/native fields are never read for dispatch.
    */
   readonly lane_a_model?: VerifierChallengeVectorModelV0
-  /**
-   * Optional expected payload. Execution must ignore it completely.
-   */
+  /** Optional expected payload. Execution must ignore it completely. */
   readonly expected?: unknown
 }
 
@@ -225,14 +221,22 @@ export type SubjectReturnedResultV0 =
 
 export type ExecutionFailureKindV0 = "thrown_error" | "non_error_throw"
 
+export type BoundedExecutionErrorNameV0 =
+  | "Error"
+  | "TypeError"
+  | "RangeError"
+  | "SyntaxError"
+  | "ReferenceError"
+  | "NonErrorThrow"
+
 export type ExecutionFailureV0 = {
   readonly execution_state: "execution_failure"
   readonly surface: ChallengeSurfaceKind
   readonly failure: {
     readonly failure_stage: "subject_invocation"
     readonly failure_kind: ExecutionFailureKindV0
-    readonly error_name: string
-    readonly safe_message: string
+    readonly error_name: BoundedExecutionErrorNameV0
+    readonly safe_message: "subject invocation failed" | "subject produced a non-error throw"
   }
 }
 
@@ -261,7 +265,16 @@ function requireString(object: Record<string, unknown>, key: string, label: stri
   return value
 }
 
-function subjectMatches(
+function subjectsEqual(a: SubjectEntrypointIdentity | null, b: SubjectEntrypointIdentity | null): boolean {
+  if (a === null || b === null) return a === b
+  return (
+    a.entrypoint === b.entrypoint &&
+    a.module_path === b.module_path &&
+    a.git_blob_oid === b.git_blob_oid
+  )
+}
+
+function subjectMatchesRegistered(
   declared: SubjectEntrypointIdentity,
   registered: SubjectEntrypointIdentity,
   surface: string,
@@ -277,48 +290,190 @@ function subjectMatches(
   }
 }
 
-function validateChallengeIdentity(challenge: unknown): VerifierChallengeIdentityProjectionV0 {
-  const object = asObject(challenge, "challenge")
+function parseSubject(value: unknown, label: string): SubjectEntrypointIdentity | null {
+  if (value === null) return null
+  const object = asObject(value, label)
   return {
-    vector_id: requireString(object, "vector_id", "challenge"),
-    challenge_id:
-      object.challenge_id === null
-        ? null
-        : requireString(object, "challenge_id", "challenge"),
-    package_version: requireString(object, "package_version", "challenge"),
-    native_schema: requireString(object, "native_schema", "challenge"),
+    entrypoint: requireString(object, "entrypoint", label),
+    module_path: requireString(object, "module_path", label),
+    git_blob_oid: requireString(object, "git_blob_oid", label),
   }
 }
 
-function validateEnvelope(request: unknown): Record<string, unknown> {
+function parseSource(value: unknown): CounterfactualChallengeIdentityV0["source"] {
+  if (value === null) return null
+  const object = asObject(value, "challenge.source")
+  return {
+    repository_path: requireString(object, "repository_path", "challenge.source"),
+    git_blob_oid: requireString(object, "git_blob_oid", "challenge.source"),
+  }
+}
+
+function parseDerivation(value: unknown): CounterfactualChallengeIdentityV0["derivation"] {
+  const object = asObject(value, "challenge.derivation")
+  const kind = requireString(object, "kind", "challenge.derivation")
+  if (kind === "path_mutation") {
+    const path = object.path
+    if (!Array.isArray(path) || path.some((segment) => typeof segment !== "string")) {
+      throw new RunnerContractError("challenge.derivation.path must be string[]")
+    }
+    if (!Object.prototype.hasOwnProperty.call(object, "from") || !Object.prototype.hasOwnProperty.call(object, "to")) {
+      throw new RunnerContractError("challenge.derivation path_mutation requires from/to")
+    }
+    return {
+      kind: "path_mutation",
+      operation: requireString(object, "operation", "challenge.derivation"),
+      path: path.slice() as string[],
+      from: structuredClone(object.from),
+      to: structuredClone(object.to),
+    }
+  }
+  if (kind === "substitution") {
+    if (!("value" in object)) {
+      throw new RunnerContractError("challenge.derivation substitution requires value")
+    }
+    return { kind: "substitution", value: structuredClone(object.value) }
+  }
+  if (kind === "audit_boundary_operation") {
+    return {
+      kind: "audit_boundary_operation",
+      operation: requireString(object, "operation", "challenge.derivation"),
+    }
+  }
+  throw new RunnerContractError(`unsupported challenge.derivation.kind: ${kind}`)
+}
+
+function parseChallengeIdentity(value: unknown): CounterfactualChallengeIdentityV0 {
+  const object = asObject(value, "challenge")
+  if (object.schema !== COUNTERFACTUAL_CHALLENGE_IDENTITY_SCHEMA) {
+    throw new RunnerContractError("challenge.schema must be receiptos.counterfactual_challenge_identity.v0")
+  }
+  const surface = requireString(object, "surface", "challenge") as ChallengeSurfaceKind
+  const allowed: ChallengeSurfaceKind[] = [
+    "verify_handoff_receipt_root",
+    "chronicle_admission",
+    "chronicle_continuity",
+    "chronicle_checkpoint_local",
+    "counterfactual_audit_boundary",
+  ]
+  if (!allowed.includes(surface)) {
+    throw new RunnerContractError(`unsupported challenge.surface: ${surface}`)
+  }
+  return {
+    schema: COUNTERFACTUAL_CHALLENGE_IDENTITY_SCHEMA,
+    native_schema: requireString(object, "native_schema", "challenge"),
+    package_version: requireString(object, "package_version", "challenge"),
+    vector_id: requireString(object, "vector_id", "challenge"),
+    challenge_id:
+      object.challenge_id === null ? null : requireString(object, "challenge_id", "challenge"),
+    execution_class: requireString(object, "execution_class", "challenge"),
+    surface,
+    subject: parseSubject(object.subject, "challenge.subject"),
+    source: parseSource(object.source),
+    derivation: parseDerivation(object.derivation),
+  }
+}
+
+function validateLaneAModelConsistency(
+  challenge: CounterfactualChallengeIdentityV0,
+  laneAModel: unknown,
+): void {
+  if (laneAModel === undefined) return
+  if (laneAModel === null || typeof laneAModel !== "object" || Array.isArray(laneAModel)) {
+    throw new RunnerContractError("lane_a_model must be a VerifierChallengeVectorModelV0 object")
+  }
+  let projected: CounterfactualChallengeIdentityV0
+  try {
+    projected = projectCounterfactualChallengeIdentity(laneAModel as VerifierChallengeVectorModelV0)
+  } catch {
+    throw new RunnerContractError("lane_a_model is not a valid Lane A model for identity projection")
+  }
+  if (canonicalIdentityJson(projected) !== canonicalIdentityJson(challenge)) {
+    throw new RunnerContractError("lane_a_model projection does not match challenge identity")
+  }
+}
+
+function validateNonCabBinding(
+  requestSurface: ChallengeSurfaceKind,
+  requestSubject: SubjectEntrypointIdentity,
+  challenge: CounterfactualChallengeIdentityV0,
+  registered: SubjectEntrypointIdentity & { surface: ChallengeSurfaceKind },
+): void {
+  if (challenge.surface !== requestSurface) {
+    throw new RunnerContractError("request.surface does not match challenge.surface")
+  }
+  if (challenge.subject === null) {
+    throw new RunnerContractError(`${requestSurface} requires non-null challenge.subject`)
+  }
+  if (!subjectsEqual(requestSubject, challenge.subject)) {
+    throw new RunnerContractError("request.subject does not match challenge.subject")
+  }
+  if (challenge.surface !== registered.surface) {
+    throw new RunnerContractError("challenge.surface is unsupported by registered adapter")
+  }
+  subjectMatchesRegistered(requestSubject, registered, requestSurface)
+}
+
+function validateCabBinding(
+  request: CabSemanticSnapshotRunRequestV0 | CabManifestHashRunRequestV0,
+  challenge: CounterfactualChallengeIdentityV0,
+): void {
+  if (request.surface !== "counterfactual_audit_boundary") {
+    throw new RunnerContractError("CAB request.surface must be counterfactual_audit_boundary")
+  }
+  if (challenge.surface !== "counterfactual_audit_boundary") {
+    throw new RunnerContractError("request.surface does not match challenge.surface")
+  }
+  if (request.subject !== null) {
+    throw new RunnerContractError("counterfactual_audit_boundary requires subject:null")
+  }
+  if (challenge.subject !== null) {
+    throw new RunnerContractError("counterfactual_audit_boundary requires challenge.subject:null")
+  }
+  if (challenge.challenge_id !== null) {
+    throw new RunnerContractError("counterfactual_audit_boundary requires challenge.challenge_id:null")
+  }
+  if (challenge.derivation.kind !== "audit_boundary_operation") {
+    throw new RunnerContractError("CAB challenge.derivation must be audit_boundary_operation")
+  }
+  if (challenge.derivation.operation !== request.operation) {
+    throw new RunnerContractError("CAB challenge.derivation.operation does not match request.operation")
+  }
+}
+
+function validateEnvelope(request: unknown): {
+  object: Record<string, unknown>
+  challenge: CounterfactualChallengeIdentityV0
+} {
   const object = asObject(request, "VerifierChallengeRunRequestV0")
   if (object.schema !== COUNTERFACTUAL_VERIFIER_RUNNER_SCHEMA) {
     throw new RunnerContractError("unsupported runner request schema")
   }
-  validateChallengeIdentity(object.challenge)
-  return object
-}
-
-function sanitizeSafeMessage(raw: string): string {
-  let message = raw
-  // Strip absolute Windows and POSIX paths.
-  message = message.replace(/[A-Za-z]:\\[^\s"']+/g, "<path>")
-  message = message.replace(/\/(?:Users|home|tmp|var|etc|opt)\/[^\s"']+/g, "<path>")
-  message = message.replace(/\r?\n[\s\S]*$/, "")
-  if (message.length > 240) message = `${message.slice(0, 240)}…`
-  return message
+  const challenge = parseChallengeIdentity(object.challenge)
+  validateLaneAModelConsistency(challenge, object.lane_a_model)
+  return { object, challenge }
 }
 
 function toExecutionFailure(surface: ChallengeSurfaceKind, thrown: unknown): ExecutionFailureV0 {
   if (thrown instanceof Error) {
+    const known: BoundedExecutionErrorNameV0[] = [
+      "Error",
+      "TypeError",
+      "RangeError",
+      "SyntaxError",
+      "ReferenceError",
+    ]
+    const name = known.includes(thrown.name as BoundedExecutionErrorNameV0)
+      ? (thrown.name as BoundedExecutionErrorNameV0)
+      : "Error"
     return {
       execution_state: "execution_failure",
       surface,
       failure: {
         failure_stage: "subject_invocation",
         failure_kind: "thrown_error",
-        error_name: thrown.name || "Error",
-        safe_message: sanitizeSafeMessage(String(thrown.message ?? "")),
+        error_name: name,
+        safe_message: "subject invocation failed",
       },
     }
   }
@@ -328,8 +483,8 @@ function toExecutionFailure(surface: ChallengeSurfaceKind, thrown: unknown): Exe
     failure: {
       failure_stage: "subject_invocation",
       failure_kind: "non_error_throw",
-      error_name: typeof thrown,
-      safe_message: sanitizeSafeMessage(typeof thrown === "string" ? thrown : "non-error throw"),
+      error_name: "NonErrorThrow",
+      safe_message: "subject produced a non-error throw",
     },
   }
 }
@@ -338,74 +493,25 @@ function cloneJson<T>(value: T): T {
   return structuredClone(value)
 }
 
-// --- Production invokers (closed registry) -----------------------------------
+// --- Immutable closed production registry ------------------------------------
 
-type ProductionInvokers = {
-  verify_handoff_receipt_root: (evidence: HandoffEvidence) => Promise<HandoffReceiptVerification>
-  chronicle_admission: (
-    evidence: HandoffEvidence,
-    proofObject: PortableProofObjectV0,
-    options?: ChronicleAdmissionRunRequestV0["input"]["options"],
-  ) => TryCreateChronicleEntryV0Result
-  chronicle_continuity: (
-    current: ChronicleCheckpointV0,
-    predecessor: ChronicleCheckpointV0 | null,
-  ) => ChronicleCheckpointContinuityResultV0
-  chronicle_checkpoint_local: (checkpoint: ChronicleCheckpointV0) => ChronicleCheckpointVerification
-  cab_semantic_snapshot: (value: unknown) => CounterfactualSemanticJson
-  cab_manifest_hash: (bytes: string | Uint8Array) => string
-}
+const PRODUCTION_INVOKERS = Object.freeze({
+  verify_handoff_receipt_root: Object.freeze(verifyHandoffReceiptRoot),
+  chronicle_admission: Object.freeze(tryCreateChronicleEntryV0),
+  chronicle_continuity: Object.freeze(evaluateChronicleCheckpointContinuityV0),
+  chronicle_checkpoint_local: Object.freeze(verifyChronicleCheckpointV0),
+  cab_semantic_snapshot: Object.freeze(snapshotCounterfactualSemanticJson),
+  cab_manifest_hash: Object.freeze(computeCounterfactualManifestFileSha256),
+})
 
-const PRODUCTION_INVOKERS: ProductionInvokers = {
-  verify_handoff_receipt_root: (evidence) => verifyHandoffReceiptRoot(evidence),
-  chronicle_admission: (evidence, proofObject, options) =>
-    tryCreateChronicleEntryV0(evidence, proofObject, options),
-  chronicle_continuity: (current, predecessor) =>
-    evaluateChronicleCheckpointContinuityV0(current, predecessor),
-  chronicle_checkpoint_local: (checkpoint) => verifyChronicleCheckpointV0(checkpoint),
-  cab_semantic_snapshot: (value) => snapshotCounterfactualSemanticJson(value),
-  cab_manifest_hash: (bytes) => computeCounterfactualManifestFileSha256(bytes),
-}
-
-/**
- * Test-only invoker override seam. Not part of the production adapter registry.
- * Overrides cannot register new surfaces — only replace invoke implementations
- * for already-registered production surfaces during a scoped callback.
- */
-let testInvokerOverrides: Partial<ProductionInvokers> | null = null
-
-export function __laneDTestOnly_withInvokerOverrides<T>(
-  overrides: Partial<ProductionInvokers>,
-  run: () => Promise<T> | T,
-): Promise<T> | T {
-  const previous = testInvokerOverrides
-  testInvokerOverrides = { ...(testInvokerOverrides ?? {}), ...overrides }
-  const restore = () => {
-    testInvokerOverrides = previous
-  }
-  try {
-    const result = run()
-    if (result && typeof (result as Promise<T>).then === "function") {
-      return (result as Promise<T>).finally(restore)
-    }
-    restore()
-    return result
-  } catch (error) {
-    restore()
-    throw error
-  }
-}
-
-function invokers(): ProductionInvokers {
-  if (!testInvokerOverrides) return PRODUCTION_INVOKERS
-  return { ...PRODUCTION_INVOKERS, ...testInvokerOverrides }
-}
-
-async function runVerifyHandoff(request: VerifyHandoffRunRequestV0): Promise<VerifierChallengeExecutionResultV0> {
-  subjectMatches(request.subject, VERIFY_HANDOFF_ADAPTER_IDENTITY, request.surface)
+async function runVerifyHandoff(
+  request: VerifyHandoffRunRequestV0,
+  challenge: CounterfactualChallengeIdentityV0,
+): Promise<VerifierChallengeExecutionResultV0> {
+  validateNonCabBinding(request.surface, request.subject, challenge, VERIFY_HANDOFF_ADAPTER_IDENTITY)
   const evidence = cloneJson(request.input.evidence)
   try {
-    const native_result = await invokers().verify_handoff_receipt_root(evidence)
+    const native_result = await PRODUCTION_INVOKERS.verify_handoff_receipt_root(evidence)
     return {
       execution_state: "subject_returned",
       surface: "verify_handoff_receipt_root",
@@ -416,13 +522,16 @@ async function runVerifyHandoff(request: VerifyHandoffRunRequestV0): Promise<Ver
   }
 }
 
-function runChronicleAdmission(request: ChronicleAdmissionRunRequestV0): VerifierChallengeExecutionResultV0 {
-  subjectMatches(request.subject, CHRONICLE_ADMISSION_ADAPTER_IDENTITY, request.surface)
+function runChronicleAdmission(
+  request: ChronicleAdmissionRunRequestV0,
+  challenge: CounterfactualChallengeIdentityV0,
+): VerifierChallengeExecutionResultV0 {
+  validateNonCabBinding(request.surface, request.subject, challenge, CHRONICLE_ADMISSION_ADAPTER_IDENTITY)
   const evidence = cloneJson(request.input.evidence)
   const proofObject = cloneJson(request.input.proof_object)
   const options = request.input.options === undefined ? undefined : cloneJson(request.input.options)
   try {
-    const native_result = invokers().chronicle_admission(evidence, proofObject, options)
+    const native_result = PRODUCTION_INVOKERS.chronicle_admission(evidence, proofObject, options)
     return {
       execution_state: "subject_returned",
       surface: "chronicle_admission",
@@ -433,12 +542,15 @@ function runChronicleAdmission(request: ChronicleAdmissionRunRequestV0): Verifie
   }
 }
 
-function runChronicleContinuity(request: ChronicleContinuityRunRequestV0): VerifierChallengeExecutionResultV0 {
-  subjectMatches(request.subject, CHRONICLE_CONTINUITY_ADAPTER_IDENTITY, request.surface)
+function runChronicleContinuity(
+  request: ChronicleContinuityRunRequestV0,
+  challenge: CounterfactualChallengeIdentityV0,
+): VerifierChallengeExecutionResultV0 {
+  validateNonCabBinding(request.surface, request.subject, challenge, CHRONICLE_CONTINUITY_ADAPTER_IDENTITY)
   const current = cloneJson(request.input.current)
   const predecessor = request.input.predecessor === null ? null : cloneJson(request.input.predecessor)
   try {
-    const native_result = invokers().chronicle_continuity(current, predecessor)
+    const native_result = PRODUCTION_INVOKERS.chronicle_continuity(current, predecessor)
     return {
       execution_state: "subject_returned",
       surface: "chronicle_continuity",
@@ -449,11 +561,19 @@ function runChronicleContinuity(request: ChronicleContinuityRunRequestV0): Verif
   }
 }
 
-function runCheckpointLocal(request: ChronicleCheckpointLocalRunRequestV0): VerifierChallengeExecutionResultV0 {
-  subjectMatches(request.subject, CHRONICLE_CHECKPOINT_LOCAL_ADAPTER_IDENTITY, request.surface)
+function runCheckpointLocal(
+  request: ChronicleCheckpointLocalRunRequestV0,
+  challenge: CounterfactualChallengeIdentityV0,
+): VerifierChallengeExecutionResultV0 {
+  validateNonCabBinding(
+    request.surface,
+    request.subject,
+    challenge,
+    CHRONICLE_CHECKPOINT_LOCAL_ADAPTER_IDENTITY,
+  )
   const checkpoint = cloneJson(request.input.checkpoint)
   try {
-    const native_result = invokers().chronicle_checkpoint_local(checkpoint)
+    const native_result = PRODUCTION_INVOKERS.chronicle_checkpoint_local(checkpoint)
     return {
       execution_state: "subject_returned",
       surface: "chronicle_checkpoint_local",
@@ -464,17 +584,15 @@ function runCheckpointLocal(request: ChronicleCheckpointLocalRunRequestV0): Veri
   }
 }
 
-function runCab(request: CabSemanticSnapshotRunRequestV0 | CabManifestHashRunRequestV0): VerifierChallengeExecutionResultV0 {
-  if (request.subject !== null) {
-    throw new RunnerContractError("counterfactual_audit_boundary requires subject:null")
-  }
-  if (request.challenge.challenge_id !== null) {
-    throw new RunnerContractError("counterfactual_audit_boundary requires challenge.challenge_id:null")
-  }
+function runCab(
+  request: CabSemanticSnapshotRunRequestV0 | CabManifestHashRunRequestV0,
+  challenge: CounterfactualChallengeIdentityV0,
+): VerifierChallengeExecutionResultV0 {
+  validateCabBinding(request, challenge)
   if (request.operation === "semantic_snapshot") {
     const value = cloneJson(request.input.value)
     try {
-      const snapshot = invokers().cab_semantic_snapshot(value)
+      const snapshot = PRODUCTION_INVOKERS.cab_semantic_snapshot(value)
       return {
         execution_state: "subject_returned",
         surface: "counterfactual_audit_boundary",
@@ -487,7 +605,7 @@ function runCab(request: CabSemanticSnapshotRunRequestV0 | CabManifestHashRunReq
   const bytes =
     typeof request.input.bytes === "string" ? request.input.bytes : new Uint8Array(request.input.bytes)
   try {
-    const sha256_hex = invokers().cab_manifest_hash(bytes)
+    const sha256_hex = PRODUCTION_INVOKERS.cab_manifest_hash(bytes)
     return {
       execution_state: "subject_returned",
       surface: "counterfactual_audit_boundary",
@@ -505,7 +623,7 @@ function runCab(request: CabSemanticSnapshotRunRequestV0 | CabManifestHashRunReq
 export async function runVerifierChallenge(
   request: VerifierChallengeRunRequestV0,
 ): Promise<VerifierChallengeExecutionResultV0> {
-  const object = validateEnvelope(request)
+  const { object, challenge } = validateEnvelope(request)
   const surface = object.surface
   if (typeof surface !== "string") {
     throw new RunnerContractError("request.surface must be a string")
@@ -523,7 +641,7 @@ export async function runVerifierChallenge(
       if (!("evidence" in input)) {
         throw new RunnerContractError("verify_handoff_receipt_root input.evidence is required")
       }
-      return runVerifyHandoff(request as VerifyHandoffRunRequestV0)
+      return runVerifyHandoff(request as VerifyHandoffRunRequestV0, challenge)
     }
     case "chronicle_admission": {
       if (!object.subject || typeof object.subject !== "object") {
@@ -533,7 +651,7 @@ export async function runVerifierChallenge(
       if (!("evidence" in input) || !("proof_object" in input)) {
         throw new RunnerContractError("chronicle_admission requires evidence and proof_object")
       }
-      return runChronicleAdmission(request as ChronicleAdmissionRunRequestV0)
+      return runChronicleAdmission(request as ChronicleAdmissionRunRequestV0, challenge)
     }
     case "chronicle_continuity": {
       if (!object.subject || typeof object.subject !== "object") {
@@ -543,7 +661,7 @@ export async function runVerifierChallenge(
       if (!("current" in input) || !("predecessor" in input)) {
         throw new RunnerContractError("chronicle_continuity requires current and predecessor")
       }
-      return runChronicleContinuity(request as ChronicleContinuityRunRequestV0)
+      return runChronicleContinuity(request as ChronicleContinuityRunRequestV0, challenge)
     }
     case "chronicle_checkpoint_local": {
       if (!object.subject || typeof object.subject !== "object") {
@@ -553,7 +671,7 @@ export async function runVerifierChallenge(
       if (!("checkpoint" in input)) {
         throw new RunnerContractError("chronicle_checkpoint_local requires checkpoint")
       }
-      return runCheckpointLocal(request as ChronicleCheckpointLocalRunRequestV0)
+      return runCheckpointLocal(request as ChronicleCheckpointLocalRunRequestV0, challenge)
     }
     case "counterfactual_audit_boundary": {
       if (object.subject !== null) {
@@ -566,7 +684,7 @@ export async function runVerifierChallenge(
       if (!object.input || typeof object.input !== "object") {
         throw new RunnerContractError("counterfactual_audit_boundary requires materialized input")
       }
-      return runCab(request as CabSemanticSnapshotRunRequestV0 | CabManifestHashRunRequestV0)
+      return runCab(request as CabSemanticSnapshotRunRequestV0 | CabManifestHashRunRequestV0, challenge)
     }
     default:
       throw new RunnerContractError(`unknown adapter/surface: ${surface}`)
@@ -618,5 +736,5 @@ export async function runAndNormalizeVerifierChallenge(request: VerifierChalleng
   return { execution, observation: normalizeSubjectReturnedResult(execution) }
 }
 
-// Re-export useful types for callers/tests without implying ChronicleEntry construction.
 export type { ChronicleEntryV0, HandoffReceiptVerification, TryCreateChronicleEntryV0Result }
+export type { CounterfactualChallengeIdentityV0 }
