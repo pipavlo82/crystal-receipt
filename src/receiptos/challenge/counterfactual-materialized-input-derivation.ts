@@ -17,8 +17,9 @@
 import { createHash } from "node:crypto"
 import { execFileSync } from "node:child_process"
 import { readFileSync } from "node:fs"
-import { dirname, isAbsolute, normalize, relative, resolve, sep } from "node:path"
+import { dirname, isAbsolute, relative, resolve, sep } from "node:path"
 import { fileURLToPath } from "node:url"
+import { tryNormalizeFrozenRepositoryRelativePath } from "./frozen-repository-path"
 import {
   PINNED_COUNTERFACTUAL_NEIGHBORHOOD_SHA256_V0,
   PINNED_NEIGHBORHOOD_MEMBER_INVENTORY_V0,
@@ -193,17 +194,8 @@ function assertSafeRelativePath(repositoryPath: string): string {
   if (typeof repositoryPath !== "string" || repositoryPath.length === 0) {
     throw new MaterializedInputDerivationError("unsupported_source_scheme")
   }
-  if (isAbsolute(repositoryPath)) {
-    throw new MaterializedInputDerivationError("source_path_outside_root")
-  }
-  if (repositoryPath.includes("\0")) {
-    throw new MaterializedInputDerivationError("source_path_outside_root")
-  }
-  const normalized = normalize(repositoryPath).replace(/\\/g, "/")
-  if (normalized.startsWith("../") || normalized === ".." || normalized.startsWith("/")) {
-    throw new MaterializedInputDerivationError("source_path_outside_root")
-  }
-  if (normalized.split("/").some((part) => part === "..")) {
+  const normalized = tryNormalizeFrozenRepositoryRelativePath(repositoryPath)
+  if (normalized === null) {
     throw new MaterializedInputDerivationError("source_path_outside_root")
   }
   return normalized

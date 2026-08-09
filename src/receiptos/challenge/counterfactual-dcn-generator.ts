@@ -13,9 +13,10 @@
 import { createHash } from "node:crypto"
 import { execFileSync } from "node:child_process"
 import { mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs"
-import { dirname, isAbsolute, normalize, relative, resolve, sep } from "node:path"
+import { dirname, isAbsolute, relative, resolve, sep } from "node:path"
 import { tmpdir } from "node:os"
 import { fileURLToPath } from "node:url"
+import { tryNormalizeFrozenRepositoryRelativePath } from "./frozen-repository-path"
 import { projectVerifierChallengeVector } from "./verifier-challenge-model"
 import {
   PINNED_COUNTERFACTUAL_NEIGHBORHOOD_SHA256_V0,
@@ -276,14 +277,8 @@ function assertSafeRelativePath(repositoryPath: string): string {
   if (typeof repositoryPath !== "string" || repositoryPath.length === 0) {
     throw new DcnGeneratorError("package_materialization_failure")
   }
-  if (isAbsolute(repositoryPath) || repositoryPath.includes("\0")) {
-    throw new DcnGeneratorError("package_materialization_failure")
-  }
-  const normalized = normalize(repositoryPath).replace(/\\/g, "/")
-  if (normalized.startsWith("../") || normalized === ".." || normalized.startsWith("/")) {
-    throw new DcnGeneratorError("package_materialization_failure")
-  }
-  if (normalized.split("/").some((part) => part === "..")) {
+  const normalized = tryNormalizeFrozenRepositoryRelativePath(repositoryPath)
+  if (normalized === null) {
     throw new DcnGeneratorError("package_materialization_failure")
   }
   return normalized
@@ -330,6 +325,7 @@ function computeGitBlobOidSha1(bytes: Uint8Array): string {
 }
 
 function loadCommittedVectorBytes(repositoryRoot: string, vectorPath: string): Buffer {
+  assertSafeRelativePath(vectorPath)
   const pathOid = gitPathOid(repositoryRoot, vectorPath)
   if (pathOid === null) {
     throw new DcnGeneratorError("vector_load_failure")

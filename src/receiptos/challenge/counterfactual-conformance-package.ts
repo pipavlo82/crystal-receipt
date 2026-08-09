@@ -13,8 +13,9 @@
 
 import { createHash } from "node:crypto"
 import { readFileSync } from "node:fs"
-import { dirname, isAbsolute, normalize, relative, resolve, sep } from "node:path"
+import { dirname, isAbsolute, relative, resolve, sep } from "node:path"
 import { fileURLToPath } from "node:url"
+import { tryNormalizeFrozenRepositoryRelativePath } from "./frozen-repository-path"
 import {
   COUNTERFACTUAL_CONFORMANCE_PACKAGE_ID,
   COUNTERFACTUAL_CONFORMANCE_PACKAGE_PATH,
@@ -97,14 +98,8 @@ function assertSafeRelativePath(repositoryPath: string): string {
   if (typeof repositoryPath !== "string" || repositoryPath.length === 0) {
     throw new CounterfactualConformancePackageError("package_materialization_failure")
   }
-  if (isAbsolute(repositoryPath) || repositoryPath.includes("\0")) {
-    throw new CounterfactualConformancePackageError("package_materialization_failure")
-  }
-  const normalized = normalize(repositoryPath).replace(/\\/g, "/")
-  if (normalized.startsWith("../") || normalized === ".." || normalized.startsWith("/")) {
-    throw new CounterfactualConformancePackageError("package_materialization_failure")
-  }
-  if (normalized.split("/").some((part) => part === "..")) {
+  const normalized = tryNormalizeFrozenRepositoryRelativePath(repositoryPath)
+  if (normalized === null) {
     throw new CounterfactualConformancePackageError("package_materialization_failure")
   }
   return normalized

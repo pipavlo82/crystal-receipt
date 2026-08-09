@@ -27,9 +27,33 @@ import {
   type FrozenCounterfactualNeighborhoodV0,
 } from "../../src/receiptos/challenge/counterfactual-neighborhood"
 import { projectVerifierChallengeVector } from "../../src/receiptos/challenge/verifier-challenge-model"
+import {
+  DcnGeneratorError,
+  generateFrozenCounterfactualNeighborhood,
+  listDcnMemberAuthorities,
+} from "../../src/receiptos/challenge/counterfactual-dcn-generator"
+import { verifyCounterfactualConformancePackage } from "../../src/receiptos/challenge/counterfactual-conformance-package"
+import {
+  isUnsafeFrozenRepositoryPath,
+  tryNormalizeFrozenRepositoryRelativePath,
+} from "../../src/receiptos/challenge/frozen-repository-path"
 
 const root = resolve(import.meta.dir, "../..")
 const LANE_B_SHA256 = "37a213cff7a34e28df165c282f2b9e7460e31fbd37794bf5020c1e91158ed36d"
+const PINNED_OID = "b1be64dbb71898ab5ffa75660f8e07c3250d8be1"
+const SAFE_SOURCE_PATH = "src/receiptos/fixtures/session-evidence.cyphes-workflow.sample.json"
+
+const UNSAFE_FROZEN_PATHS = [
+  "/etc/passwd",
+  "C:/Windows/system.ini",
+  "C:\\Windows\\system.ini",
+  "\\\\server\\share\\file.json",
+  "//server/share/file.json",
+  "\\\\?\\C:\\Windows\\system.ini",
+  "\\\\.\\device",
+  "\\Windows\\system.ini",
+  "C:Windows\\system.ini",
+] as const
 
 function readJson(relativePath: string): unknown {
   return JSON.parse(readFileSync(resolve(root, relativePath), "utf8"))
@@ -178,50 +202,94 @@ describe("counterfactual materialized-input derivation v0 (Lane I)", () => {
     )
   })
 
-  test("source blob / path / traversal failures are closed and pre-execution", () => {
-    try {
-      loadPinnedGitBlobBytes(
-        root,
-        "src/receiptos/fixtures/session-evidence.cyphes-workflow.sample.json",
-        "ffffffffffffffffffffffffffffffffffffffff",
-      )
-      throw new Error("expected blob mismatch")
-    } catch (error) {
-      expect(error).toBeInstanceOf(MaterializedInputDerivationError)
-      expect((error as MaterializedInputDerivationError).reason).toBe("source_blob_mismatch")
-      expect(error).toMatchObject({ message: "materialized input derivation failed" })
-      expect(JSON.stringify(error)).not.toContain("session-evidence")
-      expect(JSON.stringify(error)).not.toContain("\n")
+  test("cross-platform unsafe frozen paths reject as source_path_outside_root before Git lookup", () => {
+    for (const unsafePath of UNSAFE_FROZEN_PATHS) {
+      expect(isUnsafeFrozenRepositoryPath(unsafePath)).toBe(true)
+      expect(tryNormalizeFrozenRepositoryRelativePath(unsafePath)).toBeNull()
+
+      const inputPath = unsafePath
+      try {
+        loadPinnedGitBlobBytes(root, inputPath, PINNED_OID)
+        throw new Error(`expected reject for ${unsafePath}`)
+      } catch (error) {
+        expect(error).toBeInstanceOf(MaterializedInputDerivationError)
+        const typed = error as MaterializedInputDerivationError
+        // Must not fall through to Git miss (source_missing) on Linux for Windows-absolute forms.
+        expect(typed.reason).toBe("source_path_outside_root")
+        expect(typed.message).toBe("materialized input derivation failed")
+        const serialized = JSON.stringify(typed)
+        expect(serialized).not.toContain(unsafePath)
+        expect(serialized).not.toContain("/etc/passwd")
+        expect(serialized).not.toContain("Windows")
+        expect(serialized).not.toContain("\n")
+      }
+      expect(inputPath).toBe(unsafePath)
     }
 
-    try {
-      loadPinnedGitBlobBytes(root, "C:/Windows/system.ini", "b1be64dbb71898ab5ffa75660f8e07c3250d8be1")
-      throw new Error("expected absolute reject")
-    } catch (error) {
-      expect(error).toBeInstanceOf(MaterializedInputDerivationError)
-      expect((error as MaterializedInputDerivationError).reason).toBe("source_path_outside_root")
-    }
+    expect(tryNormalizeFrozenRepositoryRelativePath(SAFE_SOURCE_PATH)).toBe(SAFE_SOURCE_PATH)
+    const bytes = loadPinnedGitBlobBytes(root, SAFE_SOURCE_PATH, PINNED_OID)
+    expect(computeGitBlobOidSha1(bytes)).toBe(PINNED_OID)
 
     try {
-      loadPinnedGitBlobBytes(root, "../secrets.json", "b1be64dbb71898ab5ffa75660f8e07c3250d8be1")
+      loadPinnedGitBlobBytes(root, "../secrets.json", PINNED_OID)
       throw new Error("expected traversal reject")
     } catch (error) {
       expect(error).toBeInstanceOf(MaterializedInputDerivationError)
       expect((error as MaterializedInputDerivationError).reason).toBe("source_path_outside_root")
+      expect(JSON.stringify(error)).not.toContain("secrets.json")
     }
 
     try {
-      loadPinnedGitBlobBytes(
-        root,
-        "conformance/does-not-exist-source.json",
-        "b1be64dbb71898ab5ffa75660f8e07c3250d8be1",
-      )
+      loadPinnedGitBlobBytes(root, "conformance/does-not-exist-source.json", PINNED_OID)
       throw new Error("expected missing")
     } catch (error) {
       expect(error).toBeInstanceOf(MaterializedInputDerivationError)
       expect((error as MaterializedInputDerivationError).reason).toBe("source_missing")
     }
+
+    try {
+      loadPinnedGitBlobBytes(root, SAFE_SOURCE_PATH, "ffffffffffffffffffffffffffffffffffffffff")
+      throw new Error("expected blob mismatch")
+    } catch (error) {
+      expect(error).toBeInstanceOf(MaterializedInputDerivationError)
+      expect((error as MaterializedInputDerivationError).reason).toBe("source_blob_mismatch")
+      expect(JSON.stringify(error)).not.toContain("session-evidence")
+    }
+
+    // Mirror: DCN generator rejects the same Windows-absolute form before Git lookup.
+    const members = structuredClone(listDcnMemberAuthorities())
+    ;(members[0] as { vector_path: string }).vector_path = "C:/Windows/system.ini"
+    try {
+      generateFrozenCounterfactualNeighborhood({ repositoryRoot: root, members })
+      throw new Error("expected DCN absolute reject")
+    } catch (error) {
+      expect(error).toBeInstanceOf(DcnGeneratorError)
+      expect((error as DcnGeneratorError).reason).toBe("package_materialization_failure")
+      expect(JSON.stringify(error)).not.toContain("Windows")
+    }
   })
+
+  test(
+    "valid frozen derivation and umbrella verification remain conformant after path repair",
+    async () => {
+      const a = deriveCounterfactualNeighborhoodConformanceRequest({ repositoryRoot: root })
+      const b = deriveCounterfactualNeighborhoodConformanceRequest({ repositoryRoot: root })
+      expect(canonicalIdentityJson(a)).toBe(canonicalIdentityJson(b))
+      expect(a.members).toHaveLength(10)
+
+      const packageResult = await verifyCounterfactualConformancePackage({ repositoryRoot: root })
+      expect(packageResult.aggregate.evaluation_state).toBe("evaluated")
+      if (packageResult.aggregate.evaluation_state !== "evaluated") throw new Error("unreachable")
+      expect(packageResult.aggregate.verdict).toBe("conformant")
+      expect(packageResult.aggregate.counts).toEqual({
+        total_member_count: 10,
+        conformant_count: 10,
+        nonconformant_count: 0,
+        unresolved_count: 0,
+      })
+    },
+    { timeout: 60_000 },
+  )
 
   test("path mutation fail-closed cases", () => {
     const rootObj = { a: { b: [1, 2, 3] }, task: { title: "x" } }
