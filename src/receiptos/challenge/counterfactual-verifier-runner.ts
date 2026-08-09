@@ -12,8 +12,9 @@
  * - request bound to canonical Lane A/B challenge identity
  * - expected outcomes never consulted for dispatch
  * - execution_failure diagnostics are bounded and host-string-safe
- * - CAB stages separated: binding → input materialization → subject → output clone
- * - typed CAB rejection only from the subject-invocation catch via opaque extractor
+ * - every surface stages: binding → input materialization → subject → output clone
+ * - typed CAB rejection only from the CAB subject-invocation catch via opaque extractor
+ * - execution_failure.failure_stage distinguishes input/subject/output materialization
  */
 
 import type { HandoffEvidence, HandoffReceiptVerification } from "../schema/types"
@@ -233,6 +234,11 @@ export type SubjectReturnedResultV0 =
 
 export type ExecutionFailureKindV0 = "thrown_error" | "non_error_throw"
 
+export type ExecutionFailureStageV0 =
+  | "input_materialization"
+  | "subject_invocation"
+  | "output_materialization"
+
 export type BoundedExecutionErrorNameV0 =
   | "Error"
   | "TypeError"
@@ -241,14 +247,22 @@ export type BoundedExecutionErrorNameV0 =
   | "ReferenceError"
   | "NonErrorThrow"
 
+export type BoundedExecutionSafeMessageV0 =
+  | "input materialization failed"
+  | "input materialization produced a non-error throw"
+  | "subject invocation failed"
+  | "subject produced a non-error throw"
+  | "output materialization failed"
+  | "output materialization produced a non-error throw"
+
 export type ExecutionFailureV0 = {
   readonly execution_state: "execution_failure"
   readonly surface: ChallengeSurfaceKind
   readonly failure: {
-    readonly failure_stage: "subject_invocation"
+    readonly failure_stage: ExecutionFailureStageV0
     readonly failure_kind: ExecutionFailureKindV0
     readonly error_name: BoundedExecutionErrorNameV0
-    readonly safe_message: "subject invocation failed" | "subject produced a non-error throw"
+    readonly safe_message: BoundedExecutionSafeMessageV0
   }
 }
 
@@ -481,7 +495,28 @@ function validateEnvelope(request: unknown): {
   return { object, challenge }
 }
 
-function toExecutionFailure(surface: ChallengeSurfaceKind, thrown: unknown): ExecutionFailureV0 {
+function safeMessageFor(
+  stage: ExecutionFailureStageV0,
+  kind: ExecutionFailureKindV0,
+): BoundedExecutionSafeMessageV0 {
+  if (stage === "input_materialization") {
+    return kind === "thrown_error"
+      ? "input materialization failed"
+      : "input materialization produced a non-error throw"
+  }
+  if (stage === "output_materialization") {
+    return kind === "thrown_error"
+      ? "output materialization failed"
+      : "output materialization produced a non-error throw"
+  }
+  return kind === "thrown_error" ? "subject invocation failed" : "subject produced a non-error throw"
+}
+
+function toExecutionFailure(
+  surface: ChallengeSurfaceKind,
+  thrown: unknown,
+  failure_stage: ExecutionFailureStageV0,
+): ExecutionFailureV0 {
   if (thrown instanceof Error) {
     const known: BoundedExecutionErrorNameV0[] = [
       "Error",
@@ -497,10 +532,10 @@ function toExecutionFailure(surface: ChallengeSurfaceKind, thrown: unknown): Exe
       execution_state: "execution_failure",
       surface,
       failure: {
-        failure_stage: "subject_invocation",
+        failure_stage,
         failure_kind: "thrown_error",
         error_name: name,
-        safe_message: "subject invocation failed",
+        safe_message: safeMessageFor(failure_stage, "thrown_error"),
       },
     }
   }
@@ -508,10 +543,10 @@ function toExecutionFailure(surface: ChallengeSurfaceKind, thrown: unknown): Exe
     execution_state: "execution_failure",
     surface,
     failure: {
-      failure_stage: "subject_invocation",
+      failure_stage,
       failure_kind: "non_error_throw",
       error_name: "NonErrorThrow",
-      safe_message: "subject produced a non-error throw",
+      safe_message: safeMessageFor(failure_stage, "non_error_throw"),
     },
   }
 }
@@ -531,7 +566,7 @@ function classifyCabSubjectInvocationThrow(
       rejection,
     }
   }
-  return toExecutionFailure("counterfactual_audit_boundary", thrown)
+  return toExecutionFailure("counterfactual_audit_boundary", thrown, "subject_invocation")
 }
 
 function cloneJson<T>(value: T): T {
@@ -553,17 +588,34 @@ async function runVerifyHandoff(
   request: VerifyHandoffRunRequestV0,
   challenge: CounterfactualChallengeIdentityV0,
 ): Promise<VerifierChallengeExecutionResultV0> {
+  // Stage 1: binding/validation.
   validateNonCabBinding(request.surface, request.subject, challenge, VERIFY_HANDOFF_ADAPTER_IDENTITY)
-  const evidence = cloneJson(request.input.evidence)
+
+  // Stage 2: input materialization.
+  let evidence: typeof request.input.evidence
   try {
-    const native_result = await PRODUCTION_INVOKERS.verify_handoff_receipt_root(evidence)
+    evidence = cloneJson(request.input.evidence)
+  } catch (error) {
+    return toExecutionFailure("verify_handoff_receipt_root", error, "input_materialization")
+  }
+
+  // Stage 3: subject invocation.
+  let native_result: Awaited<ReturnType<typeof PRODUCTION_INVOKERS.verify_handoff_receipt_root>>
+  try {
+    native_result = await PRODUCTION_INVOKERS.verify_handoff_receipt_root(evidence)
+  } catch (error) {
+    return toExecutionFailure("verify_handoff_receipt_root", error, "subject_invocation")
+  }
+
+  // Stage 4: output materialization.
+  try {
     return {
       execution_state: "subject_returned",
       surface: "verify_handoff_receipt_root",
       native_result: cloneJson(native_result),
     }
   } catch (error) {
-    return toExecutionFailure("verify_handoff_receipt_root", error)
+    return toExecutionFailure("verify_handoff_receipt_root", error, "output_materialization")
   }
 }
 
@@ -571,19 +623,38 @@ function runChronicleAdmission(
   request: ChronicleAdmissionRunRequestV0,
   challenge: CounterfactualChallengeIdentityV0,
 ): VerifierChallengeExecutionResultV0 {
+  // Stage 1: binding/validation.
   validateNonCabBinding(request.surface, request.subject, challenge, CHRONICLE_ADMISSION_ADAPTER_IDENTITY)
-  const evidence = cloneJson(request.input.evidence)
-  const proofObject = cloneJson(request.input.proof_object)
-  const options = request.input.options === undefined ? undefined : cloneJson(request.input.options)
+
+  // Stage 2: input materialization.
+  let evidence: typeof request.input.evidence
+  let proofObject: typeof request.input.proof_object
+  let options: typeof request.input.options
   try {
-    const native_result = PRODUCTION_INVOKERS.chronicle_admission(evidence, proofObject, options)
+    evidence = cloneJson(request.input.evidence)
+    proofObject = cloneJson(request.input.proof_object)
+    options = request.input.options === undefined ? undefined : cloneJson(request.input.options)
+  } catch (error) {
+    return toExecutionFailure("chronicle_admission", error, "input_materialization")
+  }
+
+  // Stage 3: subject invocation.
+  let native_result: ReturnType<typeof PRODUCTION_INVOKERS.chronicle_admission>
+  try {
+    native_result = PRODUCTION_INVOKERS.chronicle_admission(evidence, proofObject, options)
+  } catch (error) {
+    return toExecutionFailure("chronicle_admission", error, "subject_invocation")
+  }
+
+  // Stage 4: output materialization.
+  try {
     return {
       execution_state: "subject_returned",
       surface: "chronicle_admission",
       native_result: cloneJson(native_result),
     }
   } catch (error) {
-    return toExecutionFailure("chronicle_admission", error)
+    return toExecutionFailure("chronicle_admission", error, "output_materialization")
   }
 }
 
@@ -591,18 +662,36 @@ function runChronicleContinuity(
   request: ChronicleContinuityRunRequestV0,
   challenge: CounterfactualChallengeIdentityV0,
 ): VerifierChallengeExecutionResultV0 {
+  // Stage 1: binding/validation.
   validateNonCabBinding(request.surface, request.subject, challenge, CHRONICLE_CONTINUITY_ADAPTER_IDENTITY)
-  const current = cloneJson(request.input.current)
-  const predecessor = request.input.predecessor === null ? null : cloneJson(request.input.predecessor)
+
+  // Stage 2: input materialization.
+  let current: typeof request.input.current
+  let predecessor: typeof request.input.predecessor
   try {
-    const native_result = PRODUCTION_INVOKERS.chronicle_continuity(current, predecessor)
+    current = cloneJson(request.input.current)
+    predecessor = request.input.predecessor === null ? null : cloneJson(request.input.predecessor)
+  } catch (error) {
+    return toExecutionFailure("chronicle_continuity", error, "input_materialization")
+  }
+
+  // Stage 3: subject invocation.
+  let native_result: ReturnType<typeof PRODUCTION_INVOKERS.chronicle_continuity>
+  try {
+    native_result = PRODUCTION_INVOKERS.chronicle_continuity(current, predecessor)
+  } catch (error) {
+    return toExecutionFailure("chronicle_continuity", error, "subject_invocation")
+  }
+
+  // Stage 4: output materialization.
+  try {
     return {
       execution_state: "subject_returned",
       surface: "chronicle_continuity",
       native_result: cloneJson(native_result),
     }
   } catch (error) {
-    return toExecutionFailure("chronicle_continuity", error)
+    return toExecutionFailure("chronicle_continuity", error, "output_materialization")
   }
 }
 
@@ -610,22 +699,39 @@ function runCheckpointLocal(
   request: ChronicleCheckpointLocalRunRequestV0,
   challenge: CounterfactualChallengeIdentityV0,
 ): VerifierChallengeExecutionResultV0 {
+  // Stage 1: binding/validation.
   validateNonCabBinding(
     request.surface,
     request.subject,
     challenge,
     CHRONICLE_CHECKPOINT_LOCAL_ADAPTER_IDENTITY,
   )
-  const checkpoint = cloneJson(request.input.checkpoint)
+
+  // Stage 2: input materialization.
+  let checkpoint: typeof request.input.checkpoint
   try {
-    const native_result = PRODUCTION_INVOKERS.chronicle_checkpoint_local(checkpoint)
+    checkpoint = cloneJson(request.input.checkpoint)
+  } catch (error) {
+    return toExecutionFailure("chronicle_checkpoint_local", error, "input_materialization")
+  }
+
+  // Stage 3: subject invocation.
+  let native_result: ReturnType<typeof PRODUCTION_INVOKERS.chronicle_checkpoint_local>
+  try {
+    native_result = PRODUCTION_INVOKERS.chronicle_checkpoint_local(checkpoint)
+  } catch (error) {
+    return toExecutionFailure("chronicle_checkpoint_local", error, "subject_invocation")
+  }
+
+  // Stage 4: output materialization.
+  try {
     return {
       execution_state: "subject_returned",
       surface: "chronicle_checkpoint_local",
       native_result: cloneJson(native_result),
     }
   } catch (error) {
-    return toExecutionFailure("chronicle_checkpoint_local", error)
+    return toExecutionFailure("chronicle_checkpoint_local", error, "output_materialization")
   }
 }
 
@@ -642,7 +748,7 @@ function runCab(
     try {
       value = cloneJson(request.input.value)
     } catch (error) {
-      return toExecutionFailure("counterfactual_audit_boundary", error)
+      return toExecutionFailure("counterfactual_audit_boundary", error, "input_materialization")
     }
 
     // Stage 3: production subject invocation — sole typed-rejection boundary.
@@ -661,7 +767,7 @@ function runCab(
         native_result: { operation: "semantic_snapshot", snapshot: cloneJson(snapshot) },
       }
     } catch (error) {
-      return toExecutionFailure("counterfactual_audit_boundary", error)
+      return toExecutionFailure("counterfactual_audit_boundary", error, "output_materialization")
     }
   }
 
@@ -671,7 +777,7 @@ function runCab(
     bytes =
       typeof request.input.bytes === "string" ? request.input.bytes : new Uint8Array(request.input.bytes)
   } catch (error) {
-    return toExecutionFailure("counterfactual_audit_boundary", error)
+    return toExecutionFailure("counterfactual_audit_boundary", error, "input_materialization")
   }
 
   // Stage 3: manifest subject — file-byte hash only; no invented semantic rejection.
@@ -679,7 +785,7 @@ function runCab(
   try {
     sha256_hex = PRODUCTION_INVOKERS.cab_manifest_hash(bytes)
   } catch (error) {
-    return toExecutionFailure("counterfactual_audit_boundary", error)
+    return toExecutionFailure("counterfactual_audit_boundary", error, "subject_invocation")
   }
 
   return {
