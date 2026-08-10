@@ -181,7 +181,7 @@ function projectChildIdentity(raw: Record<string, unknown>): ChildIdentityRecord
   }
 }
 
-function verifyUmbrellaPackageIdentity(repositoryRoot: string): {
+export function verifyUmbrellaPackageIdentity(repositoryRoot: string): {
   contract: Record<string, unknown>
   manifest: Record<string, unknown>
   fixture_set_sha256: string
