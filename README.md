@@ -193,11 +193,13 @@ Crystal Receipt packages this into portable proof-facing artifacts:
 
 This places Crystal Receipt in the broader execution provenance category: SLSA / in-toto for software supply chain, but for autonomous agent execution.
 
-Receipt truth is established by independent recomputation from original
-evidence under declared canonicalization, schemas, profiles, and verification
-rules. A verifier implements those checks; it is not a trusted truth
-authority. A producer-supplied `verifier_result` is reported evidence and must
-not substitute for consumer recomputation.
+Independent recomputation establishes whether declared receipt properties hold
+for supplied evidence under the selected schemas, canonicalization rules, and
+verification profile. It does not independently establish source truth,
+real-world occurrence, actor identity, authority, or downstream judgment. A
+verifier implements those checks; it is not a privileged truth authority. A
+producer-supplied `verifier_result` remains reported evidence and must not
+substitute for consumer recomputation.
 
 Visual artifacts, crystal surfaces, exports, and collectibles are optional
 downstream presentation layers. They do not prove the work by themselves.
@@ -371,7 +373,7 @@ Crystal Receipt does not replace:
 
 Correct statement:
 
-> The artifact does not prove the work by itself.  
+> The artifact does not prove the work by itself.
 > It represents receipt evidence that can be independently verified.
 
 ## External Producer E2E Demo
@@ -530,7 +532,7 @@ But exported artifacts do not automatically prove the work.
 
 Correct statement:
 
-> The export does not prove the work by itself.  
+> The export does not prove the work by itself.
 > It represents receipt evidence that can be independently verified.
 
 ## What this is not
@@ -590,16 +592,21 @@ A human can see:
 A system can verify:
 - “This capsule came from this receipt evidence.”
 
-A verifier can check:
-- “This receipt evidence is valid or invalid.”
+Declared checks evaluate source evidence under the selected schemas and
+verification profile. Depending on the surface, a semantic result may be
+conformant, nonconformant, rejected, or unverifiable. Execution can remain
+unresolved without becoming semantic rejection, and package corruption is
+distinct from semantic nonconformance. Downstream systems decide what those
+verified findings mean for admission, policy, history, or judgment.
 
 That separation is the key:
 
-- verifier checks truth
+- declared checks evaluate evidence
 - receipt stores evidence
 - capsule interprets it
 - crystal can present it
 - optional export can make it portable
+- downstream systems decide admission, policy, history, or judgment
 
 ## Notes
 
@@ -636,6 +643,32 @@ The image remains the human-facing fingerprint.
 - `docs/METADATA_SCHEMA_V0_2.md`
 - `docs/ROADMAP.md`
 
+## Executable conformance
+
+ReceiptOS on this repository includes implemented executable conformance
+surfaces, not only narrative claims:
+
+- [Recursive Singleton Fold](docs/RECURSIVE_SINGLETON_FOLD_REFERENCE_PACKAGE_V0_WORKING_DRAFT.md)
+  closes positions 1–28 against a committed normative conformance corpus.
+- [Counterfactual Conformance v0](conformance/counterfactual-conformance-v0/SPEC.md)
+  is an implemented bounded verifier-of-verifier system over an exact frozen
+  ten-member Deterministic Counterfactual Neighborhood, with authenticated
+  expected-result-set binding and materialized-input derivation from frozen
+  committed sources. Canonical aggregate:
+  `evaluated / conformant / 10 / 10 / 0 / 0`.
+- [Traversal stability](conformance/counterfactual-traversal-stability-v0/SPEC.md)
+  evaluates the same ten members under five frozen schedules with reset model
+  fresh process per schedule, shared process within a schedule. Measured
+  result: `50 stable / 0 history-sensitive / 0 unresolved`. Independent
+  auditors use `production_imports: 0`.
+
+Index and package inventory: [docs/CONFORMANCE_INDEX.md](docs/CONFORMANCE_INDEX.md).
+
+These results do **not** prove universal verifier correctness; correctness
+under all possible histories or all `10!` schedules; source truth or
+real-world occurrence; actor identity or authority; or correctness outside
+the frozen profiles and committed inventories.
+
 ## Tests
 
 ```bash
@@ -644,6 +677,10 @@ bun test tests/receiptos
 ```
 
 ## Citation
+
+The currently published ReceiptOS preprint is citable at the Zenodo DOI below.
+This repository README does not claim that a later review draft is
+release-frozen or published.
 
 The ReceiptOS specification is published as a citable preprint:
 
