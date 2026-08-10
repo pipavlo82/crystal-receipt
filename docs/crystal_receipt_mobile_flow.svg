@@ -1,87 +1,150 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1320" viewBox="0 0 900 1320" role="img" aria-labelledby="title desc">
-  <title id="title">ReceiptOS producer-neutral proof boundary</title>
-  <desc id="desc">Many producer systems export evidence into one ReceiptOS proof boundary, which produces receipt roots, evidence capsules, provenance summaries, verifier state, and viewer/export/settlement-facing surfaces.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1500" viewBox="0 0 900 1500" role="img" aria-labelledby="title desc">
+  <title id="title">ReceiptOS evidence and verifier-conformance architecture</title>
+  <desc id="desc">Producer evidence enters the ReceiptOS evidence substrate. Declared receipt evaluation recomputes properties from supplied evidence, while frozen conformance authorities separately test verifier behavior. Portable artifacts and findings then reach downstream consumers for interpretation.</desc>
 
   <style>
     .bg { fill: #ffffff; }
     .box { fill: #ffffff; stroke: #111111; stroke-width: 3; }
     .soft { fill: #f7f7f7; stroke: #222222; stroke-width: 2; }
     .core { fill: #f2f8ff; stroke: #111111; stroke-width: 4; }
+    .plane { fill: #ffffff; stroke: #111111; stroke-width: 3; }
+    .conf { fill: #f7fbff; stroke: #111111; stroke-width: 3; }
     .settle { fill: #f6fff2; stroke: #111111; stroke-width: 3; }
+    .note { fill: #fafafa; stroke: #333333; stroke-width: 2; }
     .title { font: 700 34px ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #111111; }
-    .h1 { font: 700 28px ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #111111; }
-    .h2 { font: 700 21px ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #111111; }
-    .body { font: 500 18px ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #111111; }
-    .mono { font: 600 16px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #111111; }
-    .small { font: 500 15px ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #333333; }
-    .label { font: 700 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: 1.6px; fill: #555555; }
+    .h1 { font: 700 26px ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #111111; }
+    .h2 { font: 700 20px ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #111111; }
+    .body { font: 500 17px ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #111111; }
+    .mono { font: 600 15px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #111111; }
+    .small { font: 500 14px ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #333333; }
+    .tiny { font: 500 13px ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #444444; }
+    .label { font: 700 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: 1.4px; fill: #555555; }
     .arrow { stroke: #111111; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+    .arrow-thin { stroke: #111111; stroke-width: 3; fill: none; marker-end: url(#arrow); }
   </style>
 
   <defs>
-    <marker id="arrow" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="strokeWidth">
-      <path d="M 0 0 L 14 7 L 0 14 z" fill="#111111"/>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M 0 0 L 12 6 L 0 12 z" fill="#111111"/>
     </marker>
   </defs>
 
-  <rect class="bg" x="0" y="0" width="900" height="1320"/>
+  <rect class="bg" x="0" y="0" width="900" height="1500"/>
 
-  <text class="title" x="450" y="58" text-anchor="middle">RECEIPTOS</text>
-  <text class="body" x="450" y="92" text-anchor="middle">Producer-neutral proof boundary for agent work</text>
+  <!-- Header -->
+  <text class="title" x="450" y="52" text-anchor="middle">RECEIPTOS</text>
+  <text class="body" x="450" y="84" text-anchor="middle">Recomputable evidence and bounded verifier conformance</text>
 
-  <rect class="box" x="70" y="130" width="760" height="190" rx="24"/>
-  <text class="label" x="110" y="168">MANY PRODUCERS</text>
-  <text class="h1" x="110" y="205">Different runtimes export evidence</text>
+  <!-- Layer 1: Evidence inputs -->
+  <rect class="box" x="50" y="110" width="800" height="230" rx="24"/>
+  <text class="label" x="80" y="145">EVIDENCE INPUTS</text>
+  <text class="h1" x="80" y="178">Producer / runtime sources</text>
 
-  <rect class="soft" x="110" y="230" width="150" height="54" rx="14"/>
-  <text class="mono" x="185" y="264" text-anchor="middle">CYPHES / ATP</text>
+  <rect class="soft" x="80" y="195" width="165" height="48" rx="12"/>
+  <text class="mono" x="162" y="225" text-anchor="middle">CYPHES / ATP</text>
+  <rect class="soft" x="260" y="195" width="140" height="48" rx="12"/>
+  <text class="mono" x="330" y="225" text-anchor="middle">Stealth</text>
+  <rect class="soft" x="415" y="195" width="180" height="48" rx="12"/>
+  <text class="mono" x="505" y="225" text-anchor="middle">GitHub Actions</text>
+  <rect class="soft" x="610" y="195" width="210" height="48" rx="12"/>
+  <text class="mono" x="715" y="225" text-anchor="middle">Coding agents</text>
 
-  <rect class="soft" x="280" y="230" width="150" height="54" rx="14"/>
-  <text class="mono" x="355" y="264" text-anchor="middle">Stealth</text>
+  <text class="small" x="80" y="268">Producer systems retain their own workflow semantics.</text>
+  <text class="h2" x="80" y="298">Portable source evidence</text>
+  <text class="mono" x="80" y="324">task · execution · commands · changes · proof refs · metadata</text>
 
-  <rect class="soft" x="450" y="230" width="150" height="54" rx="14"/>
-  <text class="mono" x="525" y="264" text-anchor="middle">GitHub Actions</text>
+  <path class="arrow" d="M450 350 L450 370"/>
 
-  <rect class="soft" x="620" y="230" width="150" height="54" rx="14"/>
-  <text class="mono" x="695" y="264" text-anchor="middle">Coding agents</text>
+  <!-- Layer 2: ReceiptOS evidence substrate -->
+  <rect class="core" x="50" y="375" width="800" height="250" rx="28"/>
+  <text class="label" x="80" y="410">RECOMPUTABLE EVIDENCE</text>
+  <text class="h1" x="80" y="444">ReceiptOS evidence substrate</text>
+  <text class="body" x="80" y="476">Normalize and canonicalize supplied evidence without importing</text>
+  <text class="body" x="80" y="500">producer-specific business logic.</text>
 
-  <text class="small" x="110" y="304">Producer systems keep their own workflow semantics.</text>
+  <rect class="soft" x="80" y="518" width="360" height="72" rx="14"/>
+  <text class="h2" x="100" y="546">receipt_root</text>
+  <text class="small" x="100" y="572">recomputed from canonical evidence</text>
 
-  <path class="arrow" d="M450 325 L450 382"/>
+  <rect class="soft" x="460" y="518" width="170" height="72" rx="14"/>
+  <text class="mono" x="545" y="550" text-anchor="middle">Evidence Capsule</text>
+  <text class="tiny" x="545" y="572" text-anchor="middle">structured view</text>
 
-  <rect class="box" x="130" y="390" width="640" height="130" rx="22"/>
-  <text class="label" x="170" y="426">EXPORTED EVIDENCE</text>
-  <text class="h2" x="170" y="462">Source evidence enters ReceiptOS through adapters</text>
-  <text class="mono" x="170" y="494">task · execution · commands · changes · verifier refs · metadata</text>
+  <rect class="soft" x="650" y="518" width="170" height="72" rx="14"/>
+  <text class="mono" x="735" y="561" text-anchor="middle">Provenance Summary</text>
 
-  <path class="arrow" d="M450 525 L450 585"/>
+  <text class="mono" x="80" y="612">portable_proof_object.v0 · declared verification surfaces</text>
 
-  <rect class="core" x="80" y="595" width="740" height="250" rx="28"/>
-  <text class="label" x="120" y="632">ONE PROOF BOUNDARY</text>
-  <text class="h1" x="120" y="672">ReceiptOS proof substrate</text>
-  <text class="body" x="120" y="707">Normalize evidence without importing producer-specific business logic.</text>
+  <!-- Split arrows into two evaluation planes -->
+  <path class="arrow" d="M250 635 L250 675"/>
+  <path class="arrow" d="M650 635 L650 675"/>
 
-  <rect class="soft" x="120" y="735" width="300" height="76" rx="16"/>
-  <text class="h2" x="150" y="765">receipt_root</text>
-  <text class="small" x="150" y="792">recomputable · anchor-independent</text>
+  <!-- Layer 3 label -->
+  <text class="label" x="450" y="658" text-anchor="middle">TWO DISTINCT EVALUATION PLANES</text>
 
-  <rect class="soft" x="480" y="735" width="300" height="76" rx="16"/>
-  <text class="h2" x="510" y="765">verifier state</text>
-  <text class="small" x="510" y="792">valid · mismatch · missing · anchored</text>
+  <!-- Plane A: Receipt evaluation -->
+  <rect class="plane" x="50" y="680" width="390" height="340" rx="22"/>
+  <text class="label" x="75" y="715">A · RECEIPT EVALUATION</text>
+  <text class="h2" x="75" y="748">Declared receipt evaluation</text>
+  <text class="small" x="75" y="780">• recompute declared properties</text>
+  <text class="small" x="75" y="805">• compare stored and computed values</text>
+  <text class="small" x="75" y="830">• distinguish verified, mismatch,</text>
+  <text class="small" x="75" y="852">  missing/unverifiable, and</text>
+  <text class="small" x="75" y="874">  execution-unresolved outcomes</text>
+  <text class="small" x="75" y="896">  where applicable</text>
+  <text class="small" x="75" y="928">• anchor state remains a separate</text>
+  <text class="small" x="75" y="950">  property, not a verifier verdict</text>
+  <rect class="note" x="75" y="970" width="340" height="30" rx="10"/>
+  <text class="tiny" x="245" y="990" text-anchor="middle">Does not prove source truth or identity</text>
 
-  <path class="arrow" d="M450 850 L450 905"/>
+  <!-- Plane B: Verifier conformance -->
+  <rect class="conf" x="460" y="680" width="390" height="340" rx="22"/>
+  <text class="label" x="485" y="715">B · VERIFIER CONFORMANCE</text>
+  <text class="h2" x="485" y="748">Verifier-conformance evaluation</text>
+  <text class="tiny" x="485" y="775">Tests verifier behavior against frozen authorities</text>
+  <text class="tiny" x="485" y="795">— not an inline gate for every receipt.</text>
 
-  <rect class="box" x="90" y="915" width="720" height="150" rx="24"/>
-  <text class="label" x="130" y="952">SHARED ARTIFACTS</text>
-  <text class="h2" x="130" y="990">Stable outputs across producers</text>
-  <text class="mono" x="130" y="1022">receiptos.evidence_capsule.v0</text>
-  <text class="mono" x="470" y="1022">receiptos.provenance_summary.v0</text>
-  <text class="small" x="130" y="1048">proof_refs · replay_refs · anchor_refs · viewer-ready summaries</text>
+  <text class="mono" x="485" y="825">RSF normative corpus — positions 1–28</text>
+  <text class="mono" x="485" y="848">Counterfactual Conformance v0</text>
+  <text class="mono" x="485" y="871">exact ten-member DCN</text>
+  <text class="mono" x="485" y="894">authenticated expected-result set</text>
+  <text class="mono" x="485" y="917">traversal — five frozen schedules</text>
 
-  <path class="arrow" d="M450 1072 L450 1130"/>
+  <rect class="soft" x="485" y="935" width="340" height="70" rx="12"/>
+  <text class="tiny" x="500" y="958">DCN aggregate: 10 / 10 conformant</text>
+  <text class="tiny" x="500" y="978">Traversal stability: 50 / 50 stable</text>
+  <text class="tiny" x="500" y="996">history-sensitive: 0 · unresolved: 0</text>
 
-  <rect class="settle" x="80" y="1140" width="740" height="130" rx="24"/>
-  <text class="label" x="120" y="1177">DOWNSTREAM USE</text>
-  <text class="h2" x="120" y="1215">Viewer / export / settlement-facing references</text>
-  <text class="small" x="120" y="1248">ReceiptOS packages proof evidence. CYPHES / ATP decides workflow, credits, and settlement.</text>
+  <!-- Confluence to portable artifacts -->
+  <path class="arrow-thin" d="M245 1025 L245 1060 L450 1060"/>
+  <path class="arrow-thin" d="M655 1025 L655 1060 L450 1060"/>
+  <path class="arrow" d="M450 1060 L450 1095"/>
+
+  <!-- Bridge note -->
+  <rect class="note" x="140" y="1098" width="620" height="55" rx="14"/>
+  <text class="tiny" x="450" y="1120" text-anchor="middle">Verifier surfaces from the substrate are tested by frozen</text>
+  <text class="tiny" x="450" y="1140" text-anchor="middle">conformance authorities → bounded conformance findings</text>
+
+  <path class="arrow" d="M450 1155 L450 1188"/>
+
+  <!-- Layer 4: Downstream -->
+  <rect class="settle" x="50" y="1193" width="800" height="255" rx="24"/>
+  <text class="label" x="80" y="1228">DOWNSTREAM CONSUMERS</text>
+  <text class="h1" x="80" y="1260">Evidence and findings remain portable</text>
+
+  <rect class="soft" x="80" y="1280" width="170" height="42" rx="12"/>
+  <text class="mono" x="165" y="1307" text-anchor="middle">Viewer / export</text>
+  <rect class="soft" x="270" y="1280" width="150" height="42" rx="12"/>
+  <text class="mono" x="345" y="1307" text-anchor="middle">Chronicle</text>
+  <rect class="soft" x="440" y="1280" width="180" height="42" rx="12"/>
+  <text class="mono" x="530" y="1307" text-anchor="middle">policy / admission</text>
+  <rect class="soft" x="640" y="1280" width="180" height="42" rx="12"/>
+  <text class="mono" x="730" y="1307" text-anchor="middle">anchor / settlement</text>
+
+  <text class="small" x="80" y="1350">Consumers interpret verified findings; ReceiptOS does not decide</text>
+  <text class="small" x="80" y="1370">downstream judgment.</text>
+
+  <text class="tiny" x="80" y="1405">Bounded conformance does not establish source truth, actor identity,</text>
+  <text class="tiny" x="80" y="1425">authority, universal verifier correctness, or correctness under all</text>
+  <text class="tiny" x="80" y="1445">possible histories.</text>
 </svg>
