@@ -1,0 +1,39 @@
+{
+  "schema": "counterfactual_traversal_stability_package_fixture_manifest.v0",
+  "package_id": "counterfactual-traversal-stability-v0",
+  "version": "v0",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "conformance/counterfactual-traversal-stability-v0/SPEC.md",
+      "sha256": "cbaa144d98dc18f7eb0ae122ddfd3a8b6bdf6a699f4e6f5f2dad8b30280874c7"
+    },
+    {
+      "path": "conformance/counterfactual-traversal-stability-v0/audit_package.ts",
+      "sha256": "47fd3ebe73f80cb3e9928502b8426d9718e089d72ae89c2546dc23c0a406c5e1"
+    },
+    {
+      "path": "conformance/counterfactual-traversal-stability-v0/contract.json",
+      "sha256": "1bcfbabfffc927cf2fdaa736ed6fec2dfd6fde30e33516695d304d375c642c3a"
+    },
+    {
+      "path": "conformance/counterfactual-traversal-stability-v0/generate_package.ts",
+      "sha256": "4968835e6a6ebea9ecd2f77c46f36f473aca1be58d2de432378f844c26ab2aeb"
+    },
+    {
+      "path": "conformance/counterfactual-traversal-stability-v0/run_schedule_worker.ts",
+      "sha256": "3a72ba442bb82d91554f2083bf1997f898dc689b282cf9e8204e560853980083"
+    },
+    {
+      "path": "conformance/counterfactual-traversal-stability-v0/schedules/schedule-set.json",
+      "sha256": "0a6cb87554aa0b5080b4e74d6f5816462b43e1841b26090e8ff9bf74e7ee1fc3"
+    },
+    {
+      "path": "conformance/counterfactual-traversal-stability-v0/verify_independent.py",
+      "sha256": "f43798b8601d294b7193f0e816c0f1da776c6b4004ed50c9570bc133dfd3227e"
+    }
+  ],
+  "fixture_set_sha256": "04821850899ad432bbe50c8d7e08659f387c3c9860d9324aaa106dd1c7ccb201",
+  "schedule_set_sha256": "323f185857af8aeb8436d9ec15f24c0a53a9662f9fbe613526477ed243ed285d",
+  "dcn_sha256": "37a213cff7a34e28df165c282f2b9e7460e31fbd37794bf5020c1e91158ed36d"
+}

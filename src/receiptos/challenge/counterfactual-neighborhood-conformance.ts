@@ -40,6 +40,9 @@ import {
   type ExecutionFailureStageV0,
   type VerifierChallengeRunRequestV0,
 } from "./counterfactual-verifier-runner"
+import type { AuthenticatedScheduleOrderV0 } from "./counterfactual-traversal-schedules"
+import type { CounterfactualObservationV0 } from "./counterfactual-result-normalization"
+import type { SubjectContractRejectionV0 } from "./counterfactual-verifier-runner"
 
 export const PINNED_COUNTERFACTUAL_NEIGHBORHOOD_SHA256_V0 =
   "37a213cff7a34e28df165c282f2b9e7460e31fbd37794bf5020c1e91158ed36d" as const
@@ -536,9 +539,106 @@ async function evaluateBoundMember(
   return evaluateVerifierChallengeConformance(carrier.request)
 }
 
+export const SCHEDULED_MEMBER_OBSERVATION_SCHEMA =
+  "receiptos.counterfactual_traversal_member_observation.v0" as const
+
+export const SCHEDULED_NEIGHBORHOOD_OBSERVATION_BUNDLE_SCHEMA =
+  "receiptos.counterfactual_traversal_schedule_observation_bundle.v0" as const
+
+export type ScheduledMemberObservationV0 = {
+  readonly schema: typeof SCHEDULED_MEMBER_OBSERVATION_SCHEMA
+  readonly vector_id: string
+  readonly package_version: string
+  readonly surface: ChallengeSurfaceKind
+  readonly route: NeighborhoodMemberRouteV0
+  readonly execution_state: "evaluated" | "execution_unresolved"
+  readonly verdict: "conformant" | "nonconformant" | null
+  readonly normative_expected: CounterfactualObservationV0 | null
+  readonly scheduled_observed: CounterfactualObservationV0 | null
+  readonly subject_contract_rejection: SubjectContractRejectionV0 | null
+  readonly mismatch_kind: ConformanceMismatchKindV0 | null
+  readonly failure_stage: ExecutionFailureStageV0 | null
+}
+
+export type ScheduledNeighborhoodObservationBundleV0 = {
+  readonly schema: typeof SCHEDULED_NEIGHBORHOOD_OBSERVATION_BUNDLE_SCHEMA
+  readonly schedule_id: string
+  readonly ordered_vector_ids_sha256: string
+  readonly neighborhood_sha256: string
+  readonly reset_model: "fresh_process_per_schedule_shared_process_within_schedule"
+  /** Members serialized in canonical DCN order, never traversal order. */
+  readonly members: readonly ScheduledMemberObservationV0[]
+  /** Execution order actually used (schedule order); diagnostic for workers only. */
+  readonly execution_vector_ids: readonly string[]
+}
+
+function observationFromEvaluation(
+  bound: BoundMemberV0,
+  evaluation: CounterfactualConformanceEvaluationV0 | CabManifestHashDiffEvaluationResultV0,
+): ScheduledMemberObservationV0 {
+  if (evaluation.evaluation_state === "execution_unresolved") {
+    return {
+      schema: SCHEDULED_MEMBER_OBSERVATION_SCHEMA,
+      vector_id: bound.identity.vector_id,
+      package_version: bound.identity.package_version,
+      surface: bound.identity.surface,
+      route: bound.route,
+      execution_state: "execution_unresolved",
+      verdict: null,
+      normative_expected: null,
+      scheduled_observed: null,
+      subject_contract_rejection: null,
+      mismatch_kind: null,
+      failure_stage: evaluation.execution_failure.failure_stage,
+    }
+  }
+  const evaluated = evaluation
+  return {
+    schema: SCHEDULED_MEMBER_OBSERVATION_SCHEMA,
+    vector_id: bound.identity.vector_id,
+    package_version: bound.identity.package_version,
+    surface: bound.identity.surface,
+    route: bound.route,
+    execution_state: "evaluated",
+    verdict: evaluated.verdict,
+    normative_expected: cloneJson(evaluated.expected_observation),
+    scheduled_observed:
+      evaluated.actual_observation === null ? null : cloneJson(evaluated.actual_observation),
+    subject_contract_rejection:
+      evaluated.subject_contract_rejection === null
+        ? null
+        : cloneJson(evaluated.subject_contract_rejection),
+    mismatch_kind: evaluated.mismatch === null ? null : evaluated.mismatch.kind,
+    failure_stage: null,
+  }
+}
+
+function orderBoundMembersForSchedule(
+  boundMembers: readonly BoundMemberV0[],
+  authenticatedSchedule: AuthenticatedScheduleOrderV0,
+): BoundMemberV0[] {
+  const byVectorId = new Map<string, BoundMemberV0>()
+  for (const bound of boundMembers) {
+    byVectorId.set(bound.identity.vector_id, bound)
+  }
+  const ordered: BoundMemberV0[] = []
+  for (const vectorId of authenticatedSchedule.ordered_vector_ids) {
+    const bound = byVectorId.get(vectorId)
+    if (!bound) {
+      throw new NeighborhoodConformanceContractError("request_missing")
+    }
+    ordered.push(bound)
+  }
+  if (ordered.length !== boundMembers.length) {
+    throw new NeighborhoodConformanceContractError("request_count_mismatch")
+  }
+  return ordered
+}
+
 /**
  * Aggregate neighborhood conformance evaluation.
  * Completes full preflight before any member execution.
+ * Always executes in canonical DCN order after identity rematch.
  */
 export async function evaluateCounterfactualNeighborhoodConformance(
   request: CounterfactualNeighborhoodConformanceRequestV0,
@@ -590,6 +690,57 @@ export async function evaluateCounterfactualNeighborhoodConformance(
     neighborhood_sha256: neighborhoodSha256,
     counts,
     members: summaries.map((entry) => cloneJson(entry)),
+  }
+}
+
+/**
+ * Package-internal Lane K seam: full Lane H/G preflight, then sequential
+ * evaluation in an authenticated frozen schedule order.
+ *
+ * Not a public caller-controlled execution-order API. Only accepts
+ * AuthenticatedScheduleOrderV0 produced by authenticateFrozenTraversalSchedule.
+ * Member results are always serialized in canonical DCN order.
+ */
+export async function evaluateCounterfactualNeighborhoodUnderAuthenticatedSchedule(
+  request: CounterfactualNeighborhoodConformanceRequestV0,
+  authenticatedSchedule: AuthenticatedScheduleOrderV0,
+): Promise<ScheduledNeighborhoodObservationBundleV0> {
+  if (authenticatedSchedule.__brand !== "AuthenticatedScheduleOrderV0") {
+    throw new NeighborhoodConformanceContractError("unsupported_member_route")
+  }
+  if (
+    authenticatedSchedule.reset_model !==
+    "fresh_process_per_schedule_shared_process_within_schedule"
+  ) {
+    throw new NeighborhoodConformanceContractError("unsupported_schema")
+  }
+
+  const { neighborhoodSha256, boundMembers } = preflightAggregate(request)
+  const executionOrder = orderBoundMembersForSchedule(boundMembers, authenticatedSchedule)
+
+  const byVectorId = new Map<string, ScheduledMemberObservationV0>()
+  for (const bound of executionOrder) {
+    const evaluation = await evaluateBoundMember(bound)
+    byVectorId.set(bound.identity.vector_id, observationFromEvaluation(bound, evaluation))
+  }
+
+  const members: ScheduledMemberObservationV0[] = []
+  for (const bound of boundMembers) {
+    const observation = byVectorId.get(bound.identity.vector_id)
+    if (!observation) {
+      throw new NeighborhoodConformanceContractError("request_missing")
+    }
+    members.push(cloneJson(observation))
+  }
+
+  return {
+    schema: SCHEDULED_NEIGHBORHOOD_OBSERVATION_BUNDLE_SCHEMA,
+    schedule_id: authenticatedSchedule.schedule_id,
+    ordered_vector_ids_sha256: authenticatedSchedule.ordered_vector_ids_sha256,
+    neighborhood_sha256: neighborhoodSha256,
+    reset_model: "fresh_process_per_schedule_shared_process_within_schedule",
+    members,
+    execution_vector_ids: authenticatedSchedule.ordered_vector_ids.map((id) => id),
   }
 }
 
