@@ -217,7 +217,9 @@ See:
 - [Unanchored Issuance Witness v0 implementation status](docs/UNANCHORED_ISSUANCE_WITNESS_V0_STATUS.md) — non-normative status of published schemas, vectors, and evaluator coverage
 - `scripts/demo-external-producer-e2e.ts`
 
-![Crystal Receipt architecture hero](docs/crystal_receipt_mobile_flow.svg)
+![ReceiptOS evidence and verifier-conformance architecture](docs/crystal_receipt_mobile_flow.svg)
+
+Receipt processing and verifier conformance are separate layers: ReceiptOS recomputes declared properties from supplied evidence, while frozen conformance profiles test whether verifier behavior matches authenticated expectations. Downstream consumers decide how those findings affect admission, history, policy, or judgment.
 
 ## Current product direction
 
