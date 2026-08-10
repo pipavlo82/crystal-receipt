@@ -1,680 +1,278 @@
-# crystal-receipt
+# ReceiptOS — Crystal Receipt reference implementation
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21402444.svg)](https://doi.org/10.5281/zenodo.21402444)
 
-## Neutrality and design partnership
+ReceiptOS packages supplied execution evidence into recomputable, portable artifacts. Declared receipt properties can be independently recomputed from that evidence under selected schemas and canonicalization rules. Frozen conformance profiles evaluate whether verifier behavior matches authenticated expectations. Downstream systems decide admission, history, policy, settlement, or other judgment.
 
-The reference implementation was developed in design partnership with Stealth (CYPHES), whose adapter and integration documentation are the deepest in this repository, alongside adapters for unaffiliated runtimes. The neutrality of ReceiptOS is structural, not sociological: no adapter participates in receipt_root derivation. Full adapter index and the two invariants: docs/ADAPTERS.md.
+This repository is the Crystal Receipt reference implementation of that substrate: a producer-neutral proof core in `src/receiptos`, committed conformance packages under `conformance/`, and optional presentation tools built on top. It does not claim source truth, universal correctness, actor identity, authority, or real-world occurrence.
 
-## ReceiptOS
+**Don't trust. Recompute.**
 
-**Portable proof and history artifacts for AI agents, tools, workflows, and autonomous systems.**
+![ReceiptOS evidence and verifier-conformance architecture](docs/crystal_receipt_mobile_flow.svg)
 
-```text
-evidence
-→ proof
-→ portable_proof_object.v0
-→ chronicle_entry.v0
-→ chronicle_portfolio.v0
-→ portfolio_root verification
-```
+Receipt processing and verifier conformance are separate layers: ReceiptOS recomputes declared properties from supplied evidence, while frozen conformance profiles test whether verifier behavior matches authenticated expectations. Downstream consumers decide how those findings affect admission, history, policy, or judgment.
 
-## What you get
+## What is implemented
 
-- Portable execution receipts
-- Recomputable `receipt_root`
-- Evidence Capsules
-- Provenance Summaries
+### Recomputable evidence
+
+The ReceiptOS proof core normalizes and canonicalizes supplied evidence without importing producer-specific business logic. Implemented surfaces include:
+
+- canonical evidence processing
+- recomputable `receipt_root`
+- Evidence Capsule (`receiptos.evidence_capsule.v0`)
+- Provenance Summary (`receiptos.provenance_summary.v0`)
 - `portable_proof_object.v0`
-- `chronicle_entry.v0`
-- `chronicle_portfolio.v0`
-- local `portfolio_root` verification
+- Merkle and anchor state as declared, inspectable properties
+- producer-supplied verifier state treated as evidence, not authority
 
-Crystal Receipt is a producer-neutral proof packaging and export layer.
-It imports evidence and proof inputs, preserves ReceiptOS-compatible proof semantics, derives canonical `receipt_root`, produces Evidence Capsules and Provenance Summaries, and exports portable proof/history artifacts for downstream systems.
-The repository is organized into two layers: a producer-neutral ReceiptOS proof core and an optional crystal rendering layer built on top of it.
+Independent recomputation asks whether declared properties hold for the supplied evidence. It does not establish source truth or downstream judgment.
 
-## Ecosystem role
+### Recursive Singleton Fold
 
-Upstream:
-- producer systems emit portable execution evidence or proof inputs
+[Recursive Singleton Fold](docs/RECURSIVE_SINGLETON_FOLD_REFERENCE_PACKAGE_V0_WORKING_DRAFT.md) closes positions 1–28 against a committed normative conformance corpus under an exact deterministic evaluation discipline. Package inventory and related vector classes live in [docs/CONFORMANCE_INDEX.md](docs/CONFORMANCE_INDEX.md).
 
-Crystal Receipt / ReceiptOS:
-- normalizes evidence
-- derives and verifies `receipt_root`
-- produces Evidence Capsules / Provenance Summaries
-- emits `portable_proof_object.v0`
-- emits `chronicle_entry.v0`
-- emits `chronicle_portfolio.v0`
-- verifies `portfolio_root`
+RSF is a bounded normative evaluation contract for the adopted corpus. It does not prove every ReceiptOS property universally.
 
-Downstream:
-- Chronicle and other history systems can consume those portable artifacts as neutral history layers
+### Counterfactual Conformance v0
 
-In short:
+[Counterfactual Conformance v0](conformance/counterfactual-conformance-v0/SPEC.md) is a bounded verifier-of-verifier evaluation over an exact frozen ten-member Deterministic Counterfactual Neighborhood. Expected results are bound by authenticated expected-result-set authority, and inputs are derived from committed sources.
+
+Canonical aggregate:
 
 ```text
-Evidence in. Proof out. History exported.
+evaluated / conformant / 10 / 10 / 0 / 0
 ```
 
-In the current architecture:
-- **ReceiptOS** is the stable proof substrate
-- **producers** are systems that emit execution evidence into that substrate
-- **Crystal Receipt** is the proof-facing packaging / inspection / export layer built around that boundary
+This is more than an ordinary test suite: neighborhood identity, expected authority, materialization, execution, comparison, and aggregate semantics are all closed under the frozen package.
 
-Crystal Receipt is **not** a Stealth frontend.
-Stealth is one current supported evidence producer, alongside other producer inputs already documented in this repo.
+### Traversal stability
 
-Visual receipt language remains downstream presentation, not the core identity of the repo.
+[Traversal stability](conformance/counterfactual-traversal-stability-v0/SPEC.md) evaluates the same ten members under five frozen deterministic schedules. Reset model: fresh process per schedule, shared process within a schedule.
 
-Post-quantum considerations for receipt longevity: see [pq-receipt-profile](https://github.com/pipavlo82/pq-receipt-profile).
-
-## External producer quick start
-
-- Read `docs/receiptos_integration_manifest_v0.md`
-- Read `docs/EXTERNAL_PRODUCER_INTEGRATION_GUIDE.md`
-- Run `bun scripts/demo-external-producer-e2e.ts`
-
-## Producer coverage
-
-ReceiptOS uses the same proof pipeline across different producer systems.
-
-Core message:
+Measured result:
 
 ```text
-Same proof pipeline.
-Different producers.
-One portable proof/history model.
+50 stable / 0 history-sensitive / 0 unresolved
 ```
 
-The current documented producer surface is best understood in two categories.
-Stealth is one supported producer here, not the definition of the product.
+This does not cover every possible history or all `10!` schedule permutations.
+
+## What the results mean
+
+```text
+source validity
+≠ verifier conformance
+≠ downstream judgment
+```
+
+- **Source validity** concerns whether supplied evidence supports declared properties under the selected schemas and verification profile.
+- **Verifier conformance** concerns whether an implementation matches an authenticated normative corpus and frozen expected-result authority.
+- **Downstream judgment** concerns what a consumer chooses to do with those findings: admission, history, policy, settlement, or other action.
+
+Also keep these distinctions:
+
+- unresolved execution ≠ semantic nonconformance
+- package corruption ≠ semantic nonconformance
+- anchor presence or state ≠ verifier verdict
+
+## Quick verification
+
+```bash
+bun test tests/receiptos
+bun conformance/counterfactual-conformance-v0/generate_package.ts --check
+bun conformance/counterfactual-traversal-stability-v0/generate_package.ts --check
+python conformance/counterfactual-conformance-v0/verify_independent.py
+python conformance/counterfactual-traversal-stability-v0/verify_independent.py
+```
+
+Generator `--check` mode must produce zero drift against the committed packages. Independent auditors do not import the production implementation (`production_imports: 0`).
+
+## Core artifact flow
+
+```text
+producer evidence
+→ normalization and canonicalization
+→ receipt_root recomputation
+→ declared verification surfaces
+→ Evidence Capsule / Provenance Summary
+→ portable_proof_object.v0
+→ Chronicle or another downstream consumer
+```
+
+Counterfactual Conformance tests verifier behavior alongside this receipt-processing architecture. It is not an inline gate required for every ordinary receipt.
+
+## Producer neutrality and integrations
+
+The reference implementation was developed in design partnership with Stealth (CYPHES). Stealth is one supported producer, not the product boundary. Neutrality is structural: no adapter participates in `receipt_root` derivation. Full adapter index: [docs/ADAPTERS.md](docs/ADAPTERS.md).
 
 ### Verified against real producer data or real fixture shape
+
 - Stealth handoff
 - GitHub Actions
 - Claude Code session
 - generic producer
 - `external.coding_run.v0`
 
-### Schema sketch / capsule-boundary compatibility only
+### Schema / capsule-boundary compatibility only
+
 - Cursor session
 - Codex session
 
-All of these paths are aimed at the same ReceiptOS capsule/proof boundary.
-But Cursor and Codex should currently be read more narrowly: they demonstrate ReceiptOS boundary compatibility and adapter shape, not a fully verified stable integration against documented real producer session formats.
+Cursor and Codex currently demonstrate ReceiptOS boundary compatibility and adapter shape. They are not yet verified against stable, documented real producer session formats.
 
-These producers differ in runtime, workflow shape, and source semantics.
-They do not get separate proof semantics.
-They normalize into the same ReceiptOS proof boundary and produce the same core proof-facing artifacts:
+Start here:
 
-- recomputable `receipt_root`
-- `receiptos.evidence_capsule.v0`
-- `receiptos.provenance_summary.v0`
-- verifier-facing proof state
-- replay-oriented evidence summaries
+- [docs/receiptos_integration_manifest_v0.md](docs/receiptos_integration_manifest_v0.md)
+- [docs/EXTERNAL_PRODUCER_INTEGRATION_GUIDE.md](docs/EXTERNAL_PRODUCER_INTEGRATION_GUIDE.md)
+- [docs/PRODUCER_SUPPORT_MATRIX.md](docs/PRODUCER_SUPPORT_MATRIX.md)
+- [docs/PRODUCER_PROOF_CONTRACT_V0.md](docs/PRODUCER_PROOF_CONTRACT_V0.md)
+- [docs/PRODUCER_NEUTRAL_PROOF_BOUNDARY.md](docs/PRODUCER_NEUTRAL_PROOF_BOUNDARY.md)
+- [docs/CYPHES_RECEIPTOS_INTEGRATION_STATUS.md](docs/CYPHES_RECEIPTOS_INTEGRATION_STATUS.md)
 
-For the current support matrix, see `docs/PRODUCER_SUPPORT_MATRIX.md`.
+## Evidence admission, verification, Merkle, and anchor boundaries
 
-## What this is
+Evidence Capsule is a non-breaking interpretation layer over portable receipt evidence. It does not mutate the evidence document and does not change receipt semantics. See [docs/EVIDENCE_CAPSULE_MODEL_V0.md](docs/EVIDENCE_CAPSULE_MODEL_V0.md) and [docs/EVIDENCE_CAPSULE_SCHEMA_V0.md](docs/EVIDENCE_CAPSULE_SCHEMA_V0.md).
 
-Crystal Receipt is no longer just a visual experiment.
-Its current direction is:
-
-- portable execution receipts
-- Evidence Capsule interpretation
-- ReceiptOS-compatible verification
-- `receipt_root` recomputation
-- `portable_proof_object.v0` export
-- `chronicle_entry.v0` export
-- `chronicle_portfolio.v0` creation/export
-- local `portfolio_root` verification
-- local Merkle proof attachment and checking
-- external anchor import / anchor-path support
-- optional visual rendering as a secondary presentation layer
-
-The core idea is simple:
-- a producer emits evidence
-- the evidence can be verified and replayed
-- the evidence can be summarized into an Evidence Capsule
-- the evidence can be exported into portable proof/history artifacts
-- the same evidence can optionally be rendered into a deterministic crystal artifact
-
-The goal is **not** to replace cryptographic verification.
-The goal is to make execution evidence portable, inspectable, verifiable, and human-readable.
-
-For the current generic product flow:
-
-```text
-evidence
--> proof
--> portable_proof_object.v0
--> chronicle_entry.v0
--> chronicle_portfolio.v0
--> portfolio_root verification
-```
-
-`portfolio_root` is derived only from:
-- `portfolio_version`
-- `portfolio_id`
-- sorted `collection_refs`
-
-It does not include scoring, reputation, certification, ownership, NFT logic, blockchain requirements, timestamps, or UI/render-only metadata.
-
-## Execution Provenance
-
-Crystal Receipt is a portable execution provenance surface for agent actions.
-
-The goal is not simply to display receipts, logs, or visual artifacts.
-
-The goal is to make agent execution independently inspectable and verifiable:
-
-```text
-agent input
--> policy
--> authorization
--> tool/action
--> evidence
--> result
--> verifier
--> receipt
-```
-
-Crystal Receipt packages this into portable proof-facing artifacts:
-
-- schema-valid receipts
-- recomputable receipt roots
-- verifier results
-- proof references / anchor state
-- Evidence Capsules
-- replay summaries / manifests
-- invariant validation
-- browser-inspectable proof views
-
-This places Crystal Receipt in the broader execution provenance category: SLSA / in-toto for software supply chain, but for autonomous agent execution.
-
-Independent recomputation establishes whether declared receipt properties hold
-for supplied evidence under the selected schemas, canonicalization rules, and
-verification profile. It does not independently establish source truth,
-real-world occurrence, actor identity, authority, or downstream judgment. A
-verifier implements those checks; it is not a privileged truth authority. A
-producer-supplied `verifier_result` remains reported evidence and must not
-substitute for consumer recomputation.
-
-Visual artifacts, crystal surfaces, exports, and collectibles are optional
-downstream presentation layers. They do not prove the work by themselves.
-
-**Don't trust. Recompute.**
-
-See:
-- `docs/EXECUTION_PROVENANCE_FRAMING.md`
-- `docs/receiptos_integration_manifest_v0.md`
-- `docs/EXTERNAL_PRODUCER_INTEGRATION_GUIDE.md`
-- `docs/PRODUCER_SUPPORT_MATRIX.md`
-- `docs/PRODUCER_PROOF_CONTRACT_V0.md`
-- `docs/PRODUCER_NEUTRAL_PROOF_BOUNDARY.md`
-- `docs/CYPHES_RECEIPTOS_INTEGRATION_STATUS.md`
-- [Unanchored Issuance Witness v0 implementation status](docs/UNANCHORED_ISSUANCE_WITNESS_V0_STATUS.md) — non-normative status of published schemas, vectors, and evaluator coverage
-- `scripts/demo-external-producer-e2e.ts`
-
-![Crystal Receipt architecture hero](docs/crystal_receipt_mobile_flow.svg)
-
-## Current product direction
-
-Crystal Receipt now includes a portable ReceiptOS-aligned proof core in `src/receiptos`.
-
-That proof core supports:
-
-- portable evidence JSON
-- schema-preserving receipt interpretation
-- canonical `receipt_root` recomputation
-- local Merkle proof helpers
-- Sepolia anchor payload/result helpers
-- Evidence Capsule view-models
-- a non-visual capsule demo CLI
-
-The visual renderer still exists and still works, but it is no longer the only or primary product story.
-The receipt and proof layer comes first.
-
-The pipeline above is the conceptual view. The flow below is the package-level view, and the concrete repo path further down is the implementation-level mapping of the same flow.
-
-## Core flow
-
-```text
-Agent action
--> portable evidence
--> receipt_root
--> Merkle proof
--> anchor / proof references
--> verifier
--> Evidence Capsule
--> optional crystal surface
-```
-
-A more concrete interpretation path in the current repo is:
-
-```text
-payload
--> policy boundary
--> authorization
--> decision trace
--> execution
--> evidence record
--> receipt root
--> Merkle proof
--> anchor
--> replay manifest
--> verification
--> optional visual presentation
-```
-
-## ReceiptOS compatibility
-
-Core formulations: see [Canonical Principles](docs/CANONICAL_PRINCIPLES.md).
-Schema at a glance: see [Schema Overview](docs/SCHEMA_OVERVIEW.md).
-ReceiptOS follows a simple rule: correctness must remain independently re-derivable. In that sense, it is closer to DNA proofreading and mismatch repair than to a reputation system: what is preserved is not trust in the producer, but the ability to re-establish correctness through independent verification. See: [Natural Precedent — DNA Proofreading](docs/natural-precedent-dna-proofreading.md).
-
-Crystal Receipt is designed to stay compatible with ReceiptOS-style proof flows.
-
-That means:
-- evidence remains portable JSON
-- receipt roots remain recomputable
-- proof helpers remain deterministic
-- Merkle / anchor state remains inspectable
-- verification remains separate from presentation
-
-Crystal Receipt does **not** redefine receipt truth.
-It consumes receipt evidence and presents it.
-
-In the current repo, this proof boundary is also producer-neutral:
-- Stealth handoff, GitHub Actions, Claude Code session, generic producer, and `external.coding_run.v0` are supported against real producer data or real fixture shape in the current adapter/fixture/test surface
-- Cursor session and Codex session currently demonstrate capsule-boundary compatibility in the adapter/fixture/test surface, but are not yet verified against stable, documented real producer session formats
-- producers may differ in workflow model, runtime, and source semantics
-- the shared Evidence Capsule / proof boundary remains stable
-- producer-specific workflow logic stays outside the shared proof substrate
-
-## Evidence Capsule
-
-Evidence Capsule is now a first-class concept in the repo.
-
-The capsule is a non-breaking interpretation layer over portable receipt evidence.
-It does not mutate the evidence document and it does not change receipt semantics.
-
-The current capsule model summarizes sections such as:
-
-- payload
-- policy boundary
-- authorization
-- decision trace
-- execution
-- evidence
-- counterfactual / denied-action interpretation
-- result
-- receipt root
-- Merkle proof
-- anchor
-- replay manifest
-- verifier
-
-Useful starting points:
-- `docs/EVIDENCE_CAPSULE_MODEL_V0.md`
-- `docs/CRYSTAL_RECEIPT_MAPPING_V0.md`
-- `docs/receiptos_integration_manifest_v0.md`
-
-## Verification, Merkle, and anchor path
-
-A receipt contains structured execution evidence, for example:
-
-- `session_id`
-- task / prompt context
-- execution records
-- commands
-- changed files
-- `diff_sha256`
-- `anchor.receipt_root`
-- `anchor.merkle_root`
-- `anchor.tx_hash`
-- verifier-facing status fields
-
-The portable proof flow is:
+Typical verification path:
 
 1. canonicalize receipt evidence
 2. recompute `receipt_root`
-3. compare against stored `anchor.receipt_root`
-4. attach / verify local Merkle proof when present
-5. prepare anchor payloads or import anchor results when needed
+3. compare stored and computed values
+4. attach or verify local Merkle proof when present
+5. import or prepare anchor state when needed
 6. summarize the result as a capsule / proof surface
 
-Crystal Receipt contains deterministic verification and recomputation
-functions for the supported ReceiptOS paths. A verifier is an implementation
-of declared checks, not a privileged source of truth, and producer-reported
-verifier state must be independently recomputed by the consumer.
+A verifier implements declared checks; it is not a privileged truth authority. Producer-reported `verifier_result` remains evidence and must not substitute for consumer recomputation.
 
-The capsule and crystal layers are interpretive and presentational.
-Producer identity (runtime, generated_by, source metadata) is provenance metadata, not proof truth.
+Merkle and anchor fields remain declared, inspectable properties. Anchor presence or imported/prepared anchor state is not a verifier verdict and is not part of a valid/mismatch/missing vocabulary.
 
-## Important security boundary
+Published Unanchored Issuance Witness schemas and normative vectors exist, but the complete production findings evaluator for Unanchored Issuance Witness remains absent. Status: [docs/UNANCHORED_ISSUANCE_WITNESS_V0_STATUS.md](docs/UNANCHORED_ISSUANCE_WITNESS_V0_STATUS.md).
 
-These implemented checks do not establish every security property and do not
-mean that every published schema has a production evaluator. In particular,
-the Unanchored Issuance Witness schemas and normative vectors are published,
-but its complete production findings evaluator is not implemented.
+## Chronicle and downstream ecosystem
 
-Crystal Receipt does not replace:
+Chronicle consumes admitted proof-bearing material as a continuity/history layer. ReceiptOS does not grant Chronicle universal historical truth. Viewer, export, policy, and settlement layers interpret portable findings; they do not inherit automatic acceptance from ReceiptOS.
 
-- signature verification
-- hash checks
-- replay protection
-- policy checks
-- scope / authority checks
-- Merkle verification
-- anchor verification
-- trust-chain verification
+Downstream artifacts include `chronicle_entry.v0`, portfolio artifacts, and local portfolio/root verification. `portfolio_root` is derived only from `portfolio_version`, `portfolio_id`, and sorted `collection_refs`. It does not include scoring, reputation, certification, ownership, NFT logic, blockchain requirements, timestamps, or UI/render-only metadata.
+
+Post-quantum considerations for receipt longevity: [pq-receipt-profile](https://github.com/pipavlo82/pq-receipt-profile).
+
+## Integration and CLI guide
+
+### Proof and capsule commands
+
+```bash
+bun scripts/demo-external-producer-e2e.ts
+bun scripts/demo-external-coding-run-e2e.ts
+
+bun scripts/receiptos-import-producer.ts \
+  --producer generic \
+  --input src/receiptos/fixtures/generic-producer-output.sample.json \
+  --out examples/imported-producer
+
+bun scripts/receiptos-import-producer.ts \
+  --producer github-actions \
+  --input src/receiptos/fixtures/github-actions-run.sample.json \
+  --out out/github-actions-demo
+
+bun scripts/receiptos-capsule-demo.ts \
+  --evidence src/receiptos/fixtures/session-evidence.with-local-merkle.sample.json \
+  --out examples/receiptos-capsule-demo/capsule-summary.json
+
+bun scripts/export-portable-proof-object-v0.ts \
+  <stealth-evidence.json> \
+  <portable-proof-object-v0.json>
+```
+
+Import/demo outputs commonly include:
+
+- `normalized-evidence.json`
+- `evidence-capsule.v0.json`
+- `provenance-summary.v0.json`
+- `capsule-summary.json`
+
+Committed Viewer examples live under `examples/receipt-examples/` (`clean-local-proof`, `tampered-mismatch`, `anchored-proof`, and `index.json`).
+
+### Viewer usage
+
+ReceiptOS artifacts are produced by import/demo scripts or by a producer integration. Open a local Viewer and load generated JSON from your machine; files stay local in the browser.
+
+- [docs/artifact-viewer/index.html](docs/artifact-viewer/index.html)
+- [docs/receipt-verifier/index.html](docs/receipt-verifier/index.html)
+- [examples/artifact-viewer/index.html](examples/artifact-viewer/index.html)
+
+Example semantics:
+
+- `clean-local-proof` — live verifier input example
+- `tampered-mismatch` — live verifier input example; should report a mismatch
+- `anchored-proof` — static example showing imported anchor state
+
+The current verifier CLI verifies portable evidence input and does not yet recompute or import anchor overlay from the `anchored-proof` example folder.
+
+### Optional visual-renderer commands
+
+Brief reference only; see [Optional visual crystal renderer](#optional-visual-crystal-renderer) for boundaries and explanation.
+
+```bash
+python generate.py --hash <receiptHash> --out examples/demo
+python generate.py --receipt examples/receipt-demo/receipt.json --out examples/receipt-demo
+```
+
+## Repository map and documentation
+
+| Path | Role |
+| --- | --- |
+| `src/receiptos/` | ReceiptOS proof core, adapters, fixtures |
+| `conformance/` | Frozen conformance packages and auditors |
+| `schemas/` | Published JSON schemas |
+| `docs/` | Specs, guides, Viewer surfaces, architecture notes |
+| `scripts/` | Import, demo, capsule, and export CLIs |
+| `examples/` | Committed example bundles and Viewer samples |
+| `tests/receiptos/` | ReceiptOS test suite |
+| `generate.py` and related visual tooling | Optional crystal renderer |
+
+Strong documentation entry points:
+
+- [docs/CANONICAL_PRINCIPLES.md](docs/CANONICAL_PRINCIPLES.md)
+- [docs/SCHEMA_OVERVIEW.md](docs/SCHEMA_OVERVIEW.md)
+- [docs/ARCHITECTURE_OVERVIEW.md](docs/ARCHITECTURE_OVERVIEW.md)
+- [docs/CONFORMANCE_INDEX.md](docs/CONFORMANCE_INDEX.md)
+- [docs/EXECUTION_PROVENANCE_FRAMING.md](docs/EXECUTION_PROVENANCE_FRAMING.md)
+- [docs/CRYSTAL_RECEIPT_MAPPING_V0.md](docs/CRYSTAL_RECEIPT_MAPPING_V0.md)
+- [docs/RECEIPT_DERIVATION.md](docs/RECEIPT_DERIVATION.md)
+- [docs/natural-precedent-dna-proofreading.md](docs/natural-precedent-dna-proofreading.md)
+
+## Security and bounded nonclaims
+
+These implemented checks do not establish every security property.
+
+ReceiptOS / Crystal Receipt does **not** claim:
+
+- a universal verifier-correctness theorem
+- correctness under every possible history or all `10!` traversal orders
+- source-truth or real-world-occurrence proof
+- actor-identity or authority proof
+- automatic downstream admission or policy decision
+- certification, scoring, reputation, ownership, NFT, or marketplace systems
+- security proof from an image
+- that every published schema has a production evaluator
+- replacement for signatures, hashes, Merkle verification, replay protection, policy checks, scope/authority checks, or anchor verification
 
 Correct statement:
 
 > The artifact does not prove the work by itself.
 > It represents receipt evidence that can be independently verified.
 
-## External Producer E2E Demo
+Export layers may aid portability and presentation. Exported artifacts do not automatically prove the work.
 
-The fastest runnable example of the producer-neutral ReceiptOS integration flow.
-Run `bun scripts/demo-external-producer-e2e.ts` for a minimal generic producer example that walks through normalization, `receipt_root` computation, Evidence Capsule generation, and Provenance Summary generation.
-Run `bun scripts/demo-external-coding-run-e2e.ts` for the first concrete external coding-agent/tool-run producer example.
-
-### Where do Viewer artifacts come from?
-
-ReceiptOS artifacts are produced by the import/demo scripts or by a producer integration. The Viewer can inspect those generated JSON files directly from your computer; files stay local in the browser and are not uploaded.
-
-Example:
-
-```bash
-bun scripts/receiptos-import-producer.ts \
- --producer github-actions \
- --input src/receiptos/fixtures/github-actions-run.sample.json \
- --out out/github-actions-demo
-```
-
-Then open the ReceiptOS Viewer and load files from `out/github-actions-demo/`:
-
-- `evidence-capsule.v0.json` — primary artifact
-- `provenance-summary.v0.json` — optional provenance summary
-- `capsule-summary.json` — optional richer viewer summary
-- `normalized-evidence.json` — optional producer/runtime context
-
-Existing committed examples live under `examples/receipt-examples/`, and real producers or CI systems can publish the same files as build artifacts.
-
-Current committed Viewer examples now include both proof-state examples and producer-specific ReceiptOS bundles generated from existing fixtures/import paths. The proof-state examples remain useful for clean/tampered/anchored integrity surfaces, while the producer-specific bundles make the shared multi-producer proof model directly visible in the Viewer.
-
-## Current CLI modes
-
-### Hash mode
-
-The original MVP remains available:
-
-```bash
-python generate.py --hash <receiptHash> --out examples/demo
-```
-
-This produces a deterministic crystal from a single hash input.
-
-### Receipt mode
-
-Receipt-derived generation is now available:
-
-```bash
-python generate.py --receipt examples/receipt-demo/receipt.json --out examples/receipt-demo
-```
-
-This loads receipt JSON, canonicalizes it, derives seeds and visual traits, and writes:
-- `crystal.svg`
-- `crystal.metadata.json`
-
-### ReceiptOS Capsule Demo
-
-A non-visual proof/capsule summary can also be generated from portable ReceiptOS evidence fixtures produced by different source systems.
-
-```bash
-bun scripts/receiptos-capsule-demo.ts --evidence src/receiptos/fixtures/session-evidence.with-local-merkle.sample.json --out examples/receiptos-capsule-demo/capsule-summary.json
-```
-
-Input fixture:
-- `src/receiptos/fixtures/session-evidence.with-local-merkle.sample.json`
-
-Output artifacts:
-- `examples/receiptos-capsule-demo/capsule-summary.json`
-- `examples/receiptos-capsule-demo/evidence-capsule.v0.json`
-
-Schema v0:
-- `schemas/evidence-capsule.v0.schema.json`
-- `docs/EVIDENCE_CAPSULE_SCHEMA_V0.md`
-
-The schema-valid `evidence-capsule.v0.json` file is proof-first and non-visual.
-This demo does not change the SVG renderer and does not change receipt root semantics.
-
-Additional static example sets now live under:
-- `examples/receipt-examples/clean-local-proof/`
-- `examples/receipt-examples/tampered-mismatch/`
-- `examples/receipt-examples/anchored-proof/`
-- `examples/receipt-examples/index.json`
-
-Example semantics:
-- `clean-local-proof` is a live verifier input example.
-- `tampered-mismatch` is a live verifier input example and should report a mismatch clearly.
-- `anchored-proof` is a static example artifact set showing imported anchor state.
-- The current verifier CLI verifies portable evidence input and does not yet recompute/import anchor overlay from the `anchored-proof` example folder.
-
-### Generic Producer Import CLI
-
-A generic external producer output can also be normalized into the current ReceiptOS input path and reduced into proof artifacts.
-This is the current producer-neutral import path.
-`receipt_root` is computed independently of the top-level `anchor`; see `bun scripts/demo-external-producer-e2e.ts` for the fastest runnable example.
-The repo now also includes `external-coding-run` as a concrete coding-agent/tool-run producer example.
-
-```bash
-bun scripts/receiptos-import-producer.ts \
- --producer generic \
- --input src/receiptos/fixtures/generic-producer-output.sample.json \
- --out examples/imported-producer
-```
-
-Output artifacts:
-- `normalized-evidence.json`
-- `capsule-summary.json`
-- `evidence-capsule.v0.json`
-- `provenance-summary.v0.json`
-
-## Optional visual renderer
-
-The crystal artifact remains relevant, but now as an optional presentation layer on top of the portable receipt/proof core.
-
-The visual side still provides:
-- deterministic rendering from stable evidence-derived inputs
-- a human-facing artifact layer
-- an optional certificate / collectible style surface
-
-But the visual layer is secondary to:
-- receipt evidence
-- proof verification
-- Merkle / anchor path
-- Evidence Capsule interpretation
-
-## Bismuth / crystal background
-
-Earlier versions of Crystal Receipt led with the renderer and the bismuth metaphor.
-That history is still relevant, but it is no longer the primary narrative.
-
-Bismuth crystals remain a useful visual metaphor because they are structured but unique.
-They grow according to rules, and small differences in conditions lead to different final forms.
-
-Crystal Receipt uses that metaphor in a deterministic way:
-
-```text
-same evidence
-+ same rules
-= same artifact
-```
-
-So the crystal remains a meaningful visual fingerprint — just not the core trust layer.
-
-## Optional export boundary
-
-If a receipt, capsule, or visual artifact is exported to another medium, that export is still not the verifier.
-
-Export layers may be useful for:
-- portability
-- public display
-- discovery
-- artifact history
-- certificate-like presentation
-
-But exported artifacts do not automatically prove the work.
-
-Correct statement:
-
-> The export does not prove the work by itself.
-> It represents receipt evidence that can be independently verified.
-
-## What this is not
-
-Crystal Receipt is not:
-
-- a blockchain verifier
-- a replacement for ReceiptOS verification
-- a replacement for producer-side verification
-- a trust oracle
-- a security proof by image
-- a scoring or reputation engine
-- a certification system
-- an ownership registry
-- an NFT product
-- “AI art with metadata”
-
-It is a portable receipt/presentation layer with an optional deterministic visual grammar.
-
-## Future direction
-
-Future directions should prioritize execution provenance:
-
-```text
-agent execution
--> portable evidence
--> receipt_root
--> verifier result
--> Evidence Capsule
--> provenance artifact
--> optional viewer / export layer
-```
-
-Visual artifacts and exports remain useful, but they are downstream presentation layers.
-Verification continues to come from receipt evidence, hashes, proofs, anchors, and verifier logic.
-
-## Product meaning
-
-Crystal Receipt turns invisible agent execution into a portable, inspectable provenance surface.
-
-For agentic systems, this matters because agents perform actions:
-- call tools
-- change files
-- spend money
-- deploy code
-- trade
-- sign messages
-- make decisions
-
-Those actions need receipts.
-Those receipts need verification.
-Those verified receipts benefit from a portable, inspectable presentation layer.
-
-A human can see:
-- “This action produced this capsule / artifact.”
-
-A system can verify:
-- “This capsule came from this receipt evidence.”
-
-Declared checks evaluate source evidence under the selected schemas and
-verification profile. Depending on the surface, a semantic result may be
-conformant, nonconformant, rejected, or unverifiable. Execution can remain
-unresolved without becoming semantic rejection, and package corruption is
-distinct from semantic nonconformance. Downstream systems decide what those
-verified findings mean for admission, policy, history, or judgment.
-
-That separation is the key:
-
-- declared checks evaluate evidence
-- receipt stores evidence
-- capsule interprets it
-- crystal can present it
-- optional export can make it portable
-- downstream systems decide admission, policy, history, or judgment
-
-## Notes
-
-- No blockchain submit path here
-- No NFT minting code here
-- No scoring or reputation layer here
-- No ownership or certification layer here
-- Stealth is a supported producer, not the product boundary
-- No producer-specific runtime integration SDK yet
-- No external paid APIs
-- Visual generator remains available
-- Proof/capsule layer is now first-class
-
-## Architecture overview
-
-Crystal Receipt now spans both:
-- a portable ReceiptOS-aligned proof core
-- and a deterministic visual artifact layer
-
-The proof layer handles evidence interpretation, root verification, Merkle state, anchor state, and capsule summaries.
-The image remains the human-facing fingerprint.
-
-- `docs/receiptos_producer_neutral_architecture.svg` — current overall architecture: producers → proof boundary → receipt_root → verifier → Evidence Capsule → viewer/export/crystal
-- `docs/ARCHITECTURE_OVERVIEW.md`
-- `docs/crystal_receipt_mobile_flow.svg` — mobile-friendly README hero diagram
-- `docs/crystal_receipt_architecture.svg` — crystal rendering pipeline diagram (visual layer only, secondary to the substrate above)
-
-## Related docs
-
-- `docs/EXECUTION_PROVENANCE_FRAMING.md`
-- `docs/EVIDENCE_CAPSULE_MODEL_V0.md`
-- `docs/CRYSTAL_RECEIPT_MAPPING_V0.md`
-- `docs/RECEIPT_DERIVATION.md`
-- `docs/METADATA_SCHEMA_V0_2.md`
-- `docs/ROADMAP.md`
-
-## Executable conformance
-
-ReceiptOS on this repository includes implemented executable conformance
-surfaces, not only narrative claims:
-
-- [Recursive Singleton Fold](docs/RECURSIVE_SINGLETON_FOLD_REFERENCE_PACKAGE_V0_WORKING_DRAFT.md)
-  closes positions 1–28 against a committed normative conformance corpus.
-- [Counterfactual Conformance v0](conformance/counterfactual-conformance-v0/SPEC.md)
-  is an implemented bounded verifier-of-verifier system over an exact frozen
-  ten-member Deterministic Counterfactual Neighborhood, with authenticated
-  expected-result-set binding and materialized-input derivation from frozen
-  committed sources. Canonical aggregate:
-  `evaluated / conformant / 10 / 10 / 0 / 0`.
-- [Traversal stability](conformance/counterfactual-traversal-stability-v0/SPEC.md)
-  evaluates the same ten members under five frozen schedules with reset model
-  fresh process per schedule, shared process within a schedule. Measured
-  result: `50 stable / 0 history-sensitive / 0 unresolved`. Independent
-  auditors use `production_imports: 0`.
-
-Index and package inventory: [docs/CONFORMANCE_INDEX.md](docs/CONFORMANCE_INDEX.md).
-
-These results do **not** prove universal verifier correctness; correctness
-under all possible histories or all `10!` schedules; source truth or
-real-world occurrence; actor identity or authority; or correctness outside
-the frozen profiles and committed inventories.
-
-## Tests
+## Tests and CI
 
 ```bash
 python -m unittest discover -s tests -p "test_*.py"
 bun test tests/receiptos
 ```
+
+Committed CI includes [`.github/workflows/receiptos-export.yml`](.github/workflows/receiptos-export.yml). Do not infer broader coverage than that workflow runs.
 
 ## Citation
 
@@ -706,3 +304,37 @@ The paper's normative canonicalization profile (receiptos-c14n-v0, §2.8)
 and its byte-exact test vector are the ones implemented here; the
 conformance rows in docs/CONFORMANCE_INDEX.md point at this DOI as the
 spec reference.
+
+## Optional visual crystal renderer
+
+The visual crystal is an optional downstream presentation layer. It is not the ReceiptOS proof substrate and does not establish receipt correctness.
+
+It remains available for:
+
+- deterministic rendering from a hash
+- receipt-derived rendering from receipt JSON
+- deterministic SVG and metadata outputs
+- optional visual fingerprint / presentation use
+- export and display of a human-facing artifact
+
+```bash
+python generate.py --hash <receiptHash> --out examples/demo
+python generate.py --receipt examples/receipt-demo/receipt.json --out examples/receipt-demo
+```
+
+Receipt mode writes `crystal.svg` and `crystal.metadata.json`. Same evidence and same rules yield the same visual artifact. That determinism is presentation-layer consistency, not proof of receipt correctness.
+
+Related notes:
+
+- [docs/METADATA_SCHEMA_V0_2.md](docs/METADATA_SCHEMA_V0_2.md)
+- [docs/crystal_receipt_architecture.svg](docs/crystal_receipt_architecture.svg) — crystal rendering pipeline only
+
+## Historical background: Bismuth and the original crystal renderer
+
+Earlier versions of Crystal Receipt led with the renderer and the bismuth metaphor. That history explains the repository name and why the optional crystal generator remains available, but it is no longer the primary product narrative.
+
+Bismuth crystals are structured yet unique: they grow according to rules, and small differences in conditions produce different final forms. Crystal Receipt used that metaphor deterministically—same evidence and same rules yield the same artifact—as a visual fingerprint over receipt-derived inputs.
+
+Today the proof substrate comes first. The renderer remains a secondary, optional presentation tool.
+
+See also [LICENSE](LICENSE) and [CONTRIBUTING.md](CONTRIBUTING.md).
