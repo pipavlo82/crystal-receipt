@@ -41,6 +41,9 @@ import {
   type VerifierChallengeRunRequestV0,
 } from "./counterfactual-verifier-runner"
 import type { AuthenticatedScheduleOrderV0 } from "./counterfactual-traversal-schedules"
+import type { AuthenticatedScheduleOrderV1 } from "./counterfactual-traversal-schedules-v1"
+
+type AuthenticatedScheduleOrder = AuthenticatedScheduleOrderV0 | AuthenticatedScheduleOrderV1
 import type { CounterfactualObservationV0 } from "./counterfactual-result-normalization"
 import type { SubjectContractRejectionV0 } from "./counterfactual-verifier-runner"
 
@@ -615,7 +618,7 @@ function observationFromEvaluation(
 
 function orderBoundMembersForSchedule(
   boundMembers: readonly BoundMemberV0[],
-  authenticatedSchedule: AuthenticatedScheduleOrderV0,
+  authenticatedSchedule: AuthenticatedScheduleOrder,
 ): BoundMemberV0[] {
   const byVectorId = new Map<string, BoundMemberV0>()
   for (const bound of boundMembers) {
@@ -698,14 +701,17 @@ export async function evaluateCounterfactualNeighborhoodConformance(
  * evaluation in an authenticated frozen schedule order.
  *
  * Not a public caller-controlled execution-order API. Only accepts
- * AuthenticatedScheduleOrderV0 produced by authenticateFrozenTraversalSchedule.
+ * AuthenticatedScheduleOrderV0 / V1 produced by authenticateFrozenTraversalSchedule{,V1}.
  * Member results are always serialized in canonical DCN order.
  */
 export async function evaluateCounterfactualNeighborhoodUnderAuthenticatedSchedule(
   request: CounterfactualNeighborhoodConformanceRequestV0,
-  authenticatedSchedule: AuthenticatedScheduleOrderV0,
+  authenticatedSchedule: AuthenticatedScheduleOrder,
 ): Promise<ScheduledNeighborhoodObservationBundleV0> {
-  if (authenticatedSchedule.__brand !== "AuthenticatedScheduleOrderV0") {
+  if (
+    authenticatedSchedule.__brand !== "AuthenticatedScheduleOrderV0" &&
+    authenticatedSchedule.__brand !== "AuthenticatedScheduleOrderV1"
+  ) {
     throw new NeighborhoodConformanceContractError("unsupported_member_route")
   }
   if (
