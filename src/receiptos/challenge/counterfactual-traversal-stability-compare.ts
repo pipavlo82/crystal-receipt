@@ -186,3 +186,21 @@ export function isTraversalStabilityPass(aggregate: TraversalStabilityAggregateV
     aggregate.semantic_execution_unresolved === 0
   )
 }
+
+/** Parameterized PASS gate for versioned profiles (v1: 12×10 → 120). */
+export function isTraversalStabilityPassFor(
+  aggregate: TraversalStabilityAggregateV0,
+  expected: { readonly scheduleCount: number; readonly evaluations: number },
+): boolean {
+  return (
+    aggregate.schedule_count === expected.scheduleCount &&
+    aggregate.member_count === 10 &&
+    aggregate.scheduled_member_evaluations === expected.evaluations &&
+    aggregate.stable === expected.evaluations &&
+    aggregate.history_sensitive === 0 &&
+    aggregate.unresolved === 0 &&
+    aggregate.semantic_conformant === expected.evaluations &&
+    aggregate.semantic_nonconformant === 0 &&
+    aggregate.semantic_execution_unresolved === 0
+  )
+}
