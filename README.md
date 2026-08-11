@@ -1,6 +1,6 @@
 # ReceiptOS — Crystal Receipt reference implementation
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21402444.svg)](https://doi.org/10.5281/zenodo.21402444)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21895219.svg)](https://doi.org/10.5281/zenodo.21895219)
 
 ReceiptOS packages supplied execution evidence into recomputable, portable artifacts. Declared receipt properties can be independently recomputed from that evidence under selected schemas and canonicalization rules. Frozen conformance profiles evaluate whether verifier behavior matches authenticated expectations. Downstream systems decide admission, history, policy, settlement, or other judgment.
 
@@ -276,34 +276,38 @@ Committed CI includes [`.github/workflows/receiptos-export.yml`](.github/workflo
 
 ## Citation
 
-The currently published ReceiptOS preprint is citable at the Zenodo DOI below.
-This repository README does not claim that a later review draft is
-release-frozen or published.
+The current published ReceiptOS preprint (v0.8, 2026-08-11) is citable at
+the Zenodo DOI below.
 
-The ReceiptOS specification is published as a citable preprint:
-
-> Tvardovskyi, P. (2026). *ReceiptOS: A Portable, Recomputable Evidence
-> Substrate for Verifiable Agent Execution.* Zenodo.
-> https://doi.org/10.5281/zenodo.21402444
+> Tvardovskyi, P. (2026). *ReceiptOS: Recomputable Evidence and
+> Counterfactual Verifier Conformance* (Version 0.8). Zenodo.
+> https://doi.org/10.5281/zenodo.21895219
 
 BibTeX:
 
 ```bibtex
-@misc{tvardovskyi2026receiptos,
+@misc{tvardovskyi2026receiptos_v08,
  author = {Tvardovskyi, Pavlo},
- title = {{ReceiptOS: A Portable, Recomputable Evidence
- Substrate for Verifiable Agent Execution}},
+ title = {{ReceiptOS: Recomputable Evidence and
+ Counterfactual Verifier Conformance}},
  year = {2026},
  publisher = {Zenodo},
- doi = {10.5281/zenodo.21402444},
- url = {https://doi.org/10.5281/zenodo.21402444}
+ version = {0.8},
+ doi = {10.5281/zenodo.21895219},
+ url = {https://doi.org/10.5281/zenodo.21895219}
 }
 ```
 
+Version DOIs:
+
+- v0.8 (current): [10.5281/zenodo.21895219](https://doi.org/10.5281/zenodo.21895219)
+- v0.6 preprint (*ReceiptOS: A Portable, Recomputable Evidence Substrate for
+  Verifiable Agent Execution*): [10.5281/zenodo.21402444](https://doi.org/10.5281/zenodo.21402444)
+- Concept DOI (always resolves to the latest version):
+  [10.5281/zenodo.21402443](https://doi.org/10.5281/zenodo.21402443)
+
 The paper's normative canonicalization profile (receiptos-c14n-v0, §2.8)
-and its byte-exact test vector are the ones implemented here; the
-conformance rows in docs/CONFORMANCE_INDEX.md point at this DOI as the
-spec reference.
+and its byte-exact test vector are the ones implemented here.
 
 ## Optional visual crystal renderer
 
