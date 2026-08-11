@@ -298,11 +298,13 @@ BibTeX:
 }
 ```
 
-Version DOIs:
+Version DOIs (the Zenodo record has two versions):
 
-- v0.8 (current): [10.5281/zenodo.21895219](https://doi.org/10.5281/zenodo.21895219)
-- v0.6 preprint (*ReceiptOS: A Portable, Recomputable Evidence Substrate for
-  Verifiable Agent Execution*): [10.5281/zenodo.21402444](https://doi.org/10.5281/zenodo.21402444)
+- Version 2 — paper v0.8, current:
+  [10.5281/zenodo.21895219](https://doi.org/10.5281/zenodo.21895219)
+- Version 1 — paper v0.6 preprint (*ReceiptOS: A Portable, Recomputable
+  Evidence Substrate for Verifiable Agent Execution*):
+  [10.5281/zenodo.21402444](https://doi.org/10.5281/zenodo.21402444)
 - Concept DOI (always resolves to the latest version):
   [10.5281/zenodo.21402443](https://doi.org/10.5281/zenodo.21402443)
 
