@@ -1,6 +1,6 @@
 # ReceiptOS — Crystal Receipt reference implementation
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21895219.svg)](https://doi.org/10.5281/zenodo.21895219)
+[![DOI v0.8](https://zenodo.org/badge/DOI/10.5281/zenodo.21895219.svg)](https://doi.org/10.5281/zenodo.21895219) [![DOI v0.6](https://zenodo.org/badge/DOI/10.5281/zenodo.21402444.svg)](https://doi.org/10.5281/zenodo.21402444)
 
 ReceiptOS packages supplied execution evidence into recomputable, portable artifacts. Declared receipt properties can be independently recomputed from that evidence under selected schemas and canonicalization rules. Frozen conformance profiles evaluate whether verifier behavior matches authenticated expectations. Downstream systems decide admission, history, policy, settlement, or other judgment.
 
