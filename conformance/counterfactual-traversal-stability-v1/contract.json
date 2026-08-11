@@ -1,0 +1,341 @@
+{
+  "schema": "counterfactual_traversal_stability_package_contract.v1",
+  "package_id": "counterfactual-traversal-stability-v1",
+  "version": "v1",
+  "profile_id": "counterfactual-traversal-stability-v1",
+  "profile_version": "v1",
+  "schedule_set_id": "counterfactual-traversal-schedule-set-v1",
+  "schedule_set_schema": "receiptos.counterfactual_traversal_schedule_set.v1",
+  "schedule_set_sha256": "b3742758dce9df46fca5b083da77b555b96b77daf3fd78a1d0e2ab83a5e3ceda",
+  "dcn_sha256": "37a213cff7a34e28df165c282f2b9e7460e31fbd37794bf5020c1e91158ed36d",
+  "member_count": 10,
+  "schedule_count": 12,
+  "scheduled_member_evaluations": 120,
+  "reset_model": "fresh_process_per_schedule_shared_process_within_schedule",
+  "first_position_coverage": {
+    "schema": "receiptos.counterfactual_traversal_first_position_coverage.v1",
+    "schedule_count": 12,
+    "member_count": 10,
+    "scheduled_member_evaluations": 120,
+    "first_position_member_count": 10,
+    "first_position_covered": 10,
+    "first_position_missing": [],
+    "records": [
+      {
+        "vector_id": "V-OBSERVED-NOT-VALIDATED",
+        "first_position_schedule_ids": [
+          "pi_canonical",
+          "pi_nonlocal_v0"
+        ],
+        "cold_start_covered": true
+      },
+      {
+        "vector_id": "V-MISSING-REQUIRED-INPUT",
+        "first_position_schedule_ids": [
+          "cold_start_missing-required-input"
+        ],
+        "cold_start_covered": true
+      },
+      {
+        "vector_id": "V-INTEGRITY-MISMATCH",
+        "first_position_schedule_ids": [
+          "cold_start_integrity-mismatch"
+        ],
+        "cold_start_covered": true
+      },
+      {
+        "vector_id": "V-CHRONICLE-PROOF-ROOT-MISMATCH",
+        "first_position_schedule_ids": [
+          "cold_start_chronicle-proof-root-mismatch"
+        ],
+        "cold_start_covered": true
+      },
+      {
+        "vector_id": "V-CHRONICLE-PREDECESSOR-UNKNOWN",
+        "first_position_schedule_ids": [
+          "cold_start_chronicle-predecessor-unknown"
+        ],
+        "cold_start_covered": true
+      },
+      {
+        "vector_id": "V-CHRONICLE-SEQUENCE-GAP",
+        "first_position_schedule_ids": [
+          "cold_start_chronicle-sequence-gap"
+        ],
+        "cold_start_covered": true
+      },
+      {
+        "vector_id": "V-CHRONICLE-CHECKPOINT-ROOT-MISMATCH",
+        "first_position_schedule_ids": [
+          "cold_start_chronicle-checkpoint-root-mismatch"
+        ],
+        "cold_start_covered": true
+      },
+      {
+        "vector_id": "V-CHRONICLE-CHECKPOINT-ENTRY-REFS-NONCANONICAL",
+        "first_position_schedule_ids": [
+          "cold_start_chronicle-checkpoint-entry-refs-noncanonical"
+        ],
+        "cold_start_covered": true
+      },
+      {
+        "vector_id": "V-AT-NEST-OBJ",
+        "first_position_schedule_ids": [
+          "pi_boundary_first"
+        ],
+        "cold_start_covered": true
+      },
+      {
+        "vector_id": "V-MAN-HASH-DIFF",
+        "first_position_schedule_ids": [
+          "pi_reverse",
+          "pi_composite_first"
+        ],
+        "cold_start_covered": true
+      }
+    ]
+  },
+  "runner": {
+    "schema": "receiptos.counterfactual_traversal_stability_runner.v1",
+    "version": "v1",
+    "module_path": "src/receiptos/challenge/counterfactual-traversal-stability-v1.ts",
+    "worker_module_path": "conformance/counterfactual-traversal-stability-v1/run_schedule_worker.ts",
+    "worker_timeout_ms": 120000,
+    "process_launch_count": 12,
+    "process_isolation": "exactly_one_fresh_spawn_per_authenticated_schedule_sequential_no_cross_schedule_reuse",
+    "pid_telemetry": "non_normative_may_repeat_never_enters_result_identity"
+  },
+  "counterfactual_conformance_package": {
+    "package_id": "counterfactual-conformance-v0",
+    "package_path": "conformance/counterfactual-conformance-v0",
+    "dcn_sha256": "37a213cff7a34e28df165c282f2b9e7460e31fbd37794bf5020c1e91158ed36d",
+    "child_identity_set_sha256": "7bbe7e02247e4177af954b83f7b2c4a982f6f1ef3806e623b2d847aa3089be47",
+    "fixture_set_sha256": "264870b880e3b37ff8f0d9bdbaa9a4f64242e92f6485316477d32bbf9b81904a"
+  },
+  "preserved_v0_profile": {
+    "package_id": "counterfactual-traversal-stability-v0",
+    "schedule_set_sha256": "323f185857af8aeb8436d9ec15f24c0a53a9662f9fbe613526477ed243ed285d",
+    "fixture_set_sha256": "04821850899ad432bbe50c8d7e08659f387c3c9860d9324aaa106dd1c7ccb201",
+    "schedule_count": 5,
+    "scheduled_member_evaluations": 50
+  },
+  "canonical_vector_ids": [
+    "V-OBSERVED-NOT-VALIDATED",
+    "V-MISSING-REQUIRED-INPUT",
+    "V-INTEGRITY-MISMATCH",
+    "V-CHRONICLE-PROOF-ROOT-MISMATCH",
+    "V-CHRONICLE-PREDECESSOR-UNKNOWN",
+    "V-CHRONICLE-SEQUENCE-GAP",
+    "V-CHRONICLE-CHECKPOINT-ROOT-MISMATCH",
+    "V-CHRONICLE-CHECKPOINT-ENTRY-REFS-NONCANONICAL",
+    "V-AT-NEST-OBJ",
+    "V-MAN-HASH-DIFF"
+  ],
+  "schedules": [
+    {
+      "schedule_id": "pi_canonical",
+      "ordered_vector_ids": [
+        "V-OBSERVED-NOT-VALIDATED",
+        "V-MISSING-REQUIRED-INPUT",
+        "V-INTEGRITY-MISMATCH",
+        "V-CHRONICLE-PROOF-ROOT-MISMATCH",
+        "V-CHRONICLE-PREDECESSOR-UNKNOWN",
+        "V-CHRONICLE-SEQUENCE-GAP",
+        "V-CHRONICLE-CHECKPOINT-ROOT-MISMATCH",
+        "V-CHRONICLE-CHECKPOINT-ENTRY-REFS-NONCANONICAL",
+        "V-AT-NEST-OBJ",
+        "V-MAN-HASH-DIFF"
+      ],
+      "ordered_vector_ids_sha256": "10fe5ab9156154a5a03b369a75cd8d6782da68149be97acb3ad645c9d86c95c7"
+    },
+    {
+      "schedule_id": "pi_reverse",
+      "ordered_vector_ids": [
+        "V-MAN-HASH-DIFF",
+        "V-AT-NEST-OBJ",
+        "V-CHRONICLE-CHECKPOINT-ENTRY-REFS-NONCANONICAL",
+        "V-CHRONICLE-CHECKPOINT-ROOT-MISMATCH",
+        "V-CHRONICLE-SEQUENCE-GAP",
+        "V-CHRONICLE-PREDECESSOR-UNKNOWN",
+        "V-CHRONICLE-PROOF-ROOT-MISMATCH",
+        "V-INTEGRITY-MISMATCH",
+        "V-MISSING-REQUIRED-INPUT",
+        "V-OBSERVED-NOT-VALIDATED"
+      ],
+      "ordered_vector_ids_sha256": "5bf691951414804217d0830215d699a5eaf61167fb782cf5388350afe6635f84"
+    },
+    {
+      "schedule_id": "pi_composite_first",
+      "ordered_vector_ids": [
+        "V-MAN-HASH-DIFF",
+        "V-OBSERVED-NOT-VALIDATED",
+        "V-MISSING-REQUIRED-INPUT",
+        "V-INTEGRITY-MISMATCH",
+        "V-CHRONICLE-PROOF-ROOT-MISMATCH",
+        "V-CHRONICLE-PREDECESSOR-UNKNOWN",
+        "V-CHRONICLE-SEQUENCE-GAP",
+        "V-CHRONICLE-CHECKPOINT-ROOT-MISMATCH",
+        "V-CHRONICLE-CHECKPOINT-ENTRY-REFS-NONCANONICAL",
+        "V-AT-NEST-OBJ"
+      ],
+      "ordered_vector_ids_sha256": "7545c4b2309b2e996b6139b75eb663932b0b906d25bccc4713974e7723ce5038"
+    },
+    {
+      "schedule_id": "pi_boundary_first",
+      "ordered_vector_ids": [
+        "V-AT-NEST-OBJ",
+        "V-OBSERVED-NOT-VALIDATED",
+        "V-MISSING-REQUIRED-INPUT",
+        "V-INTEGRITY-MISMATCH",
+        "V-CHRONICLE-PROOF-ROOT-MISMATCH",
+        "V-CHRONICLE-PREDECESSOR-UNKNOWN",
+        "V-CHRONICLE-SEQUENCE-GAP",
+        "V-CHRONICLE-CHECKPOINT-ROOT-MISMATCH",
+        "V-CHRONICLE-CHECKPOINT-ENTRY-REFS-NONCANONICAL",
+        "V-MAN-HASH-DIFF"
+      ],
+      "ordered_vector_ids_sha256": "4d4d5c88a7295de490fcd2d186e28e03503d3ef5f0bfdd0ecb92637a6eb49480"
+    },
+    {
+      "schedule_id": "pi_nonlocal_v0",
+      "ordered_vector_ids": [
+        "V-OBSERVED-NOT-VALIDATED",
+        "V-MISSING-REQUIRED-INPUT",
+        "V-CHRONICLE-PROOF-ROOT-MISMATCH",
+        "V-CHRONICLE-CHECKPOINT-ROOT-MISMATCH",
+        "V-INTEGRITY-MISMATCH",
+        "V-CHRONICLE-CHECKPOINT-ENTRY-REFS-NONCANONICAL",
+        "V-CHRONICLE-PREDECESSOR-UNKNOWN",
+        "V-CHRONICLE-SEQUENCE-GAP",
+        "V-AT-NEST-OBJ",
+        "V-MAN-HASH-DIFF"
+      ],
+      "ordered_vector_ids_sha256": "62d965b95f8004f4229f25b8b50c399ea10f5b0840efdba97b351fb7ee33db65"
+    },
+    {
+      "schedule_id": "cold_start_missing-required-input",
+      "ordered_vector_ids": [
+        "V-MISSING-REQUIRED-INPUT",
+        "V-OBSERVED-NOT-VALIDATED",
+        "V-INTEGRITY-MISMATCH",
+        "V-CHRONICLE-PROOF-ROOT-MISMATCH",
+        "V-CHRONICLE-PREDECESSOR-UNKNOWN",
+        "V-CHRONICLE-SEQUENCE-GAP",
+        "V-CHRONICLE-CHECKPOINT-ROOT-MISMATCH",
+        "V-CHRONICLE-CHECKPOINT-ENTRY-REFS-NONCANONICAL",
+        "V-AT-NEST-OBJ",
+        "V-MAN-HASH-DIFF"
+      ],
+      "ordered_vector_ids_sha256": "4a7fb6fa12597689f7f78a6b9b49dd93a14e2c4758aeae1fcfd13826e76b4f8f"
+    },
+    {
+      "schedule_id": "cold_start_integrity-mismatch",
+      "ordered_vector_ids": [
+        "V-INTEGRITY-MISMATCH",
+        "V-OBSERVED-NOT-VALIDATED",
+        "V-MISSING-REQUIRED-INPUT",
+        "V-CHRONICLE-PROOF-ROOT-MISMATCH",
+        "V-CHRONICLE-PREDECESSOR-UNKNOWN",
+        "V-CHRONICLE-SEQUENCE-GAP",
+        "V-CHRONICLE-CHECKPOINT-ROOT-MISMATCH",
+        "V-CHRONICLE-CHECKPOINT-ENTRY-REFS-NONCANONICAL",
+        "V-AT-NEST-OBJ",
+        "V-MAN-HASH-DIFF"
+      ],
+      "ordered_vector_ids_sha256": "3e2d4fb7f6e8a21d4b593e9f068e308384436dd85cdb5299ba816586b7ddf039"
+    },
+    {
+      "schedule_id": "cold_start_chronicle-proof-root-mismatch",
+      "ordered_vector_ids": [
+        "V-CHRONICLE-PROOF-ROOT-MISMATCH",
+        "V-OBSERVED-NOT-VALIDATED",
+        "V-MISSING-REQUIRED-INPUT",
+        "V-INTEGRITY-MISMATCH",
+        "V-CHRONICLE-PREDECESSOR-UNKNOWN",
+        "V-CHRONICLE-SEQUENCE-GAP",
+        "V-CHRONICLE-CHECKPOINT-ROOT-MISMATCH",
+        "V-CHRONICLE-CHECKPOINT-ENTRY-REFS-NONCANONICAL",
+        "V-AT-NEST-OBJ",
+        "V-MAN-HASH-DIFF"
+      ],
+      "ordered_vector_ids_sha256": "c15395a1764775095d338eb5a64641b83996c94b4501da4fff929d4a6837ec34"
+    },
+    {
+      "schedule_id": "cold_start_chronicle-predecessor-unknown",
+      "ordered_vector_ids": [
+        "V-CHRONICLE-PREDECESSOR-UNKNOWN",
+        "V-OBSERVED-NOT-VALIDATED",
+        "V-MISSING-REQUIRED-INPUT",
+        "V-INTEGRITY-MISMATCH",
+        "V-CHRONICLE-PROOF-ROOT-MISMATCH",
+        "V-CHRONICLE-SEQUENCE-GAP",
+        "V-CHRONICLE-CHECKPOINT-ROOT-MISMATCH",
+        "V-CHRONICLE-CHECKPOINT-ENTRY-REFS-NONCANONICAL",
+        "V-AT-NEST-OBJ",
+        "V-MAN-HASH-DIFF"
+      ],
+      "ordered_vector_ids_sha256": "4e410451f22cbdb7ebbde5906a0fe7f2653494bcceb17804cc8d5b74ee1c32a9"
+    },
+    {
+      "schedule_id": "cold_start_chronicle-sequence-gap",
+      "ordered_vector_ids": [
+        "V-CHRONICLE-SEQUENCE-GAP",
+        "V-OBSERVED-NOT-VALIDATED",
+        "V-MISSING-REQUIRED-INPUT",
+        "V-INTEGRITY-MISMATCH",
+        "V-CHRONICLE-PROOF-ROOT-MISMATCH",
+        "V-CHRONICLE-PREDECESSOR-UNKNOWN",
+        "V-CHRONICLE-CHECKPOINT-ROOT-MISMATCH",
+        "V-CHRONICLE-CHECKPOINT-ENTRY-REFS-NONCANONICAL",
+        "V-AT-NEST-OBJ",
+        "V-MAN-HASH-DIFF"
+      ],
+      "ordered_vector_ids_sha256": "017dac70e31a81b7ebba961bb920dd243e03b7113a3520d22d26c36baa36dbc3"
+    },
+    {
+      "schedule_id": "cold_start_chronicle-checkpoint-root-mismatch",
+      "ordered_vector_ids": [
+        "V-CHRONICLE-CHECKPOINT-ROOT-MISMATCH",
+        "V-OBSERVED-NOT-VALIDATED",
+        "V-MISSING-REQUIRED-INPUT",
+        "V-INTEGRITY-MISMATCH",
+        "V-CHRONICLE-PROOF-ROOT-MISMATCH",
+        "V-CHRONICLE-PREDECESSOR-UNKNOWN",
+        "V-CHRONICLE-SEQUENCE-GAP",
+        "V-CHRONICLE-CHECKPOINT-ENTRY-REFS-NONCANONICAL",
+        "V-AT-NEST-OBJ",
+        "V-MAN-HASH-DIFF"
+      ],
+      "ordered_vector_ids_sha256": "5cdf453ffe784bc17299df021072e1bb43e3600015ae6fddf0d0ea2aa0a0b3ac"
+    },
+    {
+      "schedule_id": "cold_start_chronicle-checkpoint-entry-refs-noncanonical",
+      "ordered_vector_ids": [
+        "V-CHRONICLE-CHECKPOINT-ENTRY-REFS-NONCANONICAL",
+        "V-OBSERVED-NOT-VALIDATED",
+        "V-MISSING-REQUIRED-INPUT",
+        "V-INTEGRITY-MISMATCH",
+        "V-CHRONICLE-PROOF-ROOT-MISMATCH",
+        "V-CHRONICLE-PREDECESSOR-UNKNOWN",
+        "V-CHRONICLE-SEQUENCE-GAP",
+        "V-CHRONICLE-CHECKPOINT-ROOT-MISMATCH",
+        "V-AT-NEST-OBJ",
+        "V-MAN-HASH-DIFF"
+      ],
+      "ordered_vector_ids_sha256": "88ade9f7539f2cb10b4f46a59a9e4751d415351063b9f58ed2d94928ec664562"
+    }
+  ],
+  "hash_algorithm": "sha256-lowercase-hex",
+  "fixture_set_recipe": "Sorted member paths except manifest.json: <path>\\t<file-sha256>\\n concatenated UTF-8 then SHA-256.",
+  "forbidden_semantics": [
+    "all_history_independence",
+    "universal_verifier_correctness",
+    "schedule_redefines_dcn_membership",
+    "schedule_changes_expected_authority",
+    "schedule_dependence_as_semantic_class",
+    "caller_supplied_schedule_authority",
+    "silent_reinterpretation_of_v0",
+    "numeric_pid_uniqueness_as_process_identity",
+    "caller_claimed_process_launch_count"
+  ]
+}
