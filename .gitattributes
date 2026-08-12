@@ -1,4 +1,6 @@
 *.md text eol=lf
+conformance/counterfactual-conformance-v0/** text eol=lf
+conformance/counterfactual-traversal-stability-v0/** text eol=lf
 conformance/counterfactual-traversal-stability-v1/** text eol=lf
 src/receiptos/challenge/counterfactual-traversal-schedules-v1.ts text eol=lf
 src/receiptos/challenge/counterfactual-traversal-stability-v1.ts text eol=lf
