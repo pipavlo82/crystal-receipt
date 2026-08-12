@@ -1,0 +1,110 @@
+{
+  "schema": "transformation_stability_package_contract.v0",
+  "package_id": "transformation-stability-v0",
+  "version": "v0",
+  "claim": "normative_preservation",
+  "cycle_claim": "edgewise_normative_preservation_closed_cycle",
+  "source": {
+    "pull_request": "185",
+    "merge_commit": "8e31310a8686ee78c32103d0fb40047770de4c7d",
+    "implementation_commit": "824033ea7aa91d6d99e5758e5e10c1b9004cdbfe"
+  },
+  "principal_result_classes": [
+    "stable",
+    "history_sensitive",
+    "unresolved",
+    "out_of_domain",
+    "violation"
+  ],
+  "classification_rules": {
+    "failed_applicability": "out_of_domain",
+    "transformation_or_recompute_failure": "unresolved",
+    "normative_mismatch": "violation",
+    "forbidden_variant_mismatch": "violation",
+    "stability_mismatch": "history_sensitive unless profile.history_sensitive_policy escalates to violation",
+    "allowed_variant_variation": "telemetry only; never changes principal class"
+  },
+  "handoff_matrix": {
+    "schema": "receiptos.transformation_stability_handoff_matrix.v0",
+    "matrix_id": "handoff-transformation-stability-matrix-v0",
+    "profile_module_path": "src/receiptos/challenge/transformation-stability-handoff-matrix.ts",
+    "fixture_path": "src/receiptos/fixtures/session-evidence.sample.json",
+    "fixture_blob_sha1": "a5dbda7662aa95a92a3befa3df28a666319e6740",
+    "sample_receipt_root": "0x687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc",
+    "normative_session_id_mutation_root": "0x41479b4374e63fb0d9f42c03323c6949458a67cadb728e5a2d187c59582bf53e",
+    "anchor_contract_mutation_root": "0x687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc",
+    "anchor_mutation_note": "anchor-only mutation intentionally preserves receipt_root while violating the forbidden projection; root equality alone does not protect every transformation boundary",
+    "vector_order_normative": true,
+    "vector_inventory": [
+      "H-ROUNDTRIP-STABLE",
+      "H-KEY-ORDER-REVERSE",
+      "H-NORMATIVE-SESSION-ID-MUTATION",
+      "H-FORBIDDEN-ANCHOR-CONTRACT-MUTATION",
+      "H-SOURCE-SCHEMA-MISMATCH",
+      "H-TARGET-RECOMPUTE-UNRESOLVED"
+    ],
+    "expected_aggregate": {
+      "stable": 2,
+      "history_sensitive": 0,
+      "unresolved": 1,
+      "out_of_domain": 1,
+      "violation": 2
+    },
+    "projections": {
+      "normative": "{ receipt_root }",
+      "stability": "{ canonical_envelope }",
+      "allowed": "{}",
+      "forbidden": "{ anchor }"
+    }
+  },
+  "cycle": {
+    "schema": "receiptos.transformation_stability_cycle_result.v0",
+    "profile_module_path": "src/receiptos/challenge/transformation-stability-cycle.ts",
+    "node_domain": "package-local synthetic node (mirrors tests/receiptos/transformation-stability-cycle-v0.test.ts)",
+    "cycle_vector_order_normative": true,
+    "cycle_edge_order_normative": true,
+    "cycle_vector_inventory": [
+      "stable_closed_cycle",
+      "intermediate_violation_restored_endpoint",
+      "failed_applicability_out_of_domain",
+      "recompute_unresolved_worker_timeout"
+    ],
+    "expected": {
+      "stable_closed_cycle": {
+        "classification": "stable",
+        "failed_edge_id": null,
+        "failure_reason": null,
+        "endpoint_normative_match": true
+      },
+      "intermediate_violation_restored_endpoint": {
+        "classification": "violation",
+        "failed_edge_id": "flip",
+        "failure_reason": "normative_projection_mismatch",
+        "invariant": "endpoint_equality_cannot_erase_intermediate_violation"
+      },
+      "failed_applicability_out_of_domain": {
+        "classification": "out_of_domain",
+        "failed_edge_id": "domain",
+        "failure_reason": "domain_out_of_domain"
+      },
+      "recompute_unresolved_worker_timeout": {
+        "classification": "unresolved",
+        "failed_edge_id": "trigger_unresolved",
+        "failure_reason": "worker_timeout"
+      }
+    }
+  },
+  "forbidden_semantics": [
+    "lane_k_violation_class_generalization",
+    "observation_variance_as_validity",
+    "root_equality_implies_full_boundary_preservation",
+    "endpoint_equality_erases_intermediate_violation",
+    "handoff_realistic_cycle_profile_v0"
+  ],
+  "hash_algorithm": "sha256-lowercase-hex",
+  "fixture_set_recipe": "Sorted member paths except manifest.json: <path>\\t<file-sha256>\\n concatenated UTF-8 then SHA-256.",
+  "generated_digests": {
+    "handoff_matrix_set_sha256": "fa6142bfcd05f966ee10a8bb48e1d7c1156cd54530b1ef0ea37c531d43919d91",
+    "cycle_set_sha256": "a8b9b1f9436e39f8027681b217ccae73cbf0ca416cc14ed74f9b5c91f283ddf6"
+  }
+}
