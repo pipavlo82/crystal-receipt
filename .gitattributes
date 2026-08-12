@@ -16,3 +16,4 @@ tests/receiptos/transformation-stability-cycle-v0.test.ts text eol=lf
 tests/receiptos/transformation-stability-handoff-roundtrip-v0.test.ts text eol=lf
 tests/receiptos/transformation-stability-handoff-matrix-v0.test.ts text eol=lf
 candidate-audit/verify_handoff_matrix_independent.py text eol=lf
+tests/receiptos/transformation-stability-v0-conformance-package.test.ts text eol=lf

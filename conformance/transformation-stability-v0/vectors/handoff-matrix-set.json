@@ -1,0 +1,201 @@
+{
+  "schema": "receiptos.transformation_stability_handoff_matrix.v0",
+  "matrix_id": "handoff-transformation-stability-matrix-v0",
+  "vector_count": 6,
+  "aggregate": {
+    "stable": 2,
+    "history_sensitive": 0,
+    "unresolved": 1,
+    "out_of_domain": 1,
+    "violation": 2
+  },
+  "pass": true,
+  "members": [
+    {
+      "vector_id": "H-ROUNDTRIP-STABLE",
+      "expected": {
+        "vector_id": "H-ROUNDTRIP-STABLE",
+        "transformation_class": "canonical_round_trip",
+        "expected_classification": "stable",
+        "expected_normative_match": true,
+        "expected_stability_match": true,
+        "expected_forbidden_variant_match": true,
+        "expected_unresolved_reason": null,
+        "expected_out_of_domain_reason": null
+      },
+      "observed": {
+        "schema": "receiptos.transformation_stability_result.v0",
+        "transformation_claim": "normative_preservation",
+        "transformation_profile_id": "handoff-matrix:H-ROUNDTRIP-STABLE",
+        "transformation_family": "handoff_adversarial_matrix",
+        "source_object_kind": "stealth.session.evidence.v1",
+        "target_object_kind": "stealth.session.evidence.v1",
+        "recompute_procedure_id": "receiptos.computeReceiptRoot+canonicalize.v0",
+        "comparison_rule_id": "receipt-root+canonical-envelope+anchor.v0",
+        "evaluation_state": "evaluated",
+        "classification": "stable",
+        "out_of_domain_reason": null,
+        "unresolved_reason": null,
+        "normative_match": true,
+        "stability_match": true,
+        "forbidden_variant_match": true,
+        "allowed_variant_changed": false
+      }
+    },
+    {
+      "vector_id": "H-KEY-ORDER-REVERSE",
+      "expected": {
+        "vector_id": "H-KEY-ORDER-REVERSE",
+        "transformation_class": "representation_key_order",
+        "expected_classification": "stable",
+        "expected_normative_match": true,
+        "expected_stability_match": true,
+        "expected_forbidden_variant_match": true,
+        "expected_unresolved_reason": null,
+        "expected_out_of_domain_reason": null
+      },
+      "observed": {
+        "schema": "receiptos.transformation_stability_result.v0",
+        "transformation_claim": "normative_preservation",
+        "transformation_profile_id": "handoff-matrix:H-KEY-ORDER-REVERSE",
+        "transformation_family": "handoff_adversarial_matrix",
+        "source_object_kind": "stealth.session.evidence.v1",
+        "target_object_kind": "stealth.session.evidence.v1",
+        "recompute_procedure_id": "receiptos.computeReceiptRoot+canonicalize.v0",
+        "comparison_rule_id": "receipt-root+canonical-envelope+anchor.v0",
+        "evaluation_state": "evaluated",
+        "classification": "stable",
+        "out_of_domain_reason": null,
+        "unresolved_reason": null,
+        "normative_match": true,
+        "stability_match": true,
+        "forbidden_variant_match": true,
+        "allowed_variant_changed": false
+      }
+    },
+    {
+      "vector_id": "H-NORMATIVE-SESSION-ID-MUTATION",
+      "expected": {
+        "vector_id": "H-NORMATIVE-SESSION-ID-MUTATION",
+        "transformation_class": "normative_preimage_mutation",
+        "expected_classification": "violation",
+        "expected_normative_match": false,
+        "expected_stability_match": false,
+        "expected_forbidden_variant_match": true,
+        "expected_unresolved_reason": null,
+        "expected_out_of_domain_reason": null
+      },
+      "observed": {
+        "schema": "receiptos.transformation_stability_result.v0",
+        "transformation_claim": "normative_preservation",
+        "transformation_profile_id": "handoff-matrix:H-NORMATIVE-SESSION-ID-MUTATION",
+        "transformation_family": "handoff_adversarial_matrix",
+        "source_object_kind": "stealth.session.evidence.v1",
+        "target_object_kind": "stealth.session.evidence.v1",
+        "recompute_procedure_id": "receiptos.computeReceiptRoot+canonicalize.v0",
+        "comparison_rule_id": "receipt-root+canonical-envelope+anchor.v0",
+        "evaluation_state": "evaluated",
+        "classification": "violation",
+        "out_of_domain_reason": null,
+        "unresolved_reason": null,
+        "normative_match": false,
+        "stability_match": false,
+        "forbidden_variant_match": true,
+        "allowed_variant_changed": false
+      }
+    },
+    {
+      "vector_id": "H-FORBIDDEN-ANCHOR-CONTRACT-MUTATION",
+      "expected": {
+        "vector_id": "H-FORBIDDEN-ANCHOR-CONTRACT-MUTATION",
+        "transformation_class": "forbidden_anchor_mutation",
+        "expected_classification": "violation",
+        "expected_normative_match": true,
+        "expected_stability_match": false,
+        "expected_forbidden_variant_match": false,
+        "expected_unresolved_reason": null,
+        "expected_out_of_domain_reason": null
+      },
+      "observed": {
+        "schema": "receiptos.transformation_stability_result.v0",
+        "transformation_claim": "normative_preservation",
+        "transformation_profile_id": "handoff-matrix:H-FORBIDDEN-ANCHOR-CONTRACT-MUTATION",
+        "transformation_family": "handoff_adversarial_matrix",
+        "source_object_kind": "stealth.session.evidence.v1",
+        "target_object_kind": "stealth.session.evidence.v1",
+        "recompute_procedure_id": "receiptos.computeReceiptRoot+canonicalize.v0",
+        "comparison_rule_id": "receipt-root+canonical-envelope+anchor.v0",
+        "evaluation_state": "evaluated",
+        "classification": "violation",
+        "out_of_domain_reason": null,
+        "unresolved_reason": null,
+        "normative_match": true,
+        "stability_match": false,
+        "forbidden_variant_match": false,
+        "allowed_variant_changed": false
+      }
+    },
+    {
+      "vector_id": "H-SOURCE-SCHEMA-MISMATCH",
+      "expected": {
+        "vector_id": "H-SOURCE-SCHEMA-MISMATCH",
+        "transformation_class": "source_domain_failure",
+        "expected_classification": "out_of_domain",
+        "expected_normative_match": null,
+        "expected_stability_match": null,
+        "expected_forbidden_variant_match": null,
+        "expected_unresolved_reason": null,
+        "expected_out_of_domain_reason": "handoff_evidence_schema_mismatch"
+      },
+      "observed": {
+        "schema": "receiptos.transformation_stability_result.v0",
+        "transformation_claim": "normative_preservation",
+        "transformation_profile_id": "handoff-matrix:H-SOURCE-SCHEMA-MISMATCH",
+        "transformation_family": "handoff_adversarial_matrix",
+        "source_object_kind": "unknown",
+        "target_object_kind": "stealth.session.evidence.v1",
+        "recompute_procedure_id": "receiptos.computeReceiptRoot+canonicalize.v0",
+        "comparison_rule_id": "receipt-root+canonical-envelope+anchor.v0",
+        "evaluation_state": "not_applicable",
+        "classification": "out_of_domain",
+        "out_of_domain_reason": "handoff_evidence_schema_mismatch",
+        "unresolved_reason": null,
+        "normative_match": null,
+        "stability_match": null,
+        "forbidden_variant_match": null,
+        "allowed_variant_changed": null
+      }
+    },
+    {
+      "vector_id": "H-TARGET-RECOMPUTE-UNRESOLVED",
+      "expected": {
+        "vector_id": "H-TARGET-RECOMPUTE-UNRESOLVED",
+        "transformation_class": "bounded_target_recompute_failure",
+        "expected_classification": "unresolved",
+        "expected_normative_match": null,
+        "expected_stability_match": null,
+        "expected_forbidden_variant_match": null,
+        "expected_unresolved_reason": "synthetic_target_recompute_unresolved",
+        "expected_out_of_domain_reason": null
+      },
+      "observed": {
+        "schema": "receiptos.transformation_stability_result.v0",
+        "transformation_claim": "normative_preservation",
+        "transformation_profile_id": "handoff-matrix:H-TARGET-RECOMPUTE-UNRESOLVED",
+        "transformation_family": "handoff_adversarial_matrix",
+        "source_object_kind": "stealth.session.evidence.v1",
+        "target_object_kind": "stealth.session.evidence.v1",
+        "recompute_procedure_id": "receiptos.computeReceiptRoot+canonicalize.v0",
+        "comparison_rule_id": "receipt-root+canonical-envelope+anchor.v0",
+        "evaluation_state": "execution_unresolved",
+        "classification": "unresolved",
+        "out_of_domain_reason": null,
+        "unresolved_reason": "synthetic_target_recompute_unresolved",
+        "normative_match": null,
+        "stability_match": null,
+        "forbidden_variant_match": null,
+        "allowed_variant_changed": null
+      }
+    }
+  ]
+}
