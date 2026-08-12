@@ -5,3 +5,4 @@ conformance/counterfactual-traversal-stability-v1/** text eol=lf
 src/receiptos/challenge/counterfactual-traversal-schedules-v1.ts text eol=lf
 src/receiptos/challenge/counterfactual-traversal-stability-v1.ts text eol=lf
 tests/receiptos/counterfactual-traversal-stability-v1.test.ts text eol=lf
+conformance/** text eol=lf
