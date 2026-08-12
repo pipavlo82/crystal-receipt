@@ -4,23 +4,28 @@
 Verifies package structure, inventory, per-file digests, Handoff matrix
 roots/aggregate, and closed-cycle results without importing ReceiptOS
 production TypeScript. Recomputes the Handoff receipt-root relations
-directly from the committed fixture Git blob (working-tree EOL
+directly from the fixture's pinned Git blob object (working-tree EOL
 representation is intentionally ignored) and independently re-executes the
 closed-cycle state machine from the frozen input specification in
 cycles/cycle-set.json.
+
+Fixture bytes are fetched by their pinned blob OID directly
+(`git cat-file blob <oid>`), not via `<commit>:<path>`. That makes this
+auditor correct under a depth-1 checkout, where the fixture blob is present
+in the object database but an older ancestor commit may not be. The current
+tree's binding of the canonical fixture path to that same blob OID is
+checked separately via `git rev-parse HEAD:<path>`, so path-to-object
+substitution is still caught even though history depth is irrelevant.
 """
 from __future__ import annotations
 
-import argparse
 import hashlib
 import json
 import subprocess
-import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 PACKAGE = ROOT / "conformance/transformation-stability-v0"
-DEFAULT_BASELINE_COMMIT = "8e31310a8686ee78c32103d0fb40047770de4c7d"
 FIXTURE_REL = "src/receiptos/fixtures/session-evidence.sample.json"
 EXPECTED_FIXTURE_BLOB_SHA1 = "a5dbda7662aa95a92a3befa3df28a666319e6740"
 EXPECTED_SAMPLE_ROOT = "0x687dc5c00d9241469138bb1c17a06af1b8713b0f84663b55e11d476f4171a6bc"
@@ -112,25 +117,22 @@ def require(condition: bool, message: str) -> None:
         raise AssertionError(message)
 
 
-def read_committed_git_blob_bytes(repo: Path, commit: str, rel_path: str) -> bytes:
+def read_blob_bytes_by_oid(repo: Path, oid: str) -> bytes:
     try:
-        return subprocess.check_output(
-            ["git", "cat-file", "blob", f"{commit}:{rel_path}"],
-            cwd=repo,
-        )
+        return subprocess.check_output(["git", "cat-file", "blob", oid], cwd=repo)
     except subprocess.CalledProcessError as error:
-        raise AssertionError(f"failed to read committed git blob {commit}:{rel_path}") from error
+        raise AssertionError(f"failed to read git blob by oid {oid}") from error
 
 
-def committed_git_blob_sha1(repo: Path, commit: str, rel_path: str) -> str:
+def resolve_path_oid(repo: Path, revision: str, rel_path: str) -> str:
     try:
         return subprocess.check_output(
-            ["git", "rev-parse", f"{commit}:{rel_path}"],
+            ["git", "rev-parse", f"{revision}:{rel_path}"],
             cwd=repo,
             text=True,
         ).strip()
     except subprocess.CalledProcessError as error:
-        raise AssertionError(f"failed to resolve committed git blob identity {commit}:{rel_path}") from error
+        raise AssertionError(f"failed to resolve {revision}:{rel_path}") from error
 
 
 def list_files(package: Path) -> list[str]:
@@ -240,11 +242,6 @@ def evaluate_cycle_independent(input_spec: dict) -> dict:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--baseline-commit", default=DEFAULT_BASELINE_COMMIT)
-    args = parser.parse_args()
-    baseline_commit = args.baseline_commit
-
     require(PACKAGE.is_dir(), "package missing")
     on_disk = set(list_files(PACKAGE))
     require(on_disk == CLOSED_INVENTORY, f"closed inventory mismatch: {sorted(on_disk ^ CLOSED_INVENTORY)}")
@@ -283,13 +280,25 @@ def main() -> int:
     )
     require(contract["generated_digests"]["cycle_set_sha256"] == cycle_set_sha256, "contract cycle_set_sha256")
 
-    # --- Handoff matrix: committed Git blob, not working-tree bytes ---
-    fixture_bytes = read_committed_git_blob_bytes(ROOT, baseline_commit, FIXTURE_REL)
+    # --- Handoff matrix: pinned Git blob object, not working-tree bytes ---
+    #
+    # Two independent checks, deliberately kept separate:
+    #  1. the current tree still binds the canonical fixture path to the
+    #     pinned blob OID (catches path-to-object substitution / fixture
+    #     replacement at HEAD);
+    #  2. the object bytes are fetched by that pinned OID directly, which
+    #     works under a depth-1 checkout where older ancestor commits are
+    #     not locally resolvable.
+    head_path_oid = resolve_path_oid(ROOT, "HEAD", FIXTURE_REL)
+    require(
+        head_path_oid == EXPECTED_FIXTURE_BLOB_SHA1,
+        f"HEAD:{FIXTURE_REL} does not resolve to the pinned fixture blob OID",
+    )
+
+    fixture_bytes = read_blob_bytes_by_oid(ROOT, EXPECTED_FIXTURE_BLOB_SHA1)
     blob_sha1 = git_blob_sha1(fixture_bytes)
-    git_oid = committed_git_blob_sha1(ROOT, baseline_commit, FIXTURE_REL)
-    require(blob_sha1 == git_oid, "committed blob sha1/oid mismatch")
     require(blob_sha1 == EXPECTED_FIXTURE_BLOB_SHA1, "fixture blob drift")
-    require(b"\r" not in fixture_bytes, "committed fixture blob contains CR")
+    require(b"\r" not in fixture_bytes, "fixture blob contains CR")
     fixture = json.loads(fixture_bytes.decode("utf-8"))
 
     sample_root = compute_receipt_root(fixture)
