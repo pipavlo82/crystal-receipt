@@ -1,0 +1,39 @@
+{
+  "schema": "transformation_stability_package_fixture_manifest.v0",
+  "package_id": "transformation-stability-v0",
+  "version": "v0",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "conformance/transformation-stability-v0/SPEC.md",
+      "sha256": "0558ee4a3b5c58ebb174ffb8dc072f0d855c1e4e753331f5d7be8c396d6ad59a"
+    },
+    {
+      "path": "conformance/transformation-stability-v0/audit_package.ts",
+      "sha256": "d8d45c59050635eafdef02e1a28df61f8b12fa198fb35f7a0a3bcf0094100cbf"
+    },
+    {
+      "path": "conformance/transformation-stability-v0/contract.json",
+      "sha256": "e2a84216d9efe0dc66c2a3259fe7f67df1bb6d3836784f1c3728819a422f5720"
+    },
+    {
+      "path": "conformance/transformation-stability-v0/cycles/cycle-set.json",
+      "sha256": "a8b9b1f9436e39f8027681b217ccae73cbf0ca416cc14ed74f9b5c91f283ddf6"
+    },
+    {
+      "path": "conformance/transformation-stability-v0/generate_package.ts",
+      "sha256": "3dd0d3532669fa64b7c6751315a931555138f47af0955da8ece7df1474191abd"
+    },
+    {
+      "path": "conformance/transformation-stability-v0/vectors/handoff-matrix-set.json",
+      "sha256": "fa6142bfcd05f966ee10a8bb48e1d7c1156cd54530b1ef0ea37c531d43919d91"
+    },
+    {
+      "path": "conformance/transformation-stability-v0/verify_independent.py",
+      "sha256": "1c9ed8be94503e4bbf0324c110e27ca21dae3acd05b817655cf373d1ac26888c"
+    }
+  ],
+  "fixture_set_sha256": "ef756a65fcf0302e2670a066dcee3f1a1b098fe60291bc4e1564f4b624475f74",
+  "handoff_matrix_set_sha256": "fa6142bfcd05f966ee10a8bb48e1d7c1156cd54530b1ef0ea37c531d43919d91",
+  "cycle_set_sha256": "a8b9b1f9436e39f8027681b217ccae73cbf0ca416cc14ed74f9b5c91f283ddf6"
+}
