@@ -1,0 +1,313 @@
+{
+  "schema": "receiptos.transformation_stability_cycle_set.v0",
+  "cycle_count": 4,
+  "cycles": [
+    {
+      "cycle_id": "stable_closed_cycle",
+      "input": {
+        "cycle_id": "stable_closed_cycle",
+        "start_node": {
+          "value": 1,
+          "observation": "canonical",
+          "telemetry": "pid-a",
+          "forbidden": "fixed",
+          "inDomain": true,
+          "unresolved": false
+        },
+        "history_sensitive_policy": "classify",
+        "edges": [
+          {
+            "edge_id": "to-pid-b",
+            "ops": [
+              {
+                "op": "set_field",
+                "field": "telemetry",
+                "value": "pid-b"
+              }
+            ]
+          },
+          {
+            "edge_id": "to-pid-a",
+            "ops": [
+              {
+                "op": "set_field",
+                "field": "telemetry",
+                "value": "pid-a"
+              }
+            ]
+          }
+        ]
+      },
+      "observed": {
+        "schema": "receiptos.transformation_stability_cycle_result.v0",
+        "transformation_claim": "edgewise_normative_preservation_closed_cycle",
+        "cycle_profile_id": "transformation-stability-v0:cycle:stable_closed_cycle",
+        "node_object_kind": "transformation-stability-v0-synthetic-node",
+        "recompute_procedure_id": "transformation-stability-v0-synthetic-recompute",
+        "comparison_rule_id": "transformation-stability-v0-synthetic-projection",
+        "ordered_edge_ids": [
+          "to-pid-b",
+          "to-pid-a"
+        ],
+        "evaluation_state": "evaluated",
+        "classification": "stable",
+        "failed_edge_id": null,
+        "failure_reason": null,
+        "aggregate": {
+          "edge_count": 2,
+          "completed_edges": 2,
+          "stable": 2,
+          "history_sensitive": 0,
+          "unresolved": 0,
+          "out_of_domain": 0,
+          "violation": 0
+        },
+        "edges": [
+          {
+            "edge_id": "to-pid-b",
+            "edge_index": 0,
+            "evaluation_state": "evaluated",
+            "classification": "stable",
+            "reason": null,
+            "normative_match": true,
+            "stability_match": true,
+            "forbidden_variant_match": true,
+            "allowed_variant_changed": true
+          },
+          {
+            "edge_id": "to-pid-a",
+            "edge_index": 1,
+            "evaluation_state": "evaluated",
+            "classification": "stable",
+            "reason": null,
+            "normative_match": true,
+            "stability_match": true,
+            "forbidden_variant_match": true,
+            "allowed_variant_changed": true
+          }
+        ],
+        "endpoint": {
+          "normative_match": true,
+          "stability_match": true,
+          "forbidden_variant_match": true,
+          "allowed_variant_changed": false
+        }
+      }
+    },
+    {
+      "cycle_id": "intermediate_violation_restored_endpoint",
+      "input": {
+        "cycle_id": "intermediate_violation_restored_endpoint",
+        "start_node": {
+          "value": 1,
+          "observation": "canonical",
+          "telemetry": "pid-a",
+          "forbidden": "fixed",
+          "inDomain": true,
+          "unresolved": false
+        },
+        "history_sensitive_policy": "classify",
+        "edges": [
+          {
+            "edge_id": "flip",
+            "ops": [
+              {
+                "op": "set_field",
+                "field": "value",
+                "value": -1
+              }
+            ]
+          },
+          {
+            "edge_id": "restore",
+            "ops": [
+              {
+                "op": "set_field",
+                "field": "value",
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "observed": {
+        "schema": "receiptos.transformation_stability_cycle_result.v0",
+        "transformation_claim": "edgewise_normative_preservation_closed_cycle",
+        "cycle_profile_id": "transformation-stability-v0:cycle:intermediate_violation_restored_endpoint",
+        "node_object_kind": "transformation-stability-v0-synthetic-node",
+        "recompute_procedure_id": "transformation-stability-v0-synthetic-recompute",
+        "comparison_rule_id": "transformation-stability-v0-synthetic-projection",
+        "ordered_edge_ids": [
+          "flip",
+          "restore"
+        ],
+        "evaluation_state": "evaluated",
+        "classification": "violation",
+        "failed_edge_id": "flip",
+        "failure_reason": "normative_projection_mismatch",
+        "aggregate": {
+          "edge_count": 2,
+          "completed_edges": 0,
+          "stable": 0,
+          "history_sensitive": 0,
+          "unresolved": 0,
+          "out_of_domain": 0,
+          "violation": 1
+        },
+        "edges": [
+          {
+            "edge_id": "flip",
+            "edge_index": 0,
+            "evaluation_state": "evaluated",
+            "classification": "violation",
+            "reason": "normative_projection_mismatch",
+            "normative_match": false,
+            "stability_match": true,
+            "forbidden_variant_match": true,
+            "allowed_variant_changed": false
+          }
+        ],
+        "endpoint": {
+          "normative_match": null,
+          "stability_match": null,
+          "forbidden_variant_match": null,
+          "allowed_variant_changed": null
+        }
+      }
+    },
+    {
+      "cycle_id": "failed_applicability_out_of_domain",
+      "input": {
+        "cycle_id": "failed_applicability_out_of_domain",
+        "start_node": {
+          "value": 1,
+          "observation": "canonical",
+          "telemetry": "pid-a",
+          "forbidden": "fixed",
+          "inDomain": false,
+          "unresolved": false
+        },
+        "history_sensitive_policy": "classify",
+        "edges": [
+          {
+            "edge_id": "domain",
+            "ops": []
+          }
+        ]
+      },
+      "observed": {
+        "schema": "receiptos.transformation_stability_cycle_result.v0",
+        "transformation_claim": "edgewise_normative_preservation_closed_cycle",
+        "cycle_profile_id": "transformation-stability-v0:cycle:failed_applicability_out_of_domain",
+        "node_object_kind": "transformation-stability-v0-synthetic-node",
+        "recompute_procedure_id": "transformation-stability-v0-synthetic-recompute",
+        "comparison_rule_id": "transformation-stability-v0-synthetic-projection",
+        "ordered_edge_ids": [
+          "domain"
+        ],
+        "evaluation_state": "not_applicable",
+        "classification": "out_of_domain",
+        "failed_edge_id": "domain",
+        "failure_reason": "domain_out_of_domain",
+        "aggregate": {
+          "edge_count": 1,
+          "completed_edges": 0,
+          "stable": 0,
+          "history_sensitive": 0,
+          "unresolved": 0,
+          "out_of_domain": 1,
+          "violation": 0
+        },
+        "edges": [
+          {
+            "edge_id": "domain",
+            "edge_index": 0,
+            "evaluation_state": "not_applicable",
+            "classification": "out_of_domain",
+            "reason": "domain_out_of_domain",
+            "normative_match": null,
+            "stability_match": null,
+            "forbidden_variant_match": null,
+            "allowed_variant_changed": null
+          }
+        ],
+        "endpoint": {
+          "normative_match": null,
+          "stability_match": null,
+          "forbidden_variant_match": null,
+          "allowed_variant_changed": null
+        }
+      }
+    },
+    {
+      "cycle_id": "recompute_unresolved_worker_timeout",
+      "input": {
+        "cycle_id": "recompute_unresolved_worker_timeout",
+        "start_node": {
+          "value": 1,
+          "observation": "canonical",
+          "telemetry": "pid-a",
+          "forbidden": "fixed",
+          "inDomain": true,
+          "unresolved": false
+        },
+        "history_sensitive_policy": "classify",
+        "edges": [
+          {
+            "edge_id": "trigger_unresolved",
+            "ops": [
+              {
+                "op": "set_field",
+                "field": "unresolved",
+                "value": true
+              }
+            ]
+          }
+        ]
+      },
+      "observed": {
+        "schema": "receiptos.transformation_stability_cycle_result.v0",
+        "transformation_claim": "edgewise_normative_preservation_closed_cycle",
+        "cycle_profile_id": "transformation-stability-v0:cycle:recompute_unresolved_worker_timeout",
+        "node_object_kind": "transformation-stability-v0-synthetic-node",
+        "recompute_procedure_id": "transformation-stability-v0-synthetic-recompute",
+        "comparison_rule_id": "transformation-stability-v0-synthetic-projection",
+        "ordered_edge_ids": [
+          "trigger_unresolved"
+        ],
+        "evaluation_state": "execution_unresolved",
+        "classification": "unresolved",
+        "failed_edge_id": "trigger_unresolved",
+        "failure_reason": "worker_timeout",
+        "aggregate": {
+          "edge_count": 1,
+          "completed_edges": 0,
+          "stable": 0,
+          "history_sensitive": 0,
+          "unresolved": 1,
+          "out_of_domain": 0,
+          "violation": 0
+        },
+        "edges": [
+          {
+            "edge_id": "trigger_unresolved",
+            "edge_index": 0,
+            "evaluation_state": "execution_unresolved",
+            "classification": "unresolved",
+            "reason": "worker_timeout",
+            "normative_match": null,
+            "stability_match": null,
+            "forbidden_variant_match": null,
+            "allowed_variant_changed": null
+          }
+        ],
+        "endpoint": {
+          "normative_match": null,
+          "stability_match": null,
+          "forbidden_variant_match": null,
+          "allowed_variant_changed": null
+        }
+      }
+    }
+  ]
+}
