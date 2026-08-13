@@ -119,7 +119,7 @@ export const HANDOFF_TRANSFORMATION_VECTORS_V0: readonly HandoffTransformationVe
     }),
   ])
 
-function reverseObjectKeyOrder(value: unknown): unknown {
+export function reverseObjectKeyOrder(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(reverseObjectKeyOrder)
   if (value !== null && typeof value === "object") {
     const record = value as Record<string, unknown>
