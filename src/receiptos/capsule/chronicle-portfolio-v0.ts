@@ -332,7 +332,7 @@ function computeChronicleCheckpointRootFromStoredOrder(input: Pick<ChronicleChec
   }))}`
 }
 
-function validateChronicleCheckpointShape(input: {
+export function validateChronicleCheckpointShape(input: {
   prevCheckpoint?: string | null
   sequence: number
 }) {
