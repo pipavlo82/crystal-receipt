@@ -9,8 +9,10 @@
  * the existing generic transformation-stability.ts / transformation-
  * stability-cycle.ts evaluators. No new schema, root algorithm,
  * canonicalizer, or applicability rule is introduced — the applicability
- * check below is a direct adapter over the already-merged
- * `validateChronicleCheckpointShape`, not a reimplementation of it.
+ * check below invokes the already-merged `validateChronicleCheckpointShape`
+ * indirectly, through the already-public `createChronicleCheckpointV0`
+ * constructor used as a shape-validation oracle. No existing file is
+ * modified for this, and the validator's rules are never duplicated.
  * ChronicleCheckpointV0 imports no HandoffEvidence and calls no
  * computeReceiptRoot; this module inherits that independence and adds none
  * of its own. It also has no dependency on the Chronicle Portfolio profile
@@ -50,8 +52,8 @@
 
 import {
   type ChronicleCheckpointV0,
+  createChronicleCheckpointV0,
   sortEntryRefs,
-  validateChronicleCheckpointShape,
   verifyChronicleCheckpointV0,
 } from "../capsule/chronicle-portfolio-v0"
 import { canonicalize } from "../canon/canonicalize"
@@ -110,14 +112,28 @@ function recomputeChronicleCheckpointV1(
   }
 }
 
-// Direct adapter over the existing shape validator — no rule duplicated.
-// Applicability (sequence/prev_checkpoint consistency) is independent of
-// recompute (root/canonical-order consistency); see module-level comment.
+// Uses the already-public createChronicleCheckpointV0 as a shape-validation
+// oracle rather than importing the private validator directly (no existing
+// file is modified for this). The probe deliberately uses ONLY prev_checkpoint
+// and sequence from the node, with fixed safe values for every other field
+// (checkpointId/collectionRef/entryRefs=[]): this keeps applicability scoped
+// to exactly the sequence/prev_checkpoint relationship, so an unrelated
+// malformation elsewhere on the node (e.g. corrupted entry_refs) can never be
+// misclassified as an applicability failure — it must still surface as a
+// bounded recompute failure (unresolved), not out_of_domain. Applicability
+// (sequence/prev_checkpoint consistency) is independent of recompute
+// (root/canonical-order consistency); see module-level comment.
 function chronicleCheckpointShapePreconditionV1(
   node: ChronicleCheckpointV0,
 ): TransformationPreconditionResultV0 {
   try {
-    validateChronicleCheckpointShape({ prevCheckpoint: node.prev_checkpoint, sequence: node.sequence })
+    createChronicleCheckpointV0({
+      checkpointId: "transformation-stability-shape-probe",
+      collectionRef: "transformation-stability-shape-probe",
+      entryRefs: [],
+      prevCheckpoint: node.prev_checkpoint,
+      sequence: node.sequence,
+    })
     return { ok: true }
   } catch {
     return { ok: false, reason: "chronicle_checkpoint_shape_invalid" }
