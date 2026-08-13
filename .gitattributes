@@ -23,3 +23,5 @@ src/receiptos/challenge/transformation-stability-chronicle-portfolio.ts text eol
 tests/receiptos/transformation-stability-chronicle-portfolio.test.ts text eol=lf
 src/receiptos/challenge/transformation-stability-chronicle-checkpoint.ts text eol=lf
 tests/receiptos/transformation-stability-chronicle-checkpoint.test.ts text eol=lf
+src/receiptos/challenge/transformation-stability-chronicle-collection-checkpoint.ts text eol=lf
+tests/receiptos/transformation-stability-chronicle-collection-checkpoint.test.ts text eol=lf
