@@ -1,0 +1,11 @@
+{
+  "schema": "chronicle_checkpoint.v0",
+  "checkpoint_id": "checkpoint-ext-1",
+  "collection_ref": "/collection/collection-ext-alpha",
+  "entry_refs": [
+    "entry-ext-1"
+  ],
+  "prev_checkpoint": null,
+  "sequence": 0,
+  "checkpoint_root": "sha256:7f1cbac59900dd9b183e3d970cb7fe256947f02870d6c93a713e0ee2e96bc111"
+}

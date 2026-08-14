@@ -1,0 +1,190 @@
+{
+  "schema": "chronicle_external_producer_package_contract.v0",
+  "package_id": "chronicle-external-producer-v0",
+  "version": "v0",
+  "claim": "external_producer_chronicle_interoperability",
+  "source": {
+    "base_merge_commit": "6e93da510b9b861bc215ad9a4e7cda63a518372e",
+    "chronicle_domain_path": "src/receiptos/capsule/chronicle-portfolio-v0.ts",
+    "chronicle_domain_blob_sha1": "0e790911092546c62344f980e6b611542bcd00fe",
+    "collection_checkpoint_module_path": "src/receiptos/challenge/transformation-stability-chronicle-collection-checkpoint.ts",
+    "collection_checkpoint_module_blob_sha1": "da1a0bca7e9ae36f2805a837cd9adaaec4d3ad7a",
+    "collections_portfolio_module_path": "src/receiptos/challenge/transformation-stability-chronicle-collection-portfolio.ts",
+    "collections_portfolio_module_blob_sha1": "890ddb8d5a7e8ac8bd7dfc6c0682589d796393d9",
+    "cross_object_conformance_package_path": "conformance/cross-object-transformation-stability-v0"
+  },
+  "portable_bounds": {
+    "max_file_bytes": 65536,
+    "max_collections_count": 16,
+    "max_array_length": 64,
+    "max_string_length": 256,
+    "max_json_nesting_depth": 8,
+    "integer_domain": "JSON integer literal, 0 <= n <= 9007199254740991 (JS Number.MAX_SAFE_INTEGER); no fractional or exponential form, no NaN/Infinity",
+    "identifier_grammar": "^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?$",
+    "note": "Package-local v0 self-imposed limits for bounded parsing only. Not a claim about ReceiptOS domain semantics -- ReceiptOS itself imposes no such limits."
+  },
+  "collection_ref_derivation": {
+    "formula": "\"/collection/\" + encodeURIComponentEquivalent(collection_id)",
+    "unreserved_characters": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.!~*'()",
+    "escaping_rule": "Every byte of the UTF-8 encoding of collection_id that is not one of the unreserved ASCII characters above is percent-encoded as %XX, uppercase hex, one escape per byte.",
+    "not_equivalent_to": "Python's urllib.parse.quote(collection_id, safe=\"\") with default settings. quote()'s always-safe set is only letters/digits/_.-~, so it percent-encodes ! * ' ( ), which encodeURIComponent does not. Confirmed empirically during design: quote() produces a%20b%27c%28d%29e%21f%2Ag%2Fh for the self-test input below, which is byte-different from the real encodeURIComponent output.",
+    "self_test": {
+      "input": "a b'c(d)e!f*g/h",
+      "expected_output": "a%20b'c(d)e!f*g%2Fh",
+      "note": "Deliberately outside the normative identifier_grammar -- exercises the escaping algorithm itself, not a claim that such identifiers are portable/normative for this package's matrix."
+    }
+  },
+  "comparators": {
+    "artifact_refs_and_collection_refs": "String.prototype.localeCompare in the committed TS implementation (sortArtifactRefs / sortCollectionRefs) -- locale/ICU-dependent",
+    "checkpoint_entry_refs": "plain codepoint order (< / >) for canonical ordering (sortEntryRefs); checkpoint_root itself uses STORED order, never re-sorted",
+    "portable_v0_substitute": "Python sorted() (codepoint order) is used for all ref sorting in producer_reference.py and verify_output.py",
+    "agreement_scope": "Proven to agree with the real, unmodified committed comparators only for the exact normative strings enumerated below -- this package makes no general Unicode/localeCompare portability claim. See the focused ReceiptOS test's comparator-agreement case, which sorts these exact strings both ways using the real sortArtifactRefs/sortCollectionRefs/sortEntryRefs functions.",
+    "normative_strings": [
+      "collection-ext-alpha",
+      "collection-ext-beta",
+      "artifact-ext-alpha-1",
+      "artifact-ext-alpha-2",
+      "artifact-ext-beta-1",
+      "portfolio-ext-1",
+      "checkpoint-ext-1",
+      "entry-ext-1",
+      "/collection/collection-ext-alpha",
+      "/collection/collection-ext-beta",
+      "/collection/collection-ext-not-in-corpus"
+    ]
+  },
+  "applicability_rules": {
+    "collections_portfolio_bundle": "requires collections.length >= 1, else out_of_domain / chronicle_collections_portfolio_empty",
+    "checkpoint_sequence": "sequence must be a non-negative JSON integer",
+    "checkpoint_genesis": "sequence === 0 requires prev_checkpoint === null",
+    "checkpoint_continuation": "sequence > 0 requires prev_checkpoint non-null (any non-null value)",
+    "violation_reason": "chronicle_checkpoint_shape_invalid",
+    "note": "These document already-existing rules from createChroniclePortfolioV0 and validateChronicleCheckpointShape in the frozen chronicle-portfolio-v0.ts. This package changes none of them -- it only writes them down in prose/data reachable without reading TS source."
+  },
+  "root_formulas": {
+    "encoding": "sha256:<lowercase-hex>",
+    "canonical_json": "object keys sorted; array order preserved including duplicates; UTF-8; no Unicode normalization performed anywhere",
+    "collection_root_preimage": ["collection_version", "collection_id", "artifact_refs (sorted, duplicate-preserving)"],
+    "portfolio_root_preimage": ["portfolio_version", "portfolio_id", "collection_refs (sorted, duplicate-preserving)"],
+    "checkpoint_root_preimage": ["schema", "checkpoint_id", "collection_ref", "entry_refs (stored order, never re-sorted)", "prev_checkpoint", "sequence"],
+    "excluded_from_every_preimage": ["schema on Collection/Portfolio (present on the object, absent from its own root preimage)", "metadata (not used anywhere in this package's matrix)"]
+  },
+  "topology": {
+    "files": ["producer-manifest.json", "collections.json", "portfolio.json", "checkpoint.json"],
+    "filenames_are_fixed": true,
+    "note": "No producer-controlled filenames anywhere in this topology -- every name is fixed and normative, eliminating path traversal and Windows case-collision risk by construction rather than by runtime policy alone."
+  },
+  "trust_boundary": {
+    "producer_output_is_untrusted": true,
+    "never_trusted_as_evidence": [
+      "claimed collection_root / portfolio_root / checkpoint_root",
+      "claims.producer_believes_locally_valid",
+      "claims.producer_believes_cross_link_valid",
+      "any classification the producer might claim",
+      "producer-manifest.json digests beyond transport-corruption detection"
+    ],
+    "always_recomputed": [
+      "collection_root (per Collection)",
+      "portfolio_root",
+      "checkpoint_root",
+      "derived_collection_refs",
+      "stored_collection_refs",
+      "portfolio_link_valid",
+      "checkpoint_membership_valid",
+      "classification",
+      "reason"
+    ],
+    "non_normative_metadata": ["producer_id", "producer_version"],
+    "note": "producer_id/producer_version may never be read by verification logic -- extends the existing PORTABLE_EVIDENCE_ENVELOPE_NOTE.md principle (producer identity is provenance metadata, not proof truth) into the Chronicle domain."
+  },
+  "positive_matrix": {
+    "order_normative": true,
+    "cases": [
+      "collection_checkpoint_locally_valid",
+      "collections_portfolio_locally_valid",
+      "two_distinct_collections",
+      "duplicate_preserving_multiset",
+      "stable_representation_reorder"
+    ],
+    "scenario_map": {
+      "collection_checkpoint_locally_valid": "main",
+      "collections_portfolio_locally_valid": "main",
+      "two_distinct_collections": "main",
+      "duplicate_preserving_multiset": "duplicate",
+      "stable_representation_reorder": "reorder"
+    },
+    "expected_classification": "stable"
+  },
+  "negative_matrix": {
+    "order_normative": true,
+    "cases": [
+      "wrong_collection_root",
+      "wrong_portfolio_root",
+      "wrong_checkpoint_root",
+      "stale_checkpoint_ref",
+      "missing_portfolio_ref",
+      "extra_portfolio_ref",
+      "duplicate_multiplicity_mismatch",
+      "invalid_checkpoint_sequence",
+      "empty_collections",
+      "malformed_array",
+      "producer_false_valid_claim"
+    ],
+    "expected": {
+      "wrong_collection_root": { "classification": "violation", "reason": "normative_projection_mismatch" },
+      "wrong_portfolio_root": { "classification": "violation", "reason": "normative_projection_mismatch" },
+      "wrong_checkpoint_root": { "classification": "violation", "reason": "normative_projection_mismatch" },
+      "stale_checkpoint_ref": { "classification": "violation", "reason": "normative_projection_mismatch" },
+      "missing_portfolio_ref": { "classification": "violation", "reason": "normative_projection_mismatch" },
+      "extra_portfolio_ref": { "classification": "violation", "reason": "normative_projection_mismatch" },
+      "duplicate_multiplicity_mismatch": { "classification": "violation", "reason": "normative_projection_mismatch" },
+      "invalid_checkpoint_sequence": { "classification": "out_of_domain", "reason": "chronicle_checkpoint_shape_invalid" },
+      "empty_collections": { "classification": "out_of_domain", "reason": "chronicle_collections_portfolio_empty" },
+      "malformed_array": { "classification": "unresolved", "reason": "chronicle_external_producer_recompute_failed" },
+      "producer_false_valid_claim": { "classification": "violation", "reason": "normative_projection_mismatch" }
+    }
+  },
+  "agreement_tuple_fields": [
+    "per_collection_local_validity",
+    "portfolio_local_validity",
+    "checkpoint_local_validity",
+    "claimed_roots",
+    "recomputed_roots",
+    "normalized_derived_collection_refs",
+    "normalized_stored_collection_refs",
+    "portfolio_link_valid",
+    "checkpoint_membership_valid",
+    "classification",
+    "failure_reason"
+  ],
+  "cycle_semantics_included": false,
+  "reference_corpus": {
+    "scenario": "main",
+    "collections": [
+      { "collection_id": "collection-ext-alpha", "collection_root": "sha256:b068376f4bf479c10f2b312e271d37d4b35ac2f6f239d888db9690b21f88fd84" },
+      { "collection_id": "collection-ext-beta", "collection_root": "sha256:f50ba6df5c6568dd58324cb5d8f16b659dcdefff81766d28f41909d72753704a" }
+    ],
+    "portfolio_root": "sha256:d1ada7efe85ac2506e605066e20211623813887a1ad544d1cbf138fe30bb30ad",
+    "checkpoint_root": "sha256:7f1cbac59900dd9b183e3d970cb7fe256947f02870d6c93a713e0ee2e96bc111",
+    "derived_and_stored_collection_refs": ["/collection/collection-ext-alpha", "/collection/collection-ext-beta"],
+    "checkpoint_collection_ref": "/collection/collection-ext-alpha",
+    "cross_check_note": "Every root above was independently computed by producer_reference.py and cross-checked byte-for-byte against the real, unmodified computeChronicleCollectionRoot/computeChroniclePortfolioRoot/computeChronicleCheckpointRoot from src/receiptos/capsule/chronicle-portfolio-v0.ts during design -- confirmed identical."
+  },
+  "forbidden_semantics": [
+    "trusting_producer_authored_validity_claims",
+    "cycle_production_in_this_lane",
+    "producer_controlled_filenames",
+    "general_unicode_localecompare_portability_claim",
+    "silent_conversion_of_explicit_null_metadata_to_absent",
+    "modifying_frozen_source_blobs_or_frozen_packages"
+  ],
+  "hash_algorithm": "sha256-lowercase-hex",
+  "fixture_set_recipe": "Sorted member paths except manifest.json: <path>\\t<file-sha256>\\n concatenated UTF-8 then SHA-256.",
+  "generated_digests": {
+    "input_seed_sha256": "14ff313b1d02a80bfb51092472e5b80f4c8d712f7963e73cb1c88838cd870eac",
+    "expected_positive_producer_manifest_sha256": "0549bcbc43aaf67c14b2af41d264626ebe84abac42b2802a7eea6eab58776d43",
+    "expected_positive_collections_sha256": "376bc7df3881f315ea3853fffa13b7bcd044651fad782f8c9d2bba59edcd0a10",
+    "expected_positive_portfolio_sha256": "1d1ed10ac32426299f5bd6897573b086261371b877f740e5aba547f04e9dbb39",
+    "expected_positive_checkpoint_sha256": "d845f3a476ef76a314c28574f0c2c6b0fe3ae89ccabe418700a4ea23e6d8f983"
+  }
+}
