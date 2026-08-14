@@ -28,3 +28,5 @@ tests/receiptos/transformation-stability-chronicle-collection-checkpoint.test.ts
 src/receiptos/challenge/transformation-stability-chronicle-collection-portfolio.ts text eol=lf
 tests/receiptos/transformation-stability-chronicle-collection-portfolio.test.ts text eol=lf
 tests/receiptos/cross-object-transformation-stability-v0-conformance-package.test.ts text eol=lf
+interoperability/** text eol=lf
+tests/receiptos/chronicle-external-producer-interoperability-v0.test.ts text eol=lf

@@ -1,0 +1,21 @@
+[
+  {
+    "schema": "chronicle.collection.v0",
+    "collection_version": "chronicle.collection.v0",
+    "collection_id": "collection-ext-alpha",
+    "artifact_refs": [
+      "artifact-ext-alpha-2",
+      "artifact-ext-alpha-1"
+    ],
+    "collection_root": "sha256:b068376f4bf479c10f2b312e271d37d4b35ac2f6f239d888db9690b21f88fd84"
+  },
+  {
+    "schema": "chronicle.collection.v0",
+    "collection_version": "chronicle.collection.v0",
+    "collection_id": "collection-ext-beta",
+    "artifact_refs": [
+      "artifact-ext-beta-1"
+    ],
+    "collection_root": "sha256:f50ba6df5c6568dd58324cb5d8f16b659dcdefff81766d28f41909d72753704a"
+  }
+]

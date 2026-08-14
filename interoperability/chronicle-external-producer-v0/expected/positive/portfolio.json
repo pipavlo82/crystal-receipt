@@ -1,0 +1,10 @@
+{
+  "schema": "chronicle_portfolio.v0",
+  "portfolio_version": "chronicle_portfolio.v0",
+  "portfolio_id": "portfolio-ext-1",
+  "collection_refs": [
+    "/collection/collection-ext-alpha",
+    "/collection/collection-ext-beta"
+  ],
+  "portfolio_root": "sha256:d1ada7efe85ac2506e605066e20211623813887a1ad544d1cbf138fe30bb30ad"
+}

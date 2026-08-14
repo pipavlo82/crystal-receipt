@@ -1,0 +1,45 @@
+{
+  "schema": "chronicle_external_producer_package_fixture_manifest.v0",
+  "package_id": "chronicle-external-producer-v0",
+  "version": "v0",
+  "file_count": 9,
+  "files": [
+    {
+      "path": "interoperability/chronicle-external-producer-v0/SPEC.md",
+      "sha256": "6056ad0d91da4a08df31cab64c276bd6f80b7d5fe6a04aab61dc9b20e5ed3374"
+    },
+    {
+      "path": "interoperability/chronicle-external-producer-v0/contract.json",
+      "sha256": "fa864ad9ac173ef8e8da092625eba8e32668fba526230c1b040a16810170a889"
+    },
+    {
+      "path": "interoperability/chronicle-external-producer-v0/expected/positive/checkpoint.json",
+      "sha256": "d845f3a476ef76a314c28574f0c2c6b0fe3ae89ccabe418700a4ea23e6d8f983"
+    },
+    {
+      "path": "interoperability/chronicle-external-producer-v0/expected/positive/collections.json",
+      "sha256": "376bc7df3881f315ea3853fffa13b7bcd044651fad782f8c9d2bba59edcd0a10"
+    },
+    {
+      "path": "interoperability/chronicle-external-producer-v0/expected/positive/portfolio.json",
+      "sha256": "1d1ed10ac32426299f5bd6897573b086261371b877f740e5aba547f04e9dbb39"
+    },
+    {
+      "path": "interoperability/chronicle-external-producer-v0/expected/positive/producer-manifest.json",
+      "sha256": "0549bcbc43aaf67c14b2af41d264626ebe84abac42b2802a7eea6eab58776d43"
+    },
+    {
+      "path": "interoperability/chronicle-external-producer-v0/fixtures/input-seed.json",
+      "sha256": "14ff313b1d02a80bfb51092472e5b80f4c8d712f7963e73cb1c88838cd870eac"
+    },
+    {
+      "path": "interoperability/chronicle-external-producer-v0/producer_reference.py",
+      "sha256": "918f13daab4c0bf4bec219f98a48194d489314899c1c03dd006c46245a784de2"
+    },
+    {
+      "path": "interoperability/chronicle-external-producer-v0/verify_output.py",
+      "sha256": "cfc0c386764a23f1301213b6f0e0007255411bdf382f62ae9d55e46d82284189"
+    }
+  ],
+  "fixture_set_sha256": "4c3e185797b88a74ebc64946f5011f30f58eb4224a1cb78d45657a78575c7a3e"
+}
