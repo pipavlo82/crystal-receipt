@@ -2,7 +2,7 @@
   "schema": "chronicle_external_producer_package_fixture_manifest.v0",
   "package_id": "chronicle-external-producer-v0",
   "version": "v0",
-  "file_count": 9,
+  "file_count": 10,
   "files": [
     {
       "path": "interoperability/chronicle-external-producer-v0/SPEC.md",
@@ -37,9 +37,13 @@
       "sha256": "918f13daab4c0bf4bec219f98a48194d489314899c1c03dd006c46245a784de2"
     },
     {
+      "path": "interoperability/chronicle-external-producer-v0/producer_reference_js.mjs",
+      "sha256": "8926cbf94b75283e3beb753e8cd69f3361870cddbed4b8916e2acd69816b994d"
+    },
+    {
       "path": "interoperability/chronicle-external-producer-v0/verify_output.py",
       "sha256": "cfc0c386764a23f1301213b6f0e0007255411bdf382f62ae9d55e46d82284189"
     }
   ],
-  "fixture_set_sha256": "4c3e185797b88a74ebc64946f5011f30f58eb4224a1cb78d45657a78575c7a3e"
+  "fixture_set_sha256": "d1b61d841c8c43cd258229854b04eb70eef8aca66f2de015399a415332f7de8c"
 }

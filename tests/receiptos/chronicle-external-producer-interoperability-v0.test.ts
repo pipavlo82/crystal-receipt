@@ -16,6 +16,11 @@ import {
   type ChronicleCollectionV0,
   type ChroniclePortfolioV0,
 } from "../../src/receiptos/capsule/chronicle-portfolio-v0"
+import {
+  IDENTIFIER_RE as JS_IDENTIFIER_RE,
+  encodeUriComponentEquivalent as jsEncodeUriComponentEquivalent,
+  strictJsonParse as jsStrictJsonParse,
+} from "../../interoperability/chronicle-external-producer-v0/producer_reference_js.mjs"
 
 const root = resolve(import.meta.dir, "../..")
 const PACKAGE = "interoperability/chronicle-external-producer-v0"
@@ -188,6 +193,19 @@ function runProducer(scenario: string, outDir: string) {
 function runIndependentVerifier(packageDir: string) {
   const result = spawnSync("python", [`${PACKAGE}/verify_output.py`, "--package", packageDir], { cwd: root, encoding: "utf8" })
   return { status: result.status, parsed: JSON.parse(result.stdout) }
+}
+
+// Second, independent producer -- JavaScript/Bun. Spawned as a real CLI
+// process (not imported) for the tests that must prove standalone
+// executability; the module is also imported directly above for
+// unit-level checks (escaping self-test, comparator scope, the
+// portability guard) that don't need a subprocess round-trip.
+function runJsProducer(seedPath: string, scenario: string, outDir: string) {
+  const result = spawnSync("bun", [`${PACKAGE}/producer_reference_js.mjs`, "--seed", seedPath, "--scenario", scenario, "--out", outDir], {
+    cwd: root,
+    encoding: "utf8",
+  })
+  return { status: result.status, parsed: result.stdout.trim() ? JSON.parse(result.stdout) : null, stderr: result.stderr }
 }
 
 const REQUIRED_FILES = ["producer-manifest.json", "collections.json", "portfolio.json", "checkpoint.json"]
@@ -657,5 +675,170 @@ describe("chronicle external producer interoperability v0", () => {
       new RegExp(`^\\s*(import\\s+${moduleName}\\b|from\\s+${moduleName}\\s+import)`, "m").test(source)
     expect(importsModule(verifierSource, "producer_reference")).toBe(false)
     expect(importsModule(producerSource, "verify_output")).toBe(false)
+  })
+
+  // ---------------------------------------------------------------------------
+  // Second independent producer -- JavaScript/Bun (producer_reference_js.mjs).
+  // Derived only from SPEC.md/contract.json/fixtures/input-seed.json/
+  // expected/positive/**; never reads, imports, or invokes producer_reference.py.
+  // ---------------------------------------------------------------------------
+
+  test("JS producer: fresh main run is byte-identical, file by file, to the committed expected/positive/ baseline", () => {
+    withTempDir((dir) => {
+      const result = runJsProducer(`${PACKAGE}/fixtures/input-seed.json`, "main", dir)
+      expect(result.status).toBe(0)
+      for (const name of REQUIRED_FILES) {
+        const fresh = readFileSync(join(dir, name))
+        const frozen = readFileSync(resolve(PACKAGE_ABS, "expected/positive", name))
+        expect(fresh.equals(frozen)).toBe(true)
+      }
+    })
+  })
+
+  test("JS producer: repeated runs are byte-identical", () => {
+    withTempDir((dirA) => {
+      withTempDir((dirB) => {
+        runJsProducer(`${PACKAGE}/fixtures/input-seed.json`, "main", dirA)
+        runJsProducer(`${PACKAGE}/fixtures/input-seed.json`, "main", dirB)
+        for (const name of REQUIRED_FILES) {
+          expect(readFileSync(join(dirA, name)).equals(readFileSync(join(dirB, name)))).toBe(true)
+        }
+      })
+    })
+  })
+
+  test("JS producer output passes the existing unmodified independent Python verifier", () => {
+    withTempDir((dir) => {
+      runJsProducer(`${PACKAGE}/fixtures/input-seed.json`, "main", dir)
+      const { status, parsed } = runIndependentVerifier(dir)
+      expect(status).toBe(0)
+      expect(parsed.ok).toBe(true)
+      expect(parsed.classification).toBe("stable")
+    })
+  })
+
+  test("JS producer output is accepted by the real unmodified ReceiptOS Collection/Portfolio/Checkpoint verifiers and both pairwise cross-links", () => {
+    withTempDir((dir) => {
+      runJsProducer(`${PACKAGE}/fixtures/input-seed.json`, "main", dir)
+      const result = acceptChronicleExternalProducerBundle(dir)
+      expect(result.classification).toBe("stable")
+      expect(result.reason).toBeNull()
+      expect(result.collections!.every((c) => c.ok)).toBe(true)
+      expect(result.portfolio!.ok).toBe(true)
+      expect(result.checkpoint!.ok).toBe(true)
+      expect(result.portfolio_link_valid).toBe(true)
+      expect(result.checkpoint_membership_valid).toBe(true)
+    })
+  })
+
+  test("JS producer escaping self-test exactly matches the pinned contract value", () => {
+    const selfTest = contract.collection_ref_derivation.self_test
+    const derived = jsEncodeUriComponentEquivalent(selfTest.input)
+    expect(derived).toBe(selfTest.expected_output)
+    expect(derived).toBe("a%20b'c(d)e!f*g%2Fh")
+  })
+
+  test("JS producer: every normative comparator string stays inside the frozen bounded identifier scope where applicable", () => {
+    const strings: string[] = contract.comparators.normative_strings
+    for (const value of strings) {
+      if (value.startsWith("/collection/")) continue // derived ref, not a raw identifier
+      expect(JS_IDENTIFIER_RE.test(value)).toBe(true)
+    }
+  })
+
+  test("JS producer portability guard: rejects an unsafe IEEE-754 integer that native JSON.parse would silently mis-parse", () => {
+    const rawJson = '{"sequence": 9007199254740993}'
+    // Demonstrate the hazard itself: native JSON.parse silently rounds the
+    // source integer literal 9007199254740993 down to the nearest
+    // representable double, 9007199254740992 -- with no error at all. (A
+    // literal `9007199254740993` in JS source code is itself already
+    // rounded at parse time, so this can only be demonstrated from raw
+    // JSON text, not by writing the number as a JS literal.)
+    expect(JSON.parse(rawJson).sequence).toBe(9007199254740992)
+    // The guard catches exactly this.
+    expect(() => jsStrictJsonParse(rawJson)).toThrow(/unsafe_ieee754_integer/)
+  })
+
+  test("JS producer portability guard, end to end: a seed with an unsafe-integer sequence is rejected by the CLI", () => {
+    withTempDir((dir) => {
+      const seedText = readFileSync(resolve(root, `${PACKAGE}/fixtures/input-seed.json`), "utf8")
+      const mutatedSeed = seedText.replace('"sequence": 0', '"sequence": 9007199254740993')
+      expect(mutatedSeed).not.toBe(seedText)
+      const mutatedSeedPath = join(dir, "mutated-seed.json")
+      writeFileSync(mutatedSeedPath, mutatedSeed)
+      const result = runJsProducer(mutatedSeedPath, "main", join(dir, "out"))
+      expect(result.status).not.toBe(0)
+      expect(result.parsed.ok).toBe(false)
+      expect(result.parsed.reason).toContain("unsafe_ieee754_integer")
+    })
+  })
+
+  test("JS producer also rejects duplicate JSON object keys in the seed", () => {
+    withTempDir((dir) => {
+      const seedText = readFileSync(resolve(root, `${PACKAGE}/fixtures/input-seed.json`), "utf8")
+      const mutatedSeed = seedText.replace(
+        '"portfolio_id": "portfolio-ext-1"',
+        '"portfolio_id": "portfolio-ext-1", "portfolio_id": "portfolio-ext-2"',
+      )
+      const mutatedSeedPath = join(dir, "mutated-seed.json")
+      writeFileSync(mutatedSeedPath, mutatedSeed)
+      const result = runJsProducer(mutatedSeedPath, "main", join(dir, "out"))
+      expect(result.status).not.toBe(0)
+      expect(result.parsed.reason).toContain("duplicate_object_key")
+    })
+  })
+
+  test("JS producer works standalone: copying only the interoperability package outside the repository, with no .git, src/**, Python producer, or TypeScript source reachable", () => {
+    const standaloneRoot = mkdtempSync(join(tmpdir(), "chronicle-ext-producer-js-standalone-"))
+    try {
+      const cp = spawnSync("cp", ["-r", PACKAGE_ABS, join(standaloneRoot, "package")], { encoding: "utf8" })
+      expect(cp.status).toBe(0)
+      const standalonePackage = join(standaloneRoot, "package")
+
+      // No .git metadata was copied into the standalone package itself.
+      // (Checking ambient `git status` here would be environment-dependent
+      // -- an enclosing repository elsewhere on the filesystem, unrelated
+      // to this package, can make that command succeed regardless of what
+      // was actually copied. What must be proven is that the *copy*
+      // carries no repository metadata and that the script itself never
+      // invokes git -- the latter is covered by the source-level
+      // independence test below.)
+      const findGit = spawnSync("find", [standaloneRoot, "-iname", ".git"], { encoding: "utf8" })
+      expect(findGit.stdout.trim()).toBe("")
+
+      // No src/** or TypeScript source anywhere in the copy.
+      const findTs = spawnSync("find", [standaloneRoot, "-iname", "*.ts"], { encoding: "utf8" })
+      expect(findTs.stdout.trim()).toBe("")
+      const findSrc = spawnSync("find", [standaloneRoot, "-type", "d", "-name", "src"], { encoding: "utf8" })
+      expect(findSrc.stdout.trim()).toBe("")
+
+      const runResult = spawnSync(
+        "bun",
+        ["producer_reference_js.mjs", "--seed", "fixtures/input-seed.json", "--scenario", "main", "--out", join(standaloneRoot, "standalone-out")],
+        { cwd: standalonePackage, encoding: "utf8" },
+      )
+      expect(runResult.status).toBe(0)
+      for (const name of REQUIRED_FILES) {
+        const fresh = readFileSync(join(standaloneRoot, "standalone-out", name))
+        const frozen = readFileSync(resolve(PACKAGE_ABS, "expected/positive", name))
+        expect(fresh.equals(frozen)).toBe(true)
+      }
+    } finally {
+      rmSync(standaloneRoot, { recursive: true, force: true })
+    }
+  })
+
+  test("JS producer source-level independence: zero ReceiptOS imports, no Python producer invocation/import, no subprocess/network/Git access", () => {
+    const source = readFileSync(resolve(PACKAGE_ABS, "producer_reference_js.mjs"), "utf8")
+    // Comments/docstrings may name ReceiptOS and producer_reference.py in
+    // prose (they do, explaining independence); what must never appear is
+    // an actual import/require statement reaching either one.
+    const importsProduction = /^\s*import\b[^\n]*\bfrom\s+["'].*(src\/receiptos|receiptos\/)/m.test(source)
+    expect(importsProduction).toBe(false)
+    const importsPythonProducer = /^\s*(import|require)\b[^\n]*producer_reference\.py/m.test(source)
+    expect(importsPythonProducer).toBe(false)
+    expect(/node:child_process|execSync|spawnSync|spawn\(/.test(source)).toBe(false)
+    expect(/node:net\b|node:http\b|node:https\b|node:dgram\b|fetch\(/.test(source)).toBe(false)
+    expect(/simple-git|isomorphic-git/.test(source)).toBe(false)
   })
 })
