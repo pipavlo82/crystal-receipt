@@ -33,3 +33,5 @@ tests/receiptos/chronicle-external-producer-interoperability-v0.test.ts text eol
 src/receiptos/challenge/transformation-stability-coverage.ts text eol=lf
 src/receiptos/challenge/transformation-stability-chronicle-portfolio-coverage-v1.ts text eol=lf
 tests/receiptos/transformation-stability-coverage-v0.test.ts text eol=lf
+src/receiptos/challenge/transformation-stability-coverage-normalizer-registry.ts text eol=lf
+tests/receiptos/transformation-stability-coverage-normalizer-registry-v0.test.ts text eol=lf
