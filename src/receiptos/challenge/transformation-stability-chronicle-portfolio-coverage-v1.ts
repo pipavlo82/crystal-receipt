@@ -31,6 +31,11 @@
  * `history_sensitive` at the base layer -- exactly the milder-than-it-
  * should-be classification the coverage plane is required to escalate to
  * `violation`, never the reverse.
+ *
+ * The Chronicle Portfolio pilot deliberately uses a synthetically weakened
+ * base projection to demonstrate the author-omission failure class. This is
+ * NOT evidence of a defect in the already-merged production Chronicle
+ * Portfolio Transformation Stability profile.
  */
 
 import { canonicalize } from "../canon/canonicalize"
@@ -47,6 +52,7 @@ import {
   type CoverageProfileV0,
   type TransformationStabilityWithCoverageResultV0,
 } from "./transformation-stability-coverage"
+import { SORT_COLLECTION_REFS_MULTISET_NORMALIZER_ID_V0 } from "./transformation-stability-coverage-normalizer-registry"
 
 // ---------------------------------------------------------------------------
 // Deliberately minimal base profile (see module comment for why the gaps
@@ -125,9 +131,6 @@ export function buildPilotBaseProfileV0(
 // known or unknown, therefore falls to derived C_F automatically.
 // ---------------------------------------------------------------------------
 
-export const PILOT_COLLECTION_REFS_NORMALIZER = (value: unknown): unknown =>
-  Array.isArray(value) ? sortCollectionRefs(value as string[]) : value
-
 const PILOT_DECLARATIONS_RESULT = defineCoverageProfileV0({
   same_type: true,
   history_sensitive_policy: "classify",
@@ -138,8 +141,12 @@ const PILOT_DECLARATIONS_RESULT = defineCoverageProfileV0({
     { selector: "collection_refs", targetClass: "N" },
     { selector: "portfolio_root", targetClass: "N" },
   ],
+  // Authenticated normalizer_id, not an inline function -- see
+  // transformation-stability-coverage-normalizer-registry.ts. The reused,
+  // unmodified sortCollectionRefs implementation is unchanged; only the way
+  // this profile references it has changed.
   value_normalizers: {
-    collection_refs: PILOT_COLLECTION_REFS_NORMALIZER,
+    collection_refs: SORT_COLLECTION_REFS_MULTISET_NORMALIZER_ID_V0,
   },
 })
 

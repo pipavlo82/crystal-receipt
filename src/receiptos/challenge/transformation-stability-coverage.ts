@@ -24,9 +24,20 @@
  * walker's own traversal rules (object keys sorted, arrays terminate as
  * leaves) mirror canonicalize()'s existing rules rather than inventing new
  * ones.
+ *
+ * Value normalization (for whole-array leaf atoms whose declared coverage
+ * semantics are order-insensitive) never accepts an inline function.
+ * Coverage classification, a normalizer's declared equivalence relation,
+ * and a normalizer's implementation are three separate concerns -- a
+ * profile may only reference an authenticated `normalizer_id` resolved
+ * against transformation-stability-coverage-normalizer-registry.ts. See
+ * that module for why: an unreviewed inline normalizer is a value-level
+ * reopening of the exact same omission/fail-open class this whole layer
+ * exists to close at the path level.
  */
 
 import { canonicalIdentityJson } from "./counterfactual-neighborhood"
+import { lookupNormalizerV0 } from "./transformation-stability-coverage-normalizer-registry"
 import {
   evaluateTransformationStabilityV0,
   type AuthenticatedTransformationProfileV0,
@@ -128,12 +139,21 @@ export type CoverageProfileInputV0 = {
   readonly same_type: boolean
   readonly history_sensitive_policy: HistorySensitivePolicyV0
   readonly declarations: readonly CoverageDeclarationInputV0[]
-  readonly value_normalizers?: Readonly<Record<string, (value: unknown) => unknown>>
+  // Authenticated normalizer_id strings ONLY -- never a function. This is
+  // the TypeScript-level half of "inline functions must fail"; see
+  // defineCoverageProfileV0 for the runtime backstop that also rejects a
+  // non-string value smuggled in via `any`/a cast.
+  readonly value_normalizers?: Readonly<Record<string, string>>
 }
 
 type ParsedDeclarationV0 = {
   readonly selector: ParsedCoverageSelectorV0
   readonly targetClass: "N" | "S" | "A"
+}
+
+export type ResolvedNormalizerV0 = {
+  readonly normalizerId: string
+  readonly apply: (value: unknown) => unknown
 }
 
 export type CoverageProfileV0 = {
@@ -142,7 +162,7 @@ export type CoverageProfileV0 = {
   readonly same_type: boolean
   readonly history_sensitive_policy: HistorySensitivePolicyV0
   readonly declarations: readonly ParsedDeclarationV0[]
-  readonly value_normalizers: Readonly<Record<string, (value: unknown) => unknown>>
+  readonly value_normalizers: Readonly<Record<string, ResolvedNormalizerV0>>
 }
 
 export type CoverageProfileValidationFailureV0 = {
@@ -217,11 +237,45 @@ export function defineCoverageProfileV0(input: CoverageProfileInputV0): Coverage
     }
   }
 
-  for (const path of Object.keys(input.value_normalizers ?? {})) {
+  const resolvedNormalizers: Record<string, ResolvedNormalizerV0> = {}
+  for (const [path, normalizerId] of Object.entries(input.value_normalizers ?? {})) {
+    // Runtime backstop: even though CoverageProfileInputV0 types this as
+    // `string`, a caller reaching this through `any`/a cast/plain JS could
+    // still smuggle in a function. Reject it explicitly rather than letting
+    // it flow through as a truthy, non-string "normalizer_id".
+    if (typeof normalizerId !== "string") {
+      reasons.push(`value_normalizer_must_be_authenticated_id_string_not_inline_function:${path}`)
+      continue
+    }
+
     const result = parseCoverageSelectorV0(path)
     if (!result.ok || result.selector.wildcard) {
       reasons.push(`value_normalizer_key_must_be_exact_selector:${path}`)
+      continue
     }
+    const selector = result.selector
+
+    const registryEntry = lookupNormalizerV0(normalizerId)
+    if (!registryEntry) {
+      reasons.push(`unauthenticated_normalizer_id:${normalizerId}`)
+      continue
+    }
+
+    // The normalized value only ever feeds an N/S/A comparison, never F --
+    // so the path must already carry an exact (non-wildcard) N/S/A
+    // declaration. A normalizer on an unclassified path would be silently
+    // inert (F is never normalized), which is exactly the kind of
+    // author-omission failure this whole layer exists to catch, not hide.
+    const targetKey = selectorKey(selector)
+    const classifiesTarget = parsed.some(
+      (decl) => !decl.selector.wildcard && selectorKey(decl.selector) === targetKey,
+    )
+    if (!classifiesTarget) {
+      reasons.push(`normalizer_target_path_not_classified:${path}`)
+      continue
+    }
+
+    resolvedNormalizers[path] = Object.freeze({ normalizerId, apply: registryEntry.implementation })
   }
 
   if (reasons.length > 0) return { ok: false, reasons }
@@ -234,7 +288,7 @@ export function defineCoverageProfileV0(input: CoverageProfileInputV0): Coverage
       same_type: input.same_type,
       history_sensitive_policy: input.history_sensitive_policy,
       declarations: Object.freeze(parsed),
-      value_normalizers: Object.freeze({ ...(input.value_normalizers ?? {}) }),
+      value_normalizers: Object.freeze(resolvedNormalizers),
     }),
   }
 }
@@ -352,7 +406,7 @@ export type TransformationStabilityCoverageReportV0 = {
 
 function normalizeForPath(profile: CoverageProfileV0, path: string, value: unknown): unknown {
   const normalizer = profile.value_normalizers[path]
-  return normalizer ? normalizer(value) : value
+  return normalizer ? normalizer.apply(value) : value
 }
 
 export function runCoveragePlaneV0(
