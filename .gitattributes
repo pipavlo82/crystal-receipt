@@ -35,3 +35,7 @@ src/receiptos/challenge/transformation-stability-chronicle-portfolio-coverage-v1
 tests/receiptos/transformation-stability-coverage-v0.test.ts text eol=lf
 src/receiptos/challenge/transformation-stability-coverage-normalizer-registry.ts text eol=lf
 tests/receiptos/transformation-stability-coverage-normalizer-registry-v0.test.ts text eol=lf
+src/receiptos/challenge/canonical-identity-json.ts text eol=lf
+tests/receiptos/canonical-identity-json-conformance-v0.test.ts text eol=lf
+tests/receiptos/transformation-stability-generic-extraction-v0.test.ts text eol=lf
+src/receiptos/challenge/transformation-stability-coverage-normalizer-authority.ts text eol=lf

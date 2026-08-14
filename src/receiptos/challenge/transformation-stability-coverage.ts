@@ -29,15 +29,38 @@
  * semantics are order-insensitive) never accepts an inline function.
  * Coverage classification, a normalizer's declared equivalence relation,
  * and a normalizer's implementation are three separate concerns -- a
- * profile may only reference an authenticated `normalizer_id` resolved
- * against transformation-stability-coverage-normalizer-registry.ts. See
- * that module for why: an unreviewed inline normalizer is a value-level
+ * profile may only reference an authenticated `normalizer_id`, resolved
+ * against a `normalizer_authority` the profile author supplies explicitly
+ * (see `NormalizerAuthorityV0`, imported type-only from
+ * transformation-stability-coverage-normalizer-authority.ts). That module,
+ * not this one, owns constructing and validating an authority; this
+ * module only trusts a branded authority object and additionally
+ * cross-checks that the entry an authority returns for a requested ID
+ * actually carries that same ID (`entry.normalizer_id === normalizerId`)
+ * before using its implementation -- defense in depth against an
+ * authority object that was not honestly built through that module's own
+ * constructor. This module has no default, implicit, or ReceiptOS-
+ * specific authority of its own, and needs no runtime import of the
+ * authority module at all (the import below is type-only, erased at
+ * build time): a profile that declares no `value_normalizers` needs no
+ * authority at all, and a profile that does needs whatever authority its
+ * caller injects -- generic or domain-specific, this module cannot tell
+ * the difference and does not try to. The ReceiptOS Chronicle Portfolio
+ * pilot binds this to its own closed authority
+ * (transformation-stability-coverage-normalizer-registry.ts) explicitly,
+ * at the call site, exactly like every other adapter-supplied function on
+ * a coverage or transformation profile. An unreviewed inline normalizer
+ * remains forbidden regardless of authority: it would be a value-level
  * reopening of the exact same omission/fail-open class this whole layer
- * exists to close at the path level.
+ * exists to close at the path level. A naked resolver *function* (this
+ * module's first, since-repaired cut at dependency injection) is likewise
+ * no longer accepted -- see transformation-stability-coverage-normalizer-
+ * authority.ts's header comment for why a bare closure was itself a
+ * reopened trust hole.
  */
 
-import { canonicalIdentityJson } from "./counterfactual-neighborhood"
-import { lookupNormalizerV0 } from "./transformation-stability-coverage-normalizer-registry"
+import { canonicalIdentityJson } from "./canonical-identity-json"
+import type { NormalizerAuthorityV0 } from "./transformation-stability-coverage-normalizer-authority"
 import {
   evaluateTransformationStabilityV0,
   type AuthenticatedTransformationProfileV0,
@@ -144,6 +167,13 @@ export type CoverageProfileInputV0 = {
   // defineCoverageProfileV0 for the runtime backstop that also rejects a
   // non-string value smuggled in via `any`/a cast.
   readonly value_normalizers?: Readonly<Record<string, string>>
+  // Explicit, caller-supplied authority for resolving the normalizer_id
+  // strings above -- a validated, branded NormalizerAuthorityV0 (see
+  // transformation-stability-coverage-normalizer-authority.ts), never a
+  // bare resolver function. Optional: a profile with no value_normalizers
+  // needs no authority at all. A profile that references a normalizer_id
+  // with no authority supplied fails closed, identically to an unknown ID.
+  readonly normalizer_authority?: NormalizerAuthorityV0
 }
 
 type ParsedDeclarationV0 = {
@@ -237,6 +267,17 @@ export function defineCoverageProfileV0(input: CoverageProfileInputV0): Coverage
     }
   }
 
+  // The supplied authority, if any, must be a genuinely branded
+  // NormalizerAuthorityV0 -- not a plain object/closure shaped to look
+  // like one. A forged/malformed authority is treated as no authority at
+  // all for every normalizer_id lookup below, so it fails exactly like an
+  // unauthenticated ID rather than partially succeeding.
+  const suppliedAuthority = input.normalizer_authority
+  if (suppliedAuthority !== undefined && suppliedAuthority.__brand !== "NormalizerAuthorityV0") {
+    reasons.push("normalizer_authority_not_authenticated")
+  }
+  const authority = suppliedAuthority?.__brand === "NormalizerAuthorityV0" ? suppliedAuthority : undefined
+
   const resolvedNormalizers: Record<string, ResolvedNormalizerV0> = {}
   for (const [path, normalizerId] of Object.entries(input.value_normalizers ?? {})) {
     // Runtime backstop: even though CoverageProfileInputV0 types this as
@@ -255,9 +296,25 @@ export function defineCoverageProfileV0(input: CoverageProfileInputV0): Coverage
     }
     const selector = result.selector
 
-    const registryEntry = lookupNormalizerV0(normalizerId)
-    if (!registryEntry) {
+    // No default/implicit authority: a normalizer_id can only be
+    // authenticated if this profile's own caller supplied one. A missing
+    // authority and an unrecognized ID are deliberately the same failure
+    // -- both mean "this module cannot vouch for this ID."
+    const authorityEntry = authority?.resolve(normalizerId)
+    if (!authorityEntry) {
       reasons.push(`unauthenticated_normalizer_id:${normalizerId}`)
+      continue
+    }
+
+    // Defense in depth: even a branded authority must return an entry
+    // whose own declared normalizer_id matches the ID that was actually
+    // requested. This is what makes "profile selects identity; authority
+    // assigns meaning to that identity" a checked invariant rather than a
+    // convention an authority implementation could silently violate --
+    // an authority that returns entry A for requested ID B fails closed
+    // here, never silently substituting A's implementation for B.
+    if (authorityEntry.normalizer_id !== normalizerId) {
+      reasons.push(`normalizer_authority_id_mismatch:${path}:requested=${normalizerId}:returned=${authorityEntry.normalizer_id}`)
       continue
     }
 
@@ -275,7 +332,7 @@ export function defineCoverageProfileV0(input: CoverageProfileInputV0): Coverage
       continue
     }
 
-    resolvedNormalizers[path] = Object.freeze({ normalizerId, apply: registryEntry.implementation })
+    resolvedNormalizers[path] = Object.freeze({ normalizerId, apply: authorityEntry.implementation })
   }
 
   if (reasons.length > 0) return { ok: false, reasons }

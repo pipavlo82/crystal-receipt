@@ -1,0 +1,202 @@
+{
+  "schema": "receiptos.canonical_identity_json_conformance_vectors.v0",
+  "comparator_claim": "canonicalIdentityJson",
+  "purpose": "Mechanical conformance evidence for the generic comparator shared by transformation-stability.ts, transformation-stability-cycle.ts, and transformation-stability-coverage.ts. Freezes what the comparator actually does; does not invent semantics. Consumable by any language's test runner without importing production TypeScript -- every vector is plain data.",
+  "format_notes": [
+    "Each vector has a `category` of `equal_pair`, `not_equal_pair`, `canonical_form`, or `throws`.",
+    "`equal_pair`/`not_equal_pair` vectors carry `left`/`right` (or `left_kind`/`right_kind` for a value not directly representable in plain JSON) and assert canonicalIdentityJson(left) === canonicalIdentityJson(right), or !==, respectively.",
+    "`canonical_form` vectors carry `value` (or `value_kind`) and `expected_canonical`, asserting canonicalIdentityJson(value) === expected_canonical exactly.",
+    "`throws` vectors carry `value` (or `value_kind`, plus `value_key` for the one case that needs it) and assert canonicalIdentityJson(value) throws.",
+    "A `*_kind` field, when present, replaces the corresponding plain field and names a value not directly expressible in JSON: `positive_zero`, `negative_zero`, `nan`, `positive_infinity`, `negative_infinity`, `undefined`, or `object_with_one_undefined_valued_key` (paired with `value` for the object's other keys, if any, and `value_key` naming the key whose value is JS `undefined`).",
+    "A consumer in any language should construct the described value directly (e.g. IEEE-754 negative zero, a NaN/Infinity float, or -- for undefined -- simply omit the key/value, since `undefined` itself is a JS-specific concept with no cross-language analog; a non-JS comparator's own equivalent 'forbidden absent-marker' input should be substituted)."
+  ],
+  "vectors": [
+    {
+      "vector_id": "object_key_order_independence",
+      "category": "equal_pair",
+      "description": "Two objects with the same keys/values in different declaration order canonicalize identically.",
+      "left": { "b": 1, "a": 2 },
+      "right": { "a": 2, "b": 1 }
+    },
+    {
+      "vector_id": "nested_object_key_order_independence",
+      "category": "equal_pair",
+      "description": "Key-order independence recurses into nested objects.",
+      "left": { "outer": { "b": 1, "a": 2 } },
+      "right": { "outer": { "a": 2, "b": 1 } }
+    },
+    {
+      "vector_id": "array_order_significant",
+      "category": "not_equal_pair",
+      "description": "Arrays are never reordered; declared order is part of identity.",
+      "left": [1, 2],
+      "right": [2, 1]
+    },
+    {
+      "vector_id": "duplicate_array_elements_significant",
+      "category": "not_equal_pair",
+      "description": "Arrays are never deduped; an element count change is a real difference.",
+      "left": [1, 1, 2],
+      "right": [1, 2]
+    },
+    {
+      "vector_id": "nested_arrays_order_significant",
+      "category": "not_equal_pair",
+      "description": "Order-significance recurses into nested arrays.",
+      "left": [[1, 2], [3, 4]],
+      "right": [[2, 1], [3, 4]]
+    },
+    {
+      "vector_id": "string_case_significant",
+      "category": "not_equal_pair",
+      "description": "No case-folding is ever applied to string values.",
+      "left": "ABC",
+      "right": "abc"
+    },
+    {
+      "vector_id": "empty_string_vs_missing_field",
+      "category": "not_equal_pair",
+      "description": "A key present with an empty-string value is not the same as the key being entirely absent.",
+      "left": { "a": "" },
+      "right": {}
+    },
+    {
+      "vector_id": "null_vs_missing_field",
+      "category": "not_equal_pair",
+      "description": "A key present with a null value is not the same as the key being entirely absent -- null is a present value.",
+      "left": { "a": null },
+      "right": {}
+    },
+    {
+      "vector_id": "false_vs_zero",
+      "category": "not_equal_pair",
+      "description": "Boolean false and numeric 0 canonicalize to distinct literal forms (\"false\" vs \"0\") and never compare equal.",
+      "left": false,
+      "right": 0
+    },
+    {
+      "vector_id": "positive_zero_canonical_form",
+      "category": "canonical_form",
+      "description": "Canonical form of +0.",
+      "value_kind": "positive_zero",
+      "expected_canonical": "0"
+    },
+    {
+      "vector_id": "negative_zero_canonical_form",
+      "category": "canonical_form",
+      "description": "Canonical form of -0.",
+      "value_kind": "negative_zero",
+      "expected_canonical": "0"
+    },
+    {
+      "vector_id": "zero_vs_negative_zero_compares_equal",
+      "category": "equal_pair",
+      "description": "DOCUMENTED ACTUAL BEHAVIOR, not a design choice made here: JS String(-0) === String(0) === \"0\", so +0 and -0 canonicalize identically and compare equal under this comparator. A domain that must distinguish signed zero cannot rely on this comparator to do so.",
+      "left_kind": "positive_zero",
+      "right_kind": "negative_zero"
+    },
+    {
+      "vector_id": "integer_vs_numeric_looking_string",
+      "category": "not_equal_pair",
+      "description": "A number and a string that looks like that number are never coerced into comparing equal -- the string form carries quote delimiters in its canonical output.",
+      "left": 1,
+      "right": "1"
+    },
+    {
+      "vector_id": "unicode_composed_vs_decomposed_not_normalized",
+      "category": "not_equal_pair",
+      "description": "DOCUMENTED ACTUAL BEHAVIOR: the comparator performs no Unicode normalization (no NFC/NFD). A precomposed code point (U+00E9) and its canonically-equivalent decomposed sequence (U+0065 U+0301) are different JS strings and canonicalize to different byte sequences.",
+      "left": "é",
+      "right": "é"
+    },
+    {
+      "vector_id": "escaped_quote_and_backslash_canonical_form",
+      "category": "canonical_form",
+      "description": "A string containing a literal double-quote and a literal backslash canonicalizes with both escaped per JSON string-escaping rules.",
+      "value": "a\"b\\c",
+      "expected_canonical": "\"a\\\"b\\\\c\""
+    },
+    {
+      "vector_id": "forward_slash_not_escaped_canonical_form",
+      "category": "canonical_form",
+      "description": "DOCUMENTED ACTUAL BEHAVIOR: forward slash is JSON-legal unescaped and this comparator (via JSON.stringify) does not escape it, unlike some JSON encoders' optional \\/ convention.",
+      "value": "a/b",
+      "expected_canonical": "\"a/b\""
+    },
+    {
+      "vector_id": "object_vs_array_never_equal",
+      "category": "not_equal_pair",
+      "description": "An empty object and an empty array canonicalize to distinct literal forms (\"{}\" vs \"[]\") and never compare equal.",
+      "left": {},
+      "right": []
+    },
+    {
+      "vector_id": "large_exponential_number_canonical_form",
+      "category": "canonical_form",
+      "description": "DOCUMENTED ACTUAL BEHAVIOR: very large finite numbers canonicalize using JS's own String() exponential notation, not a fixed-decimal form.",
+      "value": 1e21,
+      "expected_canonical": "1e+21"
+    },
+    {
+      "vector_id": "small_exponential_number_canonical_form",
+      "category": "canonical_form",
+      "description": "DOCUMENTED ACTUAL BEHAVIOR: very small finite numbers likewise canonicalize using JS's own String() exponential notation.",
+      "value": 1e-7,
+      "expected_canonical": "1e-7"
+    },
+    {
+      "vector_id": "positive_infinity_throws",
+      "category": "throws",
+      "description": "Non-finite numbers are rejected outright, never silently coerced to null or a sentinel string.",
+      "value_kind": "positive_infinity"
+    },
+    {
+      "vector_id": "negative_infinity_throws",
+      "category": "throws",
+      "description": "Same rejection for negative infinity.",
+      "value_kind": "negative_infinity"
+    },
+    {
+      "vector_id": "nan_throws",
+      "category": "throws",
+      "description": "Same rejection for NaN.",
+      "value_kind": "nan"
+    },
+    {
+      "vector_id": "undefined_top_level_throws",
+      "category": "throws",
+      "description": "A bare top-level undefined value is rejected, never silently treated as null or omitted.",
+      "value_kind": "undefined"
+    },
+    {
+      "vector_id": "undefined_valued_key_throws",
+      "category": "throws",
+      "description": "An object key whose value is undefined is rejected -- this is distinct from the key being absent entirely (see null_vs_missing_field / empty_string_vs_missing_field).",
+      "value_kind": "object_with_one_undefined_valued_key",
+      "value": {},
+      "value_key": "a"
+    }
+  ],
+  "mutants": [
+    {
+      "mutant_id": "sort_arrays_as_sets",
+      "description": "Recursively sorts and dedupes arrays as if they were sets before canonicalizing, instead of preserving declared order and duplicates.",
+      "wrongly_collapses_vector_ids": ["array_order_significant", "duplicate_array_elements_significant", "nested_arrays_order_significant"]
+    },
+    {
+      "mutant_id": "drop_null_valued_fields",
+      "description": "Silently omits any object key whose value is null before canonicalizing, instead of treating null as a present value.",
+      "wrongly_collapses_vector_ids": ["null_vs_missing_field"]
+    },
+    {
+      "mutant_id": "lowercase_strings",
+      "description": "Lowercases every string value before canonicalizing, instead of preserving case exactly.",
+      "wrongly_collapses_vector_ids": ["string_case_significant"]
+    },
+    {
+      "mutant_id": "coerce_numeric_strings_to_numbers",
+      "description": "Treats a string that parses as a finite number as if it were that number, instead of keeping numbers and strings in strictly separate canonical forms.",
+      "wrongly_collapses_vector_ids": ["integer_vs_numeric_looking_string"]
+    }
+  ]
+}
