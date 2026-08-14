@@ -30,3 +30,6 @@ tests/receiptos/transformation-stability-chronicle-collection-portfolio.test.ts 
 tests/receiptos/cross-object-transformation-stability-v0-conformance-package.test.ts text eol=lf
 interoperability/** text eol=lf
 tests/receiptos/chronicle-external-producer-interoperability-v0.test.ts text eol=lf
+src/receiptos/challenge/transformation-stability-coverage.ts text eol=lf
+src/receiptos/challenge/transformation-stability-chronicle-portfolio-coverage-v1.ts text eol=lf
+tests/receiptos/transformation-stability-coverage-v0.test.ts text eol=lf
