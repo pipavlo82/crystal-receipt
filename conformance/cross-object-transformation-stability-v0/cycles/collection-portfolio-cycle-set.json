@@ -1,0 +1,251 @@
+{
+  "schema": "receiptos.cross_object_transformation_stability_cycle_set.v0",
+  "profile": "collections_portfolio",
+  "cycle_count": 5,
+  "cycles": [
+    {
+      "cycle_id": "stable_multi_edge_roundtrip_reorder",
+      "observed": {
+        "schema": "receiptos.transformation_stability_cycle_result.v0",
+        "transformation_claim": "edgewise_normative_preservation_closed_cycle",
+        "cycle_profile_id": "chronicle-collections-portfolio-cycle-v0:stable_multi_edge_roundtrip_reorder",
+        "node_object_kind": "chronicle_collections_portfolio_bundle.v0",
+        "recompute_procedure_id": "receiptos.chronicleCollectionsPortfolioCrossLink+canonicalize.v0",
+        "comparison_rule_id": "collection-roots+portfolio-root+cross-link-multiset+canonical-envelope+metadata.v0",
+        "ordered_edge_ids": [
+          "canonical-roundtrip",
+          "collections-and-refs-reorder"
+        ],
+        "evaluation_state": "evaluated",
+        "classification": "stable",
+        "failed_edge_id": null,
+        "failure_reason": null,
+        "aggregate": {
+          "edge_count": 2,
+          "completed_edges": 2,
+          "stable": 2,
+          "history_sensitive": 0,
+          "unresolved": 0,
+          "out_of_domain": 0,
+          "violation": 0
+        },
+        "edges": [
+          {
+            "edge_id": "canonical-roundtrip",
+            "edge_index": 0,
+            "evaluation_state": "evaluated",
+            "classification": "stable",
+            "reason": null,
+            "normative_match": true,
+            "stability_match": true,
+            "forbidden_variant_match": true,
+            "allowed_variant_changed": false
+          },
+          {
+            "edge_id": "collections-and-refs-reorder",
+            "edge_index": 1,
+            "evaluation_state": "evaluated",
+            "classification": "stable",
+            "reason": null,
+            "normative_match": true,
+            "stability_match": true,
+            "forbidden_variant_match": true,
+            "allowed_variant_changed": false
+          }
+        ],
+        "endpoint": {
+          "normative_match": true,
+          "stability_match": true,
+          "forbidden_variant_match": true,
+          "allowed_variant_changed": false
+        }
+      }
+    },
+    {
+      "cycle_id": "cross_link_mutation_then_restore",
+      "observed": {
+        "schema": "receiptos.transformation_stability_cycle_result.v0",
+        "transformation_claim": "edgewise_normative_preservation_closed_cycle",
+        "cycle_profile_id": "chronicle-collections-portfolio-cycle-v0:cross_link_mutation_then_restore",
+        "node_object_kind": "chronicle_collections_portfolio_bundle.v0",
+        "recompute_procedure_id": "receiptos.chronicleCollectionsPortfolioCrossLink+canonicalize.v0",
+        "comparison_rule_id": "collection-roots+portfolio-root+cross-link-multiset+canonical-envelope+metadata.v0",
+        "ordered_edge_ids": [
+          "mutate-collection-id-stale-ref",
+          "restore-collection-id-and-ref"
+        ],
+        "evaluation_state": "evaluated",
+        "classification": "violation",
+        "failed_edge_id": "mutate-collection-id-stale-ref",
+        "failure_reason": "normative_projection_mismatch",
+        "aggregate": {
+          "edge_count": 2,
+          "completed_edges": 0,
+          "stable": 0,
+          "history_sensitive": 0,
+          "unresolved": 0,
+          "out_of_domain": 0,
+          "violation": 1
+        },
+        "edges": [
+          {
+            "edge_id": "mutate-collection-id-stale-ref",
+            "edge_index": 0,
+            "evaluation_state": "evaluated",
+            "classification": "violation",
+            "reason": "normative_projection_mismatch",
+            "normative_match": false,
+            "stability_match": false,
+            "forbidden_variant_match": true,
+            "allowed_variant_changed": false
+          }
+        ],
+        "endpoint": {
+          "normative_match": null,
+          "stability_match": null,
+          "forbidden_variant_match": null,
+          "allowed_variant_changed": null
+        }
+      }
+    },
+    {
+      "cycle_id": "link_only_mutation_then_restore",
+      "observed": {
+        "schema": "receiptos.transformation_stability_cycle_result.v0",
+        "transformation_claim": "edgewise_normative_preservation_closed_cycle",
+        "cycle_profile_id": "chronicle-collections-portfolio-cycle-v0:link_only_mutation_then_restore",
+        "node_object_kind": "chronicle_collections_portfolio_bundle.v0",
+        "recompute_procedure_id": "receiptos.chronicleCollectionsPortfolioCrossLink+canonicalize.v0",
+        "comparison_rule_id": "collection-roots+portfolio-root+cross-link-multiset+canonical-envelope+metadata.v0",
+        "ordered_edge_ids": [
+          "tamper-portfolio-ref-only",
+          "restore-portfolio-ref"
+        ],
+        "evaluation_state": "evaluated",
+        "classification": "violation",
+        "failed_edge_id": "tamper-portfolio-ref-only",
+        "failure_reason": "normative_projection_mismatch",
+        "aggregate": {
+          "edge_count": 2,
+          "completed_edges": 0,
+          "stable": 0,
+          "history_sensitive": 0,
+          "unresolved": 0,
+          "out_of_domain": 0,
+          "violation": 1
+        },
+        "edges": [
+          {
+            "edge_id": "tamper-portfolio-ref-only",
+            "edge_index": 0,
+            "evaluation_state": "evaluated",
+            "classification": "violation",
+            "reason": "normative_projection_mismatch",
+            "normative_match": false,
+            "stability_match": false,
+            "forbidden_variant_match": true,
+            "allowed_variant_changed": false
+          }
+        ],
+        "endpoint": {
+          "normative_match": null,
+          "stability_match": null,
+          "forbidden_variant_match": null,
+          "allowed_variant_changed": null
+        }
+      }
+    },
+    {
+      "cycle_id": "invalid_start_out_of_domain",
+      "observed": {
+        "schema": "receiptos.transformation_stability_cycle_result.v0",
+        "transformation_claim": "edgewise_normative_preservation_closed_cycle",
+        "cycle_profile_id": "chronicle-collections-portfolio-cycle-v0:invalid_start_out_of_domain",
+        "node_object_kind": "chronicle_collections_portfolio_bundle.v0",
+        "recompute_procedure_id": "receiptos.chronicleCollectionsPortfolioCrossLink+canonicalize.v0",
+        "comparison_rule_id": "collection-roots+portfolio-root+cross-link-multiset+canonical-envelope+metadata.v0",
+        "ordered_edge_ids": [
+          "attempt"
+        ],
+        "evaluation_state": "not_applicable",
+        "classification": "out_of_domain",
+        "failed_edge_id": "attempt",
+        "failure_reason": "chronicle_collections_portfolio_empty",
+        "aggregate": {
+          "edge_count": 1,
+          "completed_edges": 0,
+          "stable": 0,
+          "history_sensitive": 0,
+          "unresolved": 0,
+          "out_of_domain": 1,
+          "violation": 0
+        },
+        "edges": [
+          {
+            "edge_id": "attempt",
+            "edge_index": 0,
+            "evaluation_state": "not_applicable",
+            "classification": "out_of_domain",
+            "reason": "chronicle_collections_portfolio_empty",
+            "normative_match": null,
+            "stability_match": null,
+            "forbidden_variant_match": null,
+            "allowed_variant_changed": null
+          }
+        ],
+        "endpoint": {
+          "normative_match": null,
+          "stability_match": null,
+          "forbidden_variant_match": null,
+          "allowed_variant_changed": null
+        }
+      }
+    },
+    {
+      "cycle_id": "collections_corrupt_unresolved",
+      "observed": {
+        "schema": "receiptos.transformation_stability_cycle_result.v0",
+        "transformation_claim": "edgewise_normative_preservation_closed_cycle",
+        "cycle_profile_id": "chronicle-collections-portfolio-cycle-v0:collections_corrupt_unresolved",
+        "node_object_kind": "chronicle_collections_portfolio_bundle.v0",
+        "recompute_procedure_id": "receiptos.chronicleCollectionsPortfolioCrossLink+canonicalize.v0",
+        "comparison_rule_id": "collection-roots+portfolio-root+cross-link-multiset+canonical-envelope+metadata.v0",
+        "ordered_edge_ids": [
+          "corrupt-collection-artifact-refs"
+        ],
+        "evaluation_state": "execution_unresolved",
+        "classification": "unresolved",
+        "failed_edge_id": "corrupt-collection-artifact-refs",
+        "failure_reason": "chronicle_collections_portfolio_recompute_failed",
+        "aggregate": {
+          "edge_count": 1,
+          "completed_edges": 0,
+          "stable": 0,
+          "history_sensitive": 0,
+          "unresolved": 1,
+          "out_of_domain": 0,
+          "violation": 0
+        },
+        "edges": [
+          {
+            "edge_id": "corrupt-collection-artifact-refs",
+            "edge_index": 0,
+            "evaluation_state": "execution_unresolved",
+            "classification": "unresolved",
+            "reason": "chronicle_collections_portfolio_recompute_failed",
+            "normative_match": null,
+            "stability_match": null,
+            "forbidden_variant_match": null,
+            "allowed_variant_changed": null
+          }
+        ],
+        "endpoint": {
+          "normative_match": null,
+          "stability_match": null,
+          "forbidden_variant_match": null,
+          "allowed_variant_changed": null
+        }
+      }
+    }
+  ]
+}
