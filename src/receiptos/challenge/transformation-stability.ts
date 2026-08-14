@@ -5,7 +5,7 @@
  * projection, and applicability authority in repository code.
  */
 
-import { canonicalIdentityJson } from "./counterfactual-neighborhood"
+import { canonicalIdentityJson } from "./canonical-identity-json"
 
 export const TRANSFORMATION_STABILITY_RESULT_SCHEMA_V0 =
   "receiptos.transformation_stability_result.v0" as const

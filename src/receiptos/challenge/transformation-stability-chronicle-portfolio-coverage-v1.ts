@@ -52,7 +52,10 @@ import {
   type CoverageProfileV0,
   type TransformationStabilityWithCoverageResultV0,
 } from "./transformation-stability-coverage"
-import { SORT_COLLECTION_REFS_MULTISET_NORMALIZER_ID_V0 } from "./transformation-stability-coverage-normalizer-registry"
+import {
+  CHRONICLE_NORMALIZER_AUTHORITY_V0,
+  SORT_COLLECTION_REFS_MULTISET_NORMALIZER_ID_V0,
+} from "./transformation-stability-coverage-normalizer-registry"
 
 // ---------------------------------------------------------------------------
 // Deliberately minimal base profile (see module comment for why the gaps
@@ -148,6 +151,12 @@ const PILOT_DECLARATIONS_RESULT = defineCoverageProfileV0({
   value_normalizers: {
     collection_refs: SORT_COLLECTION_REFS_MULTISET_NORMALIZER_ID_V0,
   },
+  // The generic coverage module (transformation-stability-coverage.ts) has
+  // no default/implicit authority of its own -- this pilot is the
+  // ReceiptOS binding, so it explicitly supplies its own closed,
+  // validated Chronicle normalizer authority here, at the call site,
+  // exactly like every other adapter-supplied function on this profile.
+  normalizer_authority: CHRONICLE_NORMALIZER_AUTHORITY_V0,
 })
 
 if (!PILOT_DECLARATIONS_RESULT.ok) {
