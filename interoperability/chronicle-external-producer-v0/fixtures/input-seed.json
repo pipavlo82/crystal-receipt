@@ -1,0 +1,25 @@
+{
+  "schema": "chronicle_external_producer_input_seed.v0",
+  "collections": [
+    {
+      "collection_id": "collection-ext-alpha",
+      "artifact_refs": ["artifact-ext-alpha-2", "artifact-ext-alpha-1"]
+    },
+    {
+      "collection_id": "collection-ext-beta",
+      "artifact_refs": ["artifact-ext-beta-1"]
+    }
+  ],
+  "duplicate_collection_id": "collection-ext-alpha",
+  "portfolio": {
+    "portfolio_id": "portfolio-ext-1"
+  },
+  "checkpoint": {
+    "checkpoint_id": "checkpoint-ext-1",
+    "sequence": 0,
+    "prev_checkpoint": null,
+    "entry_refs": ["entry-ext-1"],
+    "references_collection_id": "collection-ext-alpha"
+  },
+  "escaping_self_test_id": "a b'c(d)e!f*g/h"
+}
