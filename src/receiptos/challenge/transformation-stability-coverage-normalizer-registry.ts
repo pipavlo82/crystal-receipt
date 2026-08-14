@@ -1,19 +1,32 @@
 /**
- * Closed-World Profile Coverage v0 -- normalizer authority registry.
+ * Closed-World Profile Coverage v0 -- ReceiptOS Chronicle normalizer
+ * authority binding.
  *
  * Follow-up to transformation-stability-coverage.ts (see commit
- * ee5bafb1e5cc0c44ba42b640ce03663fd8db6876). That commit's
- * `value_normalizers` field accepted an arbitrary inline
- * `(value: unknown) => unknown` function per path, with no mechanical check
- * on what the function actually did. This module closes that gap: a
- * coverage profile may now only reference an authenticated `normalizer_id`
- * string resolved against the closed registry below -- never an inline
- * function.
+ * ee5bafb1e5cc0c44ba42b640ce03663fd8db6876, which accepted an arbitrary
+ * inline `(value: unknown) => unknown` function per path, and commit
+ * b8c72e629dd169fa79d767f16a6e08edea966c95, whose first cut of dependency
+ * injection -- a naked `(normalizerId) => {implementation}` resolver
+ * closure -- reopened the same trust hole one layer lower, since any
+ * caller could attach an arbitrary implementation behind an otherwise-
+ * valid normalizer_id). Both gaps are closed the same way: a coverage
+ * profile may only reference an authenticated `normalizer_id` string,
+ * resolved against a validated, branded `NormalizerAuthorityV0` (see
+ * transformation-stability-coverage-normalizer-authority.ts) -- never an
+ * inline function, and never a bare resolver closure.
  *
- * Three concepts are kept structurally separate, on purpose:
+ * This file is the ReceiptOS-specific *binding*: it constructs exactly
+ * one such authority, containing exactly one entry
+ * (`receiptos.sortCollectionRefs.multiset.v0`), via the generic
+ * authority's own constructor -- it is not itself part of the generic
+ * mechanism, and transformation-stability-coverage.ts has no import of
+ * this file (or any Chronicle module) at all.
+ *
+ * Four concepts are kept structurally separate, on purpose:
  *   - coverage classification (N/S/A/F)              -- unaffected by this file
  *   - declared equivalence relation E                 -- prose/data, below
  *   - normalizer implementation                        -- reused, unchanged code
+ *   - normalizer authority (identity binding)          -- this file's authority object
  *
  * A normalizer's *implementation identity* (which exact code runs) is
  * authenticated by a pinned source blob OID, exactly like every other
@@ -26,18 +39,37 @@
  * transformation-stability-coverage-normalizer-registry-v0.test.ts, which
  * also proves a deliberately broken (sort+dedupe) mutant normalizer is
  * rejected by the same vector set -- if the mutant passed, the vectors
- * would be insufficient.
+ * would be insufficient. This provenance metadata (blob OID, source path,
+ * export name, determinism/idempotence/duplicate/order semantics) is kept
+ * as a separate ReceiptOS-specific record below, since the generic
+ * NormalizerAuthorityEntryV0 shape intentionally carries only
+ * normalizer_id + equivalence_kind + implementation -- provenance-grade
+ * evidence is this domain's concern, not the generic mechanism's.
  */
 
 import { sortCollectionRefs } from "../capsule/chronicle-portfolio-v0"
+import {
+  defineNormalizerAuthorityV0,
+  type NormalizerAuthorityV0,
+} from "./transformation-stability-coverage-normalizer-authority"
 
-export type NormalizerEquivalenceKindV0 = "multiset_reorder_only"
+export const SORT_COLLECTION_REFS_MULTISET_NORMALIZER_ID_V0 = "receiptos.sortCollectionRefs.multiset.v0" as const
 
-export type NormalizerRegistryEntryV0 = {
+function sortCollectionRefsNormalizerV0(value: unknown): unknown {
+  if (!Array.isArray(value)) return value
+  return sortCollectionRefs(value as string[])
+}
+
+// ---------------------------------------------------------------------------
+// ReceiptOS-specific provenance metadata. Not part of the generic
+// authority entry shape -- looked up separately by normalizer_id, purely
+// for this domain's own conformance/authentication evidence.
+// ---------------------------------------------------------------------------
+
+export type ChronicleNormalizerProvenanceV0 = {
   readonly normalizer_id: string
-  readonly equivalence_kind: NormalizerEquivalenceKindV0
+  readonly equivalence_kind: string
   readonly description: string
-  readonly implementation: (value: unknown) => unknown
   readonly implementation_source_path: string
   readonly implementation_export_name: string
   readonly expected_source_blob_oid: string
@@ -47,27 +79,14 @@ export type NormalizerRegistryEntryV0 = {
   readonly order_semantics: "non_normative" | "normative"
 }
 
-function sortCollectionRefsNormalizerV0(value: unknown): unknown {
-  if (!Array.isArray(value)) return value
-  return sortCollectionRefs(value as string[])
-}
-
-// ---------------------------------------------------------------------------
-// Closed registry. Not extensible by profile authors -- this array is the
-// only place a new normalizer_id can ever be admitted, and every entry
-// requires the full authentication chain documented in the module comment
-// above before it may be added here.
-// ---------------------------------------------------------------------------
-
-const REGISTRY_ENTRIES: readonly NormalizerRegistryEntryV0[] = [
-  {
-    normalizer_id: "receiptos.sortCollectionRefs.multiset.v0",
+const CHRONICLE_NORMALIZER_PROVENANCE_V0: readonly ChronicleNormalizerProvenanceV0[] = Object.freeze([
+  Object.freeze({
+    normalizer_id: SORT_COLLECTION_REFS_MULTISET_NORMALIZER_ID_V0,
     equivalence_kind: "multiset_reorder_only",
     description:
       "Two collection_refs arrays are equivalent iff they contain the same ref values with the same per-ref " +
       "multiplicities; order is non-normative. Reorder collapses; add/remove/substitute a ref or change any " +
       "ref's multiplicity does not collapse.",
-    implementation: sortCollectionRefsNormalizerV0,
     implementation_source_path: "src/receiptos/capsule/chronicle-portfolio-v0.ts",
     implementation_export_name: "sortCollectionRefs",
     expected_source_blob_oid: "0e790911092546c62344f980e6b611542bcd00fe",
@@ -75,30 +94,45 @@ const REGISTRY_ENTRIES: readonly NormalizerRegistryEntryV0[] = [
     idempotent: true,
     duplicate_semantics: "preserved",
     order_semantics: "non_normative",
-  },
-]
+  }),
+])
 
-function buildRegistryV0(): ReadonlyMap<string, NormalizerRegistryEntryV0> {
-  const map = new Map<string, NormalizerRegistryEntryV0>()
-  for (const entry of REGISTRY_ENTRIES) {
-    if (map.has(entry.normalizer_id)) {
-      // Fail closed at module load -- duplicate normalizer_id registration
-      // must never silently resolve to "whichever was registered last".
-      throw new Error(`duplicate_normalizer_id_registration:${entry.normalizer_id}`)
-    }
-    map.set(entry.normalizer_id, Object.freeze(entry))
-  }
-  return map
+export function lookupChronicleNormalizerProvenanceV0(normalizerId: string): ChronicleNormalizerProvenanceV0 | undefined {
+  return CHRONICLE_NORMALIZER_PROVENANCE_V0.find((entry) => entry.normalizer_id === normalizerId)
 }
 
-const REGISTRY_V0: ReadonlyMap<string, NormalizerRegistryEntryV0> = buildRegistryV0()
-
-export function lookupNormalizerV0(normalizerId: string): NormalizerRegistryEntryV0 | undefined {
-  return REGISTRY_V0.get(normalizerId)
+export function listChronicleNormalizerIdsV0(): readonly string[] {
+  return CHRONICLE_NORMALIZER_PROVENANCE_V0.map((entry) => entry.normalizer_id).sort()
 }
 
-export function listNormalizerIdsV0(): readonly string[] {
-  return [...REGISTRY_V0.keys()].sort()
+// ---------------------------------------------------------------------------
+// The actual normalizer authority. Constructed once, via the generic
+// constructor -- not hand-assembled -- so it inherits that constructor's
+// own duplicate-ID rejection and entry-shape validation. Not extensible
+// at runtime by profile authors: this module-load-time construction is
+// the only place a new normalizer_id can ever be admitted into this
+// authority.
+// ---------------------------------------------------------------------------
+
+const CHRONICLE_NORMALIZER_AUTHORITY_RESULT_V0 = defineNormalizerAuthorityV0({
+  authority_id: "receiptos.chronicle.normalizer_authority.v0",
+  authority_version: "v0",
+  entries: [
+    {
+      normalizer_id: SORT_COLLECTION_REFS_MULTISET_NORMALIZER_ID_V0,
+      equivalence_kind: "multiset_reorder_only",
+      implementation: sortCollectionRefsNormalizerV0,
+    },
+  ],
+})
+
+if (!CHRONICLE_NORMALIZER_AUTHORITY_RESULT_V0.ok) {
+  // Fails fast at module load if this binding's own authority
+  // construction is ever malformed -- the same fail-closed discipline the
+  // generic authority constructor itself enforces.
+  throw new Error(
+    `chronicle normalizer authority is invalid: ${CHRONICLE_NORMALIZER_AUTHORITY_RESULT_V0.reasons.join("; ")}`,
+  )
 }
 
-export const SORT_COLLECTION_REFS_MULTISET_NORMALIZER_ID_V0 = "receiptos.sortCollectionRefs.multiset.v0" as const
+export const CHRONICLE_NORMALIZER_AUTHORITY_V0: NormalizerAuthorityV0 = CHRONICLE_NORMALIZER_AUTHORITY_RESULT_V0.authority
