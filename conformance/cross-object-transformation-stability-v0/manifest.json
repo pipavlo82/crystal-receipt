@@ -1,0 +1,49 @@
+{
+  "schema": "cross_object_transformation_stability_package_fixture_manifest.v0",
+  "package_id": "cross-object-transformation-stability-v0",
+  "version": "v0",
+  "file_count": 9,
+  "files": [
+    {
+      "path": "conformance/cross-object-transformation-stability-v0/SPEC.md",
+      "sha256": "db37266acba5ce4ed8016a2e3ba408f5f54c9120e616192bd2a1a08f7cbb1e18"
+    },
+    {
+      "path": "conformance/cross-object-transformation-stability-v0/audit_package.ts",
+      "sha256": "eea6a148031c29fe64b72e9239fc8934b2a3cc43a14f1858b71edcf3f5abb0b4"
+    },
+    {
+      "path": "conformance/cross-object-transformation-stability-v0/contract.json",
+      "sha256": "1eaa3e91cd0e37b2758f955b5b08014fbc104b698d19d28002c096ef02f0f7e6"
+    },
+    {
+      "path": "conformance/cross-object-transformation-stability-v0/cycles/collection-checkpoint-cycle-set.json",
+      "sha256": "0cf24750193ff5d34cb4dfc266dfeed3f8ab7bed592a905f2e62275b27ab5ffd"
+    },
+    {
+      "path": "conformance/cross-object-transformation-stability-v0/cycles/collection-portfolio-cycle-set.json",
+      "sha256": "2b7d5019dba1025aa637dbb68ad047eb11a460836e3ad27148a2cc4aba1a7658"
+    },
+    {
+      "path": "conformance/cross-object-transformation-stability-v0/generate_package.ts",
+      "sha256": "850b3bc315485c12111843983f2b8b611dc942351fa27ef419e64e65a5ee1986"
+    },
+    {
+      "path": "conformance/cross-object-transformation-stability-v0/vectors/collection-checkpoint-matrix-set.json",
+      "sha256": "9264368661d8eed5f7f7421a02a7c8397114aebe38dce4404152e02502356ac4"
+    },
+    {
+      "path": "conformance/cross-object-transformation-stability-v0/vectors/collection-portfolio-matrix-set.json",
+      "sha256": "9a64333b106b0cd89e0bd43dac09577184e97982c59536a3df920543053a4c24"
+    },
+    {
+      "path": "conformance/cross-object-transformation-stability-v0/verify_independent.py",
+      "sha256": "dfabb809c7cadfd31d799b1763060b94de29fe4f261b89bf3748c41d1423eabc"
+    }
+  ],
+  "fixture_set_sha256": "b016e8162a4edf58689509ba11fe2e5195882b742b582ba775b2acc8c157ca97",
+  "collection_checkpoint_matrix_set_sha256": "9264368661d8eed5f7f7421a02a7c8397114aebe38dce4404152e02502356ac4",
+  "collections_portfolio_matrix_set_sha256": "9a64333b106b0cd89e0bd43dac09577184e97982c59536a3df920543053a4c24",
+  "collection_checkpoint_cycle_set_sha256": "0cf24750193ff5d34cb4dfc266dfeed3f8ab7bed592a905f2e62275b27ab5ffd",
+  "collections_portfolio_cycle_set_sha256": "2b7d5019dba1025aa637dbb68ad047eb11a460836e3ad27148a2cc4aba1a7658"
+}
