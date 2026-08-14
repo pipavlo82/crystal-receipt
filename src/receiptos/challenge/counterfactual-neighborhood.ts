@@ -33,6 +33,14 @@ import type {
   VerifierChallengeVectorModelV0,
 } from "./verifier-challenge-model"
 
+// canonicalIdentityJson now lives in canonical-identity-json.ts (a
+// dedicated, domain-neutral module with zero runtime imports). Imported
+// here for this file's own internal use (below), and re-exported
+// unchanged so every existing caller of this module keeps working without
+// modification. See that module's header comment for why.
+import { canonicalIdentityJson } from "./canonical-identity-json"
+export { canonicalIdentityJson }
+
 export const COUNTERFACTUAL_CHALLENGE_IDENTITY_SCHEMA =
   "receiptos.counterfactual_challenge_identity.v0" as const
 
@@ -64,39 +72,6 @@ export interface FrozenCounterfactualNeighborhoodV0 {
   readonly neighborhood_id: string
   readonly version: "v0"
   readonly members: readonly CounterfactualChallengeIdentityV0[]
-}
-
-/**
- * Canonical JSON matching conformance aggregate auditors:
- * sort object keys; preserve array order; compact separators; keep null.
- */
-export function canonicalIdentityJson(value: unknown): string {
-  if (value === null) return "null"
-  if (value === true) return "true"
-  if (value === false) return "false"
-  if (typeof value === "string") return JSON.stringify(value)
-  if (typeof value === "number") {
-    if (!Number.isFinite(value)) {
-      throw new Error("canonicalIdentityJson rejects non-finite numbers")
-    }
-    return String(value)
-  }
-  if (Array.isArray(value)) {
-    return `[${value.map((entry) => canonicalIdentityJson(entry)).join(",")}]`
-  }
-  if (typeof value === "object") {
-    const record = value as Record<string, unknown>
-    const keys = Object.keys(record).sort()
-    for (const key of keys) {
-      if (record[key] === undefined) {
-        throw new Error(`canonicalIdentityJson forbids undefined at key ${JSON.stringify(key)}`)
-      }
-    }
-    return `{${keys
-      .map((key) => `${JSON.stringify(key)}:${canonicalIdentityJson(record[key])}`)
-      .join(",")}}`
-  }
-  throw new Error(`canonicalIdentityJson rejects ${typeof value}`)
 }
 
 function sha256Utf8Hex(canonicalJson: string): string {

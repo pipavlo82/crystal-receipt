@@ -10,7 +10,7 @@
  * endpoint closure. Byte equality of R0 and Rn is neither required nor implied.
  */
 
-import { canonicalIdentityJson } from "./counterfactual-neighborhood"
+import { canonicalIdentityJson } from "./canonical-identity-json"
 import type {
   HistorySensitivePolicyV0,
   RecomputeOutcomeV0,
