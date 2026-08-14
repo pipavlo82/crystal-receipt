@@ -1,0 +1,333 @@
+{
+  "schema": "cross_object_transformation_stability_package_contract.v0",
+  "package_id": "cross-object-transformation-stability-v0",
+  "version": "v0",
+  "claim": "pairwise_cross_object_consistency",
+  "cycle_claim": "edgewise_pairwise_cross_object_consistency_closed_cycle",
+  "closure_claim": "pairwise_closure_sufficient_for_current_chronicle_composition",
+  "source": {
+    "base_merge_commit": "3fa8e96a9b3236c128ad0f20602ed84d2c615ea8",
+    "chronicle_domain_path": "src/receiptos/capsule/chronicle-portfolio-v0.ts",
+    "chronicle_domain_blob_sha1": "0e790911092546c62344f980e6b611542bcd00fe",
+    "collection_checkpoint_module_path": "src/receiptos/challenge/transformation-stability-chronicle-collection-checkpoint.ts",
+    "collection_checkpoint_module_blob_sha1": "da1a0bca7e9ae36f2805a837cd9adaaec4d3ad7a",
+    "collection_checkpoint_merge_pull_request": "187",
+    "collections_portfolio_module_path": "src/receiptos/challenge/transformation-stability-chronicle-collection-portfolio.ts",
+    "collections_portfolio_module_blob_sha1": "890ddb8d5a7e8ac8bd7dfc6c0682589d796393d9",
+    "collections_portfolio_merge_pull_request": "191"
+  },
+  "principal_result_classes": [
+    "stable",
+    "history_sensitive",
+    "unresolved",
+    "out_of_domain",
+    "violation"
+  ],
+  "classification_rules": {
+    "failed_applicability": "out_of_domain",
+    "transformation_or_recompute_failure": "unresolved",
+    "normative_mismatch": "violation",
+    "forbidden_variant_mismatch": "violation",
+    "stability_mismatch": "history_sensitive unless profile.history_sensitive_policy escalates to violation",
+    "allowed_variant_variation": "telemetry only; never changes principal class"
+  },
+  "collection_checkpoint": {
+    "schema": "receiptos.transformation_stability_chronicle_collection_checkpoint_matrix.v0",
+    "matrix_id": "chronicle-collection-checkpoint-transformation-stability-matrix-v0",
+    "profile_module_path": "src/receiptos/challenge/transformation-stability-chronicle-collection-checkpoint.ts",
+    "vector_order_normative": true,
+    "vector_inventory": [
+      "stable_coordinated_roundtrip",
+      "collection_artifact_refs_reorder_stable",
+      "upstream_mutation_without_downstream_update",
+      "downstream_reference_tamper_recomputed",
+      "coordinated_upstream_downstream_update",
+      "collection_metadata_forbidden_mutation",
+      "stored_checkpoint_root_tamper",
+      "stored_collection_root_tamper",
+      "collection_schema_literal_mutation",
+      "invalid_genesis_out_of_domain",
+      "entry_refs_recompute_unresolved"
+    ],
+    "expected_classification": {
+      "stable_coordinated_roundtrip": "stable",
+      "collection_artifact_refs_reorder_stable": "stable",
+      "upstream_mutation_without_downstream_update": "violation",
+      "downstream_reference_tamper_recomputed": "violation",
+      "coordinated_upstream_downstream_update": "violation",
+      "collection_metadata_forbidden_mutation": "violation",
+      "stored_checkpoint_root_tamper": "violation",
+      "stored_collection_root_tamper": "violation",
+      "collection_schema_literal_mutation": "violation",
+      "invalid_genesis_out_of_domain": "out_of_domain",
+      "entry_refs_recompute_unresolved": "unresolved"
+    },
+    "expected_aggregate": {
+      "stable": 2,
+      "history_sensitive": 0,
+      "unresolved": 1,
+      "out_of_domain": 1,
+      "violation": 7
+    },
+    "cycle_vector_order_normative": true,
+    "cycle_edge_order_normative": true,
+    "cycle_vector_inventory": [
+      "stable_multi_edge_roundtrip_reorder",
+      "cross_link_mutation_then_restore",
+      "invalid_start_out_of_domain",
+      "entry_refs_corrupt_unresolved"
+    ],
+    "cycle_expected": {
+      "stable_multi_edge_roundtrip_reorder": {
+        "classification": "stable",
+        "failed_edge_id": null,
+        "failure_reason": null,
+        "ordered_edge_ids": ["canonical-roundtrip", "collection-artifact-refs-reorder"],
+        "completed_edges": 2
+      },
+      "cross_link_mutation_then_restore": {
+        "classification": "violation",
+        "failed_edge_id": "mutate-collection-id-stale-ref",
+        "failure_reason": "normative_projection_mismatch",
+        "ordered_edge_ids": ["mutate-collection-id-stale-ref", "restore-collection-id-and-ref"],
+        "completed_edges": 0
+      },
+      "invalid_start_out_of_domain": {
+        "classification": "out_of_domain",
+        "failed_edge_id": "attempt",
+        "failure_reason": "chronicle_checkpoint_shape_invalid",
+        "ordered_edge_ids": ["attempt"],
+        "completed_edges": 0
+      },
+      "entry_refs_corrupt_unresolved": {
+        "classification": "unresolved",
+        "failed_edge_id": "corrupt-entry-refs",
+        "failure_reason": "chronicle_collection_checkpoint_recompute_failed",
+        "ordered_edge_ids": ["corrupt-entry-refs"],
+        "completed_edges": 0
+      }
+    }
+  },
+  "collections_portfolio": {
+    "schema": "receiptos.transformation_stability_chronicle_collections_portfolio_matrix.v0",
+    "matrix_id": "chronicle-collections-portfolio-transformation-stability-matrix-v0",
+    "profile_module_path": "src/receiptos/challenge/transformation-stability-chronicle-collection-portfolio.ts",
+    "vector_order_normative": true,
+    "vector_inventory": [
+      "stable_canonical_roundtrip",
+      "collections_and_refs_reorder_stable",
+      "upstream_collection_mutation_without_portfolio_update",
+      "downstream_portfolio_ref_tamper_recomputed",
+      "coordinated_collection_and_portfolio_update",
+      "missing_portfolio_ref",
+      "extra_portfolio_ref",
+      "replace_bundled_collection_with_other_valid_collection",
+      "duplicate_collection_ref_multiset_mismatch",
+      "collection_metadata_forbidden_mutation",
+      "portfolio_metadata_forbidden_mutation",
+      "collection_schema_literal_mutation",
+      "portfolio_schema_literal_mutation",
+      "stored_collection_root_tamper",
+      "stored_portfolio_root_tamper",
+      "empty_collections_out_of_domain",
+      "collection_artifact_refs_corrupt_unresolved",
+      "portfolio_collection_refs_corrupt_unresolved"
+    ],
+    "expected_classification": {
+      "stable_canonical_roundtrip": "stable",
+      "collections_and_refs_reorder_stable": "stable",
+      "upstream_collection_mutation_without_portfolio_update": "violation",
+      "downstream_portfolio_ref_tamper_recomputed": "violation",
+      "coordinated_collection_and_portfolio_update": "violation",
+      "missing_portfolio_ref": "violation",
+      "extra_portfolio_ref": "violation",
+      "replace_bundled_collection_with_other_valid_collection": "violation",
+      "duplicate_collection_ref_multiset_mismatch": "violation",
+      "collection_metadata_forbidden_mutation": "violation",
+      "portfolio_metadata_forbidden_mutation": "violation",
+      "collection_schema_literal_mutation": "violation",
+      "portfolio_schema_literal_mutation": "violation",
+      "stored_collection_root_tamper": "violation",
+      "stored_portfolio_root_tamper": "violation",
+      "empty_collections_out_of_domain": "out_of_domain",
+      "collection_artifact_refs_corrupt_unresolved": "unresolved",
+      "portfolio_collection_refs_corrupt_unresolved": "unresolved"
+    },
+    "expected_aggregate": {
+      "stable": 2,
+      "history_sensitive": 0,
+      "unresolved": 2,
+      "out_of_domain": 1,
+      "violation": 13
+    },
+    "cycle_vector_order_normative": true,
+    "cycle_edge_order_normative": true,
+    "cycle_vector_inventory": [
+      "stable_multi_edge_roundtrip_reorder",
+      "cross_link_mutation_then_restore",
+      "link_only_mutation_then_restore",
+      "invalid_start_out_of_domain",
+      "collections_corrupt_unresolved"
+    ],
+    "cycle_expected": {
+      "stable_multi_edge_roundtrip_reorder": {
+        "classification": "stable",
+        "failed_edge_id": null,
+        "failure_reason": null,
+        "ordered_edge_ids": ["canonical-roundtrip", "collections-and-refs-reorder"],
+        "completed_edges": 2
+      },
+      "cross_link_mutation_then_restore": {
+        "classification": "violation",
+        "failed_edge_id": "mutate-collection-id-stale-ref",
+        "failure_reason": "normative_projection_mismatch",
+        "ordered_edge_ids": ["mutate-collection-id-stale-ref", "restore-collection-id-and-ref"],
+        "completed_edges": 0
+      },
+      "link_only_mutation_then_restore": {
+        "classification": "violation",
+        "failed_edge_id": "tamper-portfolio-ref-only",
+        "failure_reason": "normative_projection_mismatch",
+        "ordered_edge_ids": ["tamper-portfolio-ref-only", "restore-portfolio-ref"],
+        "completed_edges": 0
+      },
+      "invalid_start_out_of_domain": {
+        "classification": "out_of_domain",
+        "failed_edge_id": "attempt",
+        "failure_reason": "chronicle_collections_portfolio_empty",
+        "ordered_edge_ids": ["attempt"],
+        "completed_edges": 0
+      },
+      "collections_corrupt_unresolved": {
+        "classification": "unresolved",
+        "failed_edge_id": "corrupt-collection-artifact-refs",
+        "failure_reason": "chronicle_collections_portfolio_recompute_failed",
+        "ordered_edge_ids": ["corrupt-collection-artifact-refs"],
+        "completed_edges": 0
+      }
+    }
+  },
+  "combined_flat_aggregate": {
+    "vector_count": 29,
+    "stable": 4,
+    "history_sensitive": 0,
+    "unresolved": 3,
+    "out_of_domain": 2,
+    "violation": 20
+  },
+  "combined_cycle_aggregate": {
+    "cycle_count": 9,
+    "stable": 2,
+    "history_sensitive": 0,
+    "unresolved": 2,
+    "out_of_domain": 2,
+    "violation": 3
+  },
+  "closure": {
+    "observables": {
+      "D": "derived Collection-ref multiset, sortCollectionRefs(collections.map(deriveCollectionRefFromChronicleCollection))",
+      "P": "stored Portfolio-ref multiset, sortCollectionRefs(portfolio.collection_refs)",
+      "C": "Checkpoint collection_ref, checkpoint.collection_ref"
+    },
+    "implication": "D === P and C in D implies C in P",
+    "evidence": {
+      "derived_collection_refs": [
+        "/collection/collection-alpha",
+        "/collection/collection-beta"
+      ],
+      "stored_portfolio_refs": [
+        "/collection/collection-alpha",
+        "/collection/collection-beta"
+      ],
+      "checkpoint_collection_ref": "/collection/collection-alpha",
+      "d_equals_p": true,
+      "c_in_d": true,
+      "c_in_p": true,
+      "checkpoint_verifies": true
+    },
+    "scope_caveat": "This closure holds only given the observables D, P, C above under currently committed Chronicle semantics (no committed field links a Checkpoint to a Portfolio). It must not be assumed to remain sufficient if a future direct Checkpoint -> Portfolio relation is added to committed code; that would require re-deriving this closure, not reusing it."
+  },
+  "locally_valid_globally_invalid_evidence": {
+    "collection_checkpoint": {
+      "vector_id": "upstream_mutation_without_downstream_update",
+      "collection_verifies": true,
+      "checkpoint_verifies": true,
+      "cross_link_match": false
+    },
+    "collections_portfolio": {
+      "vector_id": "duplicate_collection_ref_multiset_mismatch",
+      "all_collections_verify": true,
+      "portfolio_verifies": true,
+      "derived_collection_refs": [
+        "/collection/collection-alpha",
+        "/collection/collection-alpha"
+      ],
+      "stored_collection_refs": [
+        "/collection/collection-alpha"
+      ],
+      "cross_link_match": false
+    }
+  },
+  "forbidden_semantics": [
+    "triple_object_composition_implementation",
+    "lane_k_violation_class_generalization",
+    "observation_variance_as_validity",
+    "root_equality_implies_full_boundary_preservation",
+    "endpoint_equality_erases_intermediate_violation",
+    "closure_claim_generalization_beyond_current_observables",
+    "duplicate_ref_set_collapsing"
+  ],
+  "hash_algorithm": "sha256-lowercase-hex",
+  "fixture_set_recipe": "Sorted member paths except manifest.json: <path>\\t<file-sha256>\\n concatenated UTF-8 then SHA-256.",
+  "fixtures": {
+    "collection_checkpoint": {
+      "collection": {
+        "schema": "chronicle.collection.v0",
+        "collection_version": "chronicle.collection.v0",
+        "collection_id": "collection-a",
+        "artifact_refs": ["entry-a", "entry-b"],
+        "collection_root": "sha256:ff286cb52f5910938c5ac3568bdee61fe7eab6f3e579102d9387dfa34f8a0913"
+      },
+      "checkpoint": {
+        "schema": "chronicle_checkpoint.v0",
+        "checkpoint_id": "checkpoint-1",
+        "collection_ref": "/collection/collection-a",
+        "entry_refs": ["entry-a"],
+        "prev_checkpoint": "checkpoint-0",
+        "sequence": 1,
+        "checkpoint_root": "sha256:479082e5c644d6a699de4750209a504a3cfe20dafc266705cc29d9146215a139"
+      }
+    },
+    "collections_portfolio": {
+      "collections": [
+        {
+          "schema": "chronicle.collection.v0",
+          "collection_version": "chronicle.collection.v0",
+          "collection_id": "collection-alpha",
+          "artifact_refs": ["entry-alpha-1", "entry-alpha-2"],
+          "collection_root": "sha256:212c987088ee966b3aad34f902e81f2d318d4b7ee84ef025cfb015c8b0097b7f"
+        },
+        {
+          "schema": "chronicle.collection.v0",
+          "collection_version": "chronicle.collection.v0",
+          "collection_id": "collection-beta",
+          "artifact_refs": ["entry-beta-1"],
+          "collection_root": "sha256:5446a7cede69415ba486d63cf276fbd5d858f33629aa467d9b4881c41b31fb09"
+        }
+      ],
+      "portfolio": {
+        "schema": "chronicle_portfolio.v0",
+        "portfolio_version": "chronicle_portfolio.v0",
+        "portfolio_id": "portfolio-1",
+        "collection_refs": ["/collection/collection-alpha", "/collection/collection-beta"],
+        "portfolio_root": "sha256:a7680de09eef6128c0caf574bbdffcfcf346faa5173343e3f686fe83598e6772"
+      }
+    }
+  },
+  "generated_digests": {
+    "collection_checkpoint_matrix_set_sha256": "9264368661d8eed5f7f7421a02a7c8397114aebe38dce4404152e02502356ac4",
+    "collections_portfolio_matrix_set_sha256": "9a64333b106b0cd89e0bd43dac09577184e97982c59536a3df920543053a4c24",
+    "collection_checkpoint_cycle_set_sha256": "0cf24750193ff5d34cb4dfc266dfeed3f8ab7bed592a905f2e62275b27ab5ffd",
+    "collections_portfolio_cycle_set_sha256": "2b7d5019dba1025aa637dbb68ad047eb11a460836e3ad27148a2cc4aba1a7658"
+  }
+}

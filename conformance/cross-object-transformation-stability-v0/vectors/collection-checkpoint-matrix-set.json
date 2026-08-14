@@ -1,0 +1,345 @@
+{
+  "schema": "receiptos.transformation_stability_chronicle_collection_checkpoint_matrix.v0",
+  "matrix_id": "chronicle-collection-checkpoint-transformation-stability-matrix-v0",
+  "vector_count": 11,
+  "aggregate": {
+    "stable": 2,
+    "history_sensitive": 0,
+    "unresolved": 1,
+    "out_of_domain": 1,
+    "violation": 7
+  },
+  "pass": true,
+  "members": [
+    {
+      "vector_id": "stable_coordinated_roundtrip",
+      "expected": {
+        "vector_id": "stable_coordinated_roundtrip",
+        "expected_classification": "stable",
+        "expected_normative_match": true,
+        "expected_stability_match": true,
+        "expected_forbidden_variant_match": true,
+        "expected_unresolved_reason": null,
+        "expected_out_of_domain_reason": null
+      },
+      "observed": {
+        "schema": "receiptos.transformation_stability_result.v0",
+        "transformation_claim": "normative_preservation",
+        "transformation_profile_id": "chronicle-collection-checkpoint-canonical-roundtrip-v0",
+        "transformation_family": "chronicle_collection_checkpoint_transformation_matrix",
+        "source_object_kind": "chronicle_collection_checkpoint_bundle.v0",
+        "target_object_kind": "chronicle_collection_checkpoint_bundle.v0",
+        "recompute_procedure_id": "receiptos.chronicleCollectionCheckpointCrossLink+canonicalize.v0",
+        "comparison_rule_id": "collection-root+checkpoint-root+cross-link+canonical-envelope+metadata.v0",
+        "evaluation_state": "evaluated",
+        "classification": "stable",
+        "out_of_domain_reason": null,
+        "unresolved_reason": null,
+        "normative_match": true,
+        "stability_match": true,
+        "forbidden_variant_match": true,
+        "allowed_variant_changed": false
+      }
+    },
+    {
+      "vector_id": "collection_artifact_refs_reorder_stable",
+      "expected": {
+        "vector_id": "collection_artifact_refs_reorder_stable",
+        "expected_classification": "stable",
+        "expected_normative_match": true,
+        "expected_stability_match": true,
+        "expected_forbidden_variant_match": true,
+        "expected_unresolved_reason": null,
+        "expected_out_of_domain_reason": null
+      },
+      "observed": {
+        "schema": "receiptos.transformation_stability_result.v0",
+        "transformation_claim": "normative_preservation",
+        "transformation_profile_id": "chronicle-collection-checkpoint-canonical-roundtrip-v0",
+        "transformation_family": "chronicle_collection_checkpoint_transformation_matrix",
+        "source_object_kind": "chronicle_collection_checkpoint_bundle.v0",
+        "target_object_kind": "chronicle_collection_checkpoint_bundle.v0",
+        "recompute_procedure_id": "receiptos.chronicleCollectionCheckpointCrossLink+canonicalize.v0",
+        "comparison_rule_id": "collection-root+checkpoint-root+cross-link+canonical-envelope+metadata.v0",
+        "evaluation_state": "evaluated",
+        "classification": "stable",
+        "out_of_domain_reason": null,
+        "unresolved_reason": null,
+        "normative_match": true,
+        "stability_match": true,
+        "forbidden_variant_match": true,
+        "allowed_variant_changed": false
+      }
+    },
+    {
+      "vector_id": "upstream_mutation_without_downstream_update",
+      "expected": {
+        "vector_id": "upstream_mutation_without_downstream_update",
+        "expected_classification": "violation",
+        "expected_normative_match": false,
+        "expected_stability_match": false,
+        "expected_forbidden_variant_match": true,
+        "expected_unresolved_reason": null,
+        "expected_out_of_domain_reason": null
+      },
+      "observed": {
+        "schema": "receiptos.transformation_stability_result.v0",
+        "transformation_claim": "normative_preservation",
+        "transformation_profile_id": "chronicle-collection-checkpoint-canonical-roundtrip-v0",
+        "transformation_family": "chronicle_collection_checkpoint_transformation_matrix",
+        "source_object_kind": "chronicle_collection_checkpoint_bundle.v0",
+        "target_object_kind": "chronicle_collection_checkpoint_bundle.v0",
+        "recompute_procedure_id": "receiptos.chronicleCollectionCheckpointCrossLink+canonicalize.v0",
+        "comparison_rule_id": "collection-root+checkpoint-root+cross-link+canonical-envelope+metadata.v0",
+        "evaluation_state": "evaluated",
+        "classification": "violation",
+        "out_of_domain_reason": null,
+        "unresolved_reason": null,
+        "normative_match": false,
+        "stability_match": false,
+        "forbidden_variant_match": true,
+        "allowed_variant_changed": false
+      }
+    },
+    {
+      "vector_id": "downstream_reference_tamper_recomputed",
+      "expected": {
+        "vector_id": "downstream_reference_tamper_recomputed",
+        "expected_classification": "violation",
+        "expected_normative_match": false,
+        "expected_stability_match": false,
+        "expected_forbidden_variant_match": true,
+        "expected_unresolved_reason": null,
+        "expected_out_of_domain_reason": null
+      },
+      "observed": {
+        "schema": "receiptos.transformation_stability_result.v0",
+        "transformation_claim": "normative_preservation",
+        "transformation_profile_id": "chronicle-collection-checkpoint-canonical-roundtrip-v0",
+        "transformation_family": "chronicle_collection_checkpoint_transformation_matrix",
+        "source_object_kind": "chronicle_collection_checkpoint_bundle.v0",
+        "target_object_kind": "chronicle_collection_checkpoint_bundle.v0",
+        "recompute_procedure_id": "receiptos.chronicleCollectionCheckpointCrossLink+canonicalize.v0",
+        "comparison_rule_id": "collection-root+checkpoint-root+cross-link+canonical-envelope+metadata.v0",
+        "evaluation_state": "evaluated",
+        "classification": "violation",
+        "out_of_domain_reason": null,
+        "unresolved_reason": null,
+        "normative_match": false,
+        "stability_match": false,
+        "forbidden_variant_match": true,
+        "allowed_variant_changed": false
+      }
+    },
+    {
+      "vector_id": "coordinated_upstream_downstream_update",
+      "expected": {
+        "vector_id": "coordinated_upstream_downstream_update",
+        "expected_classification": "violation",
+        "expected_normative_match": false,
+        "expected_stability_match": false,
+        "expected_forbidden_variant_match": true,
+        "expected_unresolved_reason": null,
+        "expected_out_of_domain_reason": null
+      },
+      "observed": {
+        "schema": "receiptos.transformation_stability_result.v0",
+        "transformation_claim": "normative_preservation",
+        "transformation_profile_id": "chronicle-collection-checkpoint-canonical-roundtrip-v0",
+        "transformation_family": "chronicle_collection_checkpoint_transformation_matrix",
+        "source_object_kind": "chronicle_collection_checkpoint_bundle.v0",
+        "target_object_kind": "chronicle_collection_checkpoint_bundle.v0",
+        "recompute_procedure_id": "receiptos.chronicleCollectionCheckpointCrossLink+canonicalize.v0",
+        "comparison_rule_id": "collection-root+checkpoint-root+cross-link+canonical-envelope+metadata.v0",
+        "evaluation_state": "evaluated",
+        "classification": "violation",
+        "out_of_domain_reason": null,
+        "unresolved_reason": null,
+        "normative_match": false,
+        "stability_match": false,
+        "forbidden_variant_match": true,
+        "allowed_variant_changed": false
+      }
+    },
+    {
+      "vector_id": "collection_metadata_forbidden_mutation",
+      "expected": {
+        "vector_id": "collection_metadata_forbidden_mutation",
+        "expected_classification": "violation",
+        "expected_normative_match": true,
+        "expected_stability_match": false,
+        "expected_forbidden_variant_match": false,
+        "expected_unresolved_reason": null,
+        "expected_out_of_domain_reason": null
+      },
+      "observed": {
+        "schema": "receiptos.transformation_stability_result.v0",
+        "transformation_claim": "normative_preservation",
+        "transformation_profile_id": "chronicle-collection-checkpoint-canonical-roundtrip-v0",
+        "transformation_family": "chronicle_collection_checkpoint_transformation_matrix",
+        "source_object_kind": "chronicle_collection_checkpoint_bundle.v0",
+        "target_object_kind": "chronicle_collection_checkpoint_bundle.v0",
+        "recompute_procedure_id": "receiptos.chronicleCollectionCheckpointCrossLink+canonicalize.v0",
+        "comparison_rule_id": "collection-root+checkpoint-root+cross-link+canonical-envelope+metadata.v0",
+        "evaluation_state": "evaluated",
+        "classification": "violation",
+        "out_of_domain_reason": null,
+        "unresolved_reason": null,
+        "normative_match": true,
+        "stability_match": false,
+        "forbidden_variant_match": false,
+        "allowed_variant_changed": false
+      }
+    },
+    {
+      "vector_id": "stored_checkpoint_root_tamper",
+      "expected": {
+        "vector_id": "stored_checkpoint_root_tamper",
+        "expected_classification": "violation",
+        "expected_normative_match": false,
+        "expected_stability_match": false,
+        "expected_forbidden_variant_match": true,
+        "expected_unresolved_reason": null,
+        "expected_out_of_domain_reason": null
+      },
+      "observed": {
+        "schema": "receiptos.transformation_stability_result.v0",
+        "transformation_claim": "normative_preservation",
+        "transformation_profile_id": "chronicle-collection-checkpoint-canonical-roundtrip-v0",
+        "transformation_family": "chronicle_collection_checkpoint_transformation_matrix",
+        "source_object_kind": "chronicle_collection_checkpoint_bundle.v0",
+        "target_object_kind": "chronicle_collection_checkpoint_bundle.v0",
+        "recompute_procedure_id": "receiptos.chronicleCollectionCheckpointCrossLink+canonicalize.v0",
+        "comparison_rule_id": "collection-root+checkpoint-root+cross-link+canonical-envelope+metadata.v0",
+        "evaluation_state": "evaluated",
+        "classification": "violation",
+        "out_of_domain_reason": null,
+        "unresolved_reason": null,
+        "normative_match": false,
+        "stability_match": false,
+        "forbidden_variant_match": true,
+        "allowed_variant_changed": false
+      }
+    },
+    {
+      "vector_id": "stored_collection_root_tamper",
+      "expected": {
+        "vector_id": "stored_collection_root_tamper",
+        "expected_classification": "violation",
+        "expected_normative_match": false,
+        "expected_stability_match": false,
+        "expected_forbidden_variant_match": true,
+        "expected_unresolved_reason": null,
+        "expected_out_of_domain_reason": null
+      },
+      "observed": {
+        "schema": "receiptos.transformation_stability_result.v0",
+        "transformation_claim": "normative_preservation",
+        "transformation_profile_id": "chronicle-collection-checkpoint-canonical-roundtrip-v0",
+        "transformation_family": "chronicle_collection_checkpoint_transformation_matrix",
+        "source_object_kind": "chronicle_collection_checkpoint_bundle.v0",
+        "target_object_kind": "chronicle_collection_checkpoint_bundle.v0",
+        "recompute_procedure_id": "receiptos.chronicleCollectionCheckpointCrossLink+canonicalize.v0",
+        "comparison_rule_id": "collection-root+checkpoint-root+cross-link+canonical-envelope+metadata.v0",
+        "evaluation_state": "evaluated",
+        "classification": "violation",
+        "out_of_domain_reason": null,
+        "unresolved_reason": null,
+        "normative_match": false,
+        "stability_match": false,
+        "forbidden_variant_match": true,
+        "allowed_variant_changed": false
+      }
+    },
+    {
+      "vector_id": "collection_schema_literal_mutation",
+      "expected": {
+        "vector_id": "collection_schema_literal_mutation",
+        "expected_classification": "violation",
+        "expected_normative_match": false,
+        "expected_stability_match": false,
+        "expected_forbidden_variant_match": true,
+        "expected_unresolved_reason": null,
+        "expected_out_of_domain_reason": null
+      },
+      "observed": {
+        "schema": "receiptos.transformation_stability_result.v0",
+        "transformation_claim": "normative_preservation",
+        "transformation_profile_id": "chronicle-collection-checkpoint-canonical-roundtrip-v0",
+        "transformation_family": "chronicle_collection_checkpoint_transformation_matrix",
+        "source_object_kind": "chronicle_collection_checkpoint_bundle.v0",
+        "target_object_kind": "chronicle_collection_checkpoint_bundle.v0",
+        "recompute_procedure_id": "receiptos.chronicleCollectionCheckpointCrossLink+canonicalize.v0",
+        "comparison_rule_id": "collection-root+checkpoint-root+cross-link+canonical-envelope+metadata.v0",
+        "evaluation_state": "evaluated",
+        "classification": "violation",
+        "out_of_domain_reason": null,
+        "unresolved_reason": null,
+        "normative_match": false,
+        "stability_match": false,
+        "forbidden_variant_match": true,
+        "allowed_variant_changed": false
+      }
+    },
+    {
+      "vector_id": "invalid_genesis_out_of_domain",
+      "expected": {
+        "vector_id": "invalid_genesis_out_of_domain",
+        "expected_classification": "out_of_domain",
+        "expected_normative_match": null,
+        "expected_stability_match": null,
+        "expected_forbidden_variant_match": null,
+        "expected_unresolved_reason": null,
+        "expected_out_of_domain_reason": "chronicle_checkpoint_shape_invalid"
+      },
+      "observed": {
+        "schema": "receiptos.transformation_stability_result.v0",
+        "transformation_claim": "normative_preservation",
+        "transformation_profile_id": "chronicle-collection-checkpoint-canonical-roundtrip-v0",
+        "transformation_family": "chronicle_collection_checkpoint_transformation_matrix",
+        "source_object_kind": "chronicle_collection_checkpoint_bundle.v0",
+        "target_object_kind": "chronicle_collection_checkpoint_bundle.v0",
+        "recompute_procedure_id": "receiptos.chronicleCollectionCheckpointCrossLink+canonicalize.v0",
+        "comparison_rule_id": "collection-root+checkpoint-root+cross-link+canonical-envelope+metadata.v0",
+        "evaluation_state": "not_applicable",
+        "classification": "out_of_domain",
+        "out_of_domain_reason": "chronicle_checkpoint_shape_invalid",
+        "unresolved_reason": null,
+        "normative_match": null,
+        "stability_match": null,
+        "forbidden_variant_match": null,
+        "allowed_variant_changed": null
+      }
+    },
+    {
+      "vector_id": "entry_refs_recompute_unresolved",
+      "expected": {
+        "vector_id": "entry_refs_recompute_unresolved",
+        "expected_classification": "unresolved",
+        "expected_normative_match": null,
+        "expected_stability_match": null,
+        "expected_forbidden_variant_match": null,
+        "expected_unresolved_reason": "chronicle_collection_checkpoint_recompute_failed",
+        "expected_out_of_domain_reason": null
+      },
+      "observed": {
+        "schema": "receiptos.transformation_stability_result.v0",
+        "transformation_claim": "normative_preservation",
+        "transformation_profile_id": "chronicle-collection-checkpoint-canonical-roundtrip-v0",
+        "transformation_family": "chronicle_collection_checkpoint_transformation_matrix",
+        "source_object_kind": "chronicle_collection_checkpoint_bundle.v0",
+        "target_object_kind": "chronicle_collection_checkpoint_bundle.v0",
+        "recompute_procedure_id": "receiptos.chronicleCollectionCheckpointCrossLink+canonicalize.v0",
+        "comparison_rule_id": "collection-root+checkpoint-root+cross-link+canonical-envelope+metadata.v0",
+        "evaluation_state": "execution_unresolved",
+        "classification": "unresolved",
+        "out_of_domain_reason": null,
+        "unresolved_reason": "chronicle_collection_checkpoint_recompute_failed",
+        "normative_match": null,
+        "stability_match": null,
+        "forbidden_variant_match": null,
+        "allowed_variant_changed": null
+      }
+    }
+  ]
+}
