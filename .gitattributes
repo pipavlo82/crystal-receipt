@@ -43,3 +43,4 @@ tests/receiptos/observed-leaf-paths-conformance-v0.test.ts text eol=lf
 tests/receiptos/transformation-stability-coverage-cross-type-rejection-v0.test.ts text eol=lf
 tests/receiptos/transformation-stability-coverage-failure-semantics-v0.test.ts text eol=lf
 tests/receiptos/transformation-stability-coverage-structural-contract-v0.test.ts text eol=lf
+tests/receiptos/tsei-invariant-discrimination-attribution-v0.test.ts text eol=lf
