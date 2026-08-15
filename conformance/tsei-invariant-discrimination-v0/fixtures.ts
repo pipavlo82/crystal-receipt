@@ -17,7 +17,7 @@
  * assertion that I_C reports UNPROVEN_DISCRIMINATION).
  */
 
-import { derivePrecommitment, type GenericCase, type Invariant, type MutantDescriptor, type RepairDescriptor } from "./model"
+import type { GenericCase, IdentityRemap, Invariant, MutantDescriptor, RepairDescriptor } from "./model"
 
 function isStrictlyIncreasing(xs: readonly number[]): boolean {
   for (let i = 1; i < xs.length; i++) {
@@ -107,6 +107,42 @@ export const MUTANT_M_NOOP: MutantDescriptor = {
   has_counterfactual_repair: false,
 }
 
+/**
+ * Baseline variant that already violates I_A on its own (alpha starts
+ * negative). Exists only to build MUTANT_CASE_NO_TRANSITION below; the
+ * shared BASELINE_CASE above satisfies all three invariants and is used
+ * everywhere else.
+ */
+export const BASELINE_ALREADY_VIOLATING_A: GenericCase = {
+  alpha: -1,
+  beta: "clean-value",
+  gamma: [1, 2, 3],
+}
+
+/**
+ * Discrimination negative control: mutation changes input (alpha -1 -> -5,
+ * so it is not a no-op), I_A was ALREADY violated on the baseline, and I_A
+ * REMAINS violated after mutation -- no baseline->mutant transition ever
+ * occurs for I_A. Declares {I_A} anyway, which happens to make
+ * attribution_matches true (mutated_attribution == {I_A} == declared) --
+ * that is deliberate: this fixture proves attribution-consistency alone is
+ * not sufficient evidence of discrimination. newly_violated must be empty,
+ * and this mutant must contribute nothing to any invariant's proven-
+ * discriminator set. Must be run against BASELINE_ALREADY_VIOLATING_A, not
+ * the shared BASELINE_CASE.
+ */
+export const MUTANT_CASE_NO_TRANSITION: MutantDescriptor = {
+  mutant_id: "M_no_transition_already_violated",
+  description: "Changes alpha from one negative value to another; I_A was already violated before the change and stays violated after it.",
+  rationale:
+    "Negative control for rung 2 (discrimination): an invariant that never flips from holding to violated is not " +
+    "discriminated by this mutant, even though its declared attribution happens to equal the observed attribution " +
+    "both before and after. Must be run against BASELINE_ALREADY_VIOLATING_A.",
+  mutate: (baseline) => ({ ...baseline, alpha: -5 }),
+  expected_attribution: new Set(["I_A"]),
+  has_counterfactual_repair: false,
+}
+
 // --- Negative-control mutants (the harness must reject every one of these) ---
 
 /** Case 3: unexpected extra attribution. Real mutation breaks {I_A, I_B}; declares only {I_A}. */
@@ -133,7 +169,14 @@ export const MUTANT_CASE4_OVERDECLARED: MutantDescriptor = {
   has_counterfactual_repair: false,
 }
 
-/** Case 5: corrupted attribution identity. Real mutation and predicate behavior untouched; only the declared id is wrong. */
+/**
+ * Case 5: ORACLE-SIDE corrupted attribution identity -- the DECLARED set is
+ * corrupted, not the emitted/observed one. Real mutation and predicate
+ * behavior untouched; only the declared id is wrong. This is distinct from,
+ * and must not be conflated with, the OUTPUT-side corruption controls
+ * (EMISSION_CORRUPTION_ID_SUBSTITUTION / EMISSION_CORRUPTION_SWAP_AB below),
+ * which corrupt what the gate emits while leaving the declared oracle alone.
+ */
 export const MUTANT_CASE5_CORRUPTED_ID: MutantDescriptor = {
   mutant_id: "M_case5_corrupted_attribution_id",
   description:
@@ -147,7 +190,14 @@ export const MUTANT_CASE5_CORRUPTED_ID: MutantDescriptor = {
   has_counterfactual_repair: false,
 }
 
-/** Case 6, half A: swaps M1's declared attribution with MB's real invariant id. */
+/**
+ * Case 6, ORACLE-SIDE swap: swaps the DECLARED attribution identities.
+ * See the output-side swap control (EMISSION_CORRUPTION_SWAP_AB below) for
+ * the distinct case where predicates and declarations are both untouched
+ * and only what the gate emits is swapped.
+ *
+ * Half A: swaps M1's declared attribution with MB's real invariant id.
+ */
 export const MUTANT_CASE6_M1_SWAPPED: MutantDescriptor = {
   mutant_id: "M_case6_m1_swapped_id",
   description: "Reuses M1's real mutation (breaks only I_A) but declares the attribution as {I_B} -- swapped with MB's label.",
@@ -170,6 +220,30 @@ export const MUTANT_CASE6_MB_SWAPPED: MutantDescriptor = {
   expected_attribution: new Set(["I_A"]),
   has_counterfactual_repair: false,
 }
+
+/**
+ * OUTPUT-side corruption control A: predicate I_A is unchanged, M1's
+ * mutation is unchanged, and the declared A_i remains {I_A} unchanged.
+ * Only the identity the gate EMITS is corrupted, via remapAttribution, to
+ * "I_X" -- modeling a gate whose evaluation logic is correct but whose
+ * reporting layer mislabels its own output. Used with
+ * runMutantCaseWithCorruptedEmission(INVARIANTS, BASELINE_CASE,
+ * MUTANT_M1_SINGLETON, EMISSION_CORRUPTION_ID_SUBSTITUTION).
+ */
+export const EMISSION_CORRUPTION_ID_SUBSTITUTION: IdentityRemap = new Map([["I_A", "I_X"]])
+
+/**
+ * OUTPUT-side corruption control B: I_A and I_B predicates are unchanged,
+ * M1 and MB's mutations are unchanged, and both declared expected sets
+ * ({I_A} and {I_B} respectively) are unchanged. Only the emitted
+ * identities are swapped. Used with both MUTANT_M1_SINGLETON and
+ * MUTANT_MB_SINGLETON via runMutantCaseWithCorruptedEmission -- the
+ * harness must reject both resulting cases.
+ */
+export const EMISSION_CORRUPTION_SWAP_AB: IdentityRemap = new Map([
+  ["I_A", "I_B"],
+  ["I_B", "I_A"],
+])
 
 // --- Counterfactual repairs, both built from MUTANT_M2_MULTI's mutated value ---
 
@@ -205,8 +279,58 @@ export const REPAIR_R_WRONG: RepairDescriptor = {
   expected_attribution_after_repair: new Set(["I_B"]),
 }
 
-// --- Eagerly-computed precommitment records (frozen at fixture-declaration ---
-// --- time, i.e. before any test in this lane runs the gate). ---
+// --- Causal negative controls (all built from MUTANT_M2_MULTI's mutated ---
+// --- value, {I_A, I_B} violated). Each is deliberately constructed so its  ---
+// --- authored expected_attribution_after_repair matches the REAL post-    ---
+// --- repair outcome exactly (attribution_matches would be true), yet the  ---
+// --- repair is not actually causally correct -- proving causally_supported ---
+// --- is doing real work beyond the authored-set check. ---
 
-export const M1_PRECOMMITMENT = derivePrecommitment(INVARIANTS, BASELINE_CASE, MUTANT_M1_SINGLETON)
-export const M2_PRECOMMITMENT = derivePrecommitment(INVARIANTS, BASELINE_CASE, MUTANT_M2_MULTI)
+/**
+ * Causal control A: claims to repair I_C, but I_C was never violated by
+ * MUTANT_M2_MULTI in the first place (only alpha/beta are touched; gamma,
+ * and therefore I_C, is untouched and holds throughout). The repair itself
+ * only fixes alpha (a real, effective change) -- post-repair attribution is
+ * genuinely {I_B}, exactly matching the authored claim, but claiming to
+ * have "repaired I_C" is false because I_C was never broken. Must fail on
+ * target_was_violated_before.
+ */
+export const REPAIR_CASE_A_NEVER_VIOLATED: RepairDescriptor = {
+  repair_id: "R_case_a_target_never_violated",
+  mutant_id: MUTANT_M2_MULTI.mutant_id,
+  target_invariant_id: "I_C",
+  repair: (mutated) => ({ ...mutated, alpha: 5 }),
+  expected_attribution_after_repair: new Set(["I_B"]),
+}
+
+/**
+ * Causal control B: claims to repair only I_A, but the repair function
+ * actually fixes both alpha AND beta -- removing I_B's attribution too,
+ * which was never declared as this repair's target. Post-repair
+ * attribution is genuinely empty, exactly matching the authored claim, but
+ * removed_attribution is {I_A, I_B}, not the declared singleton {I_A}.
+ * Must fail on the exact-singleton-removal check.
+ */
+export const REPAIR_CASE_B_OVERREACH: RepairDescriptor = {
+  repair_id: "R_case_b_overreach",
+  mutant_id: MUTANT_M2_MULTI.mutant_id,
+  target_invariant_id: "I_A",
+  repair: (mutated) => ({ ...mutated, alpha: 5, beta: "clean-again" }),
+  expected_attribution_after_repair: new Set([]),
+}
+
+/**
+ * Causal control C: claims to repair only I_A, and it genuinely does
+ * remove I_A's attribution -- but it also reverses gamma as a side effect,
+ * newly violating I_C. Post-repair attribution is genuinely {I_B, I_C},
+ * exactly matching the authored claim, but added_attribution is {I_C}, a
+ * side effect the repair never declared. Must fail on the
+ * no-side-effects check.
+ */
+export const REPAIR_CASE_C_SIDE_EFFECT: RepairDescriptor = {
+  repair_id: "R_case_c_side_effect",
+  mutant_id: MUTANT_M2_MULTI.mutant_id,
+  target_invariant_id: "I_A",
+  repair: (mutated) => ({ ...mutated, alpha: 5, gamma: [3, 2, 1] }),
+  expected_attribution_after_repair: new Set(["I_B", "I_C"]),
+}

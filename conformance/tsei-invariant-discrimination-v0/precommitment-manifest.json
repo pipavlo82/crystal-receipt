@@ -1,0 +1,22 @@
+{
+  "schema": "tsei-invariant-discrimination-v0.precommitment-manifest.v0",
+  "purpose": "Literal, hand-frozen digests for the invariant set, baseline cases, and three mutant descriptors, computed once and recorded here as plain data -- NOT recomputed into constants at import time by fixtures.ts. The conformance test suite independently re-derives these digests at run time from the live fixture code and checks them byte-for-byte against these literal values. The actual precommitment anchor is the git commit that introduces this file, pushed to origin BEFORE the verification run being reported as evidence: anyone can check out that exact commit and reproduce every value below independently, without trusting anything computed in the same process as the comparison.",
+  "digest_algorithm": "sha256 hex, over a stably-key-sorted JSON serialization; see conformance/tsei-invariant-discrimination-v0/model.ts's stableStringify/canonicalDigest",
+  "invariant_set_digest": "d9e0a0dc94456b057c9a3f051c203f07ee3a92186b804f0deb99fb3ae4d0eeea",
+  "baseline_digest": "6b84e96dd81ab7bbcac331d282308523a7443c9a0394a1272bf95add88078777",
+  "baseline_already_violating_a_digest": "11870e98a21db17018c1b5a4e7a476db58aad7cef022c2ad6930edd958a5b0ad",
+  "mutants": {
+    "M1_singleton_break_alpha": {
+      "mutant_descriptor_digest": "5a1a984d5c4b141039cf977462f6915c88a260eb42db0c1bf6777360c020202e",
+      "expected_attribution_digest": "cd8d0f76d2829ff2ea932f886b18e1dcae6e8fc0c7629724e6e3d32bf83c8209"
+    },
+    "M2_multi_break_alpha_beta": {
+      "mutant_descriptor_digest": "43b1e965f5bbee035144fecc3137d5b77a9f3e3274e0695d4c43b5e9233deb8e",
+      "expected_attribution_digest": "e7fd89b18ff42441db454207a7677acd3f6c170e0c437e944e047242114f3cec"
+    },
+    "M_no_transition_already_violated": {
+      "mutant_descriptor_digest": "201f2ddcc08ae72ee43cec2652516e14b8020b9cece6e2404d5a532d000c86ca",
+      "expected_attribution_digest": "cd8d0f76d2829ff2ea932f886b18e1dcae6e8fc0c7629724e6e3d32bf83c8209"
+    }
+  }
+}

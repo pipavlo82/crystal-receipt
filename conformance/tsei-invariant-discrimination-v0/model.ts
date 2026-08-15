@@ -92,6 +92,34 @@ export function sortedArray<T>(s: ReadonlySet<T>): T[] {
   return [...s].sort()
 }
 
+/** Elements in `a` that are not in `b`. */
+export function setDifference<T>(a: ReadonlySet<T>, b: ReadonlySet<T>): ReadonlySet<T> {
+  const result = new Set<T>()
+  for (const item of a) {
+    if (!b.has(item)) result.add(item)
+  }
+  return result
+}
+
+export type IdentityRemap = ReadonlyMap<InvariantId, InvariantId>
+
+/**
+ * Remaps the identities in an attribution set, leaving set membership
+ * (i.e. which underlying predicates actually fired) untouched -- only the
+ * labels change. Used exclusively to build the output-side attribution
+ * corruption/swap controls (see ladder.ts's runMutantCaseWithCorruptedEmission):
+ * those controls must prove predicate behavior is unchanged and only the
+ * emitted identity is corrupted, which requires a way to corrupt emission
+ * independently of both the predicates and the declared oracle.
+ */
+export function remapAttribution(attribution: ReadonlySet<InvariantId>, remap: IdentityRemap): ReadonlySet<InvariantId> {
+  const result = new Set<InvariantId>()
+  for (const id of attribution) {
+    result.add(remap.get(id) ?? id)
+  }
+  return result
+}
+
 export type MutationApplication = {
   readonly mutated: GenericCase
   readonly baseline_digest: string
@@ -136,15 +164,25 @@ export type PrecommitmentRecord = {
 }
 
 /**
- * Freezes stable identities for the invariant set, the baseline case, the
+ * Computes stable identities for the invariant set, the baseline case, the
  * mutant descriptor (including its mutate function's own source text, via
  * Function.prototype.toString, so a silent logic change is also digest-
  * visible), and the declared expected attribution set A_i.
  *
- * This proves PRECOMMITMENT only: that these values were fixed before a
- * gate result was compared against them. It does not, and cannot, prove
- * A_i was independently correct -- see ladder.ts's INDEPENDENT_GROUNDING
- * constant and conformance/tsei-invariant-discrimination-v0/README.md.
+ * IMPORTANT: calling this function and comparing its result against a
+ * same-commit, same-session constant proves only that the digest algorithm
+ * is deterministic (FIXTURE_IDENTITY_REPRODUCIBLE) -- it does NOT prove
+ * precommitment. Genuine precommitment requires comparing against a value
+ * frozen in a manifest that was committed and pushed to an immutable git
+ * anchor BEFORE the comparison run, so that the comparison could in
+ * principle be performed by a third party against a commit nobody
+ * authoring this lane can retroactively edit. See
+ * precommitment-manifest.json and the README's Precommitment section for
+ * the actual precommitment claim and its evidence.
+ *
+ * Neither this function nor a manifest-anchored precommitment proves A_i
+ * was independently correct -- see ladder.ts's INDEPENDENT_GROUNDING
+ * constant.
  */
 export function derivePrecommitment(
   invariants: readonly Invariant[],
