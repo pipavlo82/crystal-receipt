@@ -237,13 +237,16 @@ describe("closed-world profile coverage v0 -- profile validation", () => {
     expect(result.ok).toBe(false)
   })
 
-  test("side qualifier is required in a cross-type profile", () => {
+  test("cross-type profiles (same_type: false) are rejected -- unsupported in v0, not merely unverified (see transformation-stability-coverage-cross-type-rejection-v0.test.ts for the full adversarial suite)", () => {
     const result = defineCoverageProfileV0({
       same_type: false,
       history_sensitive_policy: "classify",
       declarations: [{ selector: "portfolio_id", targetClass: "N" }],
-    })
+    } as unknown as Parameters<typeof defineCoverageProfileV0>[0])
     expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.reasons.some((r) => r === "cross_type_coverage_not_supported_in_v0")).toBe(true)
+    }
   })
 })
 

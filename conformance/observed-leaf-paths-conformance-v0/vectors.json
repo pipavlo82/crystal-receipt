@@ -1,0 +1,183 @@
+{
+  "schema": "receiptos.observed_leaf_paths_conformance_vectors.v0",
+  "comparator_claim": "observedLeafPathsV0",
+  "purpose": "Mechanical conformance evidence for the structural path walker used by closed-world observed-pair coverage (the `paths(canonical(value))` operator in the generic specification). This is a distinct capability from canonicalIdentityJson conformance (see canonical-identity-json-conformance-v0): the walker enumerates PATHS from a value, it does not serialize a whole value. Freezes what the walker actually does; does not invent semantics. Consumable by any language's test runner without importing production TypeScript -- every vector is plain data.",
+  "format_notes": [
+    "`walk_vectors` each carry a `root` value (or `roots` for a multi-root equal-paths comparison) and `expected_paths`, an object mapping every expected path string to its expected raw leaf value.",
+    "`pairwise_vectors` carry `source` and `target` values and assert properties of the observed-pair universe U_obs = paths(canonical(source)) UNION paths(canonical(target)): its path membership and, per path, whether it is present on the source side, the target side, or both.",
+    "The string tokens `\"$special:undefined\"` and `\"$special:non_finite\"` are placeholder markers wherever a JS-specific value not directly representable in plain JSON is needed (an `undefined` array element, or a non-finite number such as Infinity). A consumer MUST substitute the literal value before use: `$special:undefined` -> the language's absent/undefined-equivalent array-element marker; `$special:non_finite` -> a positive-infinity float. These tokens never appear as intentional string data in any vector below.",
+    "IMPORTANT, load-bearing distinction: the walker itself NEVER throws or rejects any value, including a non-finite number or an undefined array element -- it always successfully enumerates paths and preserves the raw leaf value unmodified. Rejection of such values happens strictly downstream, when a SEPARATE comparator call (canonicalIdentityJson) is made on that leaf value -- see canonical-identity-json-conformance-v0's own non_finite/undefined vectors for that separate rejection behavior, and transformation-stability-coverage-failure-semantics-v0.test.ts for how that downstream rejection becomes an `unresolved` evaluation outcome. Vectors here that carry a `$special:*` marker inside `expected_paths` are proving the walker's PERMISSIVE pass-through behavior, not a rejection."
+  ],
+  "walk_vectors": [
+    {
+      "vector_id": "scalar_root_number",
+      "description": "A bare scalar root (not an object) has no field name of its own, so it produces zero observed paths.",
+      "root": 5,
+      "expected_paths": {}
+    },
+    {
+      "vector_id": "scalar_root_string",
+      "description": "Same rule for a string root.",
+      "root": "hello",
+      "expected_paths": {}
+    },
+    {
+      "vector_id": "flat_object",
+      "description": "A flat object's own keys become top-level paths.",
+      "root": { "a": 1, "b": 2 },
+      "expected_paths": { "a": 1, "b": 2 }
+    },
+    {
+      "vector_id": "nested_object",
+      "description": "Nested objects recurse; only the leaf carries a path -- the intermediate key ('a') never appears on its own.",
+      "root": { "a": { "b": 1 } },
+      "expected_paths": { "a.b": 1 }
+    },
+    {
+      "vector_id": "object_key_order_independence",
+      "description": "Declaration order of object keys does not affect the resulting path set.",
+      "roots": [{ "b": 1, "a": 2 }, { "a": 2, "b": 1 }],
+      "expected_paths": { "a": 2, "b": 1 }
+    },
+    {
+      "vector_id": "empty_object_root",
+      "description": "An empty object at the root produces zero observed paths (same result as a bare scalar root).",
+      "root": {},
+      "expected_paths": {}
+    },
+    {
+      "vector_id": "empty_object_nested",
+      "description": "LOAD-BEARING, non-obvious behavior: a key whose value is an empty object produces ZERO paths for that key -- the key itself never appears in the observed universe, indistinguishable from that key being entirely absent. This is DIFFERENT from an empty array (see empty_array_whole_atom below), which DOES produce a path.",
+      "root": { "meta": {} },
+      "expected_paths": {}
+    },
+    {
+      "vector_id": "array_whole_atom",
+      "description": "An array is a whole-array leaf atom -- never decomposed into per-index paths.",
+      "root": { "tags": ["b", "a"] },
+      "expected_paths": { "tags": ["b", "a"] }
+    },
+    {
+      "vector_id": "empty_array_whole_atom",
+      "description": "An empty array IS recorded as a present leaf (contrast empty_object_nested above, which is not).",
+      "root": { "tags": [] },
+      "expected_paths": { "tags": [] }
+    },
+    {
+      "vector_id": "nested_array_remains_whole_atom",
+      "description": "An array containing nested arrays is captured wholesale at the outer array's path; nothing inside it is further decomposed.",
+      "root": { "a": [[1, 2], [3, 4]] },
+      "expected_paths": { "a": [[1, 2], [3, 4]] }
+    },
+    {
+      "vector_id": "object_containing_array",
+      "description": "An array nested inside an object still terminates decomposition at the array boundary.",
+      "root": { "a": { "b": [1, 2] } },
+      "expected_paths": { "a.b": [1, 2] }
+    },
+    {
+      "vector_id": "null_leaf",
+      "description": "null is a present leaf value, distinct from the key being absent.",
+      "root": { "a": null },
+      "expected_paths": { "a": null }
+    },
+    {
+      "vector_id": "false_leaf",
+      "description": "false is a present leaf value (not confused with absence).",
+      "root": { "a": false },
+      "expected_paths": { "a": false }
+    },
+    {
+      "vector_id": "zero_leaf",
+      "description": "0 is a present leaf value.",
+      "root": { "a": 0 },
+      "expected_paths": { "a": 0 }
+    },
+    {
+      "vector_id": "empty_string_leaf",
+      "description": "An empty string is a present leaf value, distinct from the key being absent.",
+      "root": { "a": "" },
+      "expected_paths": { "a": "" }
+    },
+    {
+      "vector_id": "undefined_valued_key_treated_as_absent",
+      "description": "A key explicitly present with an undefined-equivalent value is treated identically to the key being entirely absent -- it produces zero paths, matching the walker's documented undefined-drops-to-absent convention.",
+      "root": { "a": "$special:undefined" },
+      "expected_paths": {}
+    },
+    {
+      "vector_id": "array_with_undefined_element_preserved_unrejected",
+      "description": "The walker does NOT reject an undefined-equivalent element inside an array leaf -- it preserves the raw array, including the special element, unmodified. Rejection (if any) is a separate, downstream comparator concern -- see format_notes.",
+      "root": { "a": [1, "$special:undefined", 2] },
+      "expected_paths": { "a": [1, "$special:undefined", 2] }
+    },
+    {
+      "vector_id": "array_with_non_finite_element_preserved_unrejected",
+      "description": "Same permissive-preservation rule for a non-finite number inside an array leaf.",
+      "root": { "a": [1, "$special:non_finite", 2] },
+      "expected_paths": { "a": [1, "$special:non_finite", 2] }
+    },
+    {
+      "vector_id": "deep_nested_descendants",
+      "description": "Recursion depth is unbounded in principle; a 4-level-deep leaf still produces the full dotted path.",
+      "root": { "a": { "b": { "c": { "d": 1 } } } },
+      "expected_paths": { "a.b.c.d": 1 }
+    }
+  ],
+  "pairwise_vectors": [
+    {
+      "vector_id": "source_only_path",
+      "description": "A path present only on the source side appears in U_obs with source-presence true, target-presence false. Equivalent framing: this is also the present-on-source-to-absent-on-target case.",
+      "source": { "a": 1 },
+      "target": {},
+      "expected_universe": ["a"],
+      "expected_presence": { "a": { "source": true, "target": false } }
+    },
+    {
+      "vector_id": "target_only_path",
+      "description": "A path present only on the target side appears in U_obs with source-presence false, target-presence true. Equivalent framing: this is also the absent-on-source-to-present-on-target case.",
+      "source": {},
+      "target": { "a": 1 },
+      "expected_universe": ["a"],
+      "expected_presence": { "a": { "source": false, "target": true } }
+    },
+    {
+      "vector_id": "present_on_both_sides",
+      "description": "Control case: a path present on both sides appears once in U_obs with both presence flags true.",
+      "source": { "a": 1 },
+      "target": { "a": 2 },
+      "expected_universe": ["a"],
+      "expected_presence": { "a": { "source": true, "target": true } }
+    },
+    {
+      "vector_id": "absent_on_both_sides_never_enters_universe",
+      "description": "A path that never appears on either side is not part of U_obs at all -- confirms the closed-world layering rule: absence on both sides is invisible to this layer, never a coverage mismatch.",
+      "source": { "a": 1 },
+      "target": { "a": 1 },
+      "expected_universe": ["a"],
+      "expected_presence": { "a": { "source": true, "target": true } }
+    }
+  ],
+  "mutants": [
+    {
+      "mutant_id": "decompose_arrays_by_index",
+      "description": "Recursively decomposes arrays into per-index paths (e.g. 'tags.0', 'tags.1') instead of treating an array as a whole-array atom.",
+      "wrongly_diverges_on_vector_ids": ["array_whole_atom", "nested_array_remains_whole_atom"]
+    },
+    {
+      "mutant_id": "drop_null_valued_leaves",
+      "description": "Silently omits a key whose value is null, instead of recording null as a present leaf.",
+      "wrongly_diverges_on_vector_ids": ["null_leaf"]
+    },
+    {
+      "mutant_id": "record_empty_object_as_present_leaf",
+      "description": "Unlike the real walker (which produces zero paths for a key mapped to an empty object -- see empty_object_nested), this mutant records an explicit path/leaf for such a key.",
+      "wrongly_diverges_on_vector_ids": ["empty_object_nested"]
+    },
+    {
+      "mutant_id": "ignore_target_only_paths",
+      "description": "Computes the observed-pair universe as source paths only, ignoring any path that exists only on the target side, instead of the union of both sides.",
+      "wrongly_diverges_on_pairwise_vector_ids": ["target_only_path"]
+    }
+  ]
+}
