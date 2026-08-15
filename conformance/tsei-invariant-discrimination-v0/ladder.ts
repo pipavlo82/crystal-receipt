@@ -32,9 +32,18 @@ export type RungStatus = "PROVEN" | "UNPROVEN"
 /** Per-invariant discrimination status (rung 2). Never silently "covered". */
 export type DiscriminationStatus = "PROVEN" | "UNPROVEN_DISCRIMINATION"
 
+/**
+ * Rung 2 is deliberately NOT a single RungStatus field here. A bare
+ * `discrimination: "PROVEN"` would silently imply every declared invariant
+ * discriminates, which is exactly the false "covered" claim rung 2 exists
+ * to prevent (see fixtures.ts's I_C, which is declared but never
+ * discriminated by design). LadderReport therefore carries the actual
+ * per-invariant result of discriminationStatusPerInvariant() -- callers
+ * must not collapse it into a single aggregate.
+ */
 export type LadderReport = {
   readonly declared: boolean
-  readonly discrimination: RungStatus
+  readonly discrimination_per_invariant: ReadonlyMap<InvariantId, DiscriminationStatus>
   readonly attribution_consistency: RungStatus
   readonly causal_support: RungStatus
   readonly precommitment: RungStatus

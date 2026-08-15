@@ -106,8 +106,8 @@ and called comparing them against a same-session recomputation
 editing both sides together before anyone looked, so it carried no real
 temporal guarantee.
 
-This version fixes that: `precommitment-manifest.json` is a **literal, hand-
-frozen data file** -- digests written as plain JSON string values, not
+This version fixes that: `precommitment-manifest.json` is a **literal, frozen
+data file** -- digests written as plain JSON string values, not
 computed into constants at import time. The manifest and the fixture code it
 digests are committed and **pushed to origin together**, and the actual
 precommitment claim is anchored to that pushed commit's SHA, not to anything
@@ -182,7 +182,7 @@ transplantation.
   predicate-flip no-transition control and the output-side emission-
   corruption remaps), both counterfactual repairs and all four repair
   negative controls (wrong-repair, never-violated, overreach, side-effect).
-- `precommitment-manifest.json` -- the literal, hand-frozen precommitment
+- `precommitment-manifest.json` -- the literal, frozen precommitment
   anchor data; see the Precommitment section above.
 - `tests/receiptos/tsei-invariant-discrimination-attribution-v0.test.ts` --
   the executable proof: Cases 1-10, the predicate-flip and causal negative
