@@ -425,7 +425,7 @@ describe("self-application / control sensitivity", () => {
 })
 
 describe("precommitment (manifest-anchored)", () => {
-  test("fresh recomputation from live fixture code matches the literal, hand-frozen manifest exactly", () => {
+  test("fresh recomputation from live fixture code matches the literal, frozen manifest exactly", () => {
     const manifest: PrecommitmentManifest = JSON.parse(readFileSync(MANIFEST_PATH, "utf8"))
 
     expect(deriveInvariantSetDigest(INVARIANTS)).toBe(manifest.invariant_set_digest)
@@ -465,17 +465,29 @@ describe("independent grounding", () => {
 
 describe("assembled ladder report", () => {
   test("required interpretation: each rung is strictly weaker evidence than the next", () => {
-    const provenDiscriminators = new Set<InvariantId>(["I_A", "I_B"])
-    const statuses = discriminationStatusPerInvariant(INVARIANTS, provenDiscriminators)
-    expect(statuses.get("I_C")).toBe("UNPROVEN_DISCRIMINATION")
+    // discrimination_per_invariant is built from the ACTUAL result of running
+    // the real, validated mutant cases through discriminationEvidence() and
+    // discriminationStatusPerInvariant() -- never a separately handwritten
+    // claim about which invariants are discriminated.
+    const validated = [
+      runMutantCase(INVARIANTS, BASELINE_CASE, MUTANT_M1_SINGLETON),
+      runMutantCase(INVARIANTS, BASELINE_CASE, MUTANT_MB_SINGLETON),
+      runMutantCase(INVARIANTS, BASELINE_CASE, MUTANT_M2_MULTI),
+    ]
+    const provenDiscriminators = new Set<InvariantId>()
+    for (const result of validated) {
+      for (const id of discriminationEvidence(result)) provenDiscriminators.add(id)
+    }
+    const discrimination_per_invariant = discriminationStatusPerInvariant(INVARIANTS, provenDiscriminators)
 
     const report: LadderReport = {
       declared: true,
-      // PROVEN for the invariants this lane's required cases target (I_A, I_B):
-      // Cases 1/2/7/8 give mechanically-evidenced, transition-derived discrimination
-      // for both. I_C is declared-only by design and is correctly, non-silently
-      // reported UNPROVEN_DISCRIMINATION above.
-      discrimination: "PROVEN",
+      // NOT a bare aggregate -- see the ladder.ts doc comment on this field.
+      // Reflects the actual, just-computed per-invariant result: I_A and I_B
+      // achieve PROVEN discrimination via Cases 1/2/7/8's transition-derived
+      // evidence; I_C is declared-only by design and is correctly,
+      // non-silently reported UNPROVEN_DISCRIMINATION.
+      discrimination_per_invariant,
       // PROVEN: exact equality holds for every real case, and every negative
       // control (oracle-side Cases 3-6, output-side corruption/swap, no-op,
       // predicate-flip) is actually rejected.
@@ -494,7 +506,9 @@ describe("assembled ladder report", () => {
     }
 
     expect(report.declared).toBe(true)
-    expect(report.discrimination).toBe("PROVEN")
+    expect(report.discrimination_per_invariant.get("I_A")).toBe("PROVEN")
+    expect(report.discrimination_per_invariant.get("I_B")).toBe("PROVEN")
+    expect(report.discrimination_per_invariant.get("I_C")).toBe("UNPROVEN_DISCRIMINATION")
     expect(report.attribution_consistency).toBe("PROVEN")
     expect(report.causal_support).toBe("PROVEN")
     expect(report.precommitment).toBe("PROVEN")
@@ -502,5 +516,7 @@ describe("assembled ladder report", () => {
 
     // CAUSALLY_SUPPORTED does not imply INDEPENDENTLY_GROUNDED.
     expect(report.causal_support).not.toBe(report.independent_grounding)
+    // No field on this report is a bare all-invariants discrimination aggregate.
+    expect("discrimination" in report).toBe(false)
   })
 })
