@@ -57,6 +57,30 @@
  * no longer accepted -- see transformation-stability-coverage-normalizer-
  * authority.ts's header comment for why a bare closure was itself a
  * reopened trust hole.
+ *
+ * Generic artifact structural contract (v0, frozen; no new schema
+ * machinery is introduced to enforce it -- it is enforced entirely by the
+ * existing comparator/walker validation already described above):
+ *   - an artifact evaluated by this module MUST be representable in the
+ *     comparator/path-walker value domain (null, boolean, finite number,
+ *     string, array, or plain object -- the same domain
+ *     canonicalIdentityJson accepts);
+ *   - objects MAY nest objects to any depth; the walker recurses;
+ *   - arrays are accepted only as whole-array atoms in this version --
+ *     never decomposed into per-index paths (see the structural walk
+ *     section below);
+ *   - a value the comparator cannot represent (a non-finite number, an
+ *     undefined-equivalent value reachable from an array element) fails
+ *     evaluation -- as `unresolved`, per the evaluation-time-failure rule
+ *     in evaluateTransformationStabilityWithCoverageV0 below -- rather
+ *     than being silently accepted or silently dropped;
+ *   - an artifact bundle (a plain object or array grouping several
+ *     domain sub-artifacts) is an ordinary structured value under this
+ *     contract, not a separate protocol-level type -- this module has no
+ *     bundle-specific code path;
+ *   - relationship semantics among bundled sub-artifacts remain entirely
+ *     adapter-authored: nothing here mechanically derives or enforces a
+ *     cross-artifact invariant a binding did not declare.
  */
 
 import { canonicalIdentityJson } from "./canonical-identity-json"
@@ -159,7 +183,17 @@ export type CoverageDeclarationInputV0 = {
 }
 
 export type CoverageProfileInputV0 = {
-  readonly same_type: boolean
+  // Locked to `true` (same-type profiles only) -- see the
+  // cross_type_coverage_not_supported_in_v0 rejection in
+  // defineCoverageProfileV0 below for why: runCoveragePlaneV0 does not
+  // thread a per-path source/target side into classifyPathV0 (it always
+  // classifies with side=null), so a side-qualified cross-type
+  // declaration set would silently fail to match anything and every
+  // observed path would derive to F -- not merely unverified, actively
+  // unsafe. This field is retained (rather than removed outright) so a
+  // future version can reintroduce cross-type support without changing
+  // this shape again.
+  readonly same_type: true
   readonly history_sensitive_policy: HistorySensitivePolicyV0
   readonly declarations: readonly CoverageDeclarationInputV0[]
   // Authenticated normalizer_id strings ONLY -- never a function. This is
@@ -189,7 +223,7 @@ export type ResolvedNormalizerV0 = {
 export type CoverageProfileV0 = {
   readonly __coverageBrand: "CoverageProfileV0"
   readonly coverage_claim: typeof COVERAGE_PROFILE_CLAIM_V0
-  readonly same_type: boolean
+  readonly same_type: true
   readonly history_sensitive_policy: HistorySensitivePolicyV0
   readonly declarations: readonly ParsedDeclarationV0[]
   readonly value_normalizers: Readonly<Record<string, ResolvedNormalizerV0>>
@@ -225,6 +259,17 @@ export class CoverageProfileContractErrorV0 extends Error {
 export function defineCoverageProfileV0(input: CoverageProfileInputV0): CoverageProfileValidationResultV0 {
   const reasons: string[] = []
   const parsed: ParsedDeclarationV0[] = []
+
+  // Runtime backstop for the same_type:true type lock above -- a caller
+  // reaching this through `any`/a cast/plain JS could still smuggle in
+  // `false`. Rejected unconditionally, before any declaration is
+  // inspected: cross-type coverage is not merely unverified in v0, it is
+  // actively unsafe (see the field comment on CoverageProfileInputV0), so
+  // this is a narrowing of what was previously silently accepted, not a
+  // new restriction invented for its own sake.
+  if (input.same_type !== true) {
+    reasons.push("cross_type_coverage_not_supported_in_v0")
+  }
 
   for (const declaration of input.declarations) {
     const result = parseCoverageSelectorV0(declaration.selector)
@@ -570,7 +615,25 @@ export async function evaluateTransformationStabilityWithCoverageV0<TSource, TTa
     return { base, coverage: null, classification: base.classification, escalated_by_coverage: false, coverage_escalation_reason: null }
   }
 
-  const coverage = runCoveragePlaneV0(coverageProfile, source, target)
+  // Evaluation-time failure => unresolved, matching the rule the flat
+  // evaluator already enforces for its own declared procedures (Section 6
+  // of the generic specification). A profile that reaches this point is
+  // already authenticated (only a branded CoverageProfileV0 can arrive
+  // here) -- construction/profile-authentication failure is a wholly
+  // separate, earlier concern (defineCoverageProfileV0's typed
+  // ok:false result) and is never collapsed into this unresolved case.
+  // What can still throw here, at runtime, on an otherwise-valid profile:
+  // a non-finite number or an undefined-valued array element surfacing
+  // during the observed structural walk's atom comparison (the walker
+  // itself never throws -- see observedLeafPathsV0 -- only the comparator
+  // does, downstream, when an atom is actually built), or a normalizer
+  // implementation throwing.
+  let coverage: TransformationStabilityCoverageReportV0
+  try {
+    coverage = runCoveragePlaneV0(coverageProfile, source, target)
+  } catch {
+    return { base, coverage: null, classification: "unresolved", escalated_by_coverage: false, coverage_escalation_reason: null }
+  }
 
   const nEscalate = coverage.normative_mismatch_paths.length > 0
   const fEscalate = coverage.forbidden_mismatch_paths.length > 0
