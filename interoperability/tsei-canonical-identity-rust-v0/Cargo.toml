@@ -1,0 +1,13 @@
+[package]
+name = "tsei-canonical-identity-rust-v0"
+version = "0.1.0"
+edition = "2021"
+description = "Independent, clean-room Rust implementation of the TSEI canonical-identity JSON comparator (Section 11 of docs/TRANSFORMATION_STABLE_EVIDENCE_INTEROPERABILITY_V0.md)."
+publish = false
+
+[dependencies]
+serde_json = "1"
+
+[[bin]]
+name = "conformance_report"
+path = "src/bin/conformance_report.rs"
