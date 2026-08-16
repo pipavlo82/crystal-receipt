@@ -32,14 +32,17 @@ import {
   digestAuthorityOracleBytes,
   digestBlindProblemBytes,
   encodeJsonUtf8Lf,
-  evaluateIndependentGrounding,
   evaluateProductionIndependentGrounding,
   isTseiRuntimeViolation,
   leakCheckBlindPackage,
   normativeDefinitionIdentity,
   sha256ExactBytes,
 } from "../../conformance/tsei-invariant-discrimination-v0/independent-authority"
-import { injectSyntheticVerifiedProvenance, SYNTHETIC_TEST_PUBLISHER } from "../../conformance/tsei-invariant-discrimination-v0/independent-authority-synthetic"
+import {
+  evaluateSyntheticIndependentGrounding,
+  injectSyntheticVerifiedProvenance,
+  SYNTHETIC_TEST_PUBLISHER,
+} from "../../conformance/tsei-invariant-discrimination-v0/independent-authority-synthetic"
 import { INDEPENDENT_GROUNDING_REASON, INDEPENDENT_GROUNDING_STATUS } from "../../conformance/tsei-invariant-discrimination-v0/ladder"
 
 const SPEC_PATH = resolve(import.meta.dir, "..", "..", "docs", "TRANSFORMATION_STABLE_EVIDENCE_INTEROPERABILITY_V0.md")
@@ -258,6 +261,7 @@ describe("production path: no authority / generic C", () => {
     const digest = digestBlindProblemBytes(encodeJsonUtf8Lf(pkg))
     const result = evaluateProductionIndependentGrounding({
       pkg,
+      intended: intendedFrom(pkg),
       problem_package_digest: digest,
       observed_attribution: OBSERVED,
       authority: null,
@@ -286,6 +290,7 @@ describe("production path: no authority / generic C", () => {
     }
     const result = evaluateProductionIndependentGrounding({
       pkg,
+      intended: intendedFrom(pkg),
       problem_package_digest: digest,
       observed_attribution: OBSERVED,
       authority,
@@ -306,6 +311,7 @@ describe("production path: no authority / generic C", () => {
     }
     const result = evaluateProductionIndependentGrounding({
       pkg,
+      intended: intendedFrom(pkg),
       problem_package_digest: digest,
       observed_attribution: OBSERVED,
       authority,
@@ -324,6 +330,7 @@ describe("production path: no authority / generic C", () => {
     }
     const result = evaluateProductionIndependentGrounding({
       pkg,
+      intended: intendedFrom(pkg),
       problem_package_digest: digest,
       observed_attribution: OBSERVED,
       authority,
@@ -339,6 +346,7 @@ describe("production path: no authority / generic C", () => {
     const authority: AuthorityOraclePayload = { ...matchingAuthority(digest), source_class: "independent" }
     const result = evaluateProductionIndependentGrounding({
       pkg,
+      intended: intendedFrom(pkg),
       problem_package_digest: digest,
       observed_attribution: OBSERVED,
       authority,
@@ -353,14 +361,15 @@ describe("production path: no authority / generic C", () => {
     const digest = digestBlindProblemBytes(encodeJsonUtf8Lf(pkg))
     const authority = matchingAuthority(digest)
     const oracleDigest = digestAuthorityOracleBytes(encodeJsonUtf8Lf(authority))
-    const result = evaluateIndependentGrounding({
+    const result = evaluateSyntheticIndependentGrounding({
       pkg,
+      intended: intendedFrom(pkg),
       problem_package_digest: digest,
       observed_attribution: OBSERVED,
       authority,
       authority_bytes_sha256: oracleDigest,
       generic_envelope: null,
-      provider_outcome: syntheticOk(digest, oracleDigest, {
+      synthetic: syntheticOk(digest, oracleDigest, {
         publisher_identifiers: [PROHIBITED_CONTROLLER_IDENTIFIERS[0]],
       }),
     })
@@ -374,6 +383,7 @@ describe("production path: no authority / generic C", () => {
     const authority = matchingAuthority(digest)
     const result = evaluateProductionIndependentGrounding({
       pkg,
+      intended: intendedFrom(pkg),
       problem_package_digest: digest,
       observed_attribution: OBSERVED,
       authority,
@@ -389,6 +399,7 @@ describe("production path: no authority / generic C", () => {
     const authority = matchingAuthority(digest)
     const result = evaluateProductionIndependentGrounding({
       pkg,
+      intended: intendedFrom(pkg),
       problem_package_digest: digest,
       observed_attribution: OBSERVED,
       authority,
@@ -407,6 +418,7 @@ describe("production path: no authority / generic C", () => {
     }
     const result = evaluateProductionIndependentGrounding({
       pkg,
+      intended: intendedFrom(pkg),
       problem_package_digest: digest,
       observed_attribution: OBSERVED,
       authority,
@@ -424,14 +436,15 @@ describe("production path: no authority / generic C", () => {
       source_material_refs: ["conformance/tsei-invariant-discrimination-v0/fixtures.ts"],
     }
     const oracleDigest = digestAuthorityOracleBytes(encodeJsonUtf8Lf(authority))
-    const result = evaluateIndependentGrounding({
+    const result = evaluateSyntheticIndependentGrounding({
       pkg,
+      intended: intendedFrom(pkg),
       problem_package_digest: digest,
       observed_attribution: OBSERVED,
       authority,
       authority_bytes_sha256: oracleDigest,
       generic_envelope: { source_material_refs: ["expected_attribution"] },
-      provider_outcome: syntheticOk(digest, oracleDigest, {
+      synthetic: syntheticOk(digest, oracleDigest, {
         source_material_refs: ["expected_attribution"],
       }),
     })
@@ -439,7 +452,7 @@ describe("production path: no authority / generic C", () => {
     expect(result.independent_grounding).toBe("UNPROVEN")
   })
 
-  test("a fake production injection_kind cannot mint VALID_PROVENANCE", () => {
+  test("a fake production injection_kind cannot mint VALID_PROVENANCE on the production entry", () => {
     const pkg = scaffoldPackage()
     const digest = digestBlindProblemBytes(encodeJsonUtf8Lf(pkg))
     const authority = matchingAuthority(digest)
@@ -458,17 +471,20 @@ describe("production path: no authority / generic C", () => {
         source_material_refs: [],
       },
     }
-    const result = evaluateIndependentGrounding({
+    const forgedProductionEntry = {
       pkg,
+      intended: intendedFrom(pkg),
       problem_package_digest: digest,
       observed_attribution: OBSERVED,
       authority,
       authority_bytes_sha256: oracleDigest,
       generic_envelope: null,
       provider_outcome: fakeProduction,
-    })
+    }
+    const result = evaluateProductionIndependentGrounding(forgedProductionEntry)
     expect(result.oracle_input_state).toBe("INVALID_PROVENANCE")
     expect(result.independent_grounding).not.toBe("PROVEN")
+    expect(result.independent_grounding).not.toBe("DISAGREED")
   })
 })
 
@@ -485,14 +501,15 @@ describe("synthetic VALID_PROVENANCE branches (test-only)", () => {
       },
     }
     const oracleDigest = digestAuthorityOracleBytes(encodeJsonUtf8Lf(authority))
-    const result = evaluateIndependentGrounding({
+    const result = evaluateSyntheticIndependentGrounding({
       pkg,
+      intended: intendedFrom(pkg),
       problem_package_digest: digest,
       observed_attribution: OBSERVED,
       authority,
       authority_bytes_sha256: oracleDigest,
       generic_envelope: null,
-      provider_outcome: syntheticOk(digest, oracleDigest),
+      synthetic: syntheticOk(digest, oracleDigest),
     })
     expect(result.oracle_input_state).toBe("VALID_PROVENANCE")
     expect(result.independent_grounding).toBe("UNPROVEN")
@@ -514,14 +531,15 @@ describe("synthetic VALID_PROVENANCE branches (test-only)", () => {
       },
     }
     const oracleDigest = digestAuthorityOracleBytes(encodeJsonUtf8Lf(authority))
-    const result = evaluateIndependentGrounding({
+    const result = evaluateSyntheticIndependentGrounding({
       pkg,
+      intended: intendedFrom(pkg),
       problem_package_digest: digest,
       observed_attribution: OBSERVED,
       authority,
       authority_bytes_sha256: oracleDigest,
       generic_envelope: null,
-      provider_outcome: syntheticOk(digest, oracleDigest),
+      synthetic: syntheticOk(digest, oracleDigest),
     })
     expect(result.oracle_input_state).toBe("VALID_PROVENANCE")
     expect(result.independent_grounding).toBe("UNPROVEN")
@@ -541,14 +559,15 @@ describe("synthetic VALID_PROVENANCE branches (test-only)", () => {
       },
     }
     const oracleDigest = digestAuthorityOracleBytes(encodeJsonUtf8Lf(authority))
-    const result = evaluateIndependentGrounding({
+    const result = evaluateSyntheticIndependentGrounding({
       pkg,
+      intended: intendedFrom(pkg),
       problem_package_digest: digest,
       observed_attribution: OBSERVED,
       authority,
       authority_bytes_sha256: oracleDigest,
       generic_envelope: null,
-      provider_outcome: syntheticOk(digest, oracleDigest),
+      synthetic: syntheticOk(digest, oracleDigest),
     })
     expect(result.independent_grounding).toBe("DISAGREED")
     expect(result.independent_grounding_reason).toBe("AUTHORITY_DISAGREEMENT")
@@ -561,14 +580,15 @@ describe("synthetic VALID_PROVENANCE branches (test-only)", () => {
     const digest = digestBlindProblemBytes(encodeJsonUtf8Lf(pkg))
     const authority = matchingAuthority(digest)
     const oracleDigest = digestAuthorityOracleBytes(encodeJsonUtf8Lf(authority))
-    const result = evaluateIndependentGrounding({
+    const result = evaluateSyntheticIndependentGrounding({
       pkg,
+      intended: intendedFrom(pkg),
       problem_package_digest: digest,
       observed_attribution: OBSERVED,
       authority,
       authority_bytes_sha256: oracleDigest,
       generic_envelope: null,
-      provider_outcome: syntheticOk(digest, oracleDigest),
+      synthetic: syntheticOk(digest, oracleDigest),
     })
     expect(result.oracle_input_state).toBe("VALID_PROVENANCE")
     expect(result.independent_grounding).toBe("PROVEN")
@@ -585,6 +605,7 @@ describe("synthetic VALID_PROVENANCE branches (test-only)", () => {
     const digest = digestBlindProblemBytes(encodeJsonUtf8Lf(pkg))
     const result = evaluateProductionIndependentGrounding({
       pkg,
+      intended: intendedFrom(pkg),
       problem_package_digest: digest,
       observed_attribution: OBSERVED,
       authority: null,
@@ -595,6 +616,372 @@ describe("synthetic VALID_PROVENANCE branches (test-only)", () => {
     })
     expect(result.independent_grounding).toBe("UNPROVEN")
     expect(result.independent_grounding_reason).toBe("AWAITING_INDEPENDENT_AUTHORITY")
+    expect(result.independent_grounding).not.toBe("DISAGREED")
+  })
+})
+
+function disagreeingAuthority(digest: string): AuthorityOraclePayload {
+  return {
+    schema: AUTHORITY_ORACLE_SCHEMA,
+    problem_package_digest: digest,
+    cases: {
+      M_P: { mutant_id: "M_P", derived_attribution_set: ["I_Q"] },
+      M_Q: { mutant_id: "M_Q", derived_attribution_set: ["I_Q"] },
+      M_PQ: { mutant_id: "M_PQ", derived_attribution_set: ["I_P", "I_Q"] },
+    },
+  }
+}
+
+describe("faithfulness precedes comparison", () => {
+  test("unfaithful Object A cannot become DISAGREED even with disagreeing issued synthetic authority", () => {
+    const intendedPkg = scaffoldPackage()
+    const pkg = {
+      ...intendedPkg,
+      invariants: {
+        ...intendedPkg.invariants,
+        I_P: {
+          ...intendedPkg.invariants.I_P,
+          normative_definition_identity: "00".repeat(32),
+        },
+      },
+    }
+    const digest = digestBlindProblemBytes(encodeJsonUtf8Lf(pkg))
+    const authority = disagreeingAuthority(digest)
+    const oracleDigest = digestAuthorityOracleBytes(encodeJsonUtf8Lf(authority))
+    const result = evaluateSyntheticIndependentGrounding({
+      pkg,
+      intended: intendedFrom(intendedPkg),
+      problem_package_digest: digest,
+      observed_attribution: OBSERVED,
+      authority,
+      authority_bytes_sha256: oracleDigest,
+      generic_envelope: null,
+      synthetic: syntheticOk(digest, oracleDigest),
+    })
+    expect(result.independent_grounding).toBe("UNPROVEN")
+    expect(result.independent_grounding_reason).toBe("PROBLEM_PACKAGE_NOT_FAITHFUL")
+    expect(result.oracle_input_state).toBe("NOT_EVALUATED")
+    expect(result.semantic_relation).toBe("NOT_EVALUATED")
+    expect(result.synthetic_test_only).toBe(false)
+    expect(result.production_publishable).toBe(false)
+    expect(result.independent_grounding).not.toBe("DISAGREED")
+    expect(result.independent_grounding).not.toBe("PROVEN")
+    expect(result.independent_grounding_reason).not.toBe("UNPROVEN_INDEPENDENCE")
+    expect(result.independent_grounding_reason).not.toBe("AUTHORITY_DISAGREEMENT")
+    expect(isTseiRuntimeViolation(result)).toBe(false)
+  })
+})
+
+describe("Object A runtime schema allow-list and nested leaks", () => {
+  test("nested forbidden Object-A key / answer-bearing nested value fails evaluate as unfaithful", () => {
+    const intendedPkg = scaffoldPackage()
+    const pkg = {
+      ...intendedPkg,
+      cases: {
+        ...intendedPkg.cases,
+        M_P: {
+          ...intendedPkg.cases.M_P,
+          mutated: {
+            ...intendedPkg.cases.M_P.mutated,
+            nested_answer: { expected_attribution: ["I_P"] },
+          },
+        },
+      },
+    } as unknown as BlindProblemPackage
+    const intended = {
+      ...intendedFrom(intendedPkg),
+      cases: {
+        ...intendedFrom(intendedPkg).cases,
+        M_P: {
+          baseline: intendedPkg.cases.M_P.baseline,
+          mutated: pkg.cases.M_P.mutated,
+        },
+      },
+    }
+    const digest = digestBlindProblemBytes(encodeJsonUtf8Lf(pkg))
+    const authority = disagreeingAuthority(digest)
+    const oracleDigest = digestAuthorityOracleBytes(encodeJsonUtf8Lf(authority))
+    const result = evaluateSyntheticIndependentGrounding({
+      pkg,
+      intended,
+      problem_package_digest: digest,
+      observed_attribution: OBSERVED,
+      authority,
+      authority_bytes_sha256: oracleDigest,
+      generic_envelope: null,
+      synthetic: syntheticOk(digest, oracleDigest),
+    })
+    expect(leakCheckBlindPackage(pkg).clean).toBe(false)
+    expect(result.independent_grounding).toBe("UNPROVEN")
+    expect(result.independent_grounding_reason).toBe("PROBLEM_PACKAGE_NOT_FAITHFUL")
+    expect(result.independent_grounding).not.toBe("DISAGREED")
+  })
+
+  test("differently-cased evaluator metadata beside contract fields is rejected", () => {
+    const intendedPkg = scaffoldPackage()
+    const pkg = { ...intendedPkg, Evaluator: { M_P: ["I_P"] } } as unknown as BlindProblemPackage
+    const digest = digestBlindProblemBytes(encodeJsonUtf8Lf(pkg))
+    const authority = matchingAuthority(digest)
+    const oracleDigest = digestAuthorityOracleBytes(encodeJsonUtf8Lf(authority))
+    const result = evaluateSyntheticIndependentGrounding({
+      pkg,
+      intended: intendedFrom(intendedPkg),
+      problem_package_digest: digest,
+      observed_attribution: OBSERVED,
+      authority,
+      authority_bytes_sha256: oracleDigest,
+      generic_envelope: null,
+      synthetic: syntheticOk(digest, oracleDigest),
+    })
+    expect(leakCheckBlindPackage(pkg).clean).toBe(false)
+    expect(result.independent_grounding_reason).toBe("PROBLEM_PACKAGE_NOT_FAITHFUL")
+    expect(result.independent_grounding).not.toBe("PROVEN")
+  })
+
+  test("stale normative_definition_identity fails evaluate as unfaithful, not DISAGREED", () => {
+    const intendedPkg = scaffoldPackage()
+    const pkg = {
+      ...intendedPkg,
+      invariants: {
+        ...intendedPkg.invariants,
+        I_Q: {
+          ...intendedPkg.invariants.I_Q,
+          normative_definition_identity: "ff".repeat(32),
+        },
+      },
+    }
+    expect(checkBlindPackageFaithfulness(pkg, intendedFrom(intendedPkg)).faithful).toBe(false)
+    const digest = digestBlindProblemBytes(encodeJsonUtf8Lf(pkg))
+    const authority = disagreeingAuthority(digest)
+    const oracleDigest = digestAuthorityOracleBytes(encodeJsonUtf8Lf(authority))
+    const result = evaluateSyntheticIndependentGrounding({
+      pkg,
+      intended: intendedFrom(intendedPkg),
+      problem_package_digest: digest,
+      observed_attribution: OBSERVED,
+      authority,
+      authority_bytes_sha256: oracleDigest,
+      generic_envelope: null,
+      synthetic: syntheticOk(digest, oracleDigest),
+    })
+    expect(result.independent_grounding).toBe("UNPROVEN")
+    expect(result.independent_grounding_reason).toBe("PROBLEM_PACKAGE_NOT_FAITHFUL")
+    expect(result.oracle_input_state).toBe("NOT_EVALUATED")
+    expect(result.semantic_relation).toBe("NOT_EVALUATED")
+    expect(result.synthetic_test_only).toBe(false)
+    expect(result.production_publishable).toBe(false)
+    expect(result.independent_grounding).not.toBe("DISAGREED")
+  })
+})
+
+describe("mandatory oracle byte binding and freeze/digest gates", () => {
+  test("freeze_precedes_comparison = false → INVALID_PROVENANCE, not PROVEN", () => {
+    const pkg = scaffoldPackage()
+    const digest = digestBlindProblemBytes(encodeJsonUtf8Lf(pkg))
+    const authority = matchingAuthority(digest)
+    const oracleDigest = digestAuthorityOracleBytes(encodeJsonUtf8Lf(authority))
+    const result = evaluateSyntheticIndependentGrounding({
+      pkg,
+      intended: intendedFrom(pkg),
+      problem_package_digest: digest,
+      observed_attribution: OBSERVED,
+      authority,
+      authority_bytes_sha256: oracleDigest,
+      generic_envelope: null,
+      synthetic: syntheticOk(digest, oracleDigest, { freeze_precedes_comparison: false }),
+    })
+    expect(result.oracle_input_state).toBe("INVALID_PROVENANCE")
+    expect(result.independent_grounding).toBe("UNPROVEN")
+    expect(result.independent_grounding_reason).toBe("UNPROVEN_INDEPENDENCE")
+    expect(result.independent_grounding).not.toBe("PROVEN")
+  })
+
+  test("freeze_precedes_answer_disclosure = false → INVALID_PROVENANCE, not PROVEN", () => {
+    const pkg = scaffoldPackage()
+    const digest = digestBlindProblemBytes(encodeJsonUtf8Lf(pkg))
+    const authority = matchingAuthority(digest)
+    const oracleDigest = digestAuthorityOracleBytes(encodeJsonUtf8Lf(authority))
+    const result = evaluateSyntheticIndependentGrounding({
+      pkg,
+      intended: intendedFrom(pkg),
+      problem_package_digest: digest,
+      observed_attribution: OBSERVED,
+      authority,
+      authority_bytes_sha256: oracleDigest,
+      generic_envelope: null,
+      synthetic: syntheticOk(digest, oracleDigest, { freeze_precedes_answer_disclosure: false }),
+    })
+    expect(result.oracle_input_state).toBe("INVALID_PROVENANCE")
+    expect(result.independent_grounding).toBe("UNPROVEN")
+    expect(result.independent_grounding_reason).toBe("UNPROVEN_INDEPENDENCE")
+    expect(result.independent_grounding).not.toBe("PROVEN")
+  })
+
+  test("problem_package_digest mismatch → INVALID_PROVENANCE, not PROVEN", () => {
+    const pkg = scaffoldPackage()
+    const digest = digestBlindProblemBytes(encodeJsonUtf8Lf(pkg))
+    const otherDigest = "11".repeat(32)
+    const authority = matchingAuthority(digest)
+    const oracleDigest = digestAuthorityOracleBytes(encodeJsonUtf8Lf(authority))
+    const result = evaluateSyntheticIndependentGrounding({
+      pkg,
+      intended: intendedFrom(pkg),
+      problem_package_digest: digest,
+      observed_attribution: OBSERVED,
+      authority,
+      authority_bytes_sha256: oracleDigest,
+      generic_envelope: null,
+      synthetic: syntheticOk(otherDigest, oracleDigest),
+    })
+    expect(result.oracle_input_state).toBe("INVALID_PROVENANCE")
+    expect(result.independent_grounding).toBe("UNPROVEN")
+    expect(result.independent_grounding).not.toBe("PROVEN")
+  })
+
+  test("oracle_bytes_sha256 mismatch → INVALID_PROVENANCE, not PROVEN", () => {
+    const pkg = scaffoldPackage()
+    const digest = digestBlindProblemBytes(encodeJsonUtf8Lf(pkg))
+    const authority = matchingAuthority(digest)
+    const oracleDigest = digestAuthorityOracleBytes(encodeJsonUtf8Lf(authority))
+    const otherOracle = "22".repeat(32)
+    const result = evaluateSyntheticIndependentGrounding({
+      pkg,
+      intended: intendedFrom(pkg),
+      problem_package_digest: digest,
+      observed_attribution: OBSERVED,
+      authority,
+      authority_bytes_sha256: oracleDigest,
+      generic_envelope: null,
+      synthetic: syntheticOk(digest, otherOracle),
+    })
+    expect(result.oracle_input_state).toBe("INVALID_PROVENANCE")
+    expect(result.independent_grounding).toBe("UNPROVEN")
+    expect(result.independent_grounding).not.toBe("PROVEN")
+    expect(result.independent_grounding).not.toBe("DISAGREED")
+  })
+
+  test("missing oracle_bytes_sha256 → INVALID_PROVENANCE, not PROVEN", () => {
+    const pkg = scaffoldPackage()
+    const digest = digestBlindProblemBytes(encodeJsonUtf8Lf(pkg))
+    const authority = matchingAuthority(digest)
+    const oracleDigest = digestAuthorityOracleBytes(encodeJsonUtf8Lf(authority))
+    const result = evaluateSyntheticIndependentGrounding({
+      pkg,
+      intended: intendedFrom(pkg),
+      problem_package_digest: digest,
+      observed_attribution: OBSERVED,
+      authority,
+      authority_bytes_sha256: null,
+      generic_envelope: null,
+      synthetic: syntheticOk(digest, oracleDigest),
+    })
+    expect(result.oracle_input_state).toBe("INVALID_PROVENANCE")
+    expect(result.independent_grounding).toBe("UNPROVEN")
+    expect(result.independent_grounding).not.toBe("PROVEN")
+    expect(result.independent_grounding).not.toBe("DISAGREED")
+  })
+})
+
+describe("closed universe at evaluate entry", () => {
+  test("extra authority case through evaluate → AUTHORITY_INCOMPLETE, not PROVEN", () => {
+    const pkg = scaffoldPackage()
+    const digest = digestBlindProblemBytes(encodeJsonUtf8Lf(pkg))
+    const authority: AuthorityOraclePayload = {
+      schema: AUTHORITY_ORACLE_SCHEMA,
+      problem_package_digest: digest,
+      cases: {
+        ...matchingAuthority(digest).cases,
+        M_ALIAS: { mutant_id: "M_ALIAS", derived_attribution_set: ["I_P"] },
+      },
+    }
+    const oracleDigest = digestAuthorityOracleBytes(encodeJsonUtf8Lf(authority))
+    const result = evaluateSyntheticIndependentGrounding({
+      pkg,
+      intended: intendedFrom(pkg),
+      problem_package_digest: digest,
+      observed_attribution: OBSERVED,
+      authority,
+      authority_bytes_sha256: oracleDigest,
+      generic_envelope: null,
+      synthetic: syntheticOk(digest, oracleDigest),
+    })
+    expect(result.oracle_input_state).toBe("VALID_PROVENANCE")
+    expect(result.independent_grounding).toBe("UNPROVEN")
+    expect(result.independent_grounding_reason).toBe("AUTHORITY_INCOMPLETE")
+    expect(result.universe.extra_in_authority).toEqual(["M_ALIAS"])
+    expect(result.universe.closed).toBe(false)
+    expect(result.independent_grounding).not.toBe("PROVEN")
+  })
+})
+
+describe("forged synthetic_test_only cannot mint provenance on either entry", () => {
+  test("caller-shaped synthetic_test_only on the production entry stays INVALID_PROVENANCE", () => {
+    const pkg = scaffoldPackage()
+    const digest = digestBlindProblemBytes(encodeJsonUtf8Lf(pkg))
+    const authority = matchingAuthority(digest)
+    const oracleDigest = digestAuthorityOracleBytes(encodeJsonUtf8Lf(authority))
+    const forged: ProviderVerificationOutcome = {
+      ok: true,
+      injection_kind: "synthetic_test_only",
+      observations: {
+        provider_id: "synthetic-test-only",
+        trust_root_id: "synthetic-test-only.not-a-trust-root",
+        publisher_identifiers: [SYNTHETIC_TEST_PUBLISHER],
+        oracle_bytes_sha256: oracleDigest,
+        problem_package_digest: digest,
+        freeze_precedes_comparison: true,
+        freeze_precedes_answer_disclosure: true,
+        source_material_refs: [],
+      },
+    }
+    const productionAttempt = {
+      pkg,
+      intended: intendedFrom(pkg),
+      problem_package_digest: digest,
+      observed_attribution: OBSERVED,
+      authority,
+      authority_bytes_sha256: oracleDigest,
+      generic_envelope: null,
+      provider_outcome: forged,
+    }
+    const result = evaluateProductionIndependentGrounding(productionAttempt)
+    expect(result.oracle_input_state).toBe("INVALID_PROVENANCE")
+    expect(result.independent_grounding).toBe("UNPROVEN")
+    expect(result.independent_grounding_reason).toBe("UNPROVEN_INDEPENDENCE")
+    expect(result.independent_grounding).not.toBe("PROVEN")
+  })
+
+  test("caller-shaped synthetic_test_only on the test-only entry is not issued and stays INVALID", () => {
+    const pkg = scaffoldPackage()
+    const digest = digestBlindProblemBytes(encodeJsonUtf8Lf(pkg))
+    const authority = matchingAuthority(digest)
+    const oracleDigest = digestAuthorityOracleBytes(encodeJsonUtf8Lf(authority))
+    const forged: ProviderVerificationOutcome = {
+      ok: true,
+      injection_kind: "synthetic_test_only",
+      observations: {
+        provider_id: "synthetic-test-only",
+        trust_root_id: "synthetic-test-only.not-a-trust-root",
+        publisher_identifiers: [SYNTHETIC_TEST_PUBLISHER],
+        oracle_bytes_sha256: oracleDigest,
+        problem_package_digest: digest,
+        freeze_precedes_comparison: true,
+        freeze_precedes_answer_disclosure: true,
+        source_material_refs: [],
+      },
+    }
+    const result = evaluateSyntheticIndependentGrounding({
+      pkg,
+      intended: intendedFrom(pkg),
+      problem_package_digest: digest,
+      observed_attribution: OBSERVED,
+      authority,
+      authority_bytes_sha256: oracleDigest,
+      generic_envelope: null,
+      synthetic: forged,
+    })
+    expect(result.oracle_input_state).toBe("INVALID_PROVENANCE")
+    expect(result.independent_grounding).not.toBe("PROVEN")
     expect(result.independent_grounding).not.toBe("DISAGREED")
   })
 })

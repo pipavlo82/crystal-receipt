@@ -26,9 +26,10 @@ export type IndependentGroundingReason =
   | "AUTHORITY_INCOMPLETE"
   | "AUTHORITY_AMBIGUOUS"
   | "AUTHORITY_DISAGREEMENT"
+  | "PROBLEM_PACKAGE_NOT_FAITHFUL"
   | "INDEPENDENT_GROUNDING_NOT_PROVEN"
 
-export type OracleInputState = "ABSENT" | "INVALID_PROVENANCE" | "VALID_PROVENANCE"
+export type OracleInputState = "ABSENT" | "INVALID_PROVENANCE" | "VALID_PROVENANCE" | "NOT_EVALUATED"
 
 export type SemanticRelation = "NOT_EVALUATED" | "INCOMPLETE_OR_AMBIGUOUS" | "DISAGREES" | "AGREES"
 
@@ -57,6 +58,31 @@ export const ANSWER_BEARING_SOURCE_REFS: readonly string[] = [
   "precommitment-manifest.json",
   "derived_attribution_set",
 ]
+
+/**
+ * Bounded runtime allow-list for the authority-visible Object A contract.
+ * Unexpected keys at these levels are rejected. Concrete baseline/mutated
+ * values remain domain data and are not subject to this metadata allow-list,
+ * but they are still scanned for forbidden implementation/answer keys.
+ *
+ * Residual nonclaim: this does not detect arbitrary semantic steganography
+ * in natural-language normative definitions.
+ */
+export const OBJECT_A_TOP_LEVEL_KEYS: readonly string[] = [
+  "schema",
+  "instance_id",
+  "evaluation_instruction",
+  "invariants",
+  "cases",
+]
+
+export const OBJECT_A_INVARIANT_KEYS: readonly string[] = [
+  "invariant_id",
+  "normative_definition",
+  "normative_definition_identity",
+]
+
+export const OBJECT_A_CASE_KEYS: readonly string[] = ["mutant_id", "baseline", "mutated"]
 
 /**
  * Keys that must never appear on authority-visible Object A.

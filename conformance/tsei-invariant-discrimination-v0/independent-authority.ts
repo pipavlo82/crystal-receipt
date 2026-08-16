@@ -12,7 +12,10 @@ import {
   AUTHORITY_ORACLE_SCHEMA,
   BLIND_PROBLEM_SCHEMA,
   DECLARED_PRODUCTION_PROVIDER,
+  OBJECT_A_CASE_KEYS,
   OBJECT_A_FORBIDDEN_KEYS,
+  OBJECT_A_INVARIANT_KEYS,
+  OBJECT_A_TOP_LEVEL_KEYS,
   PROHIBITED_CONTROLLER_IDENTIFIERS,
   setDifference,
   setsEqual,
@@ -26,8 +29,8 @@ import {
   type IndependentGroundingResult,
   type LeakCheckResult,
   type OracleInputState,
-  type ProviderVerificationOutcome,
   type SemanticRelation,
+  type VerifiedPublicationObservations,
 } from "./independent-authority-model"
 
 export function sha256ExactBytes(bytes: Uint8Array | Buffer): string {
@@ -77,6 +80,19 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
+function rejectUnexpectedKeys(
+  record: Record<string, unknown>,
+  allowed: readonly string[],
+  path: string,
+  violations: string[],
+): void {
+  for (const key of Object.keys(record)) {
+    if (!allowed.includes(key)) {
+      violations.push(`${path}.${key}: unexpected Object A key`)
+    }
+  }
+}
+
 function walkForbidden(value: unknown, path: string, violations: string[]): void {
   if (typeof value === "function") {
     violations.push(`${path}: executable function value is forbidden on Object A`)
@@ -118,9 +134,28 @@ export function leakCheckBlindPackage(pkg: unknown): LeakCheckResult {
   if (!isRecord(pkg)) {
     return { clean: false, violations: ["package is not an object"] }
   }
+  rejectUnexpectedKeys(pkg, OBJECT_A_TOP_LEVEL_KEYS, "A", violations)
   walkForbidden(pkg, "A", violations)
   if (pkg["schema"] !== BLIND_PROBLEM_SCHEMA) {
     violations.push("A.schema must be the blind-problem schema")
+  }
+  if (isRecord(pkg["invariants"])) {
+    for (const [id, invariant] of Object.entries(pkg["invariants"])) {
+      if (!isRecord(invariant)) {
+        violations.push(`A.invariants.${id}: invariant must be an object`)
+        continue
+      }
+      rejectUnexpectedKeys(invariant, OBJECT_A_INVARIANT_KEYS, `A.invariants.${id}`, violations)
+    }
+  }
+  if (isRecord(pkg["cases"])) {
+    for (const [id, row] of Object.entries(pkg["cases"])) {
+      if (!isRecord(row)) {
+        violations.push(`A.cases.${id}: case must be an object`)
+        continue
+      }
+      rejectUnexpectedKeys(row, OBJECT_A_CASE_KEYS, `A.cases.${id}`, violations)
+    }
   }
   return { clean: violations.length === 0, violations }
 }
@@ -263,30 +298,26 @@ export function parseAttributionSet(raw: unknown): { readonly ok: true; readonly
   return { ok: true, set: new Set(items) }
 }
 
-function classifyProviderOutcome(
+function classifyVerifiedObservations(
   authority: AuthorityOraclePayload | null,
   generic_envelope: GenericProvenanceEnvelope | null,
-  provider_outcome: ProviderVerificationOutcome | null,
+  observations: VerifiedPublicationObservations | null,
   oracle_bytes_sha256: string | null,
   problem_package_digest: string,
 ): OracleInputState {
   if (authority === null) return "ABSENT"
 
   // Generic envelope fields, claimed identity on B, keys, names, emails:
-  // never sufficient. A provider verifier must independently verify.
-  if (provider_outcome === null || provider_outcome.ok !== true) return "INVALID_PROVENANCE"
+  // never sufficient. Verified observations must come from an issued
+  // synthetic-test path or a later declared production provider.
+  if (observations === null) return "INVALID_PROVENANCE"
 
-  // This lane has no declared production provider. A "production" injection
-  // cannot mint VALID_PROVENANCE here -- that would let C self-certify.
-  if (provider_outcome.injection_kind !== "synthetic_test_only") return "INVALID_PROVENANCE"
   // DECLARED_PRODUCTION_PROVIDER is null in this lane; retained as a
   // mechanical non-claim that no production trust root is configured.
   void DECLARED_PRODUCTION_PROVIDER
 
-  const observations = provider_outcome.observations
-  if (oracle_bytes_sha256 !== null && observations.oracle_bytes_sha256 !== oracle_bytes_sha256) {
-    return "INVALID_PROVENANCE"
-  }
+  if (oracle_bytes_sha256 === null) return "INVALID_PROVENANCE"
+  if (observations.oracle_bytes_sha256 !== oracle_bytes_sha256) return "INVALID_PROVENANCE"
   if (observations.problem_package_digest !== problem_package_digest) return "INVALID_PROVENANCE"
   if (authority.problem_package_digest !== problem_package_digest) return "INVALID_PROVENANCE"
   if (!observations.freeze_precedes_comparison) return "INVALID_PROVENANCE"
@@ -298,14 +329,42 @@ function classifyProviderOutcome(
   return "VALID_PROVENANCE"
 }
 
-export type EvaluateIndependentGroundingInput = {
+export type EvaluateProductionIndependentGroundingInput = {
   readonly pkg: BlindProblemPackage
+  readonly intended: IntendedFaithfulness
   readonly problem_package_digest: string
   readonly observed_attribution: { readonly [mutant_id: string]: readonly string[] }
   readonly authority: AuthorityOraclePayload | null
   readonly authority_bytes_sha256: string | null
   readonly generic_envelope: GenericProvenanceEnvelope | null
-  readonly provider_outcome: ProviderVerificationOutcome | null
+}
+
+const issuedSyntheticProvenance = new WeakSet<object>()
+
+/** Called only by independent-authority-synthetic.ts after minting a test-only outcome. */
+export function issueSyntheticTestProvenance(outcome: object): void {
+  issuedSyntheticProvenance.add(outcome)
+}
+
+function isIssuedSyntheticTestProvenance(value: unknown): value is object {
+  return typeof value === "object" && value !== null && issuedSyntheticProvenance.has(value)
+}
+
+function observationsFromIssuedSynthetic(synthetic: unknown): VerifiedPublicationObservations | null {
+  if (!isIssuedSyntheticTestProvenance(synthetic) || !isRecord(synthetic)) return null
+  if (synthetic["ok"] !== true) return null
+  if (synthetic["injection_kind"] !== "synthetic_test_only") return null
+  const observations = synthetic["observations"]
+  if (!isRecord(observations)) return null
+  if (typeof observations["oracle_bytes_sha256"] !== "string") return null
+  if (typeof observations["problem_package_digest"] !== "string") return null
+  if (typeof observations["freeze_precedes_comparison"] !== "boolean") return null
+  if (typeof observations["freeze_precedes_answer_disclosure"] !== "boolean") return null
+  if (!Array.isArray(observations["publisher_identifiers"])) return null
+  if (!Array.isArray(observations["source_material_refs"])) return null
+  if (typeof observations["provider_id"] !== "string") return null
+  if (typeof observations["trust_root_id"] !== "string") return null
+  return observations as unknown as VerifiedPublicationObservations
 }
 
 function unproven(
@@ -326,11 +385,24 @@ function unproven(
   }
 }
 
-export function evaluateIndependentGrounding(input: EvaluateIndependentGroundingInput): IndependentGroundingResult {
+function evaluateIndependentGroundingCore(
+  input: EvaluateProductionIndependentGroundingInput,
+  observations: VerifiedPublicationObservations | null,
+  synthetic_test_only: boolean,
+): IndependentGroundingResult {
   const declared = caseIdsFromMap(input.pkg.cases)
   const packaged = caseIdsFromMap(input.pkg.cases)
-  const synthetic =
-    input.provider_outcome?.ok === true && input.provider_outcome.injection_kind === "synthetic_test_only"
+
+  const faithfulness = checkBlindPackageFaithfulness(input.pkg, input.intended)
+  if (!faithfulness.faithful) {
+    const universe = closeCaseUniverse({
+      declared,
+      packaged,
+      authority: null,
+      comparison: null,
+    })
+    return unproven("PROBLEM_PACKAGE_NOT_FAITHFUL", "NOT_EVALUATED", "NOT_EVALUATED", universe, false)
+  }
 
   if (input.authority === null) {
     const universe = closeCaseUniverse({
@@ -352,10 +424,10 @@ export function evaluateIndependentGrounding(input: EvaluateIndependentGrounding
     return unproven("UNPROVEN_INDEPENDENCE", "INVALID_PROVENANCE", "NOT_EVALUATED", universe, false)
   }
 
-  const oracleState = classifyProviderOutcome(
+  const oracleState = classifyVerifiedObservations(
     input.authority,
     input.generic_envelope,
-    input.provider_outcome,
+    observations,
     input.authority_bytes_sha256,
     input.problem_package_digest,
   )
@@ -389,7 +461,7 @@ export function evaluateIndependentGrounding(input: EvaluateIndependentGrounding
       authority: authorityIds,
       comparison: null,
     })
-    return unproven("AUTHORITY_AMBIGUOUS", "VALID_PROVENANCE", "INCOMPLETE_OR_AMBIGUOUS", universe, synthetic)
+    return unproven("AUTHORITY_AMBIGUOUS", "VALID_PROVENANCE", "INCOMPLETE_OR_AMBIGUOUS", universe, synthetic_test_only)
   }
 
   const universeForCoverage = closeCaseUniverse({
@@ -404,7 +476,7 @@ export function evaluateIndependentGrounding(input: EvaluateIndependentGrounding
       "VALID_PROVENANCE",
       "INCOMPLETE_OR_AMBIGUOUS",
       universeForCoverage,
-      synthetic,
+      synthetic_test_only,
     )
   }
 
@@ -436,7 +508,7 @@ export function evaluateIndependentGrounding(input: EvaluateIndependentGrounding
       oracle_input_state: "VALID_PROVENANCE",
       semantic_relation: "DISAGREES",
       universe,
-      synthetic_test_only: synthetic,
+      synthetic_test_only,
       production_publishable: false,
     }
   }
@@ -447,28 +519,35 @@ export function evaluateIndependentGrounding(input: EvaluateIndependentGrounding
     oracle_input_state: "VALID_PROVENANCE",
     semantic_relation: "AGREES",
     universe,
-    synthetic_test_only: synthetic,
+    synthetic_test_only,
     production_publishable: false,
   }
 }
 
 /**
- * Production entry: never accepts a provider outcome. Non-arrival is
- * awaiting; any present authority without a declared provider is invalid
- * provenance. Never DISAGREED (absence is not disagreement).
+ * Production entry: never accepts a provider outcome or verified
+ * observations. Non-arrival is awaiting; any present authority without a
+ * declared provider is invalid provenance. Never DISAGREED (absence is
+ * not disagreement). Extra runtime fields such as provider_outcome are
+ * ignored -- they cannot mint VALID_PROVENANCE on this path.
  */
-export function evaluateProductionIndependentGrounding(input: {
-  readonly pkg: BlindProblemPackage
-  readonly problem_package_digest: string
-  readonly observed_attribution: { readonly [mutant_id: string]: readonly string[] }
-  readonly authority: AuthorityOraclePayload | null
-  readonly authority_bytes_sha256: string | null
-  readonly generic_envelope: GenericProvenanceEnvelope | null
-}): IndependentGroundingResult {
-  return evaluateIndependentGrounding({
-    ...input,
-    provider_outcome: null,
-  })
+export function evaluateProductionIndependentGrounding(
+  input: EvaluateProductionIndependentGroundingInput,
+): IndependentGroundingResult {
+  return evaluateIndependentGroundingCore(input, null, false)
+}
+
+/**
+ * TEST-ONLY evaluator. VALID_PROVENANCE is reachable only when `synthetic`
+ * is an object previously issued by injectSyntheticVerifiedProvenance.
+ * A caller-shaped { injection_kind: "synthetic_test_only" } literal is
+ * not issued and cannot mint verified provenance.
+ */
+export function evaluateSyntheticIndependentGrounding(
+  input: EvaluateProductionIndependentGroundingInput & { readonly synthetic: unknown },
+): IndependentGroundingResult {
+  const observations = observationsFromIssuedSynthetic(input.synthetic)
+  return evaluateIndependentGroundingCore(input, observations, observations !== null)
 }
 
 /** This lane cannot mint production grounding evidence. Always null. */
