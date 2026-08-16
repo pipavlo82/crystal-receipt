@@ -150,9 +150,12 @@ is explicit that it does not claim it.
 A later, genuinely independent grounding lane would need to derive `A_i`
 independently of: the mutant author, the gate output, the gate
 implementation under test, **and** whoever controls the precommitment
-anchor. Potential future authorities include an independent human reviewer,
-a separately authored predicate implementation, or an independently frozen
-conformance artifact -- none of which is implemented or simulated here.
+anchor. This directory now contains an **internal scaffold** for that
+comparison (`independent-authority*.ts`). The scaffold does **not**
+flip this published instance to independently grounded, does **not**
+declare a production provider/trust root, and does **not** make
+production `VALID_PROVENANCE` reachable. See "Independent authority
+scaffold (v0)" below.
 
 ## Relation to external adversarial work
 
@@ -190,3 +193,58 @@ transplantation.
   precommitment check, the self-application/control-sensitivity suite (every
   negative control is actually executed and its rejection asserted, not
   merely declared to exist), and the assembled `LadderReport`.
+- `independent-authority-model.ts` / `independent-authority.ts` -- Object A/B/C/D
+  scaffold contracts, leak/faithfulness/universe checks, and the provenance
+  classifier. Production `VALID_PROVENANCE` is unreachable: no provider-
+  specific verifier or trust root is declared.
+- `independent-authority-synthetic.ts` -- **test-only** injection and the
+  named synthetic evaluator for the `VALID_PROVENANCE` branch. Not a
+  production provider. Outcomes are not production-publishable. Caller-
+  shaped `{ injection_kind: "synthetic_test_only" }` objects are not issued.
+- `tests/receiptos/tsei-invariant-discrimination-independent-authority-v0.test.ts`
+  -- scaffold negatives, waiting state, closed-universe measurement, and
+  synthetic PROVEN/DISAGREED branches.
+
+## Independent authority scaffold (v0)
+
+This is conformance methodology, not TSEI runtime. The published #200
+instance remains `independent_grounding = UNPROVEN`
+(`INDEPENDENT_GROUNDING_NOT_PROVEN`).
+
+Authority-visible Object A may contain only: schema, instance_id,
+invariant_id, implementation-independent normative invariant definition,
+implementation-independent normative definition identity, mutant_id,
+concrete baseline/mutated values, and an implementation-independent
+evaluation instruction. Unexpected keys at those contract levels are
+rejected by a runtime allow-list. Concrete baseline/mutated values remain
+domain data (not the same metadata allow-list) but are still scanned for
+forbidden implementation/answer keys. This does **not** claim to detect
+arbitrary semantic steganography in natural-language normative
+definitions.
+
+A must not contain executable predicates, predicate source, evaluators,
+evaluator output, `expected_attribution`, or any implementation-derived
+`A_i`. An oracle produced by executing harness-supplied evaluator code is
+`TRANSPORT_ONLY`.
+
+Evaluation mechanically checks Object A faithfulness (leak check,
+normative-definition identity recomputation, intended-definition equality,
+invariant/case id consistency, exact intended baseline/mutated values, and
+required semantic fields) **before** provenance or semantic comparison.
+An unfaithful package yields `independent_grounding = UNPROVEN` with
+reason `PROBLEM_PACKAGE_NOT_FAITHFUL` -- never `DISAGREED`, `PROVEN`,
+`UNPROVEN_INDEPENDENCE`, or a TSEI runtime violation.
+
+Generic provenance-envelope fields never grant `VALID_PROVENANCE`.
+The production evaluator does not accept provider outcomes or caller-shaped
+verified observations. Synthetic `VALID_PROVENANCE` is reachable only
+through the explicitly named test-only evaluator after
+`injectSyntheticVerifiedProvenance` issues the outcome. On that valid
+path, exact oracle byte binding is mandatory: a null or mismatched
+`oracle_bytes_sha256` is `INVALID_PROVENANCE`.
+
+Production validity requires a later, explicitly declared external
+provider verifier against a declared trust root. Until then, production
+operation is `ABSENT` (reason `AWAITING_INDEPENDENT_AUTHORITY`) or
+`INVALID_PROVENANCE` (reason `UNPROVEN_INDEPENDENCE`). Non-arrival is
+not disagreement.
