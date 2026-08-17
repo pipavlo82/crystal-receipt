@@ -43,6 +43,63 @@ export const AUTHORITY_ORACLE_SCHEMA = "tsei-invariant-discrimination-v0.authori
  */
 export const DECLARED_PRODUCTION_PROVIDER: null = null
 
+/**
+ * No production provider is selected in this protocol-hardening lane.
+ * Rekor v2 is a candidate only; a successful dummy dry run is required
+ * before any real Object A, and even then does not mint PROVEN grounding.
+ */
+export const DECLARED_PROVIDER_SELECTION: null = null
+
+export const PROVIDER_CANDIDATE_REKOR_V2 = "rekor-v2-candidate-not-selected" as const
+
+export const PROVIDER_DRY_RUN_REQUIRED_BEFORE_OBJECT_A = true
+
+export const CO_SIGNED_CHECKPOINT_TIME = "NOT_YET_QUALIFIED" as const
+
+export const AUTHORITY_RELATIONSHIP_CLASS = "EXTERNAL_PRIOR_PROTOCOL_EXPOSURE" as const
+
+/**
+ * Frozen claim-boundary judgments are protocol-side declared experimental
+ * conditions. They are not independently verified historical facts and
+ * MUST NOT be read as provenance, provider verification, or PROVEN.
+ */
+export const DECLARED_CONDITION_NOT_INDEPENDENTLY_VERIFIED =
+  "DECLARED_CONDITION_NOT_INDEPENDENTLY_VERIFIED" as const
+
+export type ClaimBoundary = {
+  readonly authority_semantic_judgment: "HUMAN_PRIMARY"
+  readonly authority_assistant_role: "MECHANICAL_ONLY"
+  readonly originator_semantic_judgment: "HUMAN_PRIMARY"
+  readonly originator_assistant_role: "MECHANICAL_ONLY"
+  readonly class: typeof DECLARED_CONDITION_NOT_INDEPENDENTLY_VERIFIED
+}
+
+/**
+ * Public snapshot of the declared claim boundary. Not the private
+ * comparator baseline. Runtime-frozen; mutating it must not be possible
+ * through ordinary property assignment.
+ */
+export const CLAIM_BOUNDARY: ClaimBoundary = Object.freeze({
+  authority_semantic_judgment: "HUMAN_PRIMARY",
+  authority_assistant_role: "MECHANICAL_ONLY",
+  originator_semantic_judgment: "HUMAN_PRIMARY",
+  originator_assistant_role: "MECHANICAL_ONLY",
+  class: DECLARED_CONDITION_NOT_INDEPENDENTLY_VERIFIED,
+})
+
+export const MECHANICAL_ONLY_OPERATIONS: readonly string[] = [
+  "serialization",
+  "byte-exactness",
+  "schema validation",
+  "deterministic ordering",
+  "hashing",
+  "commitment construction/checking",
+  "provider-proof verification",
+  "exact-set comparison",
+]
+
+export const SECOND_PARTY_OBSERVATION_ONLY = "SECOND_PARTY_OBSERVATION_ONLY" as const
+
 /** Checkable known-controller identifiers for the mutant/harness/anchor side. */
 export const PROHIBITED_CONTROLLER_IDENTIFIERS: readonly string[] = [
   "shtomko@gmail.com",
@@ -139,12 +196,42 @@ export type BlindProblemPackage = {
 export type AuthorityOracleCase = {
   readonly mutant_id: string
   readonly derived_attribution_set: readonly string[]
+  /**
+   * Observational metadata frozen by Authority before Originator reveal.
+   * Not a second attribution channel. Must not alter exact-set comparison.
+   */
+  readonly definition_ambiguity_observation?: DefinitionAmbiguityObservation
+  /**
+   * Non-gating telemetry. Must not inject IDs into the comparison universe.
+   */
+  readonly observed_undeclared_effects?: readonly ObservedUndeclaredEffect[]
+}
+
+export type DefinitionAmbiguityObservation = {
+  readonly observed: boolean
+  readonly invariant_ids: readonly string[]
+  readonly note?: string
+  readonly readings_considered?: number
+}
+
+export type ObservedUndeclaredEffect = {
+  readonly note: string
+}
+
+export type AuthorityAnswerFreeObservation = {
+  readonly package_appeared_answer_free: boolean
+  readonly notes?: string
+  readonly class: typeof SECOND_PARTY_OBSERVATION_ONLY
 }
 
 export type AuthorityOraclePayload = {
   readonly schema: typeof AUTHORITY_ORACLE_SCHEMA
   readonly problem_package_digest: string
   readonly cases: { readonly [mutant_id: string]: AuthorityOracleCase }
+  readonly authority_observations?: {
+    readonly package_appeared_answer_free: boolean
+    readonly notes?: string
+  }
   readonly authority_account?: string
   readonly independence_claim?: string
   readonly source_class?: string
@@ -244,8 +331,68 @@ export type IndependentGroundingResult = {
   readonly oracle_input_state: OracleInputState
   readonly semantic_relation: SemanticRelation
   readonly universe: CaseUniverseReport
+  readonly declared_invariant_ids: readonly string[]
   readonly synthetic_test_only: boolean
   /** Always false in this scaffold lane. */
+  readonly production_publishable: false
+  readonly claim_boundary: ClaimBoundary
+  readonly claim_boundary_class: typeof DECLARED_CONDITION_NOT_INDEPENDENTLY_VERIFIED
+  readonly authority_observations: AuthorityAnswerFreeObservation | null
+  readonly definition_ambiguity_observations: {
+    readonly [mutant_id: string]: {
+      readonly observed: boolean
+      readonly invariant_ids: readonly string[]
+      readonly note?: string
+      readonly readings_considered?: number
+    }
+  }
+  readonly observed_undeclared_effects: {
+    readonly [mutant_id: string]: readonly { readonly note: string }[]
+  }
+}
+
+export type DummyProviderEventKind = "D0" | "D1" | "D2"
+
+export type DummyProviderEvent = {
+  readonly kind: DummyProviderEventKind
+  readonly originator_identity: string
+  readonly authority_identity: string
+  readonly artifact_digest: string
+  readonly provider_id: string
+  readonly log_identity: string
+  readonly ordering_index: number
+  readonly proof_material: string
+}
+
+export type ProviderDryRunInput = {
+  readonly events: {
+    readonly D0: DummyProviderEvent
+    readonly D1: DummyProviderEvent
+    readonly D2: DummyProviderEvent
+  }
+  readonly expected_originator_identity: string
+  readonly expected_authority_identity: string
+  readonly expected_artifact_digest: string
+  readonly expected_provider_id: string
+  readonly expected_log_identity: string
+  readonly expected_proof_material: string
+  readonly independently_verified_cross_log_bridge: boolean
+}
+
+export type ProviderDryRunResult = {
+  readonly ok: boolean
+  readonly model_checks_pass: boolean
+  readonly reasons: readonly string[]
+  readonly ordering_policy: "D0_lt_D1_lt_D2"
+  /** Model/in-memory checks cannot freeze a real provider policy. */
+  readonly provider_policy_freezable: false
+  readonly declared_provider_selection: null
+  readonly selected_provider_pass: false
+  readonly independently_verified_cross_log_bridge_established: false
+  readonly caller_supplied_proof_material_verified: false
+  readonly independent_provider_condition_established: false
+  readonly sufficient_for_real_object_a: false
+  readonly sufficient_for_proven_grounding: false
   readonly production_publishable: false
 }
 
