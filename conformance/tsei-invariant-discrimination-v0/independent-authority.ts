@@ -11,24 +11,30 @@ import {
   ANSWER_BEARING_SOURCE_REFS,
   AUTHORITY_ORACLE_SCHEMA,
   BLIND_PROBLEM_SCHEMA,
+  DECLARED_CONDITION_NOT_INDEPENDENTLY_VERIFIED,
   DECLARED_PRODUCTION_PROVIDER,
+  DECLARED_PROVIDER_SELECTION,
   OBJECT_A_CASE_KEYS,
   OBJECT_A_FORBIDDEN_KEYS,
   OBJECT_A_INVARIANT_KEYS,
   OBJECT_A_TOP_LEVEL_KEYS,
   PROHIBITED_CONTROLLER_IDENTIFIERS,
+  SECOND_PARTY_OBSERVATION_ONLY,
   setDifference,
   setsEqual,
   sortedArray,
   type AuthorityOraclePayload,
   type BlindProblemPackage,
   type CaseUniverseReport,
+  type ClaimBoundary,
   type ConcreteCaseValue,
   type FaithfulnessResult,
   type GenericProvenanceEnvelope,
   type IndependentGroundingResult,
   type LeakCheckResult,
   type OracleInputState,
+  type ProviderDryRunInput,
+  type ProviderDryRunResult,
   type SemanticRelation,
   type VerifiedPublicationObservations,
 } from "./independent-authority-model"
@@ -39,6 +45,28 @@ export function sha256ExactBytes(bytes: Uint8Array | Buffer): string {
 
 export function sha256ExactUtf8(text: string): string {
   return sha256ExactBytes(Buffer.from(text, "utf8"))
+}
+
+const CANONICAL_CLAIM_BOUNDARY: ClaimBoundary = Object.freeze({
+  authority_semantic_judgment: "HUMAN_PRIMARY",
+  authority_assistant_role: "MECHANICAL_ONLY",
+  originator_semantic_judgment: "HUMAN_PRIMARY",
+  originator_assistant_role: "MECHANICAL_ONLY",
+  class: DECLARED_CONDITION_NOT_INDEPENDENTLY_VERIFIED,
+})
+
+function snapshotClaimBoundary(): ClaimBoundary {
+  return Object.freeze({
+    authority_semantic_judgment: CANONICAL_CLAIM_BOUNDARY.authority_semantic_judgment,
+    authority_assistant_role: CANONICAL_CLAIM_BOUNDARY.authority_assistant_role,
+    originator_semantic_judgment: CANONICAL_CLAIM_BOUNDARY.originator_semantic_judgment,
+    originator_assistant_role: CANONICAL_CLAIM_BOUNDARY.originator_assistant_role,
+    class: CANONICAL_CLAIM_BOUNDARY.class,
+  })
+}
+
+function sortedIdList(ids: Iterable<string>): string[] {
+  return sortedArray(new Set(ids))
 }
 
 /**
@@ -373,6 +401,8 @@ function unproven(
   semantic_relation: SemanticRelation,
   universe: CaseUniverseReport,
   synthetic_test_only: boolean,
+  pkg: BlindProblemPackage,
+  evidence: ProtocolEvidence | null,
 ): IndependentGroundingResult {
   return {
     independent_grounding: "UNPROVEN",
@@ -380,9 +410,178 @@ function unproven(
     oracle_input_state,
     semantic_relation,
     universe,
+    declared_invariant_ids: sortedIdList(Object.keys(pkg.invariants)),
     synthetic_test_only,
     production_publishable: false,
+    ...(evidence ?? emptyProtocolEvidence()),
   }
+}
+
+type ProtocolEvidence = Pick<
+  IndependentGroundingResult,
+  | "claim_boundary"
+  | "claim_boundary_class"
+  | "authority_observations"
+  | "definition_ambiguity_observations"
+  | "observed_undeclared_effects"
+>
+
+function emptyProtocolEvidence(): ProtocolEvidence {
+  return {
+    claim_boundary: snapshotClaimBoundary(),
+    claim_boundary_class: DECLARED_CONDITION_NOT_INDEPENDENTLY_VERIFIED,
+    authority_observations: null,
+    definition_ambiguity_observations: {},
+    observed_undeclared_effects: {},
+  }
+}
+
+export type AuthorityObservationValidation =
+  | { readonly ok: true; readonly evidence: ProtocolEvidence }
+  | { readonly ok: false; readonly reason: "AUTHORITY_INCOMPLETE" | "AUTHORITY_AMBIGUOUS"; readonly violations: readonly string[] }
+
+function isFiniteNonNegativeInteger(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && Number.isFinite(value) && value >= 0
+}
+
+function validateAndNormalizeAuthorityObservations(
+  pkg: BlindProblemPackage,
+  authority: unknown,
+): AuthorityObservationValidation {
+  const violations: string[] = []
+  let duplicate = false
+  let unknown = false
+  const declaredInvariants = new Set(Object.keys(pkg.invariants))
+  if (!isRecord(authority)) {
+    return { ok: false, reason: "AUTHORITY_AMBIGUOUS", violations: ["authority payload is not an object"] }
+  }
+  const cases = authority["cases"]
+  if (!isRecord(cases)) {
+    return { ok: false, reason: "AUTHORITY_AMBIGUOUS", violations: ["authority.cases is not an object"] }
+  }
+
+  const ambiguity: ProtocolEvidence["definition_ambiguity_observations"] = {}
+  const undeclared: { [mutant_id: string]: { readonly note: string }[] } = {}
+
+  for (const [mutantId, row] of Object.entries(cases)) {
+    if (!isRecord(row)) {
+      violations.push(`cases[${mutantId}] is not an object`)
+      continue
+    }
+    if (Object.prototype.hasOwnProperty.call(row, "definition_ambiguity_observation")) {
+      const amb = row["definition_ambiguity_observation"]
+      if (amb == null || !isRecord(amb)) {
+        violations.push(`cases[${mutantId}].definition_ambiguity_observation must be an object`)
+        continue
+      }
+      if (typeof amb["observed"] !== "boolean") {
+        violations.push(`cases[${mutantId}].definition_ambiguity_observation.observed must be boolean`)
+      }
+      const idsRaw = amb["invariant_ids"]
+      if (!Array.isArray(idsRaw)) {
+        violations.push(`cases[${mutantId}].definition_ambiguity_observation.invariant_ids must be string[]`)
+      } else {
+        const ids = idsRaw
+        if (!ids.every((id) => typeof id === "string" && id.length > 0)) {
+          violations.push(`cases[${mutantId}].definition_ambiguity_observation.invariant_ids must be non-empty strings`)
+        } else {
+          if (new Set(ids).size !== ids.length) {
+            duplicate = true
+            violations.push(`cases[${mutantId}].definition_ambiguity_observation.invariant_ids contains duplicates`)
+          }
+          for (const id of ids) {
+            if (!declaredInvariants.has(id)) {
+              unknown = true
+              violations.push(`cases[${mutantId}].definition_ambiguity_observation references undeclared invariant ${id}`)
+            }
+          }
+        }
+      }
+      if (Object.prototype.hasOwnProperty.call(amb, "note") && amb["note"] !== undefined && typeof amb["note"] !== "string") {
+        violations.push(`cases[${mutantId}].definition_ambiguity_observation.note must be a string when present`)
+      }
+      if (Object.prototype.hasOwnProperty.call(amb, "readings_considered") && amb["readings_considered"] !== undefined) {
+        if (!isFiniteNonNegativeInteger(amb["readings_considered"])) {
+          violations.push(`cases[${mutantId}].definition_ambiguity_observation.readings_considered must be a finite non-negative integer when present`)
+        }
+      }
+      if (violations.length === 0 && typeof amb["observed"] === "boolean" && Array.isArray(idsRaw) && idsRaw.every((id) => typeof id === "string")) {
+        const entry: {
+          observed: boolean
+          invariant_ids: readonly string[]
+          note?: string
+          readings_considered?: number
+        } = {
+          observed: amb["observed"],
+          invariant_ids: sortedIdList(idsRaw),
+        }
+        if (typeof amb["note"] === "string") entry.note = amb["note"]
+        if (isFiniteNonNegativeInteger(amb["readings_considered"])) entry.readings_considered = amb["readings_considered"]
+        ambiguity[mutantId] = entry
+      }
+    }
+    if (Object.prototype.hasOwnProperty.call(row, "observed_undeclared_effects")) {
+      const effects = row["observed_undeclared_effects"]
+      if (effects == null || !Array.isArray(effects)) {
+        violations.push(`cases[${mutantId}].observed_undeclared_effects must be an array`)
+      } else {
+        const normalized: { readonly note: string }[] = []
+        let effectsOk = true
+        for (const effect of effects) {
+          if (!isRecord(effect) || typeof effect["note"] !== "string") {
+            violations.push(`cases[${mutantId}].observed_undeclared_effects notes must be objects with string note`)
+            effectsOk = false
+            break
+          }
+          normalized.push({ note: effect["note"] })
+        }
+        if (effectsOk && normalized.length > 0) undeclared[mutantId] = normalized
+      }
+    }
+  }
+
+  let answerFree: ProtocolEvidence["authority_observations"] = null
+  if (Object.prototype.hasOwnProperty.call(authority, "authority_observations")) {
+    const top = authority["authority_observations"]
+    if (top == null || !isRecord(top)) {
+      violations.push("authority_observations must be an object")
+    } else {
+      if (typeof top["package_appeared_answer_free"] !== "boolean") {
+        violations.push("authority_observations.package_appeared_answer_free must be boolean")
+      }
+      if (Object.prototype.hasOwnProperty.call(top, "notes") && top["notes"] !== undefined && typeof top["notes"] !== "string") {
+        violations.push("authority_observations.notes must be a string when present")
+      }
+      if (violations.length === 0 && typeof top["package_appeared_answer_free"] === "boolean") {
+        answerFree = {
+          package_appeared_answer_free: top["package_appeared_answer_free"],
+          class: SECOND_PARTY_OBSERVATION_ONLY,
+          ...(typeof top["notes"] === "string" ? { notes: top["notes"] } : {}),
+        }
+      }
+    }
+  }
+
+  if (violations.length > 0) {
+    return { ok: false, reason: unknown && !duplicate ? "AUTHORITY_INCOMPLETE" : "AUTHORITY_AMBIGUOUS", violations }
+  }
+  return {
+    ok: true,
+    evidence: {
+      claim_boundary: snapshotClaimBoundary(),
+      claim_boundary_class: DECLARED_CONDITION_NOT_INDEPENDENTLY_VERIFIED,
+      authority_observations: answerFree,
+      definition_ambiguity_observations: ambiguity,
+      observed_undeclared_effects: undeclared,
+    },
+  }
+}
+
+export function validateAuthorityObservationalMetadata(
+  pkg: BlindProblemPackage,
+  authority: AuthorityOraclePayload,
+): AuthorityObservationValidation {
+  return validateAndNormalizeAuthorityObservations(pkg, authority)
 }
 
 function evaluateIndependentGroundingCore(
@@ -392,8 +591,41 @@ function evaluateIndependentGroundingCore(
 ): IndependentGroundingResult {
   const declared = caseIdsFromMap(input.pkg.cases)
   const packaged = caseIdsFromMap(input.pkg.cases)
+  try {
+    return evaluateIndependentGroundingCoreUnchecked(input, observations, synthetic_test_only, declared, packaged)
+  } catch {
+    return unproven(
+      "AUTHORITY_AMBIGUOUS",
+      "NOT_EVALUATED",
+      "NOT_EVALUATED",
+      closeCaseUniverse({ declared, packaged, authority: null, comparison: null }),
+      false,
+      input.pkg,
+      emptyProtocolEvidence(),
+    )
+  }
+}
+
+function evaluateIndependentGroundingCoreUnchecked(
+  input: EvaluateProductionIndependentGroundingInput,
+  observations: VerifiedPublicationObservations | null,
+  synthetic_test_only: boolean,
+  declared: ReadonlySet<string>,
+  packaged: ReadonlySet<string>,
+): IndependentGroundingResult {
+  const declaredInvariants = new Set(Object.keys(input.pkg.invariants))
 
   const faithfulness = checkBlindPackageFaithfulness(input.pkg, input.intended)
+  let observationValidation: AuthorityObservationValidation =
+    input.authority === null ? { ok: true, evidence: emptyProtocolEvidence() } : { ok: false, reason: "AUTHORITY_AMBIGUOUS", violations: ["observation validation failed closed"] }
+  try {
+    observationValidation =
+      input.authority === null ? { ok: true, evidence: emptyProtocolEvidence() } : validateAndNormalizeAuthorityObservations(input.pkg, input.authority)
+  } catch {
+    observationValidation = { ok: false, reason: "AUTHORITY_AMBIGUOUS", violations: ["observation validation failed closed"] }
+  }
+  const evidence = observationValidation.ok ? observationValidation.evidence : emptyProtocolEvidence()
+
   if (!faithfulness.faithful) {
     const universe = closeCaseUniverse({
       declared,
@@ -401,7 +633,7 @@ function evaluateIndependentGroundingCore(
       authority: null,
       comparison: null,
     })
-    return unproven("PROBLEM_PACKAGE_NOT_FAITHFUL", "NOT_EVALUATED", "NOT_EVALUATED", universe, false)
+    return unproven("PROBLEM_PACKAGE_NOT_FAITHFUL", "NOT_EVALUATED", "NOT_EVALUATED", universe, false, input.pkg, evidence)
   }
 
   if (input.authority === null) {
@@ -411,17 +643,45 @@ function evaluateIndependentGroundingCore(
       authority: null,
       comparison: null,
     })
-    return unproven("AWAITING_INDEPENDENT_AUTHORITY", "ABSENT", "NOT_EVALUATED", universe, false)
+    return unproven("AWAITING_INDEPENDENT_AUTHORITY", "ABSENT", "NOT_EVALUATED", universe, false, input.pkg, null)
+  }
+
+  if (!isRecord(input.authority)) {
+    const universe = closeCaseUniverse({
+      declared,
+      packaged,
+      authority: null,
+      comparison: null,
+    })
+    return unproven("AUTHORITY_AMBIGUOUS", "NOT_EVALUATED", "NOT_EVALUATED", universe, false, input.pkg, emptyProtocolEvidence())
+  }
+
+  if (!observationValidation.ok) {
+    const universe = closeCaseUniverse({
+      declared,
+      packaged,
+      authority: isRecord(input.authority["cases"]) ? caseIdsFromMap(input.authority["cases"] as { readonly [id: string]: unknown }) : null,
+      comparison: null,
+    })
+    return unproven(
+      observationValidation.reason,
+      "NOT_EVALUATED",
+      "NOT_EVALUATED",
+      universe,
+      false,
+      input.pkg,
+      emptyProtocolEvidence(),
+    )
   }
 
   if (input.authority.schema !== AUTHORITY_ORACLE_SCHEMA) {
     const universe = closeCaseUniverse({
       declared,
       packaged,
-      authority: caseIdsFromMap(input.authority.cases),
+      authority: isRecord(input.authority.cases) ? caseIdsFromMap(input.authority.cases) : null,
       comparison: null,
     })
-    return unproven("UNPROVEN_INDEPENDENCE", "INVALID_PROVENANCE", "NOT_EVALUATED", universe, false)
+    return unproven("UNPROVEN_INDEPENDENCE", "INVALID_PROVENANCE", "NOT_EVALUATED", universe, false, input.pkg, evidence)
   }
 
   const oracleState = classifyVerifiedObservations(
@@ -439,17 +699,23 @@ function evaluateIndependentGroundingCore(
       authority: caseIdsFromMap(input.authority.cases),
       comparison: null,
     })
-    return unproven("UNPROVEN_INDEPENDENCE", oracleState, "NOT_EVALUATED", universe, false)
+    return unproven("UNPROVEN_INDEPENDENCE", oracleState, "NOT_EVALUATED", universe, false, input.pkg, evidence)
   }
 
   const authorityIds = caseIdsFromMap(input.authority.cases)
   const parsed = new Map<string, ReadonlySet<string>>()
   let ambiguous = false
+  let undeclaredAttribution = false
   for (const id of authorityIds) {
     const parsedSet = parseAttributionSet(input.authority.cases[id]?.derived_attribution_set)
     if (!parsedSet.ok) {
       ambiguous = true
       break
+    }
+    for (const invariantId of parsedSet.set) {
+      if (!declaredInvariants.has(invariantId)) {
+        undeclaredAttribution = true
+      }
     }
     parsed.set(id, parsedSet.set)
   }
@@ -461,7 +727,7 @@ function evaluateIndependentGroundingCore(
       authority: authorityIds,
       comparison: null,
     })
-    return unproven("AUTHORITY_AMBIGUOUS", "VALID_PROVENANCE", "INCOMPLETE_OR_AMBIGUOUS", universe, synthetic_test_only)
+    return unproven("AUTHORITY_AMBIGUOUS", "VALID_PROVENANCE", "INCOMPLETE_OR_AMBIGUOUS", universe, synthetic_test_only, input.pkg, evidence)
   }
 
   const universeForCoverage = closeCaseUniverse({
@@ -470,18 +736,21 @@ function evaluateIndependentGroundingCore(
     authority: authorityIds,
     comparison: null,
   })
-  if (!setsEqual(declared, authorityIds)) {
+  if (!setsEqual(declared, authorityIds) || undeclaredAttribution) {
     return unproven(
       "AUTHORITY_INCOMPLETE",
       "VALID_PROVENANCE",
       "INCOMPLETE_OR_AMBIGUOUS",
       universeForCoverage,
       synthetic_test_only,
+      input.pkg,
+      evidence,
     )
   }
 
   // Comparison universe is derived from the closed declared/package/authority
   // set -- the gate compares exactly those ids, never a hand-counted subset.
+  // Observational metadata is excluded from this equality.
   const comparisonIds = declared
   const universe = closeCaseUniverse({
     declared,
@@ -501,6 +770,8 @@ function evaluateIndependentGroundingCore(
     }
   }
 
+  const declared_invariant_ids = sortedIdList(Object.keys(input.pkg.invariants))
+
   if (disagrees) {
     return {
       independent_grounding: "DISAGREED",
@@ -508,8 +779,10 @@ function evaluateIndependentGroundingCore(
       oracle_input_state: "VALID_PROVENANCE",
       semantic_relation: "DISAGREES",
       universe,
+      declared_invariant_ids,
       synthetic_test_only,
       production_publishable: false,
+      ...evidence,
     }
   }
 
@@ -519,8 +792,10 @@ function evaluateIndependentGroundingCore(
     oracle_input_state: "VALID_PROVENANCE",
     semantic_relation: "AGREES",
     universe,
+    declared_invariant_ids,
     synthetic_test_only,
     production_publishable: false,
+    ...evidence,
   }
 }
 
@@ -557,4 +832,112 @@ export function asProductionGroundingEvidence(_result: IndependentGroundingResul
 
 export function isTseiRuntimeViolation(_result: IndependentGroundingResult): false {
   return false
+}
+
+export function claimBoundaryUnchanged(observed: unknown): boolean {
+  return stableStringify(observed) === stableStringify(CANONICAL_CLAIM_BOUNDARY)
+}
+
+function modelDryRunInsufficient(): Pick<
+  ProviderDryRunResult,
+  | "provider_policy_freezable"
+  | "declared_provider_selection"
+  | "selected_provider_pass"
+  | "independently_verified_cross_log_bridge_established"
+  | "caller_supplied_proof_material_verified"
+  | "independent_provider_condition_established"
+  | "sufficient_for_real_object_a"
+  | "sufficient_for_proven_grounding"
+  | "production_publishable"
+> {
+  void DECLARED_PROVIDER_SELECTION
+  return {
+    provider_policy_freezable: false,
+    declared_provider_selection: null,
+    selected_provider_pass: false,
+    independently_verified_cross_log_bridge_established: false,
+    caller_supplied_proof_material_verified: false,
+    independent_provider_condition_established: false,
+    sufficient_for_real_object_a: false,
+    sufficient_for_proven_grounding: false,
+    production_publishable: false,
+  }
+}
+
+/**
+ * In-memory model of dummy D0 < D1 < D2 checks. Caller-supplied strings are
+ * not verified proofs. This function cannot freeze a provider policy and
+ * cannot satisfy REAL_EXTERNAL_PROVIDER_DRY_RUN_PASS.
+ */
+export function evaluateProviderDryRun(input: ProviderDryRunInput): ProviderDryRunResult {
+  const reasons: string[] = []
+  const events = isRecord(input) ? input.events : undefined
+  const D0 = isRecord(events) ? events["D0"] : undefined
+  const D1 = isRecord(events) ? events["D1"] : undefined
+  const D2 = isRecord(events) ? events["D2"] : undefined
+  if (!isRecord(D0) || !isRecord(D1) || !isRecord(D2) || D0["kind"] !== "D0" || D1["kind"] !== "D1" || D2["kind"] !== "D2") {
+    reasons.push("dummy event kinds must be D0, D1, D2")
+  } else {
+    const d0 = D0 as unknown as ProviderDryRunInput["events"]["D0"]
+    const d1 = D1 as unknown as ProviderDryRunInput["events"]["D1"]
+    const d2 = D2 as unknown as ProviderDryRunInput["events"]["D2"]
+    if (!(d0.ordering_index < d1.ordering_index && d1.ordering_index < d2.ordering_index)) {
+      reasons.push("wrong event order: required D0 < D1 < D2 under the frozen ordering policy")
+    }
+    for (const event of [d0, d1, d2]) {
+      if (event.originator_identity !== input.expected_originator_identity) {
+        reasons.push("wrong Originator identity")
+      }
+      if (event.authority_identity !== input.expected_authority_identity) {
+        reasons.push("wrong Authority identity")
+      }
+      if (event.artifact_digest !== input.expected_artifact_digest) {
+        reasons.push("corrupted artifact digest")
+      }
+      if (event.proof_material !== input.expected_proof_material) {
+        reasons.push("caller-supplied proof material does not match expected dummy material")
+      }
+      if (event.provider_id !== input.expected_provider_id) {
+        reasons.push("wrong provider/log identity")
+      }
+    }
+    const logs = new Set([d0.log_identity, d1.log_identity, d2.log_identity])
+    if (logs.size !== 1) {
+      reasons.push("cross-log/shard ordering without an independently verified bridge")
+    }
+    if (![d0, d1, d2].every((event) => event.log_identity === input.expected_log_identity)) {
+      reasons.push("wrong provider/log identity")
+    }
+    if (input.expected_originator_identity === input.expected_authority_identity) {
+      reasons.push("Originator and Authority identities are not distinct; model cannot establish independent-provider condition")
+    }
+  }
+  if (input.independently_verified_cross_log_bridge === true) {
+    reasons.push("caller-asserted independently_verified_cross_log_bridge is not an independently verified bridge")
+  }
+  if (DECLARED_PROVIDER_SELECTION !== null) {
+    reasons.push("DECLARED_PROVIDER_SELECTION is non-null")
+  } else {
+    reasons.push("DECLARED_PROVIDER_SELECTION is null; model result is not a selected-provider pass")
+  }
+  const uniqueReasons = [...new Set(reasons)]
+  const modelShapeOk = !uniqueReasons.some(
+    (reason) =>
+      reason.startsWith("dummy event") ||
+      reason.startsWith("wrong event order") ||
+      reason.startsWith("wrong Originator") ||
+      reason.startsWith("wrong Authority") ||
+      reason.startsWith("corrupted artifact") ||
+      reason.startsWith("caller-supplied proof") ||
+      reason.startsWith("wrong provider/log") ||
+      reason.startsWith("cross-log/shard") ||
+      reason.startsWith("Originator and Authority identities"),
+  )
+  return {
+    ok: modelShapeOk,
+    model_checks_pass: modelShapeOk,
+    reasons: uniqueReasons,
+    ordering_policy: "D0_lt_D1_lt_D2",
+    ...modelDryRunInsufficient(),
+  }
 }

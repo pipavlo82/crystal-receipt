@@ -201,6 +201,10 @@ transplantation.
   named synthetic evaluator for the `VALID_PROVENANCE` branch. Not a
   production provider. Outcomes are not production-publishable. Caller-
   shaped `{ injection_kind: "synthetic_test_only" }` objects are not issued.
+- `INDEPENDENT_AUTHORITY_BLIND_GROUNDING_PROTOCOL_V0.md` -- protocol
+  hardening: observational metadata on B, claim boundary, mandatory
+  provider dry-run gate, Rekor v2 as **candidate only**. Does not create
+  Object A or select a production provider.
 - `tests/receiptos/tsei-invariant-discrimination-independent-authority-v0.test.ts`
   -- scaffold negatives, waiting state, closed-universe measurement, and
   synthetic PROVEN/DISAGREED branches.
@@ -248,3 +252,24 @@ provider verifier against a declared trust root. Until then, production
 operation is `ABSENT` (reason `AWAITING_INDEPENDENT_AUTHORITY`) or
 `INVALID_PROVENANCE` (reason `UNPROVEN_INDEPENDENCE`). Non-arrival is
 not disagreement.
+
+Object B may carry observational metadata (definition-ambiguity
+observation, second-party answer-free observation, undeclared-effect
+notes). Valid fields survive into the evaluation result and MUST NOT
+alter exact-set comparison, mint `VALID_PROVENANCE`, or change
+UNPROVEN / DISAGREED / PROVEN. Malformed observational metadata is
+fail-closed `UNPROVEN` without throwing and is not copied into the
+result. The claim boundary is runtime-frozen, compared against a
+private canonical baseline, classified
+`DECLARED_CONDITION_NOT_INDEPENDENTLY_VERIFIED`, and cannot mint
+provenance. See `INDEPENDENT_AUTHORITY_BLIND_GROUNDING_PROTOCOL_V0.md`
+for freeze-before-A, Object A/B/C/D obligations, P1–P10, abort
+conditions, PHASE 0–12, publication package, Authority checklist,
+E0/E1/E2, hiding commitment, no retroactive blindness, and
+`CO_SIGNED_CHECKPOINT_TIME = NOT_YET_QUALIFIED`.
+A real provider dry run is required before any real Object A;
+`evaluateProviderDryRun` is an in-memory model and cannot set
+`provider_policy_freezable = true`. Rekor v2 is a candidate only
+and is not selected. Current state remains
+`CASES_CREATED = false`, `ANSWERS_DISCLOSED = false`,
+`PROVIDER_SELECTED = false`, `PROVIDER_POLICY_FROZEN = false`.
