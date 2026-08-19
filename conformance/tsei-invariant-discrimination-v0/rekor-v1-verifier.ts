@@ -8,7 +8,7 @@
  * not performed here. This module does not mint Object A, Object B, or PROVEN.
  */
 
-import { createHash, verify as cryptoVerify, X509Certificate } from "node:crypto"
+import { createHash, createPublicKey, verify as cryptoVerify, X509Certificate } from "node:crypto"
 import {
   AUTHORITY_SAN_EMAIL,
   DECLARED_PROVIDER_SELECTION,
@@ -26,6 +26,25 @@ import {
 export const REKOR_V1_PROVIDER_ID = "rekor-v1" as const
 export const PROVIDER_POLICY_SCHEMA = "tsei-invariant-discrimination-v0.provider-policy.rekor-v1.v0"
 export const DUMMY_GATE_ELIGIBILITY_CLASS = "ELIGIBILITY_ONLY_NOT_OBJECT_A_NOT_PROVEN" as const
+export const REKOR_V1_PROVIDER_POLICY_SHA256 = "9efefd8e00950e21c121a88a0886b20eb6bc8b1ee04737f1d69c96e4b02ffd77" as const
+
+// Sigstore public-good trust material obtained from the Sigstore TUF trusted
+// root. Callers cannot replace any of these anchors.
+const REKOR_V1_PUBLIC_KEY_DER_B64 =
+  "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE2G2Y+2tabdTV5BcGiBIx0a9fAFwrkBbmLSGtks4L3qX6yYY0zufBnhC8Ur/iy55GhWP/9A/bY2LhC30M9+RYtw=="
+const FULCIO_INTERMEDIATE_DER_B64 =
+  "MIICGjCCAaGgAwIBAgIUALnViVfnU0brJasmRkHrn/UnfaQwCgYIKoZIzj0EAwMwKjEVMBMGA1UEChMMc2lnc3RvcmUuZGV2MREwDwYDVQQDEwhzaWdzdG9yZTAeFw0yMjA0MTMyMDA2MTVaFw0zMTEwMDUxMzU2NThaMDcxFTATBgNVBAoTDHNpZ3N0b3JlLmRldjEeMBwGA1UEAxMVc2lnc3RvcmUtaW50ZXJtZWRpYXRlMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAE8RVS/ysH+NOvuDZyPIZtilgUF9NlarYpAd9HP1vBBH1U5CV77LSS7s0ZiH4nE7Hv7ptS6LvvR/STk798LVgMzLlJ4HeIfF3tHSaexLcYpSASr1kS0N/RgBJz/9jWCiXno3sweTAOBgNVHQ8BAf8EBAMCAQYwEwYDVR0lBAwwCgYIKwYBBQUHAwMwEgYDVR0TAQH/BAgwBgEB/wIBADAdBgNVHQ4EFgQU39Ppz1YkEZb5qNjpKFWixi4YZD8wHwYDVR0jBBgwFoAUWMAeX5FFpWapesyQoZMi0CrFxfowCgYIKoZIzj0EAwMDZwAwZAIwPCsQK4DYiZYDPIaDi5HFKnfxXx6ASSVmERfsynYBiX2X6SJRnZU84/9DZdnFvvxmAjBOt6QpBlc4J/0DxvkTCqpclvziL6BCCPnjdlIB3Pu3BxsPmygUY7Ii2zbdCdliiow="
+const FULCIO_ROOT_DER_B64 =
+  "MIIB9zCCAXygAwIBAgIUALZNAPFdxHPwjeDloDwyYChAO/4wCgYIKoZIzj0EAwMwKjEVMBMGA1UEChMMc2lnc3RvcmUuZGV2MREwDwYDVQQDEwhzaWdzdG9yZTAeFw0yMTEwMDcxMzU2NTlaFw0zMTEwMDUxMzU2NThaMCoxFTATBgNVBAoTDHNpZ3N0b3JlLmRldjERMA8GA1UEAxMIc2lnc3RvcmUwdjAQBgcqhkjOPQIBBgUrgQQAIgNiAAT7XeFT4rb3PQGwS4IajtLk3/OlnpgangaBclYpsYBr5i+4ynB07ceb3LP0OIOZdxexX69c5iVuyJRQ+Hz05yi+UF3uBWAlHpiS5sh0+H2GHE7SXrk1EC5m1Tr19L9gg92jYzBhMA4GA1UdDwEB/wQEAwIBBjAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBRYwB5fkUWlZql6zJChkyLQKsXF+jAfBgNVHSMEGDAWgBRYwB5fkUWlZql6zJChkyLQKsXF+jAKBggqhkjOPQQDAwNpADBmAjEAj1nHeXZp+13NWBNa+EDsDP8G1WWg1tCMWP/WHPqpaVo0jhsweNFZgSs0eE7wYI4qAjEA2WB9ot98sIkoF3vZYdd3/VtWB5b9TNMea7Ix/stJ5TfcLLeABLE4BNJOsQ4vnBHJ"
+
+const REKOR_V1_PUBLIC_KEY_DER = Buffer.from(REKOR_V1_PUBLIC_KEY_DER_B64, "base64")
+const REKOR_V1_PUBLIC_KEY = createPublicKey({ key: REKOR_V1_PUBLIC_KEY_DER, format: "der", type: "spki" })
+const REKOR_V1_KEY_ID = createHash("sha256").update(REKOR_V1_PUBLIC_KEY_DER).digest().subarray(0, 4)
+const FULCIO_INTERMEDIATE = new X509Certificate(Buffer.from(FULCIO_INTERMEDIATE_DER_B64, "base64"))
+const FULCIO_ROOT = new X509Certificate(Buffer.from(FULCIO_ROOT_DER_B64, "base64"))
+
+const FULCIO_OIDC_ISSUER_V1_OID = "1.3.6.1.4.1.57264.1.1"
+const FULCIO_OIDC_ISSUER_V2_OID = "1.3.6.1.4.1.57264.1.8"
 
 export type RekorV1Controller = "originator" | "authority"
 
@@ -142,6 +161,208 @@ const TREE_ID = /^[0-9]+$/
 
 function sha256Hex(bytes: Uint8Array | Buffer): string {
   return createHash("sha256").update(bytes).digest("hex")
+}
+
+function strictBase64(value: unknown): Buffer | null {
+  if (typeof value !== "string" || value.length === 0 || value.length % 4 !== 0) return null
+  if (!/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(value)) return null
+  const decoded = Buffer.from(value, "base64")
+  return decoded.toString("base64") === value ? decoded : null
+}
+
+function canonicalJson(value: unknown): string | null {
+  if (value === null) return "null"
+  if (typeof value === "boolean") return value ? "true" : "false"
+  if (typeof value === "string") return JSON.stringify(value)
+  if (typeof value === "number") return Number.isFinite(value) ? JSON.stringify(value) : null
+  if (Array.isArray(value)) {
+    const items = value.map(canonicalJson)
+    return items.every((item): item is string => item !== null) ? `[${items.join(",")}]` : null
+  }
+  if (isRecord(value)) {
+    const entries: string[] = []
+    for (const key of Object.keys(value).sort()) {
+      const encoded = canonicalJson(value[key])
+      if (encoded === null) return null
+      entries.push(`${JSON.stringify(key)}:${encoded}`)
+    }
+    return `{${entries.join(",")}}`
+  }
+  return null
+}
+
+type DerValue = { readonly tag: number; readonly contentStart: number; readonly end: number; readonly next: number }
+
+function readDerValue(bytes: Buffer, offset: number, limit = bytes.length): DerValue | null {
+  if (!Number.isInteger(offset) || offset < 0 || offset + 2 > limit) return null
+  const tag = bytes[offset]!
+  const firstLength = bytes[offset + 1]!
+  let length = 0
+  let contentStart = offset + 2
+  if (firstLength < 0x80) {
+    length = firstLength
+  } else {
+    const count = firstLength & 0x7f
+    if (count === 0 || count > 4 || contentStart + count > limit) return null
+    if (bytes[contentStart] === 0) return null
+    for (let i = 0; i < count; i += 1) length = length * 256 + bytes[contentStart + i]!
+    contentStart += count
+    if (length < 0x80) return null
+  }
+  const end = contentStart + length
+  if (!Number.isSafeInteger(end) || end > limit) return null
+  return { tag, contentStart, end, next: end }
+}
+
+function directDerChildren(bytes: Buffer, value: DerValue): DerValue[] | null {
+  const children: DerValue[] = []
+  let offset = value.contentStart
+  while (offset < value.end) {
+    const child = readDerValue(bytes, offset, value.end)
+    if (!child) return null
+    children.push(child)
+    offset = child.next
+  }
+  return offset === value.end ? children : null
+}
+
+function decodeOid(bytes: Buffer): string | null {
+  if (bytes.length === 0) return null
+  const first = bytes[0]!
+  const parts = [Math.min(2, Math.floor(first / 40)), first - Math.min(2, Math.floor(first / 40)) * 40]
+  let current = 0
+  let open = false
+  for (let i = 1; i < bytes.length; i += 1) {
+    const octet = bytes[i]!
+    current = current * 128 + (octet & 0x7f)
+    if (!Number.isSafeInteger(current)) return null
+    open = (octet & 0x80) !== 0
+    if (!open) {
+      parts.push(current)
+      current = 0
+    }
+  }
+  return open ? null : parts.join(".")
+}
+
+function certificateExtensions(cert: X509Certificate): Map<string, Buffer> | null {
+  const bytes = Buffer.from(cert.raw)
+  const certificate = readDerValue(bytes, 0)
+  if (!certificate || certificate.tag !== 0x30 || certificate.next !== bytes.length) return null
+  const certificateChildren = directDerChildren(bytes, certificate)
+  const tbs = certificateChildren?.[0]
+  if (!tbs || tbs.tag !== 0x30) return null
+  const tbsChildren = directDerChildren(bytes, tbs)
+  if (!tbsChildren) return null
+  const extensionContainers = tbsChildren.filter((item) => item.tag === 0xa3)
+  if (extensionContainers.length !== 1) return null
+  const containerChildren = directDerChildren(bytes, extensionContainers[0]!)
+  const sequence = containerChildren?.[0]
+  if (!sequence || sequence.tag !== 0x30 || containerChildren?.length !== 1) return null
+  const extensionValues = directDerChildren(bytes, sequence)
+  if (!extensionValues) return null
+  const result = new Map<string, Buffer>()
+  for (const extension of extensionValues) {
+    if (extension.tag !== 0x30) return null
+    const fields = directDerChildren(bytes, extension)
+    if (!fields || fields.length < 2 || fields.length > 3 || fields[0]?.tag !== 0x06) return null
+    const valueField = fields.at(-1)!
+    if (valueField.tag !== 0x04) return null
+    const oid = decodeOid(bytes.subarray(fields[0]!.contentStart, fields[0]!.end))
+    if (!oid || result.has(oid)) return null
+    result.set(oid, bytes.subarray(valueField.contentStart, valueField.end))
+  }
+  return result
+}
+
+function exactOidcIssuer(cert: X509Certificate): string | null {
+  const extensions = certificateExtensions(cert)
+  if (!extensions) return null
+  const legacy = extensions.get(FULCIO_OIDC_ISSUER_V1_OID)
+  const v2 = extensions.get(FULCIO_OIDC_ISSUER_V2_OID)
+  if (!legacy && !v2) return null
+  const values: string[] = []
+  if (legacy) values.push(legacy.toString("utf8"))
+  if (v2) {
+    const encoded = readDerValue(v2, 0)
+    if (!encoded || encoded.tag !== 0x0c || encoded.next !== v2.length) return null
+    values.push(v2.subarray(encoded.contentStart, encoded.end).toString("utf8"))
+  }
+  return values.length > 0 && values.every((value) => value === values[0]) ? values[0]! : null
+}
+
+function validAt(cert: X509Certificate, unixSeconds: number): boolean {
+  const instant = unixSeconds * 1000
+  const from = Date.parse(cert.validFrom)
+  const to = Date.parse(cert.validTo)
+  return Number.isFinite(instant) && Number.isFinite(from) && Number.isFinite(to) && from <= instant && instant <= to
+}
+
+export function verifyPinnedFulcioCertificate(input: {
+  readonly certificate_pem: string
+  readonly expected_san_email: string
+  readonly expected_oidc_issuer: string
+  readonly integrated_time: number
+}): { readonly ok: boolean; readonly reasons: readonly string[]; readonly certificate: X509Certificate | null } {
+  try {
+    const cert = new X509Certificate(input.certificate_pem)
+    const emails = parseSanEmails(cert)
+    if (emails.length !== 1 || emails[0] !== input.expected_san_email) {
+      return { ok: false, reasons: ["wrong_san"], certificate: cert }
+    }
+    if (exactOidcIssuer(cert) !== input.expected_oidc_issuer) {
+      return { ok: false, reasons: ["wrong_oidc_issuer"], certificate: cert }
+    }
+    const chainOk =
+      cert.issuer === FULCIO_INTERMEDIATE.subject &&
+      cert.checkIssued(FULCIO_INTERMEDIATE) &&
+      cert.verify(FULCIO_INTERMEDIATE.publicKey) &&
+      FULCIO_INTERMEDIATE.issuer === FULCIO_ROOT.subject &&
+      FULCIO_INTERMEDIATE.checkIssued(FULCIO_ROOT) &&
+      FULCIO_INTERMEDIATE.verify(FULCIO_ROOT.publicKey) &&
+      FULCIO_ROOT.verify(FULCIO_ROOT.publicKey) &&
+      validAt(cert, input.integrated_time) &&
+      validAt(FULCIO_INTERMEDIATE, input.integrated_time) &&
+      validAt(FULCIO_ROOT, input.integrated_time)
+    if (!chainOk) return { ok: false, reasons: ["untrusted_fulcio_chain"], certificate: cert }
+    return { ok: true, reasons: [], certificate: cert }
+  } catch {
+    return { ok: false, reasons: ["invalid_certificate"], certificate: null }
+  }
+}
+
+function verifySignedEntryTimestamp(record: Record<string, unknown>): boolean {
+  const verification = isRecord(record["verification"]) ? record["verification"] : null
+  const signature = strictBase64(verification?.["signedEntryTimestamp"])
+  const body = asString(record["body"])
+  const logID = asString(record["logID"])
+  const logIndex = record["logIndex"]
+  const integratedTime = record["integratedTime"]
+  if (!signature || !body || !logID || typeof logIndex !== "number" || !Number.isInteger(logIndex) || logIndex < 0) return false
+  if (typeof integratedTime !== "number" || !Number.isInteger(integratedTime) || integratedTime < 0) return false
+  const payload = canonicalJson({ body, integratedTime, logID, logIndex })
+  if (payload === null) return false
+  try {
+    return cryptoVerify("SHA256", Buffer.from(payload, "utf8"), REKOR_V1_PUBLIC_KEY, signature)
+  } catch {
+    return false
+  }
+}
+
+function verifyCheckpointSignature(checkpoint: string): boolean {
+  const lines = checkpoint.split("\n")
+  if (lines.length !== 6 || lines[3] !== "" || lines[5] !== "") return false
+  const prefix = "— rekor.sigstore.dev "
+  if (!lines[4]?.startsWith(prefix)) return false
+  const signature = strictBase64(lines[4].slice(prefix.length))
+  if (!signature || signature.length <= REKOR_V1_KEY_ID.length) return false
+  if (!signature.subarray(0, REKOR_V1_KEY_ID.length).equals(REKOR_V1_KEY_ID)) return false
+  const note = Buffer.from(lines.slice(0, 4).join("\n"), "utf8")
+  try {
+    return cryptoVerify("SHA256", note, REKOR_V1_PUBLIC_KEY, signature.subarray(REKOR_V1_KEY_ID.length))
+  } catch {
+    return false
+  }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -312,6 +533,13 @@ export function providerPolicySha256(bytes: Uint8Array | Buffer): string {
   return sha256Hex(Buffer.from(bytes))
 }
 
+function parseFrozenRekorV1ProviderPolicy(bytes: Uint8Array | Buffer): ReturnType<typeof parseRekorV1ProviderPolicy> {
+  if (providerPolicySha256(bytes) !== REKOR_V1_PROVIDER_POLICY_SHA256) {
+    return { ok: false, reasons: ["provider_policy_digest_mismatch"] }
+  }
+  return parseRekorV1ProviderPolicy(bytes)
+}
+
 function hashLeaf(data: Buffer): Buffer {
   return createHash("sha256").update(Buffer.concat([Buffer.from([0]), data])).digest()
 }
@@ -393,7 +621,7 @@ export function verifyRekorV1Publication(input: {
   readonly captured_tree_id?: string | null
 }): RekorV1PublicationResult {
   try {
-    const parsed = parseRekorV1ProviderPolicy(input.policy_bytes)
+    const parsed = parseFrozenRekorV1ProviderPolicy(input.policy_bytes)
     if (!parsed.ok) return failPublication(parsed.reasons)
     const policy = parsed.policy
     if (input.observed_endpoint !== undefined && input.observed_endpoint !== policy.endpoint) {
@@ -422,9 +650,14 @@ export function verifyRekorV1Publication(input: {
     if (!decoded) return failPublication(["malformed_structure"])
     if (decoded.uuid !== uuid) return failPublication(["malformed_structure"])
     const record = decoded.record
+    if (!verifySignedEntryTimestamp(record)) return failPublication(["invalid_signed_entry_timestamp"])
     if (asString(record["logID"]) !== policy.log_id) return failPublication(["wrong_log_id"])
     const globalIndex = record["logIndex"]
     if (typeof globalIndex !== "number" || !Number.isInteger(globalIndex) || globalIndex < 0) {
+      return failPublication(["malformed_structure"])
+    }
+    const integratedTime = record["integratedTime"]
+    if (typeof integratedTime !== "number" || !Number.isInteger(integratedTime) || integratedTime < 0) {
       return failPublication(["malformed_structure"])
     }
     const body = decodeBody(record)
@@ -440,33 +673,25 @@ export function verifyRekorV1Publication(input: {
     if (!hash || hash["algorithm"] !== "sha256" || asString(hash["value"]) !== digest) {
       return failPublication(["digest_mismatch"], { artifact_sha256: digest })
     }
-    const sigB64 = asString(signature?.["content"])
-    const certB64 = asString(publicKey?.["content"])
-    if (!sigB64 || !certB64) return failPublication(["malformed_structure"])
-    let cert: X509Certificate
-    try {
-      const pem = Buffer.from(certB64, "base64").toString("utf8")
-      cert = new X509Certificate(pem)
-    } catch {
-      return failPublication(["invalid_certificate"])
-    }
-    const emails = parseSanEmails(cert)
+    const artifactSignature = strictBase64(signature?.["content"])
+    const certificateBytes = strictBase64(publicKey?.["content"])
+    if (!artifactSignature || !certificateBytes) return failPublication(["malformed_structure"])
     const expected = input.controller === "originator" ? policy.originator_identity_selector : policy.authority_identity_selector
-    if (emails.length !== 1 || emails[0] !== expected.san_email) {
-      return failPublication(["wrong_san"], { artifact_sha256: digest, san_email: emails[0] ?? null })
-    }
-    const certText = cert.raw.toString("latin1")
-    if (!certText.includes(expected.oidc_issuer) || !cert.toString().includes(expected.oidc_issuer)) {
-      if (!Buffer.from(cert.raw).includes(Buffer.from(expected.oidc_issuer, "utf8"))) {
-        return failPublication(["wrong_oidc_issuer"], { artifact_sha256: digest, san_email: emails[0] ?? null })
-      }
-    }
-    if (!cert.issuer.includes(policy.fulcio.intermediate_cn)) {
-      return failPublication(["invalid_certificate"], { artifact_sha256: digest, san_email: emails[0] ?? null })
+    const pem = certificateBytes.toString("utf8")
+    const certResult = verifyPinnedFulcioCertificate({
+      certificate_pem: pem,
+      expected_san_email: expected.san_email,
+      expected_oidc_issuer: expected.oidc_issuer,
+      integrated_time: integratedTime,
+    })
+    const cert = certResult.certificate
+    const emails = cert ? parseSanEmails(cert) : []
+    if (!certResult.ok || !cert) {
+      return failPublication(certResult.reasons, { artifact_sha256: digest, san_email: emails[0] ?? null })
     }
     let signatureOk = false
     try {
-      signatureOk = cryptoVerify("SHA256", artifact, cert.publicKey, Buffer.from(sigB64, "base64"))
+      signatureOk = cryptoVerify("SHA256", artifact, cert.publicKey, artifactSignature)
     } catch {
       signatureOk = false
     }
@@ -489,18 +714,15 @@ export function verifyRekorV1Publication(input: {
     }
     const computed = rootFromInclusion(localIndex, treeSize, hashLeaf(body.raw), proofBuffers)
     if (!computed || computed.toString("hex") !== rootHash) return failPublication(["invalid_inclusion_proof"])
+    if (!verifyCheckpointSignature(checkpoint)) return failPublication(["invalid_checkpoint_signature"])
     const ckptLines = checkpoint.split("\n")
     if (ckptLines.length < 3) return failPublication(["invalid_checkpoint"])
     const origin = ckptLines[0] ?? ""
     const treeId = origin.startsWith("rekor.sigstore.dev - ") ? origin.slice("rekor.sigstore.dev - ".length) : ""
     if (!TREE_ID.test(treeId)) return failPublication(["invalid_checkpoint"])
     if ((ckptLines[1] ?? "") !== String(treeSize)) return failPublication(["invalid_checkpoint"])
-    let ckptRoot: Buffer
-    try {
-      ckptRoot = Buffer.from(ckptLines[2] ?? "", "base64")
-    } catch {
-      return failPublication(["invalid_checkpoint"])
-    }
+    const ckptRoot = strictBase64(ckptLines[2])
+    if (!ckptRoot || ckptRoot.length !== 32) return failPublication(["invalid_checkpoint"])
     if (!computed.equals(ckptRoot)) return failPublication(["invalid_checkpoint"])
     if (input.captured_tree_id != null && input.captured_tree_id !== treeId) {
       return failPublication(["tree_rotation"], { tree_id: treeId, artifact_sha256: digest, san_email: emails[0] ?? null })
@@ -612,7 +834,18 @@ export function evaluateProviderPolicyFreeze(policy_bytes: Uint8Array | Buffer):
     production_publishable: false as const,
     independently_grounded: "UNPROVEN" as const,
   }
-  const parsed = parseRekorV1ProviderPolicy(policy_bytes)
+  if (digest !== REKOR_V1_PROVIDER_POLICY_SHA256) {
+    return {
+      frozen: false,
+      reasons: ["provider_policy_digest_mismatch"],
+      provider_id: null,
+      selected_provider_pass: false,
+      dummy_gate_status: null,
+      dummy_gate_class: null,
+      ...base,
+    }
+  }
+  const parsed = parseFrozenRekorV1ProviderPolicy(policy_bytes)
   if (!parsed.ok) {
     return {
       frozen: false,

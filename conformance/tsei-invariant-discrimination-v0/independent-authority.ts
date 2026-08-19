@@ -1020,6 +1020,8 @@ export {
   evaluateProviderPolicyFreeze,
   lookupFromRekorDocuments,
   providerPolicySha256,
+  REKOR_V1_PROVIDER_POLICY_SHA256,
+  verifyPinnedFulcioCertificate,
   verifyRekorV1OrderedEvents,
   verifyRekorV1Publication,
 } from "./rekor-v1-verifier"

@@ -60,7 +60,9 @@ import {
   lookupFromRekorDocuments,
   normativeDefinitionIdentity,
   providerPolicySha256,
+  REKOR_V1_PROVIDER_POLICY_SHA256,
   sha256ExactBytes,
+  verifyPinnedFulcioCertificate,
   verifyOracleCommitment,
   verifyRekorV1OrderedEvents,
   verifyRekorV1Publication,
@@ -2012,7 +2014,23 @@ function derInt(n: number): Buffer {
   return der(0x02, Buffer.from(bytes))
 }
 
-function ephemeralOriginatorCertWithoutGithubOidc(): string {
+function derOid(parts: readonly number[]): Buffer {
+  if (parts.length < 2 || parts[0]! < 0 || parts[0]! > 2 || parts[1]! < 0) throw new Error("oid")
+  const bytes: number[] = [parts[0]! * 40 + parts[1]!]
+  for (const part of parts.slice(2)) {
+    if (!Number.isInteger(part) || part < 0) throw new Error("oid")
+    const encoded = [part & 0x7f]
+    let remaining = Math.floor(part / 128)
+    while (remaining > 0) {
+      encoded.unshift((remaining & 0x7f) | 0x80)
+      remaining = Math.floor(remaining / 128)
+    }
+    bytes.push(...encoded)
+  }
+  return der(0x06, Buffer.from(bytes))
+}
+
+function ephemeralOriginatorCert(includeGithubOidc = false, includeUnrelatedIssuerText = false): string {
   const { publicKey, privateKey } = generateKeyPairSync("rsa", { modulusLength: 2048 })
   const spki = publicKey.export({ type: "spki", format: "der" }) as Buffer
   const cn = der(
@@ -2030,7 +2048,21 @@ function ephemeralOriginatorCertWithoutGithubOidc(): string {
   )
   const sanValue = der(0x30, der(0x81, Buffer.from(ORIGINATOR_SAN_EMAIL, "ascii")))
   const sanExt = der(0x30, Buffer.concat([der(0x06, Buffer.from([0x55, 0x1d, 0x11])), der(0x04, sanValue)]))
-  const extensions = der(0xa3, der(0x30, sanExt))
+  const oidcExt = der(
+    0x30,
+    Buffer.concat([
+      derOid([1, 3, 6, 1, 4, 1, 57264, 1, 1]),
+      der(0x04, Buffer.from(OIDC_ISSUER_GITHUB_OAUTH, "utf8")),
+    ]),
+  )
+  const unrelatedIssuerTextExt = der(
+    0x30,
+    Buffer.concat([derOid([1, 2, 3, 4]), der(0x04, Buffer.from(OIDC_ISSUER_GITHUB_OAUTH, "utf8"))]),
+  )
+  const extensionList = [sanExt]
+  if (includeGithubOidc) extensionList.push(oidcExt)
+  if (includeUnrelatedIssuerText) extensionList.push(unrelatedIssuerTextExt)
+  const extensions = der(0xa3, der(0x30, Buffer.concat(extensionList)))
   const tbs = der(
     0x30,
     Buffer.concat([der(0xa0, derInt(2)), derInt(1), sha256WithRsa, name, validity, name, spki, extensions]),
@@ -2039,19 +2071,6 @@ function ephemeralOriginatorCertWithoutGithubOidc(): string {
   const cert = der(0x30, Buffer.concat([tbs, sha256WithRsa, der(0x03, Buffer.concat([Buffer.from([0x00]), sig]))]))
   const wrapped = (cert.toString("base64").match(/.{1,64}/g) ?? [cert.toString("base64")]).join("\n")
   return `-----BEGIN CERTIFICATE-----\n${wrapped}\n-----END CERTIFICATE-----\n`
-}
-
-function withPublicKeyPem(document: unknown, pem: string): Record<string, unknown> {
-  const cloned = cloneDocument(document)
-  const uuid = Object.keys(cloned)[0]!
-  const rec = cloned[uuid] as Record<string, unknown>
-  const canon = JSON.parse(Buffer.from(String(rec["body"]), "base64").toString("utf8")) as Record<string, unknown>
-  const spec = canon["spec"] as Record<string, unknown>
-  const signature = spec["signature"] as Record<string, unknown>
-  const publicKey = signature["publicKey"] as Record<string, unknown>
-  publicKey["content"] = Buffer.from(pem, "utf8").toString("base64")
-  rec["body"] = Buffer.from(JSON.stringify(canon)).toString("base64")
-  return cloned
 }
 
 describe("Rekor v1 provider policy freeze", () => {
@@ -2067,6 +2086,7 @@ describe("Rekor v1 provider policy freeze", () => {
     const freeze = evaluateProviderPolicyFreeze(bytes)
     expect(freeze.frozen).toBe(true)
     expect(freeze.digest).toBe(providerPolicySha256(bytes))
+    expect(freeze.digest).toBe(REKOR_V1_PROVIDER_POLICY_SHA256)
     expect(freeze.selected_provider_pass).toBe(true)
     expect(freeze.dummy_gate_class).toBe("ELIGIBILITY_ONLY_NOT_OBJECT_A_NOT_PROVEN")
     expect(freeze.sufficient_for_real_object_a).toBe(false)
@@ -2083,6 +2103,23 @@ describe("Rekor v1 provider policy freeze", () => {
     expect(freeze.frozen).toBe(false)
     expect(freeze.digest).not.toBe(providerPolicySha256(bytes))
     expect(freeze.reasons.length).toBeGreaterThan(0)
+  })
+
+  test("semantically identical policy with byte drift cannot freeze or verify", () => {
+    const bytes = loadPolicyBytes()
+    const drifted = Buffer.concat([Buffer.from(" "), bytes])
+    const freeze = evaluateProviderPolicyFreeze(drifted)
+    expect(freeze.frozen).toBe(false)
+    expect(freeze.reasons).toEqual(["provider_policy_digest_mismatch"])
+    const publication = verifyRekorV1Publication({
+      policy_bytes: drifted,
+      artifact_bytes: readFileSync(resolve(DUMMY_GATE_DIR, "d0.json")),
+      controller: "originator",
+      lookup: dummyLookup(),
+      observed_endpoint: REKOR_V1_ENDPOINT,
+    })
+    expect(publication.ok).toBe(false)
+    expect(publication.reasons).toEqual(["provider_policy_digest_mismatch"])
   })
 
   test("caller-fabricated freeze boolean is not a policy", () => {
@@ -2116,6 +2153,69 @@ describe("Rekor v1 production verifier (offline dummy fixtures)", () => {
     expect(ordered.dummy_gate_eligibility_only).toBe(true)
     expect(ordered.sufficient_for_proven_grounding).toBe(false)
     expect(ordered.production_publishable).toBe(false)
+  })
+
+  test("SET binds top-level global indexes before ordering is evaluated", () => {
+    const documents = (["d0", "d1", "d2"] as const).map((stage, index) => {
+      const cloned = cloneDocument(loadDummyDocument(stage))
+      const uuid = Object.keys(cloned)[0]!
+      ;(cloned[uuid] as Record<string, unknown>)["logIndex"] = index + 1
+      return cloned
+    })
+    const ordered = verifyRekorV1OrderedEvents({
+      policy_bytes: loadPolicyBytes(),
+      lookup: dummyLookup(documents),
+      observed_endpoint: REKOR_V1_ENDPOINT,
+      events: [
+        { artifact_bytes: readFileSync(resolve(DUMMY_GATE_DIR, "d0.json")), controller: "originator" },
+        { artifact_bytes: readFileSync(resolve(DUMMY_GATE_DIR, "d1.json")), controller: "authority" },
+        { artifact_bytes: readFileSync(resolve(DUMMY_GATE_DIR, "d2.json")), controller: "originator" },
+      ],
+    })
+    expect(ordered.ok).toBe(false)
+    expect(ordered.reasons).toEqual(["invalid_signed_entry_timestamp"])
+  })
+
+  test("a forged common checkpoint tree ID cannot create a same-tree run", () => {
+    const documents = (["d0", "d1", "d2"] as const).map((stage) => {
+      const cloned = cloneDocument(loadDummyDocument(stage))
+      const uuid = Object.keys(cloned)[0]!
+      const record = cloned[uuid] as Record<string, unknown>
+      const inclusion = (record["verification"] as Record<string, unknown>)["inclusionProof"] as Record<string, unknown>
+      inclusion["checkpoint"] = String(inclusion["checkpoint"]).replace("1193050959916656506", "1")
+      return cloned
+    })
+    const ordered = verifyRekorV1OrderedEvents({
+      policy_bytes: loadPolicyBytes(),
+      lookup: dummyLookup(documents),
+      observed_endpoint: REKOR_V1_ENDPOINT,
+      events: [
+        { artifact_bytes: readFileSync(resolve(DUMMY_GATE_DIR, "d0.json")), controller: "originator" },
+        { artifact_bytes: readFileSync(resolve(DUMMY_GATE_DIR, "d1.json")), controller: "authority" },
+        { artifact_bytes: readFileSync(resolve(DUMMY_GATE_DIR, "d2.json")), controller: "originator" },
+      ],
+    })
+    expect(ordered.ok).toBe(false)
+    expect(ordered.reasons).toEqual(["invalid_checkpoint_signature"])
+  })
+
+  test("a corrupt Rekor signedEntryTimestamp fails closed", () => {
+    const cloned = cloneDocument(loadDummyDocument("d0"))
+    const uuid = Object.keys(cloned)[0]!
+    const record = cloned[uuid] as Record<string, unknown>
+    const verification = record["verification"] as Record<string, unknown>
+    const set = Buffer.from(String(verification["signedEntryTimestamp"]), "base64")
+    set[set.length - 1] = set[set.length - 1]! ^ 1
+    verification["signedEntryTimestamp"] = set.toString("base64")
+    const result = verifyRekorV1Publication({
+      policy_bytes: loadPolicyBytes(),
+      artifact_bytes: readFileSync(resolve(DUMMY_GATE_DIR, "d0.json")),
+      controller: "originator",
+      lookup: dummyLookup([cloned]),
+      observed_endpoint: REKOR_V1_ENDPOINT,
+    })
+    expect(result.ok).toBe(false)
+    expect(result.reasons).toEqual(["invalid_signed_entry_timestamp"])
   })
 
   test("negative controls reject before a publication can pass", () => {
@@ -2157,7 +2257,7 @@ describe("Rekor v1 production verifier (offline dummy fixtures)", () => {
         lookup: dummyLookup([wrongLog]),
         observed_endpoint: REKOR_V1_ENDPOINT,
       }).reasons,
-    ).toContain("wrong_log_id")
+    ).toContain("invalid_signed_entry_timestamp")
 
     const rotated = cloneDocument(d1Doc)
     const rotatedUuid = Object.keys(rotated)[0]!
@@ -2180,7 +2280,7 @@ describe("Rekor v1 production verifier (offline dummy fixtures)", () => {
         observed_endpoint: REKOR_V1_ENDPOINT,
         captured_tree_id: d0Pub.tree_id,
       }).reasons,
-    ).toContain("tree_rotation")
+    ).toContain("invalid_checkpoint_signature")
 
     expect(
       verifyRekorV1Publication({
@@ -2226,7 +2326,7 @@ describe("Rekor v1 production verifier (offline dummy fixtures)", () => {
         lookup: dummyLookup([wrongKind]),
         observed_endpoint: REKOR_V1_ENDPOINT,
       }).reasons,
-    ).toContain("wrong_kind_or_version")
+    ).toContain("invalid_signed_entry_timestamp")
 
     const wrongVer = cloneDocument(d0Doc)
     const verUuid = Object.keys(wrongVer)[0]!
@@ -2242,7 +2342,7 @@ describe("Rekor v1 production verifier (offline dummy fixtures)", () => {
         lookup: dummyLookup([wrongVer]),
         observed_endpoint: REKOR_V1_ENDPOINT,
       }).reasons,
-    ).toContain("wrong_kind_or_version")
+    ).toContain("invalid_signed_entry_timestamp")
 
     expect(
       verifyRekorV1Publication({
@@ -2272,7 +2372,7 @@ describe("Rekor v1 production verifier (offline dummy fixtures)", () => {
         lookup: dummyLookup([brokenSig]),
         observed_endpoint: REKOR_V1_ENDPOINT,
       }).reasons,
-    ).toContain("invalid_signature")
+    ).toContain("invalid_signed_entry_timestamp")
 
     const brokenProof = cloneDocument(d0Doc)
     const proofUuid = Object.keys(brokenProof)[0]!
@@ -2308,7 +2408,7 @@ describe("Rekor v1 production verifier (offline dummy fixtures)", () => {
         lookup: dummyLookup([brokenCkpt]),
         observed_endpoint: REKOR_V1_ENDPOINT,
       }).reasons,
-    ).toContain("invalid_checkpoint")
+    ).toContain("invalid_checkpoint_signature")
 
     const equalDoc = cloneDocument(d1Doc)
     const equalUuid = Object.keys(equalDoc)[0]!
@@ -2323,7 +2423,7 @@ describe("Rekor v1 production verifier (offline dummy fixtures)", () => {
           { artifact_bytes: d1, controller: "authority" },
         ],
       }).reasons,
-    ).toContain("equal_log_index")
+    ).toContain("invalid_signed_entry_timestamp")
 
     const reversedDoc = cloneDocument(d1Doc)
     const reversedUuid = Object.keys(reversedDoc)[0]!
@@ -2338,7 +2438,7 @@ describe("Rekor v1 production verifier (offline dummy fixtures)", () => {
           { artifact_bytes: d1, controller: "authority" },
         ],
       }).reasons,
-    ).toContain("reversed_log_index")
+    ).toContain("invalid_signed_entry_timestamp")
   })
 
   test("digest_mismatch fails closed when lookup uniqueness is satisfied against a hashedrekord whose hash.value is not the provided artifact digest", () => {
@@ -2369,28 +2469,33 @@ describe("Rekor v1 production verifier (offline dummy fixtures)", () => {
     expect(result!.artifact_sha256).toBe(artifactDigest)
   })
 
-  test("wrong_oidc_issuer fails closed when SAN matches and the certificate does not contain the GitHub OAuth issuer", () => {
-    const policy_bytes = loadPolicyBytes()
-    const d0 = readFileSync(resolve(DUMMY_GATE_DIR, "d0.json"))
-    const pem = ephemeralOriginatorCertWithoutGithubOidc()
+  test("exact OIDC extension parsing rejects a matching SAN without the GitHub OAuth issuer", () => {
+    const pem = ephemeralOriginatorCert(false, true)
     expect(pem).not.toContain(OIDC_ISSUER_GITHUB_OAUTH)
-    const cloned = withPublicKeyPem(loadDummyDocument("d0"), pem)
-    let result: ReturnType<typeof verifyRekorV1Publication> | undefined
+    let result: ReturnType<typeof verifyPinnedFulcioCertificate> | undefined
     expect(() => {
-      result = verifyRekorV1Publication({
-        policy_bytes,
-        artifact_bytes: d0,
-        controller: "originator",
-        lookup: dummyLookup([cloned]),
-        observed_endpoint: REKOR_V1_ENDPOINT,
+      result = verifyPinnedFulcioCertificate({
+        certificate_pem: pem,
+        expected_san_email: ORIGINATOR_SAN_EMAIL,
+        expected_oidc_issuer: OIDC_ISSUER_GITHUB_OAUTH,
+        integrated_time: 1787158771,
       })
     }).not.toThrow()
     expect(result!.ok).toBe(false)
     expect(result!.reasons).toContain("wrong_oidc_issuer")
-    expect(result!.reasons).not.toContain("digest_mismatch")
     expect(result!.reasons).not.toContain("wrong_san")
-    expect(result!.reasons).not.toContain("invalid_signature")
-    expect(result!.san_email).toBe(ORIGINATOR_SAN_EMAIL)
+  })
+
+  test("a self-signed certificate with matching SAN and OIDC extension is not a Fulcio chain", () => {
+    const pem = ephemeralOriginatorCert(true)
+    const result = verifyPinnedFulcioCertificate({
+      certificate_pem: pem,
+      expected_san_email: ORIGINATOR_SAN_EMAIL,
+      expected_oidc_issuer: OIDC_ISSUER_GITHUB_OAUTH,
+      integrated_time: 1787158771,
+    })
+    expect(result.ok).toBe(false)
+    expect(result.reasons).toEqual(["untrusted_fulcio_chain"])
   })
 
   test("synthetic evidence cannot satisfy production evaluation", () => {

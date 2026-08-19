@@ -197,8 +197,12 @@ transplantation.
   scaffold contracts, leak/faithfulness/universe checks, and the provenance
   classifier. Production evaluation still cannot mint VALID_PROVENANCE:
   a selected Rekor v1 verifier does not feed the production evaluator.
-- `rekor-v1-verifier.ts` -- production Rekor v1 verifier. Offline tests
-  inject immutable public dummy-gate fixtures. Caller booleans are not proofs.
+- `rekor-v1-verifier.ts` -- production Rekor v1 verifier. It authenticates the
+  Rekor SET before trusting top-level entry fields, verifies the signed
+  checkpoint and RFC 6962 inclusion, validates the leaf certificate to pinned
+  Sigstore TUF Fulcio trust material, and reads the OIDC issuer only from the
+  exact Fulcio extension OIDs. Offline tests inject immutable public dummy-gate
+  fixtures. Caller booleans are not proofs.
 - `provider-policy.rekor-v1.json` -- frozen Rekor v1 policy bytes; SHA-256
   is computed outside the file.
 - `independent-authority-synthetic.ts` -- **test-only** injection and the

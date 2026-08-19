@@ -755,8 +755,14 @@ Selected mechanics:
 - Capture `tree_id` at E0; require E1 and E2 on the **same** tree. Do not
   hard-pin the dummy-run tree for production.
 - Search by artifact SHA-256; zero or multiple matches fail closed.
-- Verify signature, Fulcio SAN/OIDC issuer, checkpoint, and RFC6962
-  inclusion proof.
+- Verify the Rekor `signedEntryTimestamp` against the pinned Rekor v1 TUF key
+  before trusting `body`, `logID`, top-level `logIndex`, or `integratedTime`.
+- Verify the signed checkpoint note against that pinned Rekor key, then verify
+  the RFC6962 inclusion proof against its authenticated root.
+- Verify the artifact signature and the leaf certificate chain against pinned
+  Sigstore TUF Fulcio intermediate/root certificates. Read the OIDC issuer only
+  from exact Fulcio extension OIDs `1.3.6.1.4.1.57264.1.1` and
+  `1.3.6.1.4.1.57264.1.8`; a matching substring elsewhere is not evidence.
 - SigningConfig / TUF: use `signing_config.v0.2.json`; forbid
   `signing_config_rekor_v2.v0.2.json`.
 
