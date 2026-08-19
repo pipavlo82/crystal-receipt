@@ -36,21 +36,21 @@ export type SemanticRelation = "NOT_EVALUATED" | "INCOMPLETE_OR_AMBIGUOUS" | "DI
 export const BLIND_PROBLEM_SCHEMA = "tsei-invariant-discrimination-v0.blind-problem.v0"
 export const AUTHORITY_ORACLE_SCHEMA = "tsei-invariant-discrimination-v0.authority-oracle.v0"
 
-/**
- * No production provider is declared in this scaffold. Until a later PR
- * names a concrete provider-specific verifier and its trust root, this
- * remains null and production VALID_PROVENANCE is unreachable.
- */
-export const DECLARED_PRODUCTION_PROVIDER: null = null
+export const DECLARED_PROVIDER_SELECTION = "rekor-v1" as const
+export const DECLARED_PRODUCTION_PROVIDER = "rekor-v1" as const
 
-/**
- * No production provider is selected in this protocol-hardening lane.
- * Rekor v2 is a candidate only; a successful dummy dry run is required
- * before any real Object A, and even then does not mint PROVEN grounding.
- */
-export const DECLARED_PROVIDER_SELECTION: null = null
-
+/** Rekor v2 remains an unselected candidate. It is not the frozen provider. */
 export const PROVIDER_CANDIDATE_REKOR_V2 = "rekor-v2-candidate-not-selected" as const
+
+export const REKOR_V1_ENDPOINT = "https://rekor.sigstore.dev" as const
+export const REKOR_V1_LOG_ID = "c0d23d6ad406973f9559f3ba2d1ca01f84147d8ffc5b8445c224f98b9591801d" as const
+export const ORIGINATOR_SAN_EMAIL = "shtomko@gmail.com" as const
+export const AUTHORITY_SAN_EMAIL = "114340671+TMerlini@users.noreply.github.com" as const
+export const OIDC_ISSUER_GITHUB_OAUTH = "https://github.com/login/oauth" as const
+export const DUMMY_GATE_RUN = "tsei-ia-provider-dry-run-v0-20260819" as const
+export const DUMMY_GATE_D0_SHA256 = "76fedc450e284e9cee23d04331b729493fceffe7fb0ed381f050ba3093e9e10e" as const
+export const DUMMY_GATE_D1_SHA256 = "219b960d52790ee193e59177e8e4f1c937fcf8ae5463041ee8334c697a72d927" as const
+export const DUMMY_GATE_D2_SHA256 = "eba13ec8c232e99e0c1680078780bb8781207ad273d495779304852fee98667a" as const
 
 export const PROVIDER_DRY_RUN_REQUIRED_BEFORE_OBJECT_A = true
 
@@ -386,7 +386,7 @@ export type ProviderDryRunResult = {
   readonly ordering_policy: "D0_lt_D1_lt_D2"
   /** Model/in-memory checks cannot freeze a real provider policy. */
   readonly provider_policy_freezable: false
-  readonly declared_provider_selection: null
+  readonly declared_provider_selection: typeof DECLARED_PROVIDER_SELECTION
   readonly selected_provider_pass: false
   readonly independently_verified_cross_log_bridge_established: false
   readonly caller_supplied_proof_material_verified: false

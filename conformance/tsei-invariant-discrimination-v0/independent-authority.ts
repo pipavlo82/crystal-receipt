@@ -12,7 +12,6 @@ import {
   AUTHORITY_ORACLE_SCHEMA,
   BLIND_PROBLEM_SCHEMA,
   DECLARED_CONDITION_NOT_INDEPENDENTLY_VERIFIED,
-  DECLARED_PRODUCTION_PROVIDER,
   DECLARED_PROVIDER_SELECTION,
   OBJECT_A_CASE_KEYS,
   OBJECT_A_FORBIDDEN_KEYS,
@@ -340,9 +339,8 @@ function classifyVerifiedObservations(
   // synthetic-test path or a later declared production provider.
   if (observations === null) return "INVALID_PROVENANCE"
 
-  // DECLARED_PRODUCTION_PROVIDER is null in this lane; retained as a
-  // mechanical non-claim that no production trust root is configured.
-  void DECLARED_PRODUCTION_PROVIDER
+  // Provider selection does not mint observations. Production evaluation
+  // still ignores caller-supplied provider_outcome and synthetic injection.
 
   if (oracle_bytes_sha256 === null) return "INVALID_PROVENANCE"
   if (observations.oracle_bytes_sha256 !== oracle_bytes_sha256) return "INVALID_PROVENANCE"
@@ -838,6 +836,87 @@ export function claimBoundaryUnchanged(observed: unknown): boolean {
   return stableStringify(observed) === stableStringify(CANONICAL_CLAIM_BOUNDARY)
 }
 
+const ORACLE_COMMIT_DOMAIN = Buffer.from("TSEI-IA-COMMIT-v0", "ascii")
+const COMMIT_SEP = Buffer.from([0])
+const INSTANCE_ID_RE = /^[a-z0-9._-]+$/
+const LOWER_HEX_64 = /^[0-9a-f]{64}$/
+
+function asCommitmentBytes(value: unknown, label: string, reasons: string[], expectedLength?: number): Buffer | null {
+  if (!(value instanceof Uint8Array)) {
+    reasons.push(`${label}_not_bytes`)
+    return null
+  }
+  const buf = Buffer.from(value)
+  if (expectedLength !== undefined && buf.length !== expectedLength) {
+    reasons.push(`${label}_length`)
+    return null
+  }
+  if (expectedLength === undefined && buf.length === 0) {
+    reasons.push(`${label}_empty`)
+    return null
+  }
+  return buf
+}
+
+function validateOracleCommitmentParts(
+  input: unknown,
+): { ok: true; instance_id: string; digest: string; nonce: Buffer; oracle: Buffer } | { ok: false; reasons: string[] } {
+  const reasons: string[] = []
+  if (!isRecord(input)) return { ok: false, reasons: ["malformed_commitment_input"] }
+  const instance_id = input["instance_id"]
+  const digest = input["problem_package_sha256"]
+  if (typeof instance_id !== "string" || !INSTANCE_ID_RE.test(instance_id)) reasons.push("invalid_instance_id")
+  if (typeof digest !== "string" || !LOWER_HEX_64.test(digest)) reasons.push("invalid_problem_package_sha256")
+  const nonce = asCommitmentBytes(input["nonce"], "nonce", reasons, 32)
+  const oracle = asCommitmentBytes(input["oracle_bytes"], "oracle_bytes", reasons)
+  if (reasons.length > 0 || typeof instance_id !== "string" || typeof digest !== "string" || !nonce || !oracle) {
+    return { ok: false, reasons }
+  }
+  return { ok: true, instance_id, digest, nonce, oracle }
+}
+
+function commitmentPreimage(parts: { instance_id: string; digest: string; nonce: Buffer; oracle: Buffer }): Buffer {
+  return Buffer.concat([
+    ORACLE_COMMIT_DOMAIN,
+    COMMIT_SEP,
+    Buffer.from(parts.instance_id, "ascii"),
+    COMMIT_SEP,
+    Buffer.from(parts.digest, "ascii"),
+    COMMIT_SEP,
+    parts.nonce,
+    COMMIT_SEP,
+    parts.oracle,
+  ])
+}
+
+export function computeOracleCommitment(
+  input: unknown,
+): { ok: true; commitment: string } | { ok: false; reasons: readonly string[] } {
+  try {
+    const parsed = validateOracleCommitmentParts(input)
+    if (!parsed.ok) return parsed
+    return { ok: true, commitment: sha256ExactBytes(commitmentPreimage(parsed)) }
+  } catch {
+    return { ok: false, reasons: ["malformed_commitment_input"] }
+  }
+}
+
+export function verifyOracleCommitment(input: unknown): { ok: boolean; reasons: readonly string[] } {
+  try {
+    if (!isRecord(input)) return { ok: false, reasons: ["malformed_commitment_input"] }
+    const computed = computeOracleCommitment(input)
+    if (!computed.ok) return computed
+    const commitment = input["commitment"]
+    if (typeof commitment !== "string" || !LOWER_HEX_64.test(commitment)) {
+      return { ok: false, reasons: ["invalid_commitment"] }
+    }
+    if (commitment !== computed.commitment) return { ok: false, reasons: ["commitment_mismatch"] }
+    return { ok: true, reasons: [] }
+  } catch {
+    return { ok: false, reasons: ["malformed_commitment_input"] }
+  }
+}
+
 function modelDryRunInsufficient(): Pick<
   ProviderDryRunResult,
   | "provider_policy_freezable"
@@ -850,10 +929,9 @@ function modelDryRunInsufficient(): Pick<
   | "sufficient_for_proven_grounding"
   | "production_publishable"
 > {
-  void DECLARED_PROVIDER_SELECTION
   return {
     provider_policy_freezable: false,
-    declared_provider_selection: null,
+    declared_provider_selection: DECLARED_PROVIDER_SELECTION,
     selected_provider_pass: false,
     independently_verified_cross_log_bridge_established: false,
     caller_supplied_proof_material_verified: false,
@@ -915,11 +993,7 @@ export function evaluateProviderDryRun(input: ProviderDryRunInput): ProviderDryR
   if (input.independently_verified_cross_log_bridge === true) {
     reasons.push("caller-asserted independently_verified_cross_log_bridge is not an independently verified bridge")
   }
-  if (DECLARED_PROVIDER_SELECTION !== null) {
-    reasons.push("DECLARED_PROVIDER_SELECTION is non-null")
-  } else {
-    reasons.push("DECLARED_PROVIDER_SELECTION is null; model result is not a selected-provider pass")
-  }
+  reasons.push("evaluateProviderDryRun is an in-memory model and cannot mint a selected-provider pass")
   const uniqueReasons = [...new Set(reasons)]
   const modelShapeOk = !uniqueReasons.some(
     (reason) =>
@@ -941,3 +1015,11 @@ export function evaluateProviderDryRun(input: ProviderDryRunInput): ProviderDryR
     ...modelDryRunInsufficient(),
   }
 }
+
+export {
+  evaluateProviderPolicyFreeze,
+  lookupFromRekorDocuments,
+  providerPolicySha256,
+  verifyRekorV1OrderedEvents,
+  verifyRekorV1Publication,
+} from "./rekor-v1-verifier"

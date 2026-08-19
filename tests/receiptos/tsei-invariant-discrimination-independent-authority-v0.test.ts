@@ -11,11 +11,12 @@
  * are metadata only and cannot mint VALID_PROVENANCE or PROVEN.
  */
 
-import { createHash } from "node:crypto"
+import { createHash, generateKeyPairSync, sign as cryptoSign } from "node:crypto"
 import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { describe, expect, test } from "bun:test"
 import {
+  AUTHORITY_SAN_EMAIL,
   AUTHORITY_ORACLE_SCHEMA,
   BLIND_PROBLEM_SCHEMA,
   CLAIM_BOUNDARY,
@@ -23,9 +24,16 @@ import {
   DECLARED_CONDITION_NOT_INDEPENDENTLY_VERIFIED,
   DECLARED_PRODUCTION_PROVIDER,
   DECLARED_PROVIDER_SELECTION,
+  DUMMY_GATE_D0_SHA256,
+  DUMMY_GATE_D1_SHA256,
+  DUMMY_GATE_D2_SHA256,
+  OIDC_ISSUER_GITHUB_OAUTH,
+  ORIGINATOR_SAN_EMAIL,
   PROVIDER_CANDIDATE_REKOR_V2,
   PROVIDER_DRY_RUN_REQUIRED_BEFORE_OBJECT_A,
   PROHIBITED_CONTROLLER_IDENTIFIERS,
+  REKOR_V1_ENDPOINT,
+  REKOR_V1_LOG_ID,
   SECOND_PARTY_OBSERVATION_ONLY,
   type AuthorityOraclePayload,
   type BlindProblemPackage,
@@ -40,15 +48,22 @@ import {
   checkBlindPackageFaithfulness,
   claimBoundaryUnchanged,
   closeCaseUniverse,
+  computeOracleCommitment,
   digestAuthorityOracleBytes,
   digestBlindProblemBytes,
   encodeJsonUtf8Lf,
   evaluateProductionIndependentGrounding,
   evaluateProviderDryRun,
+  evaluateProviderPolicyFreeze,
   isTseiRuntimeViolation,
   leakCheckBlindPackage,
+  lookupFromRekorDocuments,
   normativeDefinitionIdentity,
+  providerPolicySha256,
   sha256ExactBytes,
+  verifyOracleCommitment,
+  verifyRekorV1OrderedEvents,
+  verifyRekorV1Publication,
 } from "../../conformance/tsei-invariant-discrimination-v0/independent-authority"
 import {
   evaluateSyntheticIndependentGrounding,
@@ -286,7 +301,7 @@ describe("production path: no authority / generic C", () => {
     expect(result.independent_grounding).not.toBe("DISAGREED")
     expect(result.production_publishable).toBe(false)
     expect(asProductionGroundingEvidence(result)).toBeNull()
-    expect(DECLARED_PRODUCTION_PROVIDER).toBeNull()
+    expect(DECLARED_PRODUCTION_PROVIDER).toBe("rekor-v1")
   })
 
   test("internally authored/generic C cannot become VALID_PROVENANCE", () => {
@@ -1045,9 +1060,9 @@ function validDryRun(extra?: Partial<ProviderDryRunInput>): ProviderDryRunInput 
 }
 
 describe("protocol claim boundary and provider selection", () => {
-  test("production provider and provider selection remain null; dry run is required before Object A", () => {
-    expect(DECLARED_PRODUCTION_PROVIDER).toBeNull()
-    expect(DECLARED_PROVIDER_SELECTION).toBeNull()
+  test("production provider is rekor-v1; model dry run still cannot mint Object A", () => {
+    expect(DECLARED_PRODUCTION_PROVIDER).toBe("rekor-v1")
+    expect(DECLARED_PROVIDER_SELECTION).toBe("rekor-v1")
     expect(PROVIDER_DRY_RUN_REQUIRED_BEFORE_OBJECT_A).toBe(true)
     expect(PROVIDER_CANDIDATE_REKOR_V2).toBe("rekor-v2-candidate-not-selected")
     expect(CO_SIGNED_CHECKPOINT_TIME).toBe("NOT_YET_QUALIFIED")
@@ -1577,7 +1592,7 @@ describe("synthetic and production boundaries remain intact under observations",
     })
     expect(result.independent_grounding).toBe("PROVEN")
     expect(result.production_publishable).toBe(false)
-    expect(DECLARED_PRODUCTION_PROVIDER).toBeNull()
+    expect(DECLARED_PRODUCTION_PROVIDER).toBe("rekor-v1")
     expect(asProductionGroundingEvidence(result)).toBeNull()
   })
 })
@@ -1589,8 +1604,8 @@ describe("provider dry-run gate (dummy only; no real publication)", () => {
     expect(result.model_checks_pass).toBe(true)
     expect(result.provider_policy_freezable).toBe(false)
     expect(result.selected_provider_pass).toBe(false)
-    expect(result.declared_provider_selection).toBeNull()
-    expect(DECLARED_PROVIDER_SELECTION).toBeNull()
+    expect(result.declared_provider_selection).toBe("rekor-v1")
+    expect(DECLARED_PROVIDER_SELECTION).toBe("rekor-v1")
     expect(result.caller_supplied_proof_material_verified).toBe(false)
     expect(result.independently_verified_cross_log_bridge_established).toBe(false)
     expect(result.independent_provider_condition_established).toBe(false)
@@ -1639,13 +1654,13 @@ describe("provider dry-run gate (dummy only; no real publication)", () => {
     expect(result.reasons).toContain("Originator and Authority identities are not distinct; model cannot establish independent-provider condition")
   })
 
-  test("DECLARED_PROVIDER_SELECTION = null prevents any model result from being a selected-provider pass", () => {
+  test("DECLARED_PROVIDER_SELECTION = rekor-v1 does not make the in-memory model a selected-provider pass", () => {
     const result = evaluateProviderDryRun(validDryRun())
-    expect(DECLARED_PROVIDER_SELECTION).toBeNull()
-    expect(result.declared_provider_selection).toBeNull()
+    expect(DECLARED_PROVIDER_SELECTION).toBe("rekor-v1")
+    expect(result.declared_provider_selection).toBe("rekor-v1")
     expect(result.selected_provider_pass).toBe(false)
     expect(result.provider_policy_freezable).toBe(false)
-    expect(result.reasons).toContain("DECLARED_PROVIDER_SELECTION is null; model result is not a selected-provider pass")
+    expect(result.reasons).toContain("evaluateProviderDryRun is an in-memory model and cannot mint a selected-provider pass")
   })
 
   test("negative controls reject before a policy can freeze", () => {
@@ -1727,10 +1742,10 @@ describe("protocol artifact load-bearing text", () => {
     expect(text).toContain("DECLARED_CONDITION_NOT_INDEPENDENTLY_VERIFIED")
     expect(text).toContain("MODEL_DRY_RUN_TESTS_PASS")
     expect(text).toContain("REAL_EXTERNAL_PROVIDER_DRY_RUN_PASS")
-    expect(text).toContain("DECLARED_PROVIDER_SELECTION = null")
+    expect(text).toContain("DECLARED_PROVIDER_SELECTION = rekor-v1")
     expect(text).toContain("SigningConfig / TUF")
-    expect(text).toContain("`integrated_time` is always `0` and MUST be ignored")
-    expect(text).toContain("RFC3161 remains the candidate trusted-time path")
+    expect(text).toContain("`integratedTime` is **not** trusted wall-clock time.")
+    expect(text).toContain("RFC3161 remains required only for a wall-clock claim")
     expect(text).toContain("no runtime field named `INTERNAL_ORACLE_CASE_IDS`")
   })
 
@@ -1748,8 +1763,8 @@ describe("protocol artifact load-bearing text", () => {
     expect(text).toContain("P8  independent retrieval by the verifier")
     expect(text).toContain("P9  no reliance on artifact self-report for publisher identity")
     expect(text).toContain("P10 provider-specific verification implementable in the repository")
-    expect(text).toContain("originator_identity_selector = <provider-specific selector>")
-    expect(text).toContain("authority_identity_selector  = <provider-specific selector>")
+    expect(text).toContain("originator_identity_selector = SAN email shtomko@gmail.com AND OIDC issuer https://github.com/login/oauth")
+    expect(text).toContain("authority_identity_selector  = SAN email 114340671+TMerlini@users.noreply.github.com AND OIDC issuer https://github.com/login/oauth")
     expect(text).toContain("A display name inside JSON, a chat handle typed into Object B, or a")
     expect(text).toContain("A faithfulness failure")
     expect(text).toContain("protocol semantic change")
@@ -1786,8 +1801,8 @@ describe("protocol artifact load-bearing text", () => {
     expect(text).toContain("[ ] I accept that the provider path / identity selectors / ordering rule will be frozen before Object A exists.")
     expect(text).toContain("CASES_CREATED = false")
     expect(text).toContain("ANSWERS_DISCLOSED = false")
-    expect(text).toContain("PROVIDER_SELECTED = false")
-    expect(text).toContain("PROVIDER_POLICY_FROZEN = false")
+    expect(text).toContain("PROVIDER_SELECTED = true")
+    expect(text).toContain("PROVIDER_POLICY_FROZEN = true")
   })
 })
 
@@ -1937,5 +1952,497 @@ describe("observational metadata fails closed without throwing", () => {
         },
       },
     })
+  })
+})
+
+const POLICY_PATH = resolve(
+  import.meta.dir,
+  "..",
+  "..",
+  "conformance",
+  "tsei-invariant-discrimination-v0",
+  "provider-policy.rekor-v1.json",
+)
+const DUMMY_GATE_DIR = resolve(
+  import.meta.dir,
+  "..",
+  "..",
+  "conformance",
+  "tsei-invariant-discrimination-v0",
+  "fixtures",
+  "rekor-v1-dummy-gate",
+)
+
+function loadPolicyBytes(): Buffer {
+  return readFileSync(POLICY_PATH)
+}
+
+function loadDummyDocument(stage: "d0" | "d1" | "d2"): unknown {
+  return JSON.parse(readFileSync(resolve(DUMMY_GATE_DIR, `${stage}.entry.json`), "utf8"))
+}
+
+function dummyLookup(documents: readonly unknown[] = [loadDummyDocument("d0"), loadDummyDocument("d1"), loadDummyDocument("d2")]) {
+  return lookupFromRekorDocuments(documents)
+}
+
+function cloneDocument(document: unknown): Record<string, unknown> {
+  return JSON.parse(JSON.stringify(document)) as Record<string, unknown>
+}
+
+function derLen(n: number): Buffer {
+  if (n < 0x80) return Buffer.from([n])
+  if (n <= 0xff) return Buffer.from([0x81, n])
+  if (n <= 0xffff) return Buffer.from([0x82, (n >> 8) & 0xff, n & 0xff])
+  throw new Error("der length")
+}
+
+function der(tag: number, content: Buffer): Buffer {
+  return Buffer.concat([Buffer.from([tag]), derLen(content.length), content])
+}
+
+function derInt(n: number): Buffer {
+  if (n === 0) return der(0x02, Buffer.from([0]))
+  const bytes: number[] = []
+  let v = n
+  while (v > 0) {
+    bytes.unshift(v & 0xff)
+    v >>= 8
+  }
+  if ((bytes[0] ?? 0) & 0x80) bytes.unshift(0)
+  return der(0x02, Buffer.from(bytes))
+}
+
+function ephemeralOriginatorCertWithoutGithubOidc(): string {
+  const { publicKey, privateKey } = generateKeyPairSync("rsa", { modulusLength: 2048 })
+  const spki = publicKey.export({ type: "spki", format: "der" }) as Buffer
+  const cn = der(
+    0x30,
+    Buffer.concat([der(0x06, Buffer.from([0x55, 0x04, 0x03])), der(0x0c, Buffer.from("test-only-not-fulcio", "utf8"))]),
+  )
+  const name = der(0x30, der(0x31, cn))
+  const validity = der(
+    0x30,
+    Buffer.concat([der(0x17, Buffer.from("250101000000Z")), der(0x17, Buffer.from("360101000000Z"))]),
+  )
+  const sha256WithRsa = der(
+    0x30,
+    Buffer.concat([der(0x06, Buffer.from([0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x0b])), der(0x05, Buffer.alloc(0))]),
+  )
+  const sanValue = der(0x30, der(0x81, Buffer.from(ORIGINATOR_SAN_EMAIL, "ascii")))
+  const sanExt = der(0x30, Buffer.concat([der(0x06, Buffer.from([0x55, 0x1d, 0x11])), der(0x04, sanValue)]))
+  const extensions = der(0xa3, der(0x30, sanExt))
+  const tbs = der(
+    0x30,
+    Buffer.concat([der(0xa0, derInt(2)), derInt(1), sha256WithRsa, name, validity, name, spki, extensions]),
+  )
+  const sig = cryptoSign("sha256", tbs, privateKey)
+  const cert = der(0x30, Buffer.concat([tbs, sha256WithRsa, der(0x03, Buffer.concat([Buffer.from([0x00]), sig]))]))
+  const wrapped = (cert.toString("base64").match(/.{1,64}/g) ?? [cert.toString("base64")]).join("\n")
+  return `-----BEGIN CERTIFICATE-----\n${wrapped}\n-----END CERTIFICATE-----\n`
+}
+
+function withPublicKeyPem(document: unknown, pem: string): Record<string, unknown> {
+  const cloned = cloneDocument(document)
+  const uuid = Object.keys(cloned)[0]!
+  const rec = cloned[uuid] as Record<string, unknown>
+  const canon = JSON.parse(Buffer.from(String(rec["body"]), "base64").toString("utf8")) as Record<string, unknown>
+  const spec = canon["spec"] as Record<string, unknown>
+  const signature = spec["signature"] as Record<string, unknown>
+  const publicKey = signature["publicKey"] as Record<string, unknown>
+  publicKey["content"] = Buffer.from(pem, "utf8").toString("base64")
+  rec["body"] = Buffer.from(JSON.stringify(canon)).toString("base64")
+  return cloned
+}
+
+describe("Rekor v1 provider policy freeze", () => {
+  test("exact committed bytes freeze via production verifier and external digest", () => {
+    const bytes = loadPolicyBytes()
+    expect(bytes.includes(0x0d)).toBe(false)
+    expect(bytes[0]).not.toBe(0xef)
+    expect(bytes.includes(0x00)).toBe(false)
+    expect(bytes.at(-1)).toBe(0x0a)
+    const parsed = JSON.parse(bytes.toString("utf8"))
+    expect(encodeJsonUtf8Lf(parsed).equals(bytes)).toBe(true)
+    expect(parsed).not.toHaveProperty("sha256")
+    const freeze = evaluateProviderPolicyFreeze(bytes)
+    expect(freeze.frozen).toBe(true)
+    expect(freeze.digest).toBe(providerPolicySha256(bytes))
+    expect(freeze.selected_provider_pass).toBe(true)
+    expect(freeze.dummy_gate_class).toBe("ELIGIBILITY_ONLY_NOT_OBJECT_A_NOT_PROVEN")
+    expect(freeze.sufficient_for_real_object_a).toBe(false)
+    expect(freeze.sufficient_for_proven_grounding).toBe(false)
+    expect(freeze.production_publishable).toBe(false)
+    expect(freeze.independently_grounded).toBe("UNPROVEN")
+    expect(INDEPENDENT_GROUNDING_STATUS).toBe("UNPROVEN")
+  })
+
+  test("policy mutation and digest drift fail closed", () => {
+    const bytes = loadPolicyBytes()
+    const mutated = Buffer.from(bytes.toString("utf8").replace(ORIGINATOR_SAN_EMAIL, "nobody@example.com"))
+    const freeze = evaluateProviderPolicyFreeze(mutated)
+    expect(freeze.frozen).toBe(false)
+    expect(freeze.digest).not.toBe(providerPolicySha256(bytes))
+    expect(freeze.reasons.length).toBeGreaterThan(0)
+  })
+
+  test("caller-fabricated freeze boolean is not a policy", () => {
+    const freeze = evaluateProviderPolicyFreeze(Buffer.from(JSON.stringify({ frozen: true, ok: true }), "utf8"))
+    expect(freeze.frozen).toBe(false)
+  })
+})
+
+describe("Rekor v1 production verifier (offline dummy fixtures)", () => {
+  test("dummy D0/D1/D2 verify with captured tree and strict global order", () => {
+    const policy_bytes = loadPolicyBytes()
+    const lookup = dummyLookup()
+    const ordered = verifyRekorV1OrderedEvents({
+      policy_bytes,
+      lookup,
+      observed_endpoint: REKOR_V1_ENDPOINT,
+      events: [
+        { artifact_bytes: readFileSync(resolve(DUMMY_GATE_DIR, "d0.json")), controller: "originator" },
+        { artifact_bytes: readFileSync(resolve(DUMMY_GATE_DIR, "d1.json")), controller: "authority" },
+        { artifact_bytes: readFileSync(resolve(DUMMY_GATE_DIR, "d2.json")), controller: "originator" },
+      ],
+    })
+    expect(ordered.ok).toBe(true)
+    expect(ordered.captured_tree_id).toBe("1193050959916656506")
+    expect(ordered.global_log_indexes).toEqual([2518155653, 2518462930, 2518661048])
+    expect(ordered.publications[0]?.artifact_sha256).toBe(DUMMY_GATE_D0_SHA256)
+    expect(ordered.publications[1]?.artifact_sha256).toBe(DUMMY_GATE_D1_SHA256)
+    expect(ordered.publications[2]?.artifact_sha256).toBe(DUMMY_GATE_D2_SHA256)
+    expect(ordered.publications[0]?.san_email).toBe(ORIGINATOR_SAN_EMAIL)
+    expect(ordered.publications[1]?.san_email).toBe(AUTHORITY_SAN_EMAIL)
+    expect(ordered.dummy_gate_eligibility_only).toBe(true)
+    expect(ordered.sufficient_for_proven_grounding).toBe(false)
+    expect(ordered.production_publishable).toBe(false)
+  })
+
+  test("negative controls reject before a publication can pass", () => {
+    const policy_bytes = loadPolicyBytes()
+    const d0 = readFileSync(resolve(DUMMY_GATE_DIR, "d0.json"))
+    const d1 = readFileSync(resolve(DUMMY_GATE_DIR, "d1.json"))
+    const d0Doc = loadDummyDocument("d0")
+    const d1Doc = loadDummyDocument("d1")
+    const d2Doc = loadDummyDocument("d2")
+
+    expect(
+      verifyRekorV1Publication({
+        policy_bytes,
+        artifact_bytes: d0,
+        controller: "authority",
+        lookup: dummyLookup(),
+        observed_endpoint: REKOR_V1_ENDPOINT,
+      }).reasons,
+    ).toContain("wrong_san")
+
+    expect(
+      verifyRekorV1Publication({
+        policy_bytes,
+        artifact_bytes: d0,
+        controller: "originator",
+        lookup: dummyLookup(),
+        observed_endpoint: "https://rekor.example.invalid",
+      }).reasons,
+    ).toContain("wrong_endpoint")
+
+    const wrongLog = cloneDocument(d0Doc)
+    const wrongLogUuid = Object.keys(wrongLog)[0]!
+    ;(wrongLog[wrongLogUuid] as Record<string, unknown>)["logID"] = "aa".repeat(32)
+    expect(
+      verifyRekorV1Publication({
+        policy_bytes,
+        artifact_bytes: d0,
+        controller: "originator",
+        lookup: dummyLookup([wrongLog]),
+        observed_endpoint: REKOR_V1_ENDPOINT,
+      }).reasons,
+    ).toContain("wrong_log_id")
+
+    const rotated = cloneDocument(d1Doc)
+    const rotatedUuid = Object.keys(rotated)[0]!
+    const rotatedRec = rotated[rotatedUuid] as Record<string, unknown>
+    const rotatedInc = (rotatedRec["verification"] as Record<string, unknown>)["inclusionProof"] as Record<string, unknown>
+    rotatedInc["checkpoint"] = String(rotatedInc["checkpoint"]).replace("1193050959916656506", "1")
+    const d0Pub = verifyRekorV1Publication({
+      policy_bytes,
+      artifact_bytes: d0,
+      controller: "originator",
+      lookup: dummyLookup(),
+      observed_endpoint: REKOR_V1_ENDPOINT,
+    })
+    expect(
+      verifyRekorV1Publication({
+        policy_bytes,
+        artifact_bytes: d1,
+        controller: "authority",
+        lookup: dummyLookup([rotated]),
+        observed_endpoint: REKOR_V1_ENDPOINT,
+        captured_tree_id: d0Pub.tree_id,
+      }).reasons,
+    ).toContain("tree_rotation")
+
+    expect(
+      verifyRekorV1Publication({
+        policy_bytes,
+        artifact_bytes: d0,
+        controller: "originator",
+        lookup: { searchByHash: () => [], getEntry: () => null },
+        observed_endpoint: REKOR_V1_ENDPOINT,
+      }).reasons,
+    ).toContain("zero_matches")
+
+    expect(
+      verifyRekorV1Publication({
+        policy_bytes,
+        artifact_bytes: d0,
+        controller: "originator",
+        lookup: { searchByHash: () => ["a", "b"], getEntry: () => d0Doc },
+        observed_endpoint: REKOR_V1_ENDPOINT,
+      }).reasons,
+    ).toContain("multiple_matches")
+
+    expect(
+      verifyRekorV1Publication({
+        policy_bytes,
+        artifact_bytes: d0,
+        controller: "originator",
+        lookup: { searchByHash: () => ["x"], getEntry: () => ({ ok: true, frozen: true }) },
+        observed_endpoint: REKOR_V1_ENDPOINT,
+      }).reasons,
+    ).toContain("malformed_structure")
+
+    const wrongKind = cloneDocument(d0Doc)
+    const kindUuid = Object.keys(wrongKind)[0]!
+    const kindRec = wrongKind[kindUuid] as Record<string, unknown>
+    const kindCanon = JSON.parse(Buffer.from(String(kindRec["body"]), "base64").toString("utf8")) as Record<string, unknown>
+    kindCanon["kind"] = "rfc3161"
+    kindRec["body"] = Buffer.from(JSON.stringify(kindCanon)).toString("base64")
+    expect(
+      verifyRekorV1Publication({
+        policy_bytes,
+        artifact_bytes: d0,
+        controller: "originator",
+        lookup: dummyLookup([wrongKind]),
+        observed_endpoint: REKOR_V1_ENDPOINT,
+      }).reasons,
+    ).toContain("wrong_kind_or_version")
+
+    const wrongVer = cloneDocument(d0Doc)
+    const verUuid = Object.keys(wrongVer)[0]!
+    const verRec = wrongVer[verUuid] as Record<string, unknown>
+    const verCanon = JSON.parse(Buffer.from(String(verRec["body"]), "base64").toString("utf8")) as Record<string, unknown>
+    verCanon["apiVersion"] = "0.0.2"
+    verRec["body"] = Buffer.from(JSON.stringify(verCanon)).toString("base64")
+    expect(
+      verifyRekorV1Publication({
+        policy_bytes,
+        artifact_bytes: d0,
+        controller: "originator",
+        lookup: dummyLookup([wrongVer]),
+        observed_endpoint: REKOR_V1_ENDPOINT,
+      }).reasons,
+    ).toContain("wrong_kind_or_version")
+
+    expect(
+      verifyRekorV1Publication({
+        policy_bytes,
+        artifact_bytes: Buffer.from("altered-dummy-artifact", "utf8"),
+        controller: "originator",
+        lookup: dummyLookup(),
+        observed_endpoint: REKOR_V1_ENDPOINT,
+      }).reasons,
+    ).toContain("zero_matches")
+
+    const brokenSig = cloneDocument(d0Doc)
+    const sigUuid = Object.keys(brokenSig)[0]!
+    const sigRec = brokenSig[sigUuid] as Record<string, unknown>
+    const sigCanon = JSON.parse(Buffer.from(String(sigRec["body"]), "base64").toString("utf8")) as Record<string, unknown>
+    const spec = sigCanon["spec"] as Record<string, unknown>
+    const signature = spec["signature"] as Record<string, unknown>
+    const sigBuf = Buffer.from(String(signature["content"]), "base64")
+    sigBuf[0] = sigBuf[0]! ^ 1
+    signature["content"] = sigBuf.toString("base64")
+    sigRec["body"] = Buffer.from(JSON.stringify(sigCanon)).toString("base64")
+    expect(
+      verifyRekorV1Publication({
+        policy_bytes,
+        artifact_bytes: d0,
+        controller: "originator",
+        lookup: dummyLookup([brokenSig]),
+        observed_endpoint: REKOR_V1_ENDPOINT,
+      }).reasons,
+    ).toContain("invalid_signature")
+
+    const brokenProof = cloneDocument(d0Doc)
+    const proofUuid = Object.keys(brokenProof)[0]!
+    const proofRec = brokenProof[proofUuid] as Record<string, unknown>
+    const proofInc = (proofRec["verification"] as Record<string, unknown>)["inclusionProof"] as Record<string, unknown>
+    const hashes = [...(proofInc["hashes"] as string[])]
+    const flipped = Buffer.from(hashes[0]!, "hex")
+    flipped[0] = flipped[0]! ^ 1
+    hashes[0] = flipped.toString("hex")
+    proofInc["hashes"] = hashes
+    expect(
+      verifyRekorV1Publication({
+        policy_bytes,
+        artifact_bytes: d0,
+        controller: "originator",
+        lookup: dummyLookup([brokenProof]),
+        observed_endpoint: REKOR_V1_ENDPOINT,
+      }).reasons,
+    ).toContain("invalid_inclusion_proof")
+
+    const brokenCkpt = cloneDocument(d0Doc)
+    const ckptUuid = Object.keys(brokenCkpt)[0]!
+    const ckptRec = brokenCkpt[ckptUuid] as Record<string, unknown>
+    const ckptInc = (ckptRec["verification"] as Record<string, unknown>)["inclusionProof"] as Record<string, unknown>
+    const lines = String(ckptInc["checkpoint"]).split("\n")
+    lines[2] = Buffer.alloc(32, 7).toString("base64")
+    ckptInc["checkpoint"] = lines.join("\n")
+    expect(
+      verifyRekorV1Publication({
+        policy_bytes,
+        artifact_bytes: d0,
+        controller: "originator",
+        lookup: dummyLookup([brokenCkpt]),
+        observed_endpoint: REKOR_V1_ENDPOINT,
+      }).reasons,
+    ).toContain("invalid_checkpoint")
+
+    const equalDoc = cloneDocument(d1Doc)
+    const equalUuid = Object.keys(equalDoc)[0]!
+    ;(equalDoc[equalUuid] as Record<string, unknown>)["logIndex"] = 2518155653
+    expect(
+      verifyRekorV1OrderedEvents({
+        policy_bytes,
+        lookup: dummyLookup([d0Doc, equalDoc, d2Doc]),
+        observed_endpoint: REKOR_V1_ENDPOINT,
+        events: [
+          { artifact_bytes: d0, controller: "originator" },
+          { artifact_bytes: d1, controller: "authority" },
+        ],
+      }).reasons,
+    ).toContain("equal_log_index")
+
+    const reversedDoc = cloneDocument(d1Doc)
+    const reversedUuid = Object.keys(reversedDoc)[0]!
+    ;(reversedDoc[reversedUuid] as Record<string, unknown>)["logIndex"] = 1
+    expect(
+      verifyRekorV1OrderedEvents({
+        policy_bytes,
+        lookup: dummyLookup([d0Doc, reversedDoc, d2Doc]),
+        observed_endpoint: REKOR_V1_ENDPOINT,
+        events: [
+          { artifact_bytes: d0, controller: "originator" },
+          { artifact_bytes: d1, controller: "authority" },
+        ],
+      }).reasons,
+    ).toContain("reversed_log_index")
+  })
+
+  test("digest_mismatch fails closed when lookup uniqueness is satisfied against a hashedrekord whose hash.value is not the provided artifact digest", () => {
+    const policy_bytes = loadPolicyBytes()
+    const d0Doc = loadDummyDocument("d0")
+    const uuid = Object.keys(d0Doc as Record<string, unknown>)[0]!
+    const artifact_bytes = Buffer.from("altered-dummy-artifact", "utf8")
+    const artifactDigest = createHash("sha256").update(artifact_bytes).digest("hex")
+    expect(artifactDigest).not.toBe(DUMMY_GATE_D0_SHA256)
+    const lookup = {
+      searchByHash: (sha256Hex: string) => (sha256Hex === artifactDigest ? [uuid] : []),
+      getEntry: (id: unknown) => (id === uuid ? d0Doc : null),
+    }
+    let result: ReturnType<typeof verifyRekorV1Publication> | undefined
+    expect(() => {
+      result = verifyRekorV1Publication({
+        policy_bytes,
+        artifact_bytes,
+        controller: "originator",
+        lookup,
+        observed_endpoint: REKOR_V1_ENDPOINT,
+      })
+    }).not.toThrow()
+    expect(result!.ok).toBe(false)
+    expect(result!.reasons).toContain("digest_mismatch")
+    expect(result!.reasons).not.toContain("zero_matches")
+    expect(result!.reasons).not.toContain("wrong_kind_or_version")
+    expect(result!.artifact_sha256).toBe(artifactDigest)
+  })
+
+  test("wrong_oidc_issuer fails closed when SAN matches and the certificate does not contain the GitHub OAuth issuer", () => {
+    const policy_bytes = loadPolicyBytes()
+    const d0 = readFileSync(resolve(DUMMY_GATE_DIR, "d0.json"))
+    const pem = ephemeralOriginatorCertWithoutGithubOidc()
+    expect(pem).not.toContain(OIDC_ISSUER_GITHUB_OAUTH)
+    const cloned = withPublicKeyPem(loadDummyDocument("d0"), pem)
+    let result: ReturnType<typeof verifyRekorV1Publication> | undefined
+    expect(() => {
+      result = verifyRekorV1Publication({
+        policy_bytes,
+        artifact_bytes: d0,
+        controller: "originator",
+        lookup: dummyLookup([cloned]),
+        observed_endpoint: REKOR_V1_ENDPOINT,
+      })
+    }).not.toThrow()
+    expect(result!.ok).toBe(false)
+    expect(result!.reasons).toContain("wrong_oidc_issuer")
+    expect(result!.reasons).not.toContain("digest_mismatch")
+    expect(result!.reasons).not.toContain("wrong_san")
+    expect(result!.reasons).not.toContain("invalid_signature")
+    expect(result!.san_email).toBe(ORIGINATOR_SAN_EMAIL)
+  })
+
+  test("synthetic evidence cannot satisfy production evaluation", () => {
+    const pkg = scaffoldPackage()
+    const digest = digestBlindProblemBytes(encodeJsonUtf8Lf(pkg))
+    const authority = matchingAuthority(digest)
+    const production = evaluateProductionIndependentGrounding({
+      pkg,
+      intended: intendedFrom(pkg),
+      problem_package_digest: digest,
+      observed_attribution: OBSERVED,
+      authority,
+      authority_bytes_sha256: digestAuthorityOracleBytes(encodeJsonUtf8Lf(authority)),
+      generic_envelope: null,
+    })
+    expect(production.independent_grounding).toBe("UNPROVEN")
+    expect(production.oracle_input_state).toBe("INVALID_PROVENANCE")
+    expect(asProductionGroundingEvidence(production)).toBeNull()
+  })
+})
+
+describe("oracle commitment helpers (no real oracle or nonce)", () => {
+  const sample = {
+    instance_id: "test-only.not-a-real-instance",
+    problem_package_sha256: "ab".repeat(32),
+    nonce: Buffer.alloc(32, 3),
+    oracle_bytes: Buffer.from('{"schema":"test-only.not-a-real-oracle","v":0}', "utf8"),
+  }
+
+  test("compute and verify round-trip", () => {
+    const computed = computeOracleCommitment(sample)
+    expect(computed.ok).toBe(true)
+    if (!computed.ok) return
+    expect(verifyOracleCommitment({ ...sample, commitment: computed.commitment }).ok).toBe(true)
+  })
+
+  test("negatives reject byte, nonce, oracle, and domain confusion", () => {
+    const computed = computeOracleCommitment(sample)
+    expect(computed.ok).toBe(true)
+    if (!computed.ok) return
+    const commitment = computed.commitment
+    expect(computeOracleCommitment({ ...sample, instance_id: "BAD ID" }).ok).toBe(false)
+    expect(computeOracleCommitment({ ...sample, problem_package_sha256: "AB".repeat(32) }).ok).toBe(false)
+    expect(computeOracleCommitment({ ...sample, nonce: Buffer.alloc(31, 3) }).ok).toBe(false)
+    expect(computeOracleCommitment({ ...sample, oracle_bytes: Buffer.alloc(0) }).ok).toBe(false)
+    expect(verifyOracleCommitment({ ...sample, commitment: "00".repeat(32) }).ok).toBe(false)
+    const mutatedOracle = Buffer.from(sample.oracle_bytes)
+    mutatedOracle[mutatedOracle.length - 1] ^= 1
+    expect(verifyOracleCommitment({ ...sample, oracle_bytes: mutatedOracle, commitment }).ok).toBe(false)
+    const mutatedNonce = Buffer.from(sample.nonce)
+    mutatedNonce[0] ^= 1
+    expect(verifyOracleCommitment({ ...sample, nonce: mutatedNonce, commitment }).ok).toBe(false)
+    expect(verifyOracleCommitment({ ...sample, instance_id: "test-only.other", commitment }).ok).toBe(false)
   })
 })

@@ -2,11 +2,12 @@
 
 Methodology / protocol artifact after PR #201. This artifact does **not**
 create Object A, blind cases, an internal oracle, a real commitment nonce,
-or production grounding evidence. It does **not** select a production
-provider. It specifies the conditions under which a later lane MAY create
-those objects.
+or production grounding evidence. It **selects Rekor v1** as the frozen
+provider for a later run. Dummy-gate PASS is eligibility only. This
+artifact does **not** mint PROVEN grounding and does **not** create
+Object A.
 
-**Status:** `DRAFT_FOR_AUTHORITY_REVIEW`
+**Status:** `PROVIDER_POLICY_FROZEN_PRE_OBJECT_A`
 **Originator:** Pavlo Tvardovskyi
 **Authority for this proposed run:** Merlini
 **Reference scaffold:** PR #201, TSEI independent-authority scaffold v0
@@ -24,9 +25,9 @@ UNPROVEN | DISAGREED | PROVEN
 `SPECIFICATION_DEFECT` is not a status.
 
 ```
-provider_selected = false
-DECLARED_PROVIDER_SELECTION = null
-DECLARED_PRODUCTION_PROVIDER = null
+provider_selected = true
+DECLARED_PROVIDER_SELECTION = rekor-v1
+DECLARED_PRODUCTION_PROVIDER = rekor-v1
 ```
 
 Generic provenance cannot mint `VALID_PROVENANCE`. Synthetic provenance
@@ -184,7 +185,9 @@ The provider-specific verifier must establish the declared provenance
 policy from provider-observed data, not from self-reported fields in
 Object B.
 
-This lane has **not** selected a provider.
+This lane selects Rekor v1 (`https://rekor.sigstore.dev`, hashedrekord
+`0.0.1`) as the frozen provider. Dummy-gate PASS is eligibility only and
+does not create Object A or mint PROVEN.
 
 ## 5. Four-object model
 
@@ -602,9 +605,7 @@ influenced by knowledge of the first instance's answers.
 
 ## 14. Provider eligibility
 
-The provider policy is not yet selected.
-
-It must be selected and frozen before A exists.
+The provider policy is selected and frozen as Rekor v1 before A exists.
 
 The provider must support all load-bearing properties below.
 
@@ -650,8 +651,8 @@ Before A exists, the final provider policy must declare exact expected
 identities.
 
 ```
-originator_identity_selector = <provider-specific selector>
-authority_identity_selector  = <provider-specific selector>
+originator_identity_selector = SAN email shtomko@gmail.com AND OIDC issuer https://github.com/login/oauth
+authority_identity_selector  = SAN email 114340671+TMerlini@users.noreply.github.com AND OIDC issuer https://github.com/login/oauth
 ```
 
 The verifier must bind the observed publication/signing identity to those
@@ -710,96 +711,79 @@ Negative controls (prove the check can fail before trusting it to pass):
 6. wrong provider / log identity → reject
 7. cross-shard ordering without an independently verified bridge → reject
 
-This lane defines the gate. It does **not** perform a real external dummy
-publication. `evaluateProviderDryRun` is an **in-memory model** of dummy
-event shape. Caller-supplied strings are **not** verified proofs.
-Caller-supplied `independently_verified_cross_log_bridge = true` does
-**not** establish a bridge. `DECLARED_PROVIDER_SELECTION = null` means
-no model result is a selected-provider pass.
+This lane records an external dummy gate. `evaluateProviderDryRun` remains
+an **in-memory model** of dummy event shape. Caller-supplied strings are
+**not** verified proofs. Caller-supplied
+`independently_verified_cross_log_bridge = true` does **not** establish a
+bridge. A model result is never a selected-provider pass.
 
 ```
-provider_policy_freezable = false
+evaluateProviderDryRun.provider_policy_freezable = false
 MODEL_DRY_RUN_TESTS_PASS != REAL_EXTERNAL_PROVIDER_DRY_RUN_PASS
 sufficient_for_real_object_a = false
 sufficient_for_proven_grounding = false
 ```
 
-A later, separately implemented real provider verifier is required
-before any provider policy may be frozen.
+The production Rekor v1 verifier plus exact
+`provider-policy.rekor-v1.json` bytes freeze provider policy. Dummy PASS
+is eligibility only: it does not create Object A and does not mint PROVEN.
 
-## 17. Rekor v2 — candidate only; conservative current policy
+Object A codec remains sorted-key JSON UTF-8 with exactly one trailing LF
+(`encodeJsonUtf8Lf`). Dummy-gate JCS used compact JSON with **no** trailing
+newline. Those codecs must not be mixed.
 
-Sigstore/Rekor is a candidate, not preselected.
+## 17. Rekor v1 — selected frozen provider
 
 ```
-provider_selected = false
-DECLARED_PROVIDER_SELECTION = null
-DECLARED_PRODUCTION_PROVIDER = null
+provider_selected = true
+DECLARED_PROVIDER_SELECTION = rekor-v1
+DECLARED_PRODUCTION_PROVIDER = rekor-v1
 CANDIDATE_NOT_SELECTED = rekor-v2-candidate-not-selected
 ```
 
-If selected later, the final provider policy must pin exact current
-mechanics rather than relying on generic "Rekor timestamp" wording.
+Frozen policy file: `provider-policy.rekor-v1.json`.
+SHA-256 of those exact bytes is computed **outside** the file.
 
-Current official constraints (Sigstore primary sources, not Rekor v1):
+Selected mechanics:
 
-- Use **top-level** `TransparencyLogEntry.log_index`.
-- Ignore `inclusion_proof.log_index`.
-- `integrated_time` is always `0` and MUST be ignored.
-- A **verified checkpoint** supplies trusted root-hash / tree-size material.
-- Write path is hashedrekord `0.0.2` only.
-- No SignedEntryTimestamp assumption.
-- Current service / shard selection comes from **SigningConfig / TUF**
-  material, not a hardcoded URL.
-- Rekor v2 shards are **independent ordering domains**. Cross-shard
-  ordering requires an independently verified bridge.
-- The verification package MUST retain inclusion proof and checkpoint
-  because v1-style search / get-by-index behavior is not available.
+- Endpoint `https://rekor.sigstore.dev`.
+- Rekor v1 log ID `c0d23d6ad406973f9559f3ba2d1ca01f84147d8ffc5b8445c224f98b9591801d`.
+- Write path hashedrekord `0.0.1` only.
+- Use **top-level** `logIndex` for monotonic order.
+- Ignore `inclusionProof.logIndex` when deciding global order.
+- `integratedTime` is **not** trusted wall-clock time.
+- Capture `tree_id` at E0; require E1 and E2 on the **same** tree. Do not
+  hard-pin the dummy-run tree for production.
+- Search by artifact SHA-256; zero or multiple matches fail closed.
+- Verify signature, Fulcio SAN/OIDC issuer, checkpoint, and RFC6962
+  inclusion proof.
+- SigningConfig / TUF: use `signing_config.v0.2.json`; forbid
+  `signing_config_rekor_v2.v0.2.json`.
+
+Dummy run `tsei-ia-provider-dry-run-v0-20260819` is
+`REAL_EXTERNAL_PROVIDER_DRY_RUN_PASS` with class
+`ELIGIBILITY_ONLY_NOT_OBJECT_A_NOT_PROVEN`.
 
 ```
 CO_SIGNED_CHECKPOINT_TIME = NOT_YET_QUALIFIED
 ```
 
-Official Sigstore documentation discusses witnessed / co-signed
-checkpoints as a future witnessing capability (CLIENTS.md section
-"Future: Witnessing"; GA FAQ "will be implemented soon"). This lane has
-**not** established that any production Rekor v2 path currently
-guarantees a co-signed checkpoint timestamp.
-
-Therefore:
-
 ```
-RFC3161 remains the candidate trusted-time path
+RFC3161 remains required only for a wall-clock claim
 ```
 
-unless a **REAL** provider dummy run proves another provider-specific
-witness path. This lane does **not** claim co-signed checkpoint time is
-currently qualified.
+Event order does not require RFC3161. This lane does **not** claim
+co-signed checkpoint time is currently qualified.
 
 The experiment's primary ordering requirement is event order, not
 human-readable wall-clock time.
 
-A future Sigstore provider policy would need to specify at minimum:
-
-```
-exact Rekor log/shard identity
-trusted root
-expected signer identity selector
-log-index ordering rule
-checkpoint / inclusion-proof verification
-RFC3161 timestamp authority if wall-clock time is claimed
-exact B digest/signature binding
-```
-
 Sources:
 
-- https://github.com/sigstore/rekor-tiles/blob/main/CLIENTS.md
-- https://github.com/sigstore/architecture-docs/blob/main/rekor-v2-spec.md
-- https://github.com/sigstore/rekor-tiles/blob/main/README.md
-- https://blog.sigstore.dev/rekor-v2-ga/
-- https://docs.sigstore.dev/about/security/
+- https://docs.sigstore.dev/logging/overview/
 - https://github.com/sigstore/rekor
 - https://docs.sigstore.dev/quickstart/quickstart-cosign/
+- https://docs.sigstore.dev/about/security/
 
 ## 18. Observational metadata on Object B
 
@@ -1182,20 +1166,22 @@ and the provider policy are resolved.
 ## 29. This lane does not create Object A
 
 No Object A, no blind-case corpus, no real internal oracle, no real
-32-byte nonce, and no real E0 commitment exist in this lane. No
-production provider is selected. No production provenance and no
-production PROVEN are created.
+32-byte nonce, and no real E0 commitment exist in this lane. Rekor v1 is
+selected and the provider policy is frozen. Dummy-gate PASS is eligibility
+only. No production provenance and no production PROVEN are created.
 
 # Current protocol state
 
 ```
-PROTOCOL = DRAFT_FOR_AUTHORITY_REVIEW
+PROTOCOL = PROVIDER_POLICY_FROZEN_PRE_OBJECT_A
 CASES_CREATED = false
 ANSWERS_DISCLOSED = false
-PROVIDER_SELECTED = false
-PROVIDER_POLICY_FROZEN = false
+PROVIDER_SELECTED = true
+PROVIDER_POLICY_FROZEN = true
+DUMMY_GATE = REAL_EXTERNAL_PROVIDER_DRY_RUN_PASS
+DUMMY_GATE_CLASS = ELIGIBILITY_ONLY_NOT_OBJECT_A_NOT_PROVEN
 AUTHORITY_RELATIONSHIP = EXTERNAL_PRIOR_PROTOCOL_EXPOSURE
-NEXT_GATE = AUTHORITY_PROTOCOL_REVIEW + PROVIDER_SELECTION
+NEXT_GATE = OBJECT_A_NOT_CREATED
 ```
 
 **End of protocol draft.**
