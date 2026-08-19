@@ -195,16 +195,24 @@ transplantation.
   merely declared to exist), and the assembled `LadderReport`.
 - `independent-authority-model.ts` / `independent-authority.ts` -- Object A/B/C/D
   scaffold contracts, leak/faithfulness/universe checks, and the provenance
-  classifier. Production `VALID_PROVENANCE` is unreachable: no provider-
-  specific verifier or trust root is declared.
+  classifier. Production evaluation still cannot mint VALID_PROVENANCE:
+  a selected Rekor v1 verifier does not feed the production evaluator.
+- `rekor-v1-verifier.ts` -- production Rekor v1 verifier. It authenticates the
+  Rekor SET before trusting top-level entry fields, verifies the signed
+  checkpoint and RFC 6962 inclusion, validates the leaf certificate to pinned
+  Sigstore TUF Fulcio trust material, and reads the OIDC issuer only from the
+  exact Fulcio extension OIDs. Offline tests inject immutable public dummy-gate
+  fixtures. Caller booleans are not proofs.
+- `provider-policy.rekor-v1.json` -- frozen Rekor v1 policy bytes; SHA-256
+  is computed outside the file.
 - `independent-authority-synthetic.ts` -- **test-only** injection and the
   named synthetic evaluator for the `VALID_PROVENANCE` branch. Not a
   production provider. Outcomes are not production-publishable. Caller-
   shaped `{ injection_kind: "synthetic_test_only" }` objects are not issued.
 - `INDEPENDENT_AUTHORITY_BLIND_GROUNDING_PROTOCOL_V0.md` -- protocol
-  hardening: observational metadata on B, claim boundary, mandatory
-  provider dry-run gate, Rekor v2 as **candidate only**. Does not create
-  Object A or select a production provider.
+  hardening: observational metadata on B, claim boundary, dummy-gate
+  eligibility, selected Rekor v1 / hashedrekord `0.0.1`. Does not create
+  Object A and does not mint PROVEN.
 - `tests/receiptos/tsei-invariant-discrimination-independent-authority-v0.test.ts`
   -- scaffold negatives, waiting state, closed-universe measurement, and
   synthetic PROVEN/DISAGREED branches.
@@ -241,17 +249,16 @@ reason `PROBLEM_PACKAGE_NOT_FAITHFUL` -- never `DISAGREED`, `PROVEN`,
 
 Generic provenance-envelope fields never grant `VALID_PROVENANCE`.
 The production evaluator does not accept provider outcomes or caller-shaped
-verified observations. Synthetic `VALID_PROVENANCE` is reachable only
+verified observations even after Rekor v1 is selected. Synthetic
+`VALID_PROVENANCE` is reachable only
 through the explicitly named test-only evaluator after
 `injectSyntheticVerifiedProvenance` issues the outcome. On that valid
 path, exact oracle byte binding is mandatory: a null or mismatched
 `oracle_bytes_sha256` is `INVALID_PROVENANCE`.
 
-Production validity requires a later, explicitly declared external
-provider verifier against a declared trust root. Until then, production
-operation is `ABSENT` (reason `AWAITING_INDEPENDENT_AUTHORITY`) or
-`INVALID_PROVENANCE` (reason `UNPROVEN_INDEPENDENCE`). Non-arrival is
-not disagreement.
+Production `VALID_PROVENANCE` remains unreachable on
+`evaluateProductionIndependentGrounding` until a later real E0/E1/E2
+instance is wired. Non-arrival is not disagreement.
 
 Object B may carry observational metadata (definition-ambiguity
 observation, second-party answer-free observation, undeclared-effect
@@ -269,7 +276,8 @@ E0/E1/E2, hiding commitment, no retroactive blindness, and
 `CO_SIGNED_CHECKPOINT_TIME = NOT_YET_QUALIFIED`.
 A real provider dry run is required before any real Object A;
 `evaluateProviderDryRun` is an in-memory model and cannot set
-`provider_policy_freezable = true`. Rekor v2 is a candidate only
-and is not selected. Current state remains
+`provider_policy_freezable = true`. Rekor v1 is selected; Rekor v2 remains
+`rekor-v2-candidate-not-selected`. Dummy-gate PASS is eligibility only.
+Current state remains
 `CASES_CREATED = false`, `ANSWERS_DISCLOSED = false`,
-`PROVIDER_SELECTED = false`, `PROVIDER_POLICY_FROZEN = false`.
+`PROVIDER_SELECTED = true`, `PROVIDER_POLICY_FROZEN = true`.
