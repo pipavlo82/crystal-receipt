@@ -231,6 +231,13 @@ transplantation.
 - `tests/receiptos/tsei-originator-oracle-production-v0.test.ts` --
   production originator-oracle grammar, golden synthetic bytes, and
   fail-closed negatives. No real worksheet answers.
+- `fixtures/rekor-v1-real-run-public-evidence/` -- sanitized public
+  coordinates, public E0-record bytes, and frozen public Rekor entries
+  for the real E0/E1/E2 run. Does **not** contain Object A, Object B,
+  oracle/reveal, or nonce bytes.
+- `tests/receiptos/tsei-real-run-public-evidence-v0.test.ts` -- schema
+  exactness, 12/12 comparison, order/identity/commitment bindings,
+  offline E0 Rekor verification, and sanitization negatives.
 
 ## Independent authority scaffold (v0)
 
@@ -272,8 +279,24 @@ path, exact oracle byte binding is mandatory: a null or mismatched
 `oracle_bytes_sha256` is `INVALID_PROVENANCE`.
 
 Production `VALID_PROVENANCE` remains unreachable on
-`evaluateProductionIndependentGrounding` until a later real E0/E1/E2
-instance is wired. Non-arrival is not disagreement.
+`evaluateProductionIndependentGrounding`: that evaluator still does not
+ingest Rekor observations. A real E0/E1/E2 instance now has **public**
+Rekor v1 coordinates and a public E0-record in
+`fixtures/rekor-v1-real-run-public-evidence/`. Derived offline status from
+those artifacts and the production verifier/evaluator is:
+
+- `evaluateProductionIndependentGrounding.independent_grounding = UNPROVEN`
+  (`UNPROVEN_INDEPENDENCE` / `INVALID_PROVENANCE`)
+- `verifyRekorV1OrderedEvents.sufficient_for_proven_grounding = false`
+- mechanical exact-set relation on the frozen public comparison table:
+  `AGREES` (12/12)
+- public evidence status:
+  `REKOR_V1_E0_LT_E1_LT_E2_VERIFIED_EXACT_SET_AGREES`
+
+This is **not** a claim that the run is fully publicly reproducible.
+Object A, Object B, oracle/reveal bytes, and nonce bytes remain unpublished.
+Chat corroboration is not a cryptographic provenance source and does not
+mint status. Non-arrival is not disagreement.
 
 Object B may carry observational metadata (definition-ambiguity
 observation, second-party answer-free observation, undeclared-effect
@@ -302,6 +325,9 @@ A real provider dry run is required before any real Object A;
 `evaluateProviderDryRun` is an in-memory model and cannot set
 `provider_policy_freezable = true`. Rekor v1 is selected; Rekor v2 remains
 `rekor-v2-candidate-not-selected`. Dummy-gate PASS is eligibility only.
-Current state remains
-`CASES_CREATED = false`, `ANSWERS_DISCLOSED = false`,
-`PROVIDER_SELECTED = true`, `PROVIDER_POLICY_FROZEN = true`.
+The #200 published instance remains `independent_grounding = UNPROVEN`.
+For the separate real-run public-evidence package, current derived state is
+`CASES_CREATED = true` (public comparison table only),
+`ANSWERS_DISCLOSED = comparison_sets_only`,
+`PROVIDER_SELECTED = true`, `PROVIDER_POLICY_FROZEN = true`,
+and production evaluator `independent_grounding` remains `UNPROVEN`.
