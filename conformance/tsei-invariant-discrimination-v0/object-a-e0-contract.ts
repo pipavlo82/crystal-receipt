@@ -42,8 +42,9 @@ export const E1_AUTHORITY = "Tiago" as const
  * on origin/main. Pinned so this module never reads the filesystem.
  */
 export const FROZEN_PROTOCOL_SHA256 =
-  "d0850ea0b9609fc99bb1ae97bbb8e6daf4455438649a0924f8de9d58736cfd8b" as const
+  "8f2cf22d77b5476c0619a186d4a889c428fc5565f3d838f88d57b3c6fc806301" as const
 
+/** Frozen originator-oracle codec name. Production object shape: originator-oracle.ts. */
 export const INTERNAL_ORACLE_CODEC = "tsei-invariant-discrimination-v0.internal-oracle.v0" as const
 
 export const E0_RECORD_KEYS = [
@@ -544,8 +545,11 @@ export function acceptObjectAFromBytes(input: unknown): ObjectAAcceptanceResult 
 }
 
 /**
- * Codec name/version freeze only. Does not include any oracle values.
- * Callers supply contents; this only applies encodeJsonUtf8Lf.
+ * Codec name/version freeze only. Does not include any oracle values and
+ * does not validate the production originator-oracle object shape.
+ * Production fields, filename, and HUMAN_PRIMARY materialize live in
+ * originator-oracle.ts. Callers supply contents; this only applies
+ * encodeJsonUtf8Lf after a fail-closed graph inspect.
  */
 export function encodeInternalOracleUtf8Lf(
   value: unknown,

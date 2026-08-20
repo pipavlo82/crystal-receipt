@@ -18,7 +18,7 @@ modules, or any frozen comparator/coverage vector file. It introduces no new
 TSEI runtime verdict and does not reinterpret `stable` / `history_sensitive` /
 `unresolved` / `out_of_domain` / `violation`. It is conformance methodology
 only, scoped entirely to `conformance/tsei-invariant-discrimination-v0/**`
-plus one focused test file under `tests/receiptos/**`.
+plus focused test files under `tests/receiptos/**`.
 
 ## Why code, not a JSON vector file
 
@@ -211,11 +211,26 @@ transplantation.
   shaped `{ injection_kind: "synthetic_test_only" }` objects are not issued.
 - `INDEPENDENT_AUTHORITY_BLIND_GROUNDING_PROTOCOL_V0.md` -- protocol
   hardening: observational metadata on B, claim boundary, dummy-gate
-  eligibility, selected Rekor v1 / hashedrekord `0.0.1`. Does not create
-  Object A and does not mint PROVEN.
+  eligibility, selected Rekor v1 / hashedrekord `0.0.1`, and the frozen
+  production originator-oracle object shape (§8.2). Does not create
+  Object A and does not mint PROVEN or E0.
+- `object-a-e0-contract.ts` -- Object A acceptance and public E0 record
+  contract. Freezes `INTERNAL_ORACLE_CODEC`; does not define production
+  oracle field contents.
+- `originator-oracle.ts` -- production Originator internal-oracle private
+  artifact: schema `tsei-invariant-discrimination-v0.internal-oracle.v0`,
+  filename `originator-oracle.private.json`, lifecycle
+  `PRIVATE_PRE_E0_NOT_E0`. Mechanical serialize of HUMAN_PRIMARY answers
+  only. Not Object A, not Object B, not E0, not
+  `internal-oracle-reveal.json`.
 - `tests/receiptos/tsei-invariant-discrimination-independent-authority-v0.test.ts`
   -- scaffold negatives, waiting state, closed-universe measurement, and
   synthetic PROVEN/DISAGREED branches.
+- `tests/receiptos/tsei-object-a-e0-contract-v0.test.ts` -- Object A / E0
+  scaffold contract.
+- `tests/receiptos/tsei-originator-oracle-production-v0.test.ts` --
+  production originator-oracle grammar, golden synthetic bytes, and
+  fail-closed negatives. No real worksheet answers.
 
 ## Independent authority scaffold (v0)
 
@@ -274,6 +289,15 @@ for freeze-before-A, Object A/B/C/D obligations, P1–P10, abort
 conditions, PHASE 0–12, publication package, Authority checklist,
 E0/E1/E2, hiding commitment, no retroactive blindness, and
 `CO_SIGNED_CHECKPOINT_TIME = NOT_YET_QUALIFIED`.
+The production Originator internal-oracle private artifact is specified
+in `originator-oracle.ts` and protocol §8.2. Semantic answers remain
+`HUMAN_PRIMARY`; code may only validate and serialize. The pre-E0 file
+`originator-oracle.private.json` is `PRIVATE_PRE_E0_NOT_E0`: it is not
+E0, not Object A, not Object B, and not the post-E2
+`internal-oracle-reveal.json`. A later E0 lane may hash those exact
+bytes with a nonce via the existing commitment; this lane still does
+not mint E0.
+
 A real provider dry run is required before any real Object A;
 `evaluateProviderDryRun` is an in-memory model and cannot set
 `provider_policy_freezable = true`. Rekor v1 is selected; Rekor v2 remains
