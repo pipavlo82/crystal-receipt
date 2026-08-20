@@ -30,6 +30,7 @@ import {
   ALLOWED_INVARIANT_IDS,
   acceptRealRunPublicEvidence,
   CASE_IDS,
+  FROZEN_PUBLIC_EVIDENCE_SHA256,
   PRIVATE_ARTIFACT_REPORTED_RELATION,
   REAL_RUN_PUBLIC_EVIDENCE_SCHEMA,
   REAL_RUN_PUBLIC_EVIDENCE_STATUS,
@@ -130,6 +131,8 @@ describe("TSEI real-run public evidence v0", () => {
     expect(accepted.ok).toBe(true)
     if (!accepted.ok) return
     expect(accepted.digest).toBe(sha256ExactBytes(bytes))
+    expect(accepted.digest).toBe(FROZEN_PUBLIC_EVIDENCE_SHA256)
+    expect(FROZEN_PUBLIC_EVIDENCE_SHA256).toBe(sha256ExactBytes(bytes))
     const derived = asRecord(parsed.derived_status)
     const evaluator = asRecord(derived.evaluateProductionIndependentGrounding)
     expect(evaluator.independent_grounding).toBe("UNPROVEN")
@@ -361,5 +364,59 @@ describe("TSEI real-run public evidence v0", () => {
     const sufficient = cloneEvidence()
     asRecord(asRecord(sufficient.derived_status).verifyRekorV1OrderedEvents).sufficient_for_proven_grounding = true
     expect(acceptRealRunPublicEvidence(sufficient).ok).toBe(false)
+  })
+
+  test("negative: full-receipt digest rejects unknown keys and nested coordinate mutations", () => {
+    const fixtureBytes = readFileSync(resolve(FIXTURE_DIR, "public-evidence.json"))
+    expect(FROZEN_PUBLIC_EVIDENCE_SHA256).toBe(sha256ExactBytes(fixtureBytes))
+    expect(sha256ExactBytes(encodeJsonUtf8Lf(loadJson("public-evidence.json")))).toBe(FROZEN_PUBLIC_EVIDENCE_SHA256)
+
+    const expectDigestClosed = (mutate: (evidence: Record<string, unknown>) => void, extraReason?: string) => {
+      const evidence = cloneEvidence()
+      mutate(evidence)
+      const accepted = acceptRealRunPublicEvidence(evidence)
+      expect(() => acceptRealRunPublicEvidence(evidence)).not.toThrow()
+      expect(accepted.ok).toBe(false)
+      if (accepted.ok) return
+      expect(accepted.reasons.includes("receipt_digest_mismatch")).toBe(true)
+      if (extraReason) expect(accepted.reasons.includes(extraReason)).toBe(true)
+    }
+
+    expectDigestClosed((evidence) => {
+      evidence.unknown_top_level = "not-in-receipt"
+    })
+    expectDigestClosed((evidence) => {
+      asRecord(asRecord(evidence.events).E1).unknown_nested = "not-in-receipt"
+    })
+    expectDigestClosed((evidence) => {
+      asRecord(asRecord(evidence.events).E1).sha256 = "0000000000000000000000000000000000000000000000000000000000000000"
+    })
+    expectDigestClosed((evidence) => {
+      asRecord(asRecord(evidence.events).E1).global_log_index = 0
+    })
+    expectDigestClosed((evidence) => {
+      asRecord(asRecord(evidence.events).E2).uuid = "00000000000000000000000000000000000000000000000000000000000000000000000000000000"
+    })
+    expectDigestClosed((evidence) => {
+      asRecord(evidence.order).recorded_global_indexes = [2533202771, 2535402205, 2534488743]
+    })
+    expectDigestClosed((evidence) => {
+      asRecord(evidence.artifacts).oracle_commitment = "0000000000000000000000000000000000000000000000000000000000000000"
+    })
+    expectDigestClosed((evidence) => {
+      asRecord(evidence.artifacts).object_a_sha256 = "0000000000000000000000000000000000000000000000000000000000000000"
+    })
+    expectDigestClosed((evidence) => {
+      evidence.package_claims = [...(evidence.package_claims as string[]), "extra_claim"]
+    })
+    expectDigestClosed((evidence) => {
+      evidence.package_does_not_claim = ["exact_set_equality_between_two_public_operands"]
+    })
+    expectDigestClosed((evidence) => {
+      asRecord(asRecord(evidence.definition_ambiguity_observations_non_gating).c07).readings_considered = 3
+    })
+    expectDigestClosed((evidence) => {
+      evidence.unused_location = "PROVEN"
+    }, "overclaim_proven_literal")
   })
 })

@@ -232,9 +232,11 @@ transplantation.
   production originator-oracle grammar, golden synthetic bytes, and
   fail-closed negatives. No real worksheet answers.
 - `rekor-v1-real-run-public-evidence.ts` -- fail-closed acceptor for the
-  sanitized public receipt. Rejects status escalation and public
-  recomputation claims. Does not open the E0 commitment and does not
-  verify unpublished E1/E2 payloads.
+  sanitized public receipt. Explicit semantic/status checks remain, and
+  acceptance additionally requires `encodeJsonUtf8Lf(input)` to SHA-256
+  to the frozen public-evidence receipt digest. Unknown keys, missing
+  keys, and nested literal changes fail closed. Does not open the E0
+  commitment and does not verify unpublished E1/E2 payloads.
 - `fixtures/rekor-v1-real-run-public-evidence/` -- sanitized public
   coordinates, public E0-record bytes, and frozen public Rekor entries
   for the real E0/E1/E2 run. This is a public receipt, not a complete
@@ -243,7 +245,8 @@ transplantation.
 - `tests/receiptos/tsei-real-run-public-evidence-v0.test.ts` -- schema
   exactness, reported-table shape, recorded order/identity/commitment
   coordinates, offline E0 Rekor verification, sanitization negatives,
-  and malformed/status-escalation negatives.
+  malformed/status-escalation negatives, and full-receipt digest
+  mutation negatives.
 
 ## Independent authority scaffold (v0)
 

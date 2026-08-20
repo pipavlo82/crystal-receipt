@@ -1,6 +1,11 @@
 /**
  * Fail-closed acceptor for the sanitized real-run public-evidence receipt.
  *
+ * Acceptance is bound to the complete canonical public receipt: after the
+ * explicit semantic/status checks, encodeJsonUtf8Lf(input) must SHA-256 to
+ * FROZEN_PUBLIC_EVIDENCE_SHA256. Unknown keys, missing keys, and any nested
+ * literal change fail closed.
+ *
  * This module does not mint production PROVEN, does not open the E0
  * commitment, and does not verify E1/E2 payload signatures.
  */
@@ -36,7 +41,16 @@ export const CASE_IDS = [
 ] as const
 export const ALLOWED_INVARIANT_IDS = ["I_A", "I_B", "I_C"] as const
 
+/**
+ * SHA-256 of the exact canonical public-evidence.json bytes committed at
+ * 1ef4a7f60fc8bd401f143c8b01480e337d8b7e10 (encodeJsonUtf8Lf of that object
+ * plus one trailing LF). Computed outside the fixture; not a self-field.
+ */
+export const FROZEN_PUBLIC_EVIDENCE_SHA256 =
+  "da3103fcb5b3c99fa1c64ffc7eaf0539642760c7cbac9982862682729c43a2f4" as const
+
 const FORBIDDEN_STATUS_TOKEN = "VERIFIED_EXACT_SET_AGREES"
+const FORBIDDEN_PROVEN_LITERAL = "PROVEN"
 const FORBIDDEN_KEYS = ["mechanical_exact_set_relation", "exact_set_agreement"] as const
 
 export type RealRunPublicEvidenceAcceptance =
@@ -82,7 +96,9 @@ function asStringArray(value: unknown): string[] | null {
 
 /**
  * Accept a claimed public-evidence object. Never throws. Never infers
- * comparison operands. Status escalation fails closed.
+ * comparison operands. Status escalation fails closed. Full-receipt
+ * digest equality is a load-bearing gate in addition to the semantic
+ * checks above.
  */
 export function acceptRealRunPublicEvidence(input: unknown): RealRunPublicEvidenceAcceptance {
   try {
@@ -101,6 +117,9 @@ export function acceptRealRunPublicEvidence(input: unknown): RealRunPublicEviden
     walkStrings(input, strings)
     if (strings.some((item) => item.includes(FORBIDDEN_STATUS_TOKEN))) {
       reasons.push("overclaim_verified_exact_set_agrees")
+    }
+    if (strings.some((item) => item === FORBIDDEN_PROVEN_LITERAL)) {
+      reasons.push("overclaim_proven_literal")
     }
     for (const key of FORBIDDEN_KEYS) {
       if (hasForbiddenKey(input, key)) reasons.push(`forbidden_key_${key}`)
@@ -161,9 +180,11 @@ export function acceptRealRunPublicEvidence(input: unknown): RealRunPublicEviden
       }
     }
     if (input["exact_set_agreement"] !== undefined) reasons.push("legacy_exact_set_agreement")
-    if (reasons.length > 0) return fail(reasons)
     const bytes = encodeJsonUtf8Lf(input)
-    return { ok: true, reasons: [], digest: sha256ExactBytes(bytes), bytes }
+    const digest = sha256ExactBytes(bytes)
+    if (digest !== FROZEN_PUBLIC_EVIDENCE_SHA256) reasons.push("receipt_digest_mismatch")
+    if (reasons.length > 0) return fail(reasons)
+    return { ok: true, reasons: [], digest, bytes }
   } catch {
     return fail(["malformed_public_evidence"])
   }
