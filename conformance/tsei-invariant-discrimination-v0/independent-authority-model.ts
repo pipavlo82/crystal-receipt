@@ -351,6 +351,24 @@ export type IndependentGroundingResult = {
   }
 }
 
+/**
+ * Outer result of the future-run Rekor production evaluator.
+ * IndependentGroundingResult.production_publishable remains literal false.
+ * This type may carry a boolean publishable flag without widening that lock.
+ */
+export type ProductionRekorIndependentGroundingResult = {
+  readonly ok: boolean
+  readonly reasons: readonly string[]
+  readonly independent_grounding: IndependentGroundingStatus
+  readonly independent_grounding_reason: IndependentGroundingReason | null
+  readonly oracle_input_state: OracleInputState
+  readonly semantic_relation: SemanticRelation
+  readonly production_publishable: boolean
+  readonly sufficient_for_proven_grounding: boolean
+  readonly sufficient_for_real_run: false
+  readonly core: IndependentGroundingResult | null
+}
+
 export type DummyProviderEventKind = "D0" | "D1" | "D2"
 
 export type DummyProviderEvent = {
