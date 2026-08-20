@@ -231,6 +231,22 @@ transplantation.
 - `tests/receiptos/tsei-originator-oracle-production-v0.test.ts` --
   production originator-oracle grammar, golden synthetic bytes, and
   fail-closed negatives. No real worksheet answers.
+- `rekor-v1-real-run-public-evidence.ts` -- fail-closed acceptor for the
+  sanitized public receipt. Explicit semantic/status checks remain, and
+  acceptance additionally requires `encodeJsonUtf8Lf(input)` to SHA-256
+  to the frozen public-evidence receipt digest. Unknown keys, missing
+  keys, and nested literal changes fail closed. Does not open the E0
+  commitment and does not verify unpublished E1/E2 payloads.
+- `fixtures/rekor-v1-real-run-public-evidence/` -- sanitized public
+  coordinates, public E0-record bytes, and frozen public Rekor entries
+  for the real E0/E1/E2 run. This is a public receipt, not a complete
+  public reproduction. It does **not** contain Object A, Object B,
+  oracle/reveal, or nonce bytes.
+- `tests/receiptos/tsei-real-run-public-evidence-v0.test.ts` -- schema
+  exactness, reported-table shape, recorded order/identity/commitment
+  coordinates, offline E0 Rekor verification, sanitization negatives,
+  malformed/status-escalation negatives, and full-receipt digest
+  mutation negatives.
 
 ## Independent authority scaffold (v0)
 
@@ -272,8 +288,49 @@ path, exact oracle byte binding is mandatory: a null or mismatched
 `oracle_bytes_sha256` is `INVALID_PROVENANCE`.
 
 Production `VALID_PROVENANCE` remains unreachable on
-`evaluateProductionIndependentGrounding` until a later real E0/E1/E2
-instance is wired. Non-arrival is not disagreement.
+`evaluateProductionIndependentGrounding`: that evaluator still does not
+ingest Rekor observations. A real E0/E1/E2 instance now has a **public
+receipt** in `fixtures/rekor-v1-real-run-public-evidence/`: public Rekor
+v1 coordinates and a public E0-record. Both participants privately
+recomputed the historical run and reported 12/12 exact-set agreement.
+That comparison is a private-artifact result; the two operands are not
+in this package, so the committed bytes cannot mechanically recompute
+exact-set equality.
+
+What the public package **does** prove from committed bytes:
+
+- exact E0-record bytes hash to the anchored E0 digest
+- E0 publication/signature/selector/Rekor verification passes
+- frozen E1/E2 Rekor entry documents record the stated digests, log IDs,
+  UUIDs, and indexes
+- the recorded global indexes are numerically E0 < E1 < E2
+- private-artifact independent recomputation reported 12/12 equality
+- production status remains UNPROVEN
+
+What the public package **does not** independently verify:
+
+- E1/E2 payload signatures (exact payload bytes are unpublished)
+- E1/E2 identity-to-payload binding
+- E0 commitment opening (nonce and oracle bytes are unpublished)
+- exact-set equality between two public operands
+
+Derived status from those artifacts and the production
+verifier/evaluator is:
+
+- `evaluateProductionIndependentGrounding.independent_grounding = UNPROVEN`
+  (`UNPROVEN_INDEPENDENCE` / `INVALID_PROVENANCE`)
+- `production_publishable = false`
+- `verifyRekorV1OrderedEvents.sufficient_for_proven_grounding = false`
+- `private_artifact_run_result.relation = REPORTED_EXACT_SET_AGREES`
+  (`cases_equal = 12`, `cases_total = 12`,
+  `publicly_recomputable_from_package = false`)
+- public evidence status:
+  `REKOR_V1_PUBLIC_RECEIPT_RECORDED_PRODUCTION_UNPROVEN`
+
+This sanitized package is a public receipt, not a complete public
+reproduction. Object A, Object B, oracle/reveal bytes, and nonce bytes
+remain unpublished. Chat corroboration is not a cryptographic provenance
+source and does not mint status. Non-arrival is not disagreement.
 
 Object B may carry observational metadata (definition-ambiguity
 observation, second-party answer-free observation, undeclared-effect
@@ -302,6 +359,10 @@ A real provider dry run is required before any real Object A;
 `evaluateProviderDryRun` is an in-memory model and cannot set
 `provider_policy_freezable = true`. Rekor v1 is selected; Rekor v2 remains
 `rekor-v2-candidate-not-selected`. Dummy-gate PASS is eligibility only.
-Current state remains
-`CASES_CREATED = false`, `ANSWERS_DISCLOSED = false`,
-`PROVIDER_SELECTED = true`, `PROVIDER_POLICY_FROZEN = true`.
+The #200 published instance remains `independent_grounding = UNPROVEN`.
+For the separate real-run public-evidence package, current derived state is
+`CASES_CREATED = true` (reported comparison table only; not a public
+recomputation of two independently bound sets),
+`ANSWERS_DISCLOSED = comparison_sets_only`,
+`PROVIDER_SELECTED = true`, `PROVIDER_POLICY_FROZEN = true`,
+and production evaluator `independent_grounding` remains `UNPROVEN`.
