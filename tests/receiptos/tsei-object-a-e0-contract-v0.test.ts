@@ -199,7 +199,7 @@ const SUBCLASSED_UINT8ARRAY_AVAILABLE = (() => {
 describe("frozen origin/main hashes", () => {
   test("protocol and provider-policy bytes are unchanged", () => {
     expect(sha256File(PROTOCOL_PATH)).toBe(FROZEN_PROTOCOL_SHA256)
-    expect(sha256File(PROTOCOL_PATH)).toBe("d0850ea0b9609fc99bb1ae97bbb8e6daf4455438649a0924f8de9d58736cfd8b")
+    expect(sha256File(PROTOCOL_PATH)).toBe("8f2cf22d77b5476c0619a186d4a889c428fc5565f3d838f88d57b3c6fc806301")
     expect(sha256File(POLICY_PATH)).toBe(IndependentAuthority.REKOR_V1_PROVIDER_POLICY_SHA256)
     expect(sha256File(POLICY_PATH)).toBe("9efefd8e00950e21c121a88a0886b20eb6bc8b1ee04737f1d69c96e4b02ffd77")
   })

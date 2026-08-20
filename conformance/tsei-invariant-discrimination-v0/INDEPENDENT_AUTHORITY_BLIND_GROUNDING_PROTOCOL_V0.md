@@ -453,6 +453,103 @@ The internal oracle is serialized as exact UTF-8 JSON bytes under a
 frozen schema. The schema and serialization rule are fixed before A is
 created.
 
+The frozen production schema identifier (codec name) is:
+
+```
+tsei-invariant-discrimination-v0.internal-oracle.v0
+```
+
+This is the Originator internal oracle. It is not Object A, not Object B,
+not provider telemetry, and not a scaffold `{ schema, note }` example.
+Object B uses `tsei-invariant-discrimination-v0.authority-oracle.v0` and
+MUST NOT substitute for this artifact.
+
+Byte rule: `encodeJsonUtf8Lf` (recursive sorted-key UTF-8 JSON + exactly
+one trailing LF). No BOM. No CR. No NUL. No dummy-gate JCS. Arrays that
+the schema requires to be ordered MUST already be in ascending UTF-8 byte
+order before encode; the validator rejects unsorted arrays rather than
+silently sorting attribution answers.
+
+Required top-level fields, and no others:
+
+```
+schema
+instance_id
+problem_package_sha256
+declared_invariant_ids
+cases
+```
+
+Meanings and JSON types:
+
+```
+schema
+  string, exactly tsei-invariant-discrimination-v0.internal-oracle.v0
+
+instance_id
+  string matching [a-z0-9._-]+
+  binds the oracle bytes to one Object A instance
+
+problem_package_sha256
+  string, exactly 64 lowercase hex characters
+  SHA-256 of the accepted Object A bytes for that instance
+
+declared_invariant_ids
+  JSON array of strings
+  frozen universe for this lane: exactly ["I_A","I_B","I_C"]
+  already in ascending UTF-8 byte order
+  these are the only allowed attribution-set elements
+
+cases
+  JSON object (map), not an array
+  closed case universe: keys exactly c01,c02,c03,c04,c05,c06,
+  c07,c08,c09,c10,c11,c12
+  encodeJsonUtf8Lf sorts object keys; the logical set must still
+  equal that closed universe (no extra, missing, or unknown keys)
+```
+
+Each case object has exactly:
+
+```
+mutant_id
+  string, equal to the map key
+
+originator_attribution_set
+  JSON array of strings
+  subset of {I_A,I_B,I_C}
+  no duplicates
+  already in ascending UTF-8 byte order
+  empty, singleton, and multi-ID sets are all legal grammar
+```
+
+`originator_attribution_set` is the Originator (internal) attribution
+set. It is not `derived_attribution_set` (Object B / Authority). Exact
+comparison later is internal originator_attribution_set == external
+derived_attribution_set as set equality per mutant. This section does
+not perform that comparison.
+
+Forbidden on this artifact: `note`, `authority_observations`, `nonce`,
+`expected_attribution`, `derived_attribution_set`, extra keys, and any
+extension point.
+
+Pre-E0 private filename and lifecycle:
+
+```
+filename = originator-oracle.private.json
+lifecycle = PRIVATE_PRE_E0_NOT_E0
+```
+
+This private file is not Object A, not Object B, not the public E0
+record, and not the post-E2 publication filename
+`internal-oracle-reveal.json`. Materializing it does not constitute E0.
+A later E0 lane hashes these exact oracle bytes with a 32-byte nonce,
+`instance_id`, and `problem_package_sha256` via the §8.3 commitment.
+This lane still does not mint E0, generate a nonce, or publish.
+
+Attribution answers are HUMAN_PRIMARY. Serialization, schema validation,
+deterministic ordering, and hashing are MECHANICAL_ONLY. Code MUST NOT
+infer, compare, correct, or complete originator_attribution_set values.
+
 ### 8.3 Commitment
 
 ```
