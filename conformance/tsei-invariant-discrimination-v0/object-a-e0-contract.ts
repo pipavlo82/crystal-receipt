@@ -31,6 +31,8 @@ import {
 } from "./independent-authority-model"
 import * as IndependentAuthority from "./independent-authority"
 import type { IntendedFaithfulness } from "./independent-authority"
+import { FROZEN_PROTOCOL_V1_SHA256, acceptIntendedFaithfulnessFromBytes } from "./intended-faithfulness"
+import { REKOR_V1_P0_PROVIDER_POLICY_SHA256 } from "./rekor-v1-verifier"
 
 /** Originator (Pavlo): E0 commitment and E2 reveal. This scaffold performs neither publication. */
 export const E0_E2_ORIGINATOR = "Pavlo" as const
@@ -52,6 +54,19 @@ export const E0_RECORD_KEYS = [
   "provider_policy_sha256",
   "instance_id",
   "problem_package_sha256",
+  "authority_relationship_class",
+  "oracle_commitment",
+] as const
+
+export const E0_RECORD_V1_SCHEMA = "tsei-invariant-discrimination-v0.e0-record.v1" as const
+
+export const E0_RECORD_V1_KEYS = [
+  "schema",
+  "protocol_sha256",
+  "provider_policy_sha256",
+  "instance_id",
+  "problem_package_sha256",
+  "intended_faithfulness_sha256",
   "authority_relationship_class",
   "oracle_commitment",
 ] as const
@@ -102,11 +117,40 @@ export type E0Record = {
   readonly oracle_commitment: string
 }
 
+export type E0RecordV1 = {
+  readonly schema: typeof E0_RECORD_V1_SCHEMA
+  readonly protocol_sha256: typeof FROZEN_PROTOCOL_V1_SHA256
+  readonly provider_policy_sha256: typeof REKOR_V1_P0_PROVIDER_POLICY_SHA256
+  readonly instance_id: string
+  readonly problem_package_sha256: string
+  readonly intended_faithfulness_sha256: string
+  readonly authority_relationship_class: typeof AUTHORITY_RELATIONSHIP_CLASS
+  readonly oracle_commitment: string
+}
+
 export type E0ContractResult =
   | {
       readonly ok: true
       readonly reasons: readonly string[]
       readonly record: E0Record
+      readonly bytes: Buffer
+      readonly production_publishable: false
+      readonly sufficient_for_real_object_a: false
+    }
+  | {
+      readonly ok: false
+      readonly reasons: readonly string[]
+      readonly record: null
+      readonly bytes: null
+      readonly production_publishable: false
+      readonly sufficient_for_real_object_a: false
+    }
+
+export type E0V1ContractResult =
+  | {
+      readonly ok: true
+      readonly reasons: readonly string[]
+      readonly record: E0RecordV1
       readonly bytes: Buffer
       readonly production_publishable: false
       readonly sufficient_for_real_object_a: false
@@ -133,6 +177,17 @@ function failObjectA(reasons: readonly string[]): ObjectAAcceptanceResult {
 }
 
 function failE0(reasons: readonly string[]): E0ContractResult {
+  return {
+    ok: false,
+    reasons,
+    record: null,
+    bytes: null,
+    production_publishable: false,
+    sufficient_for_real_object_a: false,
+  }
+}
+
+function failE0V1(reasons: readonly string[]): E0V1ContractResult {
   return {
     ok: false,
     reasons,
@@ -680,7 +735,123 @@ export function commitOriginatorE0(input: unknown): E0ContractResult {
   }
 }
 
+function snapshotE0RecordV1(record: Record<string, unknown>): E0RecordV1 | null {
+  if (record["schema"] !== E0_RECORD_V1_SCHEMA) return null
+  if (record["protocol_sha256"] !== FROZEN_PROTOCOL_V1_SHA256) return null
+  if (record["provider_policy_sha256"] !== REKOR_V1_P0_PROVIDER_POLICY_SHA256) return null
+  if (typeof record["instance_id"] !== "string" || !INSTANCE_ID_RE.test(record["instance_id"])) return null
+  if (typeof record["problem_package_sha256"] !== "string" || !LOWER_HEX_64.test(record["problem_package_sha256"])) return null
+  if (typeof record["intended_faithfulness_sha256"] !== "string" || !LOWER_HEX_64.test(record["intended_faithfulness_sha256"])) {
+    return null
+  }
+  if (record["authority_relationship_class"] !== AUTHORITY_RELATIONSHIP_CLASS) return null
+  if (typeof record["oracle_commitment"] !== "string" || !LOWER_HEX_64.test(record["oracle_commitment"])) return null
+  return {
+    schema: E0_RECORD_V1_SCHEMA,
+    protocol_sha256: FROZEN_PROTOCOL_V1_SHA256,
+    provider_policy_sha256: REKOR_V1_P0_PROVIDER_POLICY_SHA256,
+    instance_id: record["instance_id"],
+    problem_package_sha256: record["problem_package_sha256"],
+    intended_faithfulness_sha256: record["intended_faithfulness_sha256"],
+    authority_relationship_class: AUTHORITY_RELATIONSHIP_CLASS,
+    oracle_commitment: record["oracle_commitment"],
+  }
+}
+
+/**
+ * Validate a claimed future-run E0 v1 record. Historical six-key E0 is not
+ * an alias and cannot satisfy this gate. Never accepts nonce or oracle bytes.
+ */
+export function acceptE0RecordV1(input: unknown): E0V1ContractResult {
+  try {
+    if (!isRecord(input)) return failE0V1(["malformed_e0_input"])
+    const inspectReasons: string[] = []
+    inspectUntrustedGraph(input, "E0", inspectReasons, new WeakSet())
+    if (inspectReasons.length > 0) return failE0V1(uniqueReasons(inspectReasons))
+    extraKeys(input, E0_RECORD_V1_KEYS, "E0", inspectReasons)
+    missingKeys(input, E0_RECORD_V1_KEYS, "E0", inspectReasons)
+    for (const key of E0_FORBIDDEN_KEYS) {
+      if (Object.prototype.hasOwnProperty.call(input, key)) {
+        inspectReasons.push(`E0.${key}: nonce/oracle/answer fields are forbidden on the public E0 record`)
+      }
+    }
+    if (inspectReasons.length > 0) return failE0V1(uniqueReasons(inspectReasons))
+    if (input["schema"] !== E0_RECORD_V1_SCHEMA) inspectReasons.push("E0.schema mismatch")
+    if (input["protocol_sha256"] !== FROZEN_PROTOCOL_V1_SHA256) inspectReasons.push("E0.protocol_sha256 mismatch")
+    if (input["provider_policy_sha256"] !== REKOR_V1_P0_PROVIDER_POLICY_SHA256) {
+      inspectReasons.push("E0.provider_policy_sha256 mismatch")
+    }
+    if (input["authority_relationship_class"] !== AUTHORITY_RELATIONSHIP_CLASS) {
+      inspectReasons.push("E0.authority_relationship_class mismatch")
+    }
+    const snapshot = snapshotE0RecordV1(input)
+    if (!snapshot || inspectReasons.length > 0) {
+      return failE0V1(uniqueReasons(inspectReasons.length > 0 ? inspectReasons : ["malformed_e0_record"]))
+    }
+    const bytes = IndependentAuthority.encodeJsonUtf8Lf(snapshot)
+    const encoding = validateCanonicalUtf8JsonLf(bytes)
+    if (!encoding.ok) return failE0V1(encoding.reasons)
+    return {
+      ok: true,
+      reasons: [],
+      record: deepFreeze(snapshot),
+      bytes,
+      production_publishable: false,
+      sufficient_for_real_object_a: false,
+    }
+  } catch {
+    return failE0V1(["malformed_e0_input"])
+  }
+}
+
+/**
+ * Bind a future-run E0 v1 record from independently accepted intended bytes
+ * and Object A. Does not generate a nonce, sign, or publish.
+ */
+export function commitOriginatorE0V1(input: unknown): E0V1ContractResult {
+  try {
+    if (!isRecord(input)) return failE0V1(["malformed_e0_input"])
+    const intendedAccepted = acceptIntendedFaithfulnessFromBytes({ bytes: input["intended_faithfulness_bytes"] })
+    if (!intendedAccepted.ok) return failE0V1(["intended_not_accepted", ...intendedAccepted.reasons])
+    const accepted = acceptObjectA({ pkg: input["pkg"], intended: intendedAccepted.intended })
+    if (!accepted.ok) return failE0V1(["object_a_not_accepted", ...accepted.reasons])
+    if (accepted.package.instance_id !== intendedAccepted.artifact.instance_id) {
+      return failE0V1(["instance_id_mismatch"])
+    }
+    if (Object.prototype.hasOwnProperty.call(input, "protocol_sha256") && input["protocol_sha256"] !== FROZEN_PROTOCOL_V1_SHA256) {
+      return failE0V1(["protocol_sha256_mismatch"])
+    }
+    if (
+      Object.prototype.hasOwnProperty.call(input, "provider_policy_sha256") &&
+      input["provider_policy_sha256"] !== REKOR_V1_P0_PROVIDER_POLICY_SHA256
+    ) {
+      return failE0V1(["provider_policy_sha256_mismatch"])
+    }
+    const bound = bindOracleCommitment({
+      instance_id: accepted.package.instance_id,
+      problem_package_sha256: accepted.digest,
+      nonce: input["nonce"],
+      oracle_bytes: input["oracle_bytes"],
+    })
+    if (!bound.ok) return failE0V1(["oracle_commitment_failed", ...bound.reasons])
+    return acceptE0RecordV1({
+      schema: E0_RECORD_V1_SCHEMA,
+      protocol_sha256: FROZEN_PROTOCOL_V1_SHA256,
+      provider_policy_sha256: REKOR_V1_P0_PROVIDER_POLICY_SHA256,
+      instance_id: accepted.package.instance_id,
+      problem_package_sha256: accepted.digest,
+      intended_faithfulness_sha256: intendedAccepted.digest,
+      authority_relationship_class: AUTHORITY_RELATIONSHIP_CLASS,
+      oracle_commitment: bound.commitment,
+    })
+  } catch {
+    return failE0V1(["malformed_e0_input"])
+  }
+}
+
 export {
   AUTHORITY_RELATIONSHIP_CLASS,
   BLIND_PROBLEM_SCHEMA,
+  FROZEN_PROTOCOL_V1_SHA256,
+  REKOR_V1_P0_PROVIDER_POLICY_SHA256,
 }

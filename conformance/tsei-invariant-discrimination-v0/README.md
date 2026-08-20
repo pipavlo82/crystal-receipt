@@ -214,9 +214,22 @@ transplantation.
   eligibility, selected Rekor v1 / hashedrekord `0.0.1`, and the frozen
   production originator-oracle object shape (§8.2). Does not create
   Object A and does not mint PROVEN or E0.
+- `INDEPENDENT_AUTHORITY_BLIND_GROUNDING_PROTOCOL_V1.md` -- future-run
+  addendum: answer-free intended schema, Rekor P0, E0 v1, and
+  `P0 < E0 < E1 < E2`. Does not create the intended instance or mint
+  PROVEN. Protocol v0 bytes remain the historical pin.
+- `intended-faithfulness.ts` -- strict byte acceptor for the answer-free
+  intended artifact. Scaffold only; `sufficient_for_real_intended_instance`
+  remains false.
+- `provider-policy.rekor-v1.p0-e0-e1-e2.json` -- new P0-capable policy
+  bytes. The historical `provider-policy.rekor-v1.json` pin is unchanged.
+- `tests/receiptos/tsei-intended-faithfulness-v0.test.ts` and
+  `tests/receiptos/tsei-production-rekor-grounding-v0.test.ts` -- contract
+  and negative controls. Not a real run.
 - `object-a-e0-contract.ts` -- Object A acceptance and public E0 record
   contract. Freezes `INTERNAL_ORACLE_CODEC`; does not define production
-  oracle field contents.
+  oracle field contents. E0 v1 is a parallel acceptor; historical six-key
+  E0 parsing is unchanged.
 - `originator-oracle.ts` -- production Originator internal-oracle private
   artifact: schema `tsei-invariant-discrimination-v0.internal-oracle.v0`,
   filename `originator-oracle.private.json`, lifecycle
@@ -366,3 +379,29 @@ recomputation of two independently bound sets),
 `ANSWERS_DISCLOSED = comparison_sets_only`,
 `PROVIDER_SELECTED = true`, `PROVIDER_POLICY_FROZEN = true`,
 and production evaluator `independent_grounding` remains `UNPROVEN`.
+
+## Future-run intended-faithfulness contract (protocol v1 addendum)
+
+A later production run may freeze an **answer-free intended-faithfulness
+corpus** at Rekor P0 before Object A / E0. That is a freeze/anchor claim:
+exact intended bytes were publicly and independently verifiably bound
+before Object A acceptance/E0. It does **not** prove when private bytes
+were first created and does **not** mean the corpus was independently
+authored.
+
+This scaffold does **not** create that corpus, does **not** publish P0,
+and does **not** create Object A/B/oracle/E0/E1/E2. Historical instance
+`tsei-ia-real-v0-20260819-01` / PR #206 remains
+`REKOR_V1_PUBLIC_RECEIPT_RECORDED_PRODUCTION_UNPROVEN`. The #200 ladder
+remains `UNPROVEN`. Sanitized receipts without private operands keep
+`publicly_recomputable_from_package = false`. Historical six-key E0 is
+not an alias for E0 v1.
+
+`evaluateProductionIndependentGrounding` is unchanged and still cannot
+ingest Rekor observations. `asProductionGroundingEvidence` remains null.
+`IndependentGroundingResult.production_publishable` remains literal
+`false`. Existing `verifyRekorV1OrderedEvents` remains
+`sufficient_for_proven_grounding = false`. The new single-shot
+`evaluateProductionRekorIndependentGrounding` lives in
+`independent-authority.ts`, derives observations internally, and does
+not export the private core.
