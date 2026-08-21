@@ -202,6 +202,47 @@ Before E1, the Authority may receive only exact Object A bytes, and only
 after E0 is verified. No oracle, nonce, expected sets, evaluator output,
 or intended-as-answers channel.
 
+## 9.1 Authority exact-byte preflight is mandatory
+
+For a real v1 run, the Authority must freeze **canonical Object B bytes**,
+not merely a schema-valid JSON object with the intended semantic content.
+The exact byte rule is normative and load-bearing:
+
+- encoding: `encodeJsonUtf8Lf`
+- recursively key-sorted JSON
+- UTF-8
+- compact form (no pretty-print indentation)
+- exactly one trailing LF
+- no BOM, CR, or NUL
+
+The Originator must give the Authority an **answer-free Object B template**
+and an **exact-byte preflight** before Object A is released. The preflight
+must reject at least:
+
+- pretty-printed / indented JSON
+- missing final LF
+- extra trailing LF
+- CRLF line endings
+- non-UTF-8 / BOM / NUL
+- bytes that do not round-trip through `encodeJsonUtf8Lf`
+
+Passing schema validation alone is insufficient. Equality of derived
+attribution sets alone is insufficient. If Object B is frozen with
+non-canonical bytes, the run fails closed before semantic comparison.
+
+## 9.2 Non-repair boundary for a closed instance
+
+If E1 is later shown to have frozen non-canonical Object B bytes, that
+instance is `UNPROVEN` for reason `object_b_bytes_non_canonical`. The
+permitted closure is:
+
+- preserve the original Object B / E1 / E2 evidence unchanged;
+- do not canonicalize and continue as the same instance;
+- do not ask the Authority to re-sign or republish a replacement E1/E2 for
+  that closed instance;
+- if intended-faithfulness proof is still wanted, start a **new blind
+  instance** with a new `instance_id` and genuinely new cases.
+
 ## 10. Production evaluation
 
 `evaluateProductionIndependentGrounding` remains the locked historical

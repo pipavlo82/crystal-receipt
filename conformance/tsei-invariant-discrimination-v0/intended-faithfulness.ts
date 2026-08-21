@@ -27,7 +27,7 @@ export const INTENDED_FAITHFULNESS_SCHEMA =
 
 /** SHA-256 of INDEPENDENT_AUTHORITY_BLIND_GROUNDING_PROTOCOL_V1.md (exact bytes). */
 export const FROZEN_PROTOCOL_V1_SHA256 =
-  "ed683a030c0c735124349b1f29ffb7f9d12dfeedbb9153a0d03c3920c877a7f7" as const
+  "fd7e17355e9c61daa6632398baeefcc519e53b3cf235c5f915ce0f56c72f8729" as const
 
 export const HISTORICAL_IA_INSTANCE_ID = "tsei-ia-real-v0-20260819-01" as const
 

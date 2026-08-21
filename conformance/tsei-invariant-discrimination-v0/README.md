@@ -397,6 +397,32 @@ remains `UNPROVEN`. Sanitized receipts without private operands keep
 `publicly_recomputable_from_package = false`. Historical six-key E0 is
 not an alias for E0 v1.
 
+For real v1 authority runs, **Object B exact bytes are a first-class gate**.
+The Authority must freeze canonical `encodeJsonUtf8Lf` bytes, not merely a
+schema-valid JSON object with the same semantic content. That means:
+
+- recursively key-sorted UTF-8 JSON
+- compact encoding (no pretty-print indentation)
+- exactly one trailing LF
+- no BOM / CR / NUL
+- byte-for-byte round-trip through `encodeJsonUtf8Lf`
+
+The Authority handoff should therefore include an **answer-free canonical
+Object B template** plus an **exact-byte preflight** that rejects
+pretty-printed JSON and missing-final-LF payloads before E1 publication.
+A small operational kit now lives at:
+
+- `AUTHORITY_OBJECT_B_PREFLIGHT_V1.md`
+- `fixtures/authority-object-b-template-v1.json`
+- `fixtures/authority-object-b-valid-v1.json`
+- `fixtures/authority-object-b-invalid-pretty-no-lf-v1.json`
+
+If E1 freezes non-canonical Object B bytes, the production evaluator must
+fail closed with `object_b_bytes_non_canonical`; ordering, identity,
+signature, and semantic agreement do not rescue the instance. The correct
+closure is to preserve the failed instance unchanged and, if needed, start a
+new blind instance with a new `instance_id` and genuinely new cases.
+
 `evaluateProductionIndependentGrounding` is unchanged and still cannot
 ingest Rekor observations. `asProductionGroundingEvidence` remains null.
 `IndependentGroundingResult.production_publishable` remains literal

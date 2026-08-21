@@ -560,6 +560,32 @@ describe("evaluateProductionRekorIndependentGrounding negatives", () => {
     expect(result.reasons).toContain("e1_payload_bytes_not_object_b")
   })
 
+  test("non-canonical Object B bytes fail closed before semantic comparison", () => {
+    const operands = buildScaffoldOperands()
+    const prettyPrinted = Buffer.from(JSON.stringify(JSON.parse(operands.objectBBytes.toString("utf8")), null, 2), "utf8")
+    const result = evaluateProductionRekorIndependentGrounding({
+      ...baseBundle(operands),
+      object_b_bytes: prettyPrinted,
+      e1_artifact_bytes: prettyPrinted,
+    })
+    expectNotProven(result)
+    expect(result.reasons).toContain("object_b_bytes_non_canonical")
+    expect(result.semantic_relation).toBe("NOT_EVALUATED")
+  })
+
+  test("missing final LF on Object B fails closed before semantic comparison", () => {
+    const operands = buildScaffoldOperands()
+    const missingLf = operands.objectBBytes.subarray(0, operands.objectBBytes.length - 1)
+    const result = evaluateProductionRekorIndependentGrounding({
+      ...baseBundle(operands),
+      object_b_bytes: missingLf,
+      e1_artifact_bytes: missingLf,
+    })
+    expectNotProven(result)
+    expect(result.reasons).toContain("object_b_bytes_non_canonical")
+    expect(result.semantic_relation).toBe("NOT_EVALUATED")
+  })
+
   test("E2 payload bytes unequal to oracle fail", () => {
     const operands = buildScaffoldOperands()
     const mutated = Buffer.from(operands.oracleBytes)
