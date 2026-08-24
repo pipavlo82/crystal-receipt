@@ -15,14 +15,27 @@ const POLICY_V0 = resolve(ROOT, "provider-policy.rekor-v1.p0-e0-e1-e2.json")
 const POLICY_V1 = resolve(ROOT, "provider-policy.rekor-v1.p0-e0-e1-e2.v1.json")
 const sha = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex")
 
-test("protocol v2 and provider policy v1 remain pinned to approved exact bytes", () => {
+test("implementation remains pinned to exact normative protocol and policy bytes", () => {
   const protocol = readFileSync(PROTOCOL)
   const policy = readFileSync(POLICY_V1)
-  expect(protocol.length).toBe(15150)
-  expect(sha(protocol)).toBe("10ff58f08dc8dcac2e0ebe1e1012ba5e605729e29e73d5e966ba9241ecbd3e1d")
+  expect(protocol.length).toBe(16828)
+  expect(sha(protocol)).toBe("3150b5ae09d9b14d706cb64473de63917804e002bd79b5f60473927460b454d0")
   expect(policy.length).toBe(1905)
   expect(sha(policy)).toBe(REKOR_V1_P0_PROVIDER_POLICY_V1_SHA256)
   expect(protocol.includes(Buffer.from(REKOR_V1_P0_PROVIDER_POLICY_V1_SHA256, "utf8"))).toBe(true)
+})
+
+test("normative protocol bytes contain no mutable candidate or lifecycle status", () => {
+  const protocol = readFileSync(PROTOCOL, "utf8")
+  expect(protocol).not.toContain("FUTURE_CONTRACT_CANDIDATE_NOT_IMPLEMENTED_NOT_FROZEN")
+  expect(protocol).not.toContain("PROTOCOL_V2_APPROVED")
+  expect(protocol).not.toContain("PROVIDER_POLICY_V1_APPROVED")
+  expect(protocol).not.toContain("IMPLEMENTATION_AUTHORIZED")
+  expect(protocol).not.toContain("REPOSITORY_CHANGED")
+  expect(protocol).not.toContain("NEXT_GATE")
+  expect(protocol).not.toContain("provider-policy.rekor-v1.p0-e0-e1-e2.v1.candidate.json")
+  expect(protocol).toContain("schema = tsei-invariant-discrimination-v1.protocol-v2-ratification.v0")
+  expect(protocol).toContain("status = RATIFIED_FOR_NEW_INSTANCES")
 })
 
 test("new policy is canonical and fixes the P0 tree-capture pin", () => {

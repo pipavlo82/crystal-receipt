@@ -218,6 +218,15 @@ transplantation.
   addendum: answer-free intended schema, Rekor P0, E0 v1, and
   `P0 < E0 < E1 < E2`. Does not create the intended instance or mint
   PROVEN. Protocol v0 bytes remain the historical pin.
+- `INDEPENDENT_AUTHORITY_BLIND_GROUNDING_PROTOCOL_V2.md` -- normative
+  real intended-instance eligibility and production-composition contract.
+  Mutable approval, implementation, repository, and run state is excluded
+  from the hash-bound protocol bytes and belongs in a separate append-only
+  ratification record. Ratification alone does not create a run or mint a
+  verdict.
+- `provider-policy.rekor-v1.p0-e0-e1-e2.v1.json` -- protocol-v2 Rekor policy
+  bytes with P0 tree capture. The exact filename, byte length, and digest are
+  pinned by protocol v2 and tests.
 - `intended-faithfulness.ts` -- strict byte acceptor for the answer-free
   intended artifact. Scaffold only; `sufficient_for_real_intended_instance`
   remains false.

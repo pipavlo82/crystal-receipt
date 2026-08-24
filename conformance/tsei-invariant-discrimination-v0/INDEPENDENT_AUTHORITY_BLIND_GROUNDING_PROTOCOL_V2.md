@@ -1,14 +1,16 @@
-# Independent Authority Blind Grounding Protocol v2 candidate
+# Independent Authority Blind Grounding Protocol v2
 
-Future real intended-instance eligibility and production composition contract.
+Normative real intended-instance eligibility and production composition contract.
 
-**Status:** `FUTURE_CONTRACT_CANDIDATE_NOT_IMPLEMENTED_NOT_FROZEN`
+**Governance boundary:** these bytes contain no mutable approval, implementation,
+repository, release, or run status. Activation is established only by the
+separate append-only ratification record defined in §17.
 
 **Text rule:** LF only, final LF present.
 
 **Answer-free:** this document contains no blind cases, attribution answers, oracle payload, nonce, or future instance ID.
 
-This candidate does not change protocol v0 or v1, does not repair or reevaluate a completed instance, does not create a new instance, does not publish P0/E0/E1/E2, and does not mint `PROVEN` or any production verdict.
+This protocol does not change protocol v0 or v1, does not repair or reevaluate a completed instance, does not create a new instance, does not publish P0/E0/E1/E2, and does not mint `PROVEN` or any production verdict by its existence or ratification alone.
 
 ## 1. Purpose
 
@@ -60,10 +62,10 @@ Production composition may return boolean publishability fields only from intern
 
 ## 4. Exact provider policy
 
-Future protocol v2 uses this candidate policy artifact:
+Protocol v2 uses this exact provider policy artifact:
 
 ```text
-filename: provider-policy.rekor-v1.p0-e0-e1-e2.v1.candidate.json
+filename: provider-policy.rekor-v1.p0-e0-e1-e2.v1.json
 bytes: 1905
 SHA-256: 744d024586c983f8bb6c1dd10209aeb0354b65a5121af0ef6580ea2fd8aa8e56
 schema: tsei-invariant-discrimination-v1.provider-policy.rekor-v1.p0-e0-e1-e2.v1
@@ -128,7 +130,7 @@ Canonical bytes are recursively key-sorted compact UTF-8 JSON followed by exactl
 The exact bytes bind:
 
 - a new non-historical, non-dummy instance ID;
-- this protocol candidate's SHA-256 after exact-byte approval and freeze;
+- this protocol's exact SHA-256 as named by the separate ratification record;
 - provider policy SHA-256 `744d024586c983f8bb6c1dd10209aeb0354b65a5121af0ef6580ea2fd8aa8e56`;
 - normative definition identities recomputed from exact definition strings;
 - a non-empty invariant universe and non-empty case universe.
@@ -367,14 +369,19 @@ The implementation must include:
 - historical v0/v1 regression locks;
 - proof that no synthetic fixture is production-publishable by caller assertion.
 
-Implementation, tests, protocol bytes, policy bytes, and source commit require separate review before any future real instance design begins.
+Implementation, tests, protocol bytes, policy bytes, and source commit require
+separate review before any future real instance design begins. Protocol
+activation additionally requires the append-only ratification record defined
+in §17.
 
 ## 16. Lifecycle
 
 ```text
-protocol and policy exact bytes approved and frozen
+final protocol and policy exact bytes reviewed
 → implementation and tests reviewed
 → independent contract audit
+→ implementation commit landed
+→ append-only ratification record approved and frozen
 → genuinely new private instance design
 → intended bytes exact review and approval
 → P0 publication and independent verification
@@ -388,21 +395,53 @@ protocol and policy exact bytes approved and frozen
 → accurate result closure
 ```
 
-## 17. Current candidate state
+## 17. Ratification and activation
+
+Mutable lifecycle state is not part of these normative bytes. Approval,
+implementation, repository, audit, and activation facts belong in one separate
+append-only ratification record. Changing any such fact never requires editing
+this protocol.
+
+The ratification record is canonical `encodeJsonUtf8Lf` JSON with exactly these
+top-level keys:
 
 ```text
-PROTOCOL_V2_CANDIDATE_CREATED = true
-PROTOCOL_V2_APPROVED = false
-PROVIDER_POLICY_V1_CANDIDATE_CREATED = true
-PROVIDER_POLICY_V1_APPROVED = false
-IMPLEMENTATION_AUTHORIZED = false
-REPOSITORY_CHANGED = false
-FROZEN_V1_CHANGED = false
-NEW_INSTANCE_DESIGNED = false
-NEW_INSTANCE_STARTED = false
-P0_PUBLISHED = false
-AUTHORITY_CONTACTED = false
-NEXT_GATE = HUMAN_REVIEW_PROTOCOL_AND_POLICY_EXACT_BYTES
+schema
+protocol_filename
+protocol_bytes
+protocol_sha256
+provider_policy_filename
+provider_policy_bytes
+provider_policy_sha256
+implementation_repository
+implementation_commit
+implementation_tree
+independent_audit_sha256
+approval_record_sha256
+status
 ```
 
-**End of protocol v2 candidate.**
+Required literal values include:
+
+```text
+schema = tsei-invariant-discrimination-v1.protocol-v2-ratification.v0
+protocol_filename = INDEPENDENT_AUTHORITY_BLIND_GROUNDING_PROTOCOL_V2.md
+provider_policy_filename = provider-policy.rekor-v1.p0-e0-e1-e2.v1.json
+provider_policy_bytes = 1905
+provider_policy_sha256 = 744d024586c983f8bb6c1dd10209aeb0354b65a5121af0ef6580ea2fd8aa8e56
+implementation_repository = pipavlo82/crystal-receipt
+status = RATIFIED_FOR_NEW_INSTANCES
+```
+
+The record must bind the exact protocol bytes, the exact policy bytes, the
+landed implementation commit and tree, an independent contract-audit artifact,
+and exact approval evidence. Every digest is lowercase SHA-256 hex. The record
+must pass exact-byte human review before it is frozen. Missing, malformed,
+unreviewed, non-canonical, or internally inconsistent ratification evidence
+means protocol v2 is not active for a real instance.
+
+Ratification does not create an instance, authorize P0, contact the Authority,
+or mint any evaluator result. Each of those remains a later separately governed
+gate. Protocol v2 applies only to genuinely new instance IDs and cases.
+
+**End of protocol v2.**
