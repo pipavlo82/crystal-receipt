@@ -27,11 +27,15 @@ export const REKOR_V1_PROVIDER_ID = "rekor-v1" as const
 export const PROVIDER_POLICY_SCHEMA = "tsei-invariant-discrimination-v0.provider-policy.rekor-v1.v0"
 export const PROVIDER_POLICY_P0_SCHEMA =
   "tsei-invariant-discrimination-v0.provider-policy.rekor-v1.p0-e0-e1-e2.v0" as const
+export const PROVIDER_POLICY_P0_V1_SCHEMA =
+  "tsei-invariant-discrimination-v1.provider-policy.rekor-v1.p0-e0-e1-e2.v1" as const
 export const DUMMY_GATE_ELIGIBILITY_CLASS = "ELIGIBILITY_ONLY_NOT_OBJECT_A_NOT_PROVEN" as const
 export const REKOR_V1_PROVIDER_POLICY_SHA256 = "9efefd8e00950e21c121a88a0886b20eb6bc8b1ee04737f1d69c96e4b02ffd77" as const
 /** SHA-256 of provider-policy.rekor-v1.p0-e0-e1-e2.json. Does not retarget the v0 pin. */
 export const REKOR_V1_P0_PROVIDER_POLICY_SHA256 =
   "a047d4a41515d3982f6ba00bb3304f3e40e0fc46ba10f6c61092c3219bbb4862" as const
+export const REKOR_V1_P0_PROVIDER_POLICY_V1_SHA256 =
+  "744d024586c983f8bb6c1dd10209aeb0354b65a5121af0ef6580ea2fd8aa8e56" as const
 
 // Sigstore public-good trust material obtained from the Sigstore TUF trusted
 // root. Callers cannot replace any of these anchors.
@@ -152,6 +156,22 @@ export type ParsedRekorV1P0Policy = Omit<ParsedRekorV1Policy, "event_order" | "s
   }
   readonly schema: typeof PROVIDER_POLICY_P0_SCHEMA
   readonly v: 1
+}
+
+export type ParsedRekorV1P0PolicyV1 = Omit<ParsedRekorV1P0Policy, "dummy_gate" | "schema" | "v"> & {
+  readonly dummy_gate: Omit<ParsedRekorV1P0Policy["dummy_gate"], "production_tree_pin"> & {
+    readonly production_tree_pin: "capture_at_p0_not_dummy_tree"
+  }
+  readonly schema: typeof PROVIDER_POLICY_P0_V1_SCHEMA
+  readonly v: 2
+}
+
+export type RekorV1IntendedEligibilitySequenceResult = {
+  readonly ok: boolean
+  readonly reasons: readonly string[]
+  readonly captured_tree_id: string | null
+  readonly global_log_indexes: readonly number[]
+  readonly publications: readonly RekorV1PublicationResult[]
 }
 
 export type RekorV1ProductionSequenceResult = {
@@ -696,6 +716,52 @@ export function parseRekorV1P0ProviderPolicy(
   }
 }
 
+/**
+ * Protocol-v2 policy parser. The policy intentionally carries forward every
+ * verified trust/select/order leaf from the v1 P0 policy while changing only
+ * schema, version, and the explicit P0 tree-capture label.
+ */
+export function parseRekorV1P0ProviderPolicyV1(
+  bytes: Uint8Array | Buffer,
+): { ok: true; policy: ParsedRekorV1P0PolicyV1 } | { ok: false; reasons: readonly string[] } {
+  try {
+    const text = Buffer.from(bytes).toString("utf8")
+    if (text.includes("\u0000") || text.includes("\r") || text.charCodeAt(0) === 0xfeff) {
+      return { ok: false, reasons: ["malformed_policy_bytes"] }
+    }
+    const parsed: unknown = JSON.parse(text)
+    if (!isRecord(parsed) || !keysExact(parsed, POLICY_TOP_KEYS)) {
+      return { ok: false, reasons: ["malformed_policy_schema"] }
+    }
+    const dummy = isRecord(parsed["dummy_gate"]) ? parsed["dummy_gate"] : null
+    if (!dummy || parsed["schema"] !== PROVIDER_POLICY_P0_V1_SCHEMA || parsed["v"] !== 2) {
+      return { ok: false, reasons: ["malformed_policy_schema"] }
+    }
+    if (dummy["production_tree_pin"] !== "capture_at_p0_not_dummy_tree") {
+      return { ok: false, reasons: ["production_tree_pin_mismatch"] }
+    }
+    const translated = {
+      ...parsed,
+      schema: PROVIDER_POLICY_P0_SCHEMA,
+      v: 1,
+      dummy_gate: { ...dummy, production_tree_pin: "capture_at_e0_not_dummy_tree" },
+    }
+    const canonical = canonicalJson(translated)
+    if (canonical === null) return { ok: false, reasons: ["malformed_policy_schema"] }
+    const legacy = parseRekorV1P0ProviderPolicy(Buffer.from(`${canonical}\n`, "utf8"))
+    if (!legacy.ok) return legacy
+    const policy: ParsedRekorV1P0PolicyV1 = {
+      ...legacy.policy,
+      dummy_gate: { ...legacy.policy.dummy_gate, production_tree_pin: "capture_at_p0_not_dummy_tree" },
+      schema: PROVIDER_POLICY_P0_V1_SCHEMA,
+      v: 2,
+    }
+    return { ok: true, policy }
+  } catch {
+    return { ok: false, reasons: ["malformed_policy_bytes"] }
+  }
+}
+
 export function providerPolicySha256(bytes: Uint8Array | Buffer): string {
   return sha256Hex(Buffer.from(bytes))
 }
@@ -714,6 +780,15 @@ function parseFrozenRekorV1P0ProviderPolicy(
     return { ok: false, reasons: ["provider_policy_digest_mismatch"] }
   }
   return parseRekorV1P0ProviderPolicy(bytes)
+}
+
+function parseFrozenRekorV1P0ProviderPolicyV1(
+  bytes: Uint8Array | Buffer,
+): ReturnType<typeof parseRekorV1P0ProviderPolicyV1> {
+  if (providerPolicySha256(bytes) !== REKOR_V1_P0_PROVIDER_POLICY_V1_SHA256) {
+    return { ok: false, reasons: ["provider_policy_digest_mismatch"] }
+  }
+  return parseRekorV1P0ProviderPolicyV1(bytes)
 }
 
 function parsePolicyForPublication(
@@ -735,6 +810,19 @@ function parsePolicyForPublication(
   }
   if (digest === REKOR_V1_P0_PROVIDER_POLICY_SHA256) {
     const parsed = parseFrozenRekorV1P0ProviderPolicy(bytes)
+    if (!parsed.ok) return parsed
+    return {
+      ok: true,
+      policy: {
+        endpoint: parsed.policy.endpoint,
+        log_id: parsed.policy.log_id,
+        originator_identity_selector: parsed.policy.originator_identity_selector,
+        authority_identity_selector: parsed.policy.authority_identity_selector,
+      },
+    }
+  }
+  if (digest === REKOR_V1_P0_PROVIDER_POLICY_V1_SHA256) {
+    const parsed = parseFrozenRekorV1P0ProviderPolicyV1(bytes)
     if (!parsed.ok) return parsed
     return {
       ok: true,
@@ -1135,6 +1223,141 @@ export function verifyRekorV1ProductionSequence(input: {
   }
 }
 
+export function verifyRekorV1IntendedEligibilitySequenceV1(input: {
+  readonly policy_bytes: Uint8Array | Buffer
+  readonly p0_artifact_bytes: Uint8Array | Buffer
+  readonly e0_artifact_bytes: Uint8Array | Buffer
+  readonly lookup: RekorV1LogLookup
+  readonly observed_endpoint?: unknown
+}): RekorV1IntendedEligibilitySequenceResult {
+  try {
+    if (providerPolicySha256(input.policy_bytes) !== REKOR_V1_P0_PROVIDER_POLICY_V1_SHA256) {
+      return { ok: false, reasons: ["provider_policy_digest_mismatch"], captured_tree_id: null, global_log_indexes: [], publications: [] }
+    }
+    const parsed = parseFrozenRekorV1P0ProviderPolicyV1(input.policy_bytes)
+    if (!parsed.ok) return { ok: false, reasons: parsed.reasons, captured_tree_id: null, global_log_indexes: [], publications: [] }
+    const named = [Buffer.from(input.p0_artifact_bytes), Buffer.from(input.e0_artifact_bytes)] as const
+    for (const bytes of named) {
+      if (DUMMY_GATE_ARTIFACT_DIGESTS.has(sha256Hex(bytes))) {
+        return { ok: false, reasons: ["dummy_gate_artifact_forbidden"], captured_tree_id: null, global_log_indexes: [], publications: [] }
+      }
+    }
+    const p0 = verifyRekorV1Publication({
+      policy_bytes: input.policy_bytes,
+      artifact_bytes: named[0],
+      controller: "originator",
+      lookup: input.lookup,
+      observed_endpoint: input.observed_endpoint,
+      captured_tree_id: null,
+    })
+    if (!p0.ok) return { ok: false, reasons: p0.reasons, captured_tree_id: null, global_log_indexes: [], publications: [p0] }
+    const e0 = verifyRekorV1Publication({
+      policy_bytes: input.policy_bytes,
+      artifact_bytes: named[1],
+      controller: "originator",
+      lookup: input.lookup,
+      observed_endpoint: input.observed_endpoint,
+      captured_tree_id: p0.tree_id,
+    })
+    const publications = [p0, e0] as const
+    const indexes = publications.map((item) => item.global_log_index).filter((item): item is number => item !== null)
+    if (!e0.ok) return { ok: false, reasons: e0.reasons, captured_tree_id: p0.tree_id, global_log_indexes: indexes, publications }
+    const reasons: string[] = []
+    if (indexes.length !== 2) reasons.push("malformed_structure")
+    else {
+      if (indexes[0] === indexes[1]) reasons.push("equal_log_index")
+      if (indexes[0]! > indexes[1]!) reasons.push("reversed_log_index")
+    }
+    if (p0.tree_id !== e0.tree_id) reasons.push("tree_rotation")
+    return {
+      ok: reasons.length === 0,
+      reasons,
+      captured_tree_id: p0.tree_id,
+      global_log_indexes: indexes,
+      publications,
+    }
+  } catch {
+    return { ok: false, reasons: ["malformed_structure"], captured_tree_id: null, global_log_indexes: [], publications: [] }
+  }
+}
+
+/** Full protocol-v2 P0 < E0 < E1 < E2 production sequence. */
+export function verifyRekorV1ProductionSequenceV1(input: {
+  readonly policy_bytes: Uint8Array | Buffer
+  readonly events: {
+    readonly p0_artifact_bytes: Uint8Array | Buffer
+    readonly e0_artifact_bytes: Uint8Array | Buffer
+    readonly e1_artifact_bytes: Uint8Array | Buffer
+    readonly e2_artifact_bytes: Uint8Array | Buffer
+  }
+  readonly lookup: RekorV1LogLookup
+  readonly observed_endpoint?: unknown
+}): RekorV1ProductionSequenceResult {
+  try {
+    if (providerPolicySha256(input.policy_bytes) !== REKOR_V1_P0_PROVIDER_POLICY_V1_SHA256) {
+      return emptyProductionSequence(["provider_policy_digest_mismatch"])
+    }
+    const parsed = parseFrozenRekorV1P0ProviderPolicyV1(input.policy_bytes)
+    if (!parsed.ok) return emptyProductionSequence(parsed.reasons)
+    const named: readonly { bytes: Buffer; controller: RekorV1Controller }[] = [
+      { bytes: Buffer.from(input.events.p0_artifact_bytes), controller: "originator" },
+      { bytes: Buffer.from(input.events.e0_artifact_bytes), controller: "originator" },
+      { bytes: Buffer.from(input.events.e1_artifact_bytes), controller: "authority" },
+      { bytes: Buffer.from(input.events.e2_artifact_bytes), controller: "originator" },
+    ]
+    for (const event of named) {
+      if (DUMMY_GATE_ARTIFACT_DIGESTS.has(sha256Hex(event.bytes))) {
+        return emptyProductionSequence(["dummy_gate_artifact_forbidden"])
+      }
+    }
+    const publications: RekorV1PublicationResult[] = []
+    let captured: string | null = null
+    for (let index = 0; index < named.length; index += 1) {
+      const event = named[index]!
+      const publication = verifyRekorV1Publication({
+        policy_bytes: input.policy_bytes,
+        artifact_bytes: event.bytes,
+        controller: event.controller,
+        lookup: input.lookup,
+        observed_endpoint: input.observed_endpoint,
+        captured_tree_id: index === 0 ? null : captured,
+      })
+      publications.push(publication)
+      if (!publication.ok) {
+        return {
+          ok: false,
+          reasons: publication.reasons,
+          captured_tree_id: captured,
+          global_log_indexes: publications.map((item) => item.global_log_index).filter((item): item is number => item !== null),
+          publications,
+          sufficient_for_proven_grounding: false,
+          production_publishable: false,
+        }
+      }
+      if (index === 0) captured = publication.tree_id
+    }
+    const indexes = publications.map((item) => item.global_log_index).filter((item): item is number => item !== null)
+    const reasons: string[] = []
+    if (indexes.length !== 4) reasons.push("malformed_structure")
+    for (let index = 1; index < indexes.length; index += 1) {
+      if (indexes[index] === indexes[index - 1]) reasons.push("equal_log_index")
+      if (indexes[index]! < indexes[index - 1]!) reasons.push("reversed_log_index")
+    }
+    if (new Set(publications.map((item) => item.tree_id)).size !== 1) reasons.push("tree_rotation")
+    return {
+      ok: reasons.length === 0,
+      reasons,
+      captured_tree_id: captured,
+      global_log_indexes: indexes,
+      publications,
+      sufficient_for_proven_grounding: false,
+      production_publishable: false,
+    }
+  } catch {
+    return emptyProductionSequence(["malformed_structure"])
+  }
+}
+
 function emptyLookup(): RekorV1LogLookup {
   return {
     searchByHash: () => [],
@@ -1270,6 +1493,68 @@ export function evaluateP0ProviderPolicyFreeze(policy_bytes: Uint8Array | Buffer
     return {
       frozen: false,
       reasons: ["verifier_self_check_failed", ...selfCheck.reasons],
+      provider_id: parsed.policy.provider_id,
+      selected_provider_pass: false,
+      dummy_gate_status: parsed.policy.dummy_gate.status,
+      dummy_gate_class: parsed.policy.dummy_gate.class,
+      ...base,
+    }
+  }
+  return {
+    frozen: true,
+    reasons: [],
+    provider_id: parsed.policy.provider_id,
+    selected_provider_pass: true,
+    dummy_gate_status: parsed.policy.dummy_gate.status,
+    dummy_gate_class: parsed.policy.dummy_gate.class,
+    ...base,
+  }
+}
+
+export function evaluateP0ProviderPolicyFreezeV1(policy_bytes: Uint8Array | Buffer): ProviderPolicyFreezeResult {
+  const digest = providerPolicySha256(policy_bytes)
+  const base = {
+    digest,
+    declared_provider_selection: DECLARED_PROVIDER_SELECTION,
+    sufficient_for_real_object_a: false as const,
+    sufficient_for_proven_grounding: false as const,
+    production_publishable: false as const,
+    independently_grounded: "UNPROVEN" as const,
+  }
+  if (digest !== REKOR_V1_P0_PROVIDER_POLICY_V1_SHA256) {
+    return {
+      frozen: false,
+      reasons: ["provider_policy_digest_mismatch"],
+      provider_id: null,
+      selected_provider_pass: false,
+      dummy_gate_status: null,
+      dummy_gate_class: null,
+      ...base,
+    }
+  }
+  const parsed = parseFrozenRekorV1P0ProviderPolicyV1(policy_bytes)
+  if (!parsed.ok) {
+    return {
+      frozen: false,
+      reasons: parsed.reasons,
+      provider_id: null,
+      selected_provider_pass: false,
+      dummy_gate_status: null,
+      dummy_gate_class: null,
+      ...base,
+    }
+  }
+  const selfCheck = verifyRekorV1Publication({
+    policy_bytes,
+    artifact_bytes: Buffer.from("not-a-rekor-artifact", "utf8"),
+    controller: "originator",
+    lookup: emptyLookup(),
+    observed_endpoint: parsed.policy.endpoint,
+  })
+  if (selfCheck.ok || !selfCheck.reasons.includes("zero_matches")) {
+    return {
+      frozen: false,
+      reasons: selfCheck.ok ? ["verifier_accepted_empty_lookup"] : ["verifier_self_check_failed", ...selfCheck.reasons],
       provider_id: parsed.policy.provider_id,
       selected_provider_pass: false,
       dummy_gate_status: parsed.policy.dummy_gate.status,

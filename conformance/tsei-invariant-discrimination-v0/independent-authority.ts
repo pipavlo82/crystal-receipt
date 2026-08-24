@@ -45,7 +45,11 @@ import {
   acceptObjectAFromBytes,
 } from "./object-a-e0-contract"
 import { acceptIntendedFaithfulnessFromBytes } from "./intended-faithfulness"
+import { acceptIntendedFaithfulnessV1FromBytes } from "./intended-faithfulness-v1"
+import { acceptE0RecordV2FromBytes, acceptObjectAV1FromBytes } from "./object-a-e0-contract-v1"
 import { acceptOriginatorOracle } from "./originator-oracle"
+import * as RealIntendedEligibilityV1 from "./real-intended-instance-eligibility"
+import * as RekorV1Contract from "./rekor-v1-verifier"
 import {
   evaluateP0ProviderPolicyFreeze,
   lookupFromRekorDocuments,
@@ -871,6 +875,27 @@ const FORBIDDEN_PRODUCTION_BUNDLE_KEYS = [
   "synthetic",
 ] as const
 
+const FORBIDDEN_PRODUCTION_V1_BUNDLE_KEYS = [
+  ...FORBIDDEN_PRODUCTION_BUNDLE_KEYS,
+  "object_a",
+  "e0_record",
+  "digests",
+  "global_log_indexes",
+  "captured_tree",
+  "freeze_precedes_object_a",
+  "freeze_precedes_e0",
+  "eligible",
+  "eligibility",
+  "intended_instance_eligibility",
+  "status",
+  "sufficient_for_real_intended_instance",
+  "sufficient_for_real_run",
+] as const
+
+export type ProductionRekorIndependentGroundingV1Result = ProductionRekorIndependentGroundingResult & {
+  readonly intended_instance_eligibility: RealIntendedEligibilityV1.RealIntendedInstanceEligibilityResult | null
+}
+
 function uniqueProductionReasons(reasons: readonly string[]): string[] {
   return [...new Set(reasons)]
 }
@@ -890,6 +915,17 @@ function failProductionRekor(
     sufficient_for_proven_grounding: false,
     sufficient_for_real_run: false,
     core: extras?.core ?? null,
+  }
+}
+
+function failProductionRekorV1(
+  reasons: readonly string[],
+  eligibility: RealIntendedEligibilityV1.RealIntendedInstanceEligibilityResult | null = null,
+  extras?: Partial<Pick<ProductionRekorIndependentGroundingResult, "independent_grounding_reason" | "oracle_input_state" | "core">>,
+): ProductionRekorIndependentGroundingV1Result {
+  return {
+    ...failProductionRekor(reasons, extras),
+    intended_instance_eligibility: eligibility,
   }
 }
 
@@ -1098,6 +1134,173 @@ export function evaluateProductionRekorIndependentGrounding(input: unknown): Pro
     }
   } catch {
     return failProductionRekor(["malformed_production_bundle"])
+  }
+}
+
+/**
+ * Protocol-v2 production composition. This is additive: the frozen v0
+ * evaluator above retains its scaffold-bound behavior. The eligibility result
+ * is always derived internally from the exact five-field projection.
+ */
+export function evaluateProductionRekorIndependentGroundingV1(input: unknown): ProductionRekorIndependentGroundingV1Result {
+  try {
+    if (!isRecord(input)) return failProductionRekorV1(["malformed_production_bundle"])
+    const reasons: string[] = []
+    for (const key of FORBIDDEN_PRODUCTION_V1_BUNDLE_KEYS) {
+      if (Object.prototype.hasOwnProperty.call(input, key)) reasons.push(`caller_shaped_${key}`)
+    }
+    for (const key of PRODUCTION_BUNDLE_KEYS) {
+      if (!Object.prototype.hasOwnProperty.call(input, key)) reasons.push(`missing_${key}`)
+    }
+    for (const key of Object.keys(input)) {
+      if (!(PRODUCTION_BUNDLE_KEYS as readonly string[]).includes(key) && !(FORBIDDEN_PRODUCTION_V1_BUNDLE_KEYS as readonly string[]).includes(key)) {
+        reasons.push(`unexpected_bundle_key_${key}`)
+      }
+    }
+    if (reasons.length > 0) return failProductionRekorV1(uniqueProductionReasons(reasons))
+
+    const intendedBytes = bundleBytes(input["intended_faithfulness_bytes"], "intended_faithfulness_bytes")
+    const objectABytes = bundleBytes(input["object_a_bytes"], "object_a_bytes")
+    const objectBBytes = bundleBytes(input["object_b_bytes"], "object_b_bytes")
+    const e1Bytes = bundleBytes(input["e1_artifact_bytes"], "e1_artifact_bytes")
+    const oracleBytes = bundleBytes(input["originator_oracle_bytes"], "originator_oracle_bytes")
+    const e2Bytes = bundleBytes(input["e2_artifact_bytes"], "e2_artifact_bytes")
+    const nonceBytes = bundleBytes(input["nonce_bytes"], "nonce_bytes")
+    const e0Bytes = bundleBytes(input["e0_record_bytes"], "e0_record_bytes")
+    const policyBytes = bundleBytes(input["policy_bytes"], "policy_bytes")
+    for (const item of [intendedBytes, objectABytes, objectBBytes, e1Bytes, oracleBytes, e2Bytes, nonceBytes, e0Bytes, policyBytes]) {
+      if (!item.ok) return failProductionRekorV1(item.reasons)
+    }
+    if (!intendedBytes.ok || !objectABytes.ok || !objectBBytes.ok || !e1Bytes.ok || !oracleBytes.ok || !e2Bytes.ok || !nonceBytes.ok || !e0Bytes.ok || !policyBytes.ok) {
+      return failProductionRekorV1(["malformed_production_bundle"])
+    }
+    if (!Array.isArray(input["rekor_documents"])) return failProductionRekorV1(["rekor_documents_not_array"])
+    if (!e1Bytes.bytes.equals(objectBBytes.bytes)) return failProductionRekorV1(["e1_payload_bytes_not_object_b"])
+    if (!e2Bytes.bytes.equals(oracleBytes.bytes)) return failProductionRekorV1(["e2_payload_bytes_not_oracle"])
+
+    const eligibility = RealIntendedEligibilityV1.verifyRealIntendedInstanceEligibility({
+      intended_faithfulness_bytes: intendedBytes.bytes,
+      object_a_bytes: objectABytes.bytes,
+      e0_record_bytes: e0Bytes.bytes,
+      policy_bytes: policyBytes.bytes,
+      rekor_documents: input["rekor_documents"],
+    })
+    if (!eligibility.ok || eligibility.status !== "ELIGIBLE" || eligibility.sufficient_for_real_intended_instance !== true) {
+      return failProductionRekorV1(["real_intended_instance_ineligible", ...eligibility.reasons], eligibility, {
+        oracle_input_state: "NOT_EVALUATED",
+      })
+    }
+
+    const policyFreeze = RekorV1Contract.evaluateP0ProviderPolicyFreezeV1(policyBytes.bytes)
+    if (!policyFreeze.frozen || policyFreeze.digest !== RekorV1Contract.REKOR_V1_P0_PROVIDER_POLICY_V1_SHA256) {
+      return failProductionRekorV1(["provider_policy_not_frozen", ...policyFreeze.reasons], eligibility)
+    }
+
+    const intended = acceptIntendedFaithfulnessV1FromBytes({ bytes: intendedBytes.bytes })
+    if (!intended.ok) {
+      return failProductionRekorV1(["intended_not_accepted", ...intended.reasons], eligibility, {
+        independent_grounding_reason: "PROBLEM_PACKAGE_NOT_FAITHFUL",
+        oracle_input_state: "NOT_EVALUATED",
+      })
+    }
+    const objectA = acceptObjectAV1FromBytes({ bytes: objectABytes.bytes, intended })
+    if (!objectA.ok) {
+      return failProductionRekorV1(["object_a_not_accepted", ...objectA.reasons], eligibility, {
+        independent_grounding_reason: objectA.reasons.includes("object_a_not_faithful")
+          ? "PROBLEM_PACKAGE_NOT_FAITHFUL"
+          : "UNPROVEN_INDEPENDENCE",
+        oracle_input_state: "NOT_EVALUATED",
+      })
+    }
+    const e0 = acceptE0RecordV2FromBytes({ bytes: e0Bytes.bytes })
+    if (!e0.ok) return failProductionRekorV1(["e0_v2_not_accepted", ...e0.reasons], eligibility)
+    if (e0.record.instance_id !== objectA.artifact.instance_id) return failProductionRekorV1(["e0_instance_id_mismatch"], eligibility)
+    if (e0.record.problem_package_sha256 !== objectA.digest) return failProductionRekorV1(["e0_object_a_digest_mismatch"], eligibility)
+    if (e0.record.intended_faithfulness_sha256 !== intended.digest) return failProductionRekorV1(["e0_intended_digest_mismatch"], eligibility)
+
+    const oracleParsed = parseCanonicalJson(oracleBytes.bytes, "originator_oracle_bytes")
+    if (!oracleParsed.ok) return failProductionRekorV1(oracleParsed.reasons, eligibility)
+    const originatorOracle = acceptOriginatorOracle(oracleParsed.value)
+    if (!originatorOracle.ok) return failProductionRekorV1(["originator_oracle_not_accepted", ...originatorOracle.reasons], eligibility)
+    if (!originatorOracle.bytes.equals(oracleBytes.bytes)) return failProductionRekorV1(["originator_oracle_bytes_not_canonical"], eligibility)
+    if (originatorOracle.artifact.instance_id !== objectA.package.instance_id) return failProductionRekorV1(["oracle_instance_id_mismatch"], eligibility)
+    if (originatorOracle.artifact.problem_package_sha256 !== objectA.digest) return failProductionRekorV1(["oracle_object_a_digest_mismatch"], eligibility)
+
+    const bParsed = parseCanonicalJson(objectBBytes.bytes, "object_b_bytes")
+    if (!bParsed.ok) return failProductionRekorV1(bParsed.reasons, eligibility)
+    if (!isRecord(bParsed.value)) return failProductionRekorV1(["object_b_not_object"], eligibility)
+    const authority = bParsed.value as unknown as AuthorityOraclePayload
+
+    const opened = verifyOracleCommitment({
+      instance_id: objectA.package.instance_id,
+      problem_package_sha256: objectA.digest,
+      nonce: nonceBytes.bytes,
+      oracle_bytes: oracleBytes.bytes,
+      commitment: e0.record.oracle_commitment,
+    })
+    if (!opened.ok) return failProductionRekorV1(["commitment_failure", ...opened.reasons], eligibility)
+
+    const sequence = RekorV1Contract.verifyRekorV1ProductionSequenceV1({
+      policy_bytes: policyBytes.bytes,
+      events: {
+        p0_artifact_bytes: intendedBytes.bytes,
+        e0_artifact_bytes: e0Bytes.bytes,
+        e1_artifact_bytes: e1Bytes.bytes,
+        e2_artifact_bytes: e2Bytes.bytes,
+      },
+      lookup: RekorV1Contract.lookupFromRekorDocuments(input["rekor_documents"]),
+      observed_endpoint: "https://rekor.sigstore.dev",
+    })
+    if (!sequence.ok) return failProductionRekorV1(["production_sequence_unverified", ...sequence.reasons], eligibility)
+    if (sequence.global_log_indexes.length !== 4) return failProductionRekorV1(["production_sequence_evidence_incomplete"], eligibility)
+    if (sequence.publications[0]?.artifact_sha256 !== intended.digest) return failProductionRekorV1(["p0_digest_mismatch"], eligibility)
+    if (sequence.publications[1]?.artifact_sha256 !== e0.digest) return failProductionRekorV1(["e0_publication_digest_mismatch"], eligibility)
+    if (sequence.publications[2]?.artifact_sha256 !== sha256ExactBytes(e1Bytes.bytes)) return failProductionRekorV1(["e1_publication_digest_mismatch"], eligibility)
+    if (sequence.publications[3]?.artifact_sha256 !== sha256ExactBytes(e2Bytes.bytes)) return failProductionRekorV1(["e2_publication_digest_mismatch"], eligibility)
+
+    const observations: VerifiedPublicationObservations = {
+      provider_id: "rekor-v1",
+      trust_root_id: REKOR_V1_LOG_ID,
+      publisher_identifiers: [AUTHORITY_SAN_EMAIL],
+      oracle_bytes_sha256: sha256ExactBytes(objectBBytes.bytes),
+      problem_package_digest: objectA.digest,
+      freeze_precedes_comparison: true,
+      freeze_precedes_answer_disclosure: true,
+      source_material_refs: [],
+    }
+    const core = evaluateIndependentGroundingCore(
+      {
+        pkg: objectA.package,
+        intended: intended.intended,
+        problem_package_digest: objectA.digest,
+        observed_attribution: observedAttributionFromOracle(originatorOracle.artifact),
+        authority,
+        authority_bytes_sha256: sha256ExactBytes(objectBBytes.bytes),
+        generic_envelope: null,
+      },
+      observations,
+      false,
+    )
+
+    const proven = eligibility.status === "ELIGIBLE"
+      && core.independent_grounding === "PROVEN"
+      && core.oracle_input_state === "VALID_PROVENANCE"
+      && core.semantic_relation === "AGREES"
+    return {
+      ok: core.independent_grounding === "PROVEN" || core.independent_grounding === "DISAGREED",
+      reasons: core.independent_grounding === "UNPROVEN" ? [core.independent_grounding_reason ?? "UNPROVEN"] : [],
+      independent_grounding: core.independent_grounding,
+      independent_grounding_reason: core.independent_grounding_reason,
+      oracle_input_state: core.oracle_input_state,
+      semantic_relation: core.semantic_relation,
+      production_publishable: proven,
+      sufficient_for_proven_grounding: proven,
+      sufficient_for_real_run: false,
+      core,
+      intended_instance_eligibility: eligibility,
+    }
+  } catch {
+    return failProductionRekorV1(["malformed_production_bundle"])
   }
 }
 
