@@ -175,6 +175,8 @@ describe("protocol-v2 outer production composition", () => {
     const result = IndependentAuthority.evaluateProductionRekorIndependentGroundingV1(input)
     expect(result.ok).toBe(true)
     expect(result.intended_instance_eligibility?.status).toBe("ELIGIBLE")
+    expect(result.intended_instance_eligibility?.evidence?.log_id).toBe(REKOR_V1_LOG_ID)
+    expect(JSON.parse(JSON.stringify(result)).intended_instance_eligibility.evidence.log_id).toBe(REKOR_V1_LOG_ID)
     expect(result.independent_grounding).toBe("PROVEN")
     expect(result.oracle_input_state).toBe("VALID_PROVENANCE")
     expect(result.semantic_relation).toBe("AGREES")
