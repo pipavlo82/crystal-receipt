@@ -20,7 +20,7 @@ import type { IntendedFaithfulness } from "./independent-authority"
 export const INTENDED_FAITHFULNESS_V1_SCHEMA =
   "tsei-invariant-discrimination-v1.intended-faithfulness.v1" as const
 export const FROZEN_PROTOCOL_V2_SHA256 =
-  "10ff58f08dc8dcac2e0ebe1e1012ba5e605729e29e73d5e966ba9241ecbd3e1d" as const
+  "3150b5ae09d9b14d706cb64473de63917804e002bd79b5f60473927460b454d0" as const
 export const REKOR_V1_PROVIDER_POLICY_V1_SHA256 =
   "744d024586c983f8bb6c1dd10209aeb0354b65a5121af0ef6580ea2fd8aa8e56" as const
 export const HISTORICAL_IA_INSTANCE_IDS = new Set<string>([
