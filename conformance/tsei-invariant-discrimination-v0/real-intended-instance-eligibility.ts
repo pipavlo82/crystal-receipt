@@ -1,6 +1,6 @@
 /** Byte-derived protocol-v2 real intended-instance eligibility verifier. */
 
-import { REKOR_V1_ENDPOINT } from "./independent-authority-model"
+import { REKOR_V1_ENDPOINT, REKOR_V1_LOG_ID } from "./independent-authority-model"
 import { acceptIntendedFaithfulnessV1FromBytes } from "./intended-faithfulness-v1"
 import { acceptE0RecordV2FromBytes, acceptObjectAV1FromBytes } from "./object-a-e0-contract-v1"
 import * as RekorV1 from "./rekor-v1-verifier"
@@ -172,7 +172,7 @@ export function verifyRealIntendedInstanceEligibility(input: unknown): RealInten
       e0_record_sha256: e0.digest,
       instance_id: intended.artifact.instance_id,
       intended_faithfulness_sha256: intended.digest,
-      log_id: RekorV1.REKOR_V1_LOG_ID,
+      log_id: REKOR_V1_LOG_ID,
       object_a_sha256: objectA.digest,
       order: "P0_LT_E0",
       p0_global_log_index: p0Index,

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, spyOn, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import * as IndependentAuthority from "../../conformance/tsei-invariant-discrimination-v0/independent-authority"
+import { REKOR_V1_LOG_ID } from "../../conformance/tsei-invariant-discrimination-v0/independent-authority-model"
 import {
   acceptIntendedFaithfulnessV1FromBytes,
   FROZEN_PROTOCOL_V2_SHA256,
@@ -104,6 +105,8 @@ describe("real intended-instance eligibility", () => {
     expect(result.evidence.intended_faithfulness_sha256).toBe(data.intended.digest)
     expect(result.evidence.object_a_sha256).toBe(data.objectA.digest)
     expect(result.evidence.e0_record_sha256).toBe(data.e0.digest)
+    expect(result.evidence.log_id).toBe(REKOR_V1_LOG_ID)
+    expect(JSON.parse(JSON.stringify(result)).evidence.log_id).toBe(REKOR_V1_LOG_ID)
     expect(Object.isFrozen(result)).toBe(true)
     expect(Object.isFrozen(result.evidence)).toBe(true)
     expect(Reflect.set(result.evidence, "p0_global_log_index", 999)).toBe(false)
