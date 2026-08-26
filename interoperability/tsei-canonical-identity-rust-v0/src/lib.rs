@@ -37,12 +37,17 @@ pub enum Value {
     /// (see the object-insertion-order-independence tests).
     Object(Vec<(String, Value)>),
     Undefined,
+    /// Structural stand-in for a string that is not a Unicode scalar-value
+    /// sequence (for example, a lone UTF-16 surrogate). Rust `String` cannot
+    /// represent such an input directly.
+    InvalidUnicodeString,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CanonicalizeError {
     NonFiniteNumber,
     UndefinedValue,
+    InvalidUnicodeScalarSequence,
 }
 
 impl fmt::Display for CanonicalizeError {
@@ -53,6 +58,9 @@ impl fmt::Display for CanonicalizeError {
             }
             CanonicalizeError::UndefinedValue => {
                 write!(f, "canonicalIdentityJson: undefined value rejected")
+            }
+            CanonicalizeError::InvalidUnicodeScalarSequence => {
+                write!(f, "canonicalIdentityJson: invalid Unicode scalar sequence rejected")
             }
         }
     }
@@ -95,6 +103,7 @@ pub fn canonical_identity_json(value: &Value) -> Result<String, CanonicalizeErro
 pub fn canonicalize(value: &Value, mutant: MutantMode) -> Result<String, CanonicalizeError> {
     match value {
         Value::Undefined => Err(CanonicalizeError::UndefinedValue),
+        Value::InvalidUnicodeString => Err(CanonicalizeError::InvalidUnicodeScalarSequence),
         Value::Null => Ok("null".to_string()),
         Value::Bool(b) => Ok(if *b { "true".to_string() } else { "false".to_string() }),
         Value::Number(n) => canonicalize_number(*n),
@@ -122,25 +131,24 @@ fn canonicalize_object(
     entries: &[(String, Value)],
     mutant: MutantMode,
 ) -> Result<String, CanonicalizeError> {
-    let mut rendered: Vec<(String, String)> = Vec::with_capacity(entries.len());
+    let mut rendered: Vec<(String, String, String)> = Vec::with_capacity(entries.len());
     for (key, val) in entries {
         if mutant == MutantMode::DropNullValuedFields && matches!(val, Value::Null) {
             continue;
         }
         let rendered_val = canonicalize(val, mutant)?;
         let rendered_key = canonicalize_string(key, MutantMode::None)?;
-        rendered.push((rendered_key, rendered_val));
+        rendered.push((key.clone(), rendered_key, rendered_val));
     }
 
-    // Sort by rendered key for key-order independence (Section 11). The
-    // vector corpus never pins an exact multi-key object canonical string,
-    // only the equality/inequality relation it induces, so any single
-    // consistent order satisfies the spec.
+    // Rust strings are valid Unicode scalar-value sequences, and UTF-8 byte
+    // order preserves Unicode scalar order. Sort the raw key, never its JSON-
+    // escaped rendering (Section 11).
     rendered.sort_by(|a, b| a.0.cmp(&b.0));
 
     let joined = rendered
         .into_iter()
-        .map(|(k, v)| format!("{}:{}", k, v))
+        .map(|(_, k, v)| format!("{}:{}", k, v))
         .collect::<Vec<_>>()
         .join(",");
     Ok(format!("{{{}}}", joined))

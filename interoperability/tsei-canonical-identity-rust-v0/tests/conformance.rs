@@ -35,6 +35,9 @@ fn resolve(obj: &serde_json::Map<String, Json>, plain_key: &str, kind_key: &str)
             "positive_infinity" => Value::Number(f64::INFINITY),
             "negative_infinity" => Value::Number(f64::NEG_INFINITY),
             "undefined" => Value::Undefined,
+            "lone_high_surrogate_string" | "lone_low_surrogate_string" => {
+                Value::InvalidUnicodeString
+            }
             "object_with_one_undefined_valued_key" => {
                 let base = obj
                     .get("value")
@@ -120,14 +123,14 @@ fn run_all_vectors(mutant: MutantMode) -> Vec<(String, bool)> {
 }
 
 #[test]
-fn all_24_vectors_pass_under_the_real_comparator() {
+fn all_27_vectors_pass_under_the_real_comparator() {
     let results = run_all_vectors(MutantMode::None);
     let failures: Vec<&String> = results.iter().filter(|(_, ok)| !ok).map(|(id, _)| id).collect();
     assert!(
         failures.is_empty(),
         "vectors failed under the real (non-mutant) comparator: {failures:?}"
     );
-    assert_eq!(results.len(), 24, "expected exactly 24 frozen vectors");
+    assert_eq!(results.len(), 27, "expected exactly 27 frozen vectors");
 }
 
 #[test]
@@ -159,7 +162,7 @@ fn corpus_canonical_forms(mutant: MutantMode) -> Vec<(String, Option<String>)> {
 /// discriminates it: running the *mutant* comparator variant against the
 /// vector(s) it is documented to wrongly collapse must produce a collapse
 /// (left/right canonicalize equal) where the real comparator (proven above)
-/// produces not-equal. This is mutation-testing evidence, not just "24/24
+/// produces not-equal. This is mutation-testing evidence, not just "27/27
 /// pass" -- it shows the corpus would actually catch each described bug.
 #[test]
 fn all_four_mutants_are_caught_by_the_corpus() {

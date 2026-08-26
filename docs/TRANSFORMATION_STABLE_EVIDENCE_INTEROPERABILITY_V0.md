@@ -286,26 +286,28 @@ x ~_k y  =>  normalize_k(x) = normalize_k(y)         (completeness, REQUIRED onl
 
 ## 11. Comparator Requirements
 
-A conforming canonical-identity comparator is grounded against the frozen, language-neutral corpus at `conformance/canonical-identity-json-conformance-v0/vectors.json` (24 vectors, 4 mutant-rejection cases as of this specification version).
+A conforming canonical-identity comparator is grounded against the frozen, language-neutral corpus at `conformance/canonical-identity-json-conformance-v0/vectors.json` (27 vectors, 4 mutant-rejection cases as of this specification version).
 
 Documented, normative behavior:
 
 | behavior | requirement |
 |---|---|
 | object key-order independence | two objects with identical key/value sets in different declaration order **MUST** canonicalize identically, including recursively into nested objects |
+| object key total order | object keys **MUST** be sorted lexicographically by Unicode scalar value before JSON string escaping; a UTF-16 implementation **MUST NOT** use naïve code-unit `<` or a default code-unit sort as a substitute |
 | array order significance | arrays **MUST NOT** be reordered or treated as sets; declared order is part of identity |
 | duplicate-array significance | arrays **MUST NOT** be deduplicated; an element-count change is a real difference |
 | presence-vs-absence | a key present with any value **MUST** canonicalize differently from the key being entirely absent |
 | null-vs-absence | a key present with a `null` value **MUST** canonicalize differently from the key being absent; `null` is a present value |
 | string case significance | no case-folding **MUST** be applied |
 | no Unicode normalization | a comparator **MUST NOT** apply NFC/NFD or any other Unicode normalization |
+| Unicode string domain | string values and object keys **MUST** be Unicode scalar-value sequences; a lone high or low surrogate **MUST** be rejected before canonicalization |
 | `0`/`-0` behavior | documented as-is: positive and negative zero **MUST** canonicalize identically under this specification's reference numeric-to-string behavior; a domain requiring signed-zero distinction **MUST NOT** rely on this comparator to provide it |
 | non-finite rejection | a comparator **MUST** reject non-finite numeric values outright |
 | absent-value rejection | a comparator **MUST** reject a bare top-level absent/undefined-equivalent value, and **MUST** reject an object key whose value is absent/undefined-equivalent, distinctly from that key being entirely omitted |
 
 **A conforming implementation MUST reproduce the vector corpus's outcomes exactly**, for both direct equality/inequality assertions and the documented mutant-rejection cases.
 
-**Explicit non-claim:** the current reference implementation is **conformance-evidenced only**. No independent, second-language implementation of this comparator currently exists in this repository. This specification defines the target behavior precisely enough that one could be built, but building one is future work, not a completed claim.
+**Independent implementation evidence:** an independent clean-room Rust implementation exists at `interoperability/tsei-canonical-identity-rust-v0/`. It consumes the shared corpus without importing or transpiling the TypeScript reference implementation and reproduces all 27 vector outcomes plus all 4 mutant-rejection cases. This is bounded conformance evidence, not a proof over every possible input or every future implementation.
 
 ---
 
@@ -356,7 +358,7 @@ Minimum generic conformance categories a conforming implementation **SHOULD** be
 **Evidence-type discipline, kept explicit:**
 - **conformance evidence** — a fixed vector set is run against an implementation and produces the expected outcomes. Bounds behavior against known cases; does not prove absence of unknown-case bugs.
 - **formal proof** — a property established by direct inspection of control flow or construction, independent of running any test (e.g., cycle non-erasure, observed-pair coverage-completeness).
-- **independent implementation evidence** — a second, separately-authored implementation shown to agree with a reference. This specification currently has **no instance of this category for the comparator or the path walker.** Tests referenced throughout this document are conformance evidence for the one reference implementation, not proofs, and not independent-implementation evidence.
+- **independent implementation evidence** — a second, separately-authored implementation shown to agree with a reference. The canonical comparator has one instance of this category: the clean-room Rust implementation in `interoperability/tsei-canonical-identity-rust-v0/`, bounded to agreement on the shared 27-vector / 4-mutant corpus. The path walker currently has no independent second implementation. Tests of either implementation are conformance evidence over their exercised corpus, not full-domain proofs.
 
 ---
 
@@ -400,7 +402,7 @@ Repeated prominently, verbatim in substance:
 2. Reactive observed-pair coverage is not schema-total static analysis — completeness holds only over the paths actually observed in one evaluated pair (Section 8).
 3. A path absent on both sides of an evaluated pair, even if required by an underlying domain schema, belongs to lower object/domain validation — never to this mechanism's pairwise-preservation claim (Section 8).
 4. Real, authenticated normalizer/equivalence-relation evidence breadth is currently n=1 in the reference implementation — the mechanism (Section 10) is structurally general, but its empirical necessity argument rests on thin evidence.
-5. The comparator (Section 11) has no second, independent implementation yet — conformance-evidenced only.
+5. The comparator (Section 11) has one independent second-language implementation — bounded to the shared 27-vector / 4-mutant corpus; broader implementation diversity and full-domain equivalence remain unproven.
 6. The path walker underlying Section 8 likewise has no second, independent implementation yet — conformance-evidenced only, via the corpus referenced in Section 8.
 7. Adapter-authored transformation/recompute/applicability/projection semantics remain inside the trust boundary (Section 3) — independent recomputation removes trust in an artifact's self-report, never in the adapter code defining what recomputation means.
 8. Cross-type coverage is not supported in this specification version (Section 9.1) — this is a deliberate exclusion, not a gap expected to close without a future specification revision.
@@ -436,7 +438,7 @@ ReceiptOS and Chronicle serve this specification in exactly three roles: **refer
 
 Two generic, language-neutral conformance corpora currently exist:
 
-- **Canonical identity vectors** — `conformance/canonical-identity-json-conformance-v0/vectors.json` (24 vectors, 4 mutants). Referenced normatively by Section 11.
+- **Canonical identity vectors** — `conformance/canonical-identity-json-conformance-v0/vectors.json` (27 vectors, 4 mutants). Referenced normatively by Section 11 and consumed independently by both the TypeScript and Rust implementations.
 - **Observed leaf path vectors** — `conformance/observed-leaf-paths-conformance-v0/vectors.json` (19 walk vectors, 4 pairwise vectors, 4 mutants). Referenced normatively by Section 8.
 
 The following are generic *tests* — evidence that the current reference implementation matches this specification — and are explicitly not themselves the specification, and not proofs:
@@ -456,4 +458,4 @@ A test passing demonstrates that one reference implementation currently produces
 
 ## Document Status
 
-This is the first committed version of this specification. It documents the generic mechanism as implemented and conformance-evidenced in this repository as of the merge of the change that closed the four previously-identified specification-readiness gaps (structural path-walker conformance, the cross-type coverage boundary, coverage-plane failure-semantics alignment, and the generic artifact structural contract). Every normative rule in Sections 3-11 was checked against the current reference implementation before this document was committed; no rule in this document is known to contradict current reference behavior.
+This document defines specification v0. It records the generic mechanism as implemented and conformance-evidenced in this repository, including the four previously identified specification-readiness closures (structural path-walker conformance, the cross-type coverage boundary, coverage-plane failure-semantics alignment, and the generic artifact structural contract) and the Unicode scalar-order comparator closure. Every normative rule in Sections 3-11 is exercised against the current reference implementation; no rule in this document is known to contradict current reference behavior.

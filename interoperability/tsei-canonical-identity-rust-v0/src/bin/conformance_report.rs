@@ -29,6 +29,9 @@ fn resolve(obj: &serde_json::Map<String, Json>, plain_key: &str, kind_key: &str)
             "positive_infinity" => Value::Number(f64::INFINITY),
             "negative_infinity" => Value::Number(f64::NEG_INFINITY),
             "undefined" => Value::Undefined,
+            "lone_high_surrogate_string" | "lone_low_surrogate_string" => {
+                Value::InvalidUnicodeString
+            }
             "object_with_one_undefined_valued_key" => {
                 let base = obj.get("value").and_then(Json::as_object).unwrap();
                 let value_key = obj.get("value_key").and_then(Json::as_str).unwrap();

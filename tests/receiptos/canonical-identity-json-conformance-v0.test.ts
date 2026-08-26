@@ -41,6 +41,8 @@ type VectorKindKey =
   | "negative_infinity"
   | "undefined"
   | "object_with_one_undefined_valued_key"
+  | "lone_high_surrogate_string"
+  | "lone_low_surrogate_string"
 
 type VectorV0 = {
   readonly vector_id: string
@@ -89,6 +91,10 @@ function resolveKind(kind: VectorKindKey, baseValue: unknown, key: string | unde
       record[key!] = undefined
       return record
     }
+    case "lone_high_surrogate_string":
+      return "\ud800"
+    case "lone_low_surrogate_string":
+      return "\udc00"
   }
 }
 
@@ -137,6 +143,11 @@ describe("canonicalIdentityJson conformance v0: real comparator", () => {
       }
     })
   }
+
+  test("lone surrogates are rejected in object keys as well as values", () => {
+    expect(() => canonicalIdentityJson({ ["\ud800"]: 1 })).toThrow()
+    expect(() => canonicalIdentityJson({ ["\udc00"]: 1 })).toThrow()
+  })
 })
 
 // ---------------------------------------------------------------------------
