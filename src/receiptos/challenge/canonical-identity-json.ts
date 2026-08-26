@@ -16,7 +16,8 @@
  * modification. Semantics are byte-for-byte identical to the prior
  * implementation; only the module boundary moved.
  *
- * Recipe: sort object keys ascending; arrays keep declared order; compact
+ * Recipe: validate strings as Unicode scalar-value sequences, sort object
+ * keys lexicographically by Unicode scalar value; arrays keep declared order; compact
  * separators; `null` is a present value, distinct from an absent key;
  * non-finite numbers and `undefined` (top-level or key-valued) are
  * rejected, never silently coerced. See
@@ -28,11 +29,46 @@
  * observed fact, not redesigned.
  */
 
+function assertUnicodeScalarSequence(value: string, context: string): void {
+  for (let index = 0; index < value.length; index += 1) {
+    const unit = value.charCodeAt(index)
+    if (unit >= 0xd800 && unit <= 0xdbff) {
+      const next = value.charCodeAt(index + 1)
+      if (!(next >= 0xdc00 && next <= 0xdfff)) {
+        throw new Error(`canonicalIdentityJson rejects lone surrogate in ${context}`)
+      }
+      index += 1
+    } else if (unit >= 0xdc00 && unit <= 0xdfff) {
+      throw new Error(`canonicalIdentityJson rejects lone surrogate in ${context}`)
+    }
+  }
+}
+
+function compareUnicodeScalarSequences(left: string, right: string): number {
+  assertUnicodeScalarSequence(left, "object key")
+  assertUnicodeScalarSequence(right, "object key")
+
+  let leftIndex = 0
+  let rightIndex = 0
+  while (leftIndex < left.length && rightIndex < right.length) {
+    const leftScalar = left.codePointAt(leftIndex)!
+    const rightScalar = right.codePointAt(rightIndex)!
+    if (leftScalar !== rightScalar) return leftScalar < rightScalar ? -1 : 1
+    leftIndex += leftScalar > 0xffff ? 2 : 1
+    rightIndex += rightScalar > 0xffff ? 2 : 1
+  }
+  if (leftIndex === left.length && rightIndex === right.length) return 0
+  return leftIndex === left.length ? -1 : 1
+}
+
 export function canonicalIdentityJson(value: unknown): string {
   if (value === null) return "null"
   if (value === true) return "true"
   if (value === false) return "false"
-  if (typeof value === "string") return JSON.stringify(value)
+  if (typeof value === "string") {
+    assertUnicodeScalarSequence(value, "string value")
+    return JSON.stringify(value)
+  }
   if (typeof value === "number") {
     if (!Number.isFinite(value)) {
       throw new Error("canonicalIdentityJson rejects non-finite numbers")
@@ -44,12 +80,14 @@ export function canonicalIdentityJson(value: unknown): string {
   }
   if (typeof value === "object") {
     const record = value as Record<string, unknown>
-    const keys = Object.keys(record).sort()
+    const keys = Object.keys(record)
     for (const key of keys) {
+      assertUnicodeScalarSequence(key, "object key")
       if (record[key] === undefined) {
         throw new Error(`canonicalIdentityJson forbids undefined at key ${JSON.stringify(key)}`)
       }
     }
+    keys.sort(compareUnicodeScalarSequences)
     return `{${keys
       .map((key) => `${JSON.stringify(key)}:${canonicalIdentityJson(record[key])}`)
       .join(",")}}`

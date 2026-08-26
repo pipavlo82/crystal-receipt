@@ -7,7 +7,7 @@
     "`equal_pair`/`not_equal_pair` vectors carry `left`/`right` (or `left_kind`/`right_kind` for a value not directly representable in plain JSON) and assert canonicalIdentityJson(left) === canonicalIdentityJson(right), or !==, respectively.",
     "`canonical_form` vectors carry `value` (or `value_kind`) and `expected_canonical`, asserting canonicalIdentityJson(value) === expected_canonical exactly.",
     "`throws` vectors carry `value` (or `value_kind`, plus `value_key` for the one case that needs it) and assert canonicalIdentityJson(value) throws.",
-    "A `*_kind` field, when present, replaces the corresponding plain field and names a value not directly expressible in JSON: `positive_zero`, `negative_zero`, `nan`, `positive_infinity`, `negative_infinity`, `undefined`, or `object_with_one_undefined_valued_key` (paired with `value` for the object's other keys, if any, and `value_key` naming the key whose value is JS `undefined`).",
+    "A `*_kind` field, when present, replaces the corresponding plain field and names a value not directly expressible in interoperable JSON: `positive_zero`, `negative_zero`, `nan`, `positive_infinity`, `negative_infinity`, `undefined`, `object_with_one_undefined_valued_key`, `lone_high_surrogate_string`, or `lone_low_surrogate_string` (the undefined-object kind is paired with `value` for the object's other keys, if any, and `value_key` naming the key whose value is JS `undefined`).",
     "A consumer in any language should construct the described value directly (e.g. IEEE-754 negative zero, a NaN/Infinity float, or -- for undefined -- simply omit the key/value, since `undefined` itself is a JS-specific concept with no cross-language analog; a non-JS comparator's own equivalent 'forbidden absent-marker' input should be substituted)."
   ],
   "vectors": [
@@ -24,6 +24,13 @@
       "description": "Key-order independence recurses into nested objects.",
       "left": { "outer": { "b": 1, "a": 2 } },
       "right": { "outer": { "a": 2, "b": 1 } }
+    },
+    {
+      "vector_id": "unicode_scalar_object_key_order_canonical_form",
+      "category": "canonical_form",
+      "description": "Object keys sort lexicographically by Unicode scalar value before JSON escaping. U+E000 precedes U+10000 even though a naive UTF-16 code-unit sort would reverse them.",
+      "value": { "𐀀": 1, "": 2 },
+      "expected_canonical": "{\"\":2,\"𐀀\":1}"
     },
     {
       "vector_id": "array_order_significant",
@@ -175,6 +182,18 @@
       "value_kind": "object_with_one_undefined_valued_key",
       "value": {},
       "value_key": "a"
+    },
+    {
+      "vector_id": "lone_high_surrogate_string_throws",
+      "category": "throws",
+      "description": "A string containing a lone UTF-16 high surrogate is not a Unicode scalar-value sequence and must be rejected.",
+      "value_kind": "lone_high_surrogate_string"
+    },
+    {
+      "vector_id": "lone_low_surrogate_string_throws",
+      "category": "throws",
+      "description": "A string containing a lone UTF-16 low surrogate is not a Unicode scalar-value sequence and must be rejected.",
+      "value_kind": "lone_low_surrogate_string"
     }
   ],
   "mutants": [

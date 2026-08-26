@@ -29,14 +29,14 @@ was read to derive it.
 
 ## Layout
 
-- `src/lib.rs` — the comparator: `Value` (JSON value + a `Value::Undefined`
-  stand-in for JS's `undefined`), `canonical_identity_json`, and a
+- `src/lib.rs` — the comparator: `Value` (JSON value + structural stand-ins
+  for JS's `undefined` and a non-scalar Unicode string), `canonical_identity_json`, and a
   `MutantMode`-parameterized `canonicalize` used only by the mutant-discrimination
   test harness (real callers only ever use `canonical_identity_json`, which is
   `MutantMode::None`).
 - `tests/conformance.rs` — loads the real `vectors.json` from the repository
   (via `include_str!`, not a copy) and:
-  - runs all 24 vectors (`equal_pair`, `not_equal_pair`, `canonical_form`, `throws`)
+  - runs all 27 vectors (`equal_pair`, `not_equal_pair`, `canonical_form`, `throws`)
     against the real comparator,
   - reproduces each of the 4 documented mutants as a literal alternate code path
     and proves the corpus catches it (the mutant collapses exactly the vector IDs
@@ -45,6 +45,10 @@ was read to derive it.
     (determinism/repeatability).
 - `src/bin/conformance_report.rs` — `cargo run --bin conformance_report` prints
   a plain-text pass/fail summary for external verification.
+- `CONFORMANCE_REPORT_V0.md` — a committed snapshot of the 27/27 and 4/4
+  Unicode-closure run, including the exact corpus digest. The executable test
+  remains authoritative and recomputable; the snapshot makes the reviewed run
+  directly inspectable without relying on an earlier 24-vector report.
 
 ## Design notes / language mapping
 
@@ -59,13 +63,13 @@ was read to derive it.
   undefined" or "the top-level value itself is undefined" — both required by
   Section 11's absent-value-rejection rule and by the `undefined`/
   `object_with_one_undefined_valued_key` vector kinds.
-- **Object canonical string form is not byte-pinned by the corpus** beyond the
-  equality relation it induces (only scalar/string/number canonical forms are
-  pinned by `canonical_form` vectors). This implementation sorts an object's
-  entries by their already-escaped key string before joining, which is
-  sufficient for key-order independence (Section 11) regardless of insertion
-  order; the exact resulting byte string is an internal choice, not a
-  contract.
+- **`Value::InvalidUnicodeString`** is the Rust-side structural stand-in for a
+  UTF-16 string containing a lone high or low surrogate. Rust `String` cannot
+  represent that input, but the shared `throws` vectors still require the
+  comparator to refuse to produce a canonical value.
+- **Object key order is byte-pinned by the corpus.** Keys are sorted by raw
+  Unicode scalar value before JSON escaping. The astral/BMP boundary vector
+  makes this rule observable across UTF-16 and UTF-8 language runtimes.
 
 ## Portability findings (Rust vs. the spec's JS-shaped reference behavior)
 
@@ -73,21 +77,13 @@ Recorded per the spec's own Section 13 discipline (interoperability claims
 must state their assumptions explicitly, not leave them implicit in one
 implementation):
 
-- **UTF-16 vs. UTF-8/scalar strings.** JS strings are UTF-16 code-unit
-  sequences and can contain unpaired ("lone") surrogates — not valid Unicode
-  scalar values. Rust `String`/`str` are guaranteed valid UTF-8 and therefore
-  **cannot** represent an unpaired surrogate at all. A hypothetical JS input
-  containing one has no direct Rust `Value::String` equivalent; this is a
-  genuine representational gap between the two languages, not a comparator
-  bug. It does not affect any vector in the current corpus.
-- **String ordering for object-key sorting.** JS string comparison (`<`/`>`,
-  and hence any JS-side key sort) compares UTF-16 code units; Rust's default
-  `String`/`str` `Ord` compares by UTF-8 byte value (equivalently, Unicode
-  scalar value). These agree for all BMP characters but can disagree for
-  supplementary-plane (astral) characters encoded as UTF-16 surrogate pairs.
-  Irrelevant here because (a) the corpus never pins an exact object canonical
-  string, only the equality relation, and (b) no vector's keys use astral
-  characters — recorded for completeness, not as a defect.
+- **UTF-16 vs. UTF-8/scalar strings.** The normative domain is Unicode scalar-
+  value sequences. The TypeScript implementation rejects lone surrogates;
+  Rust strings exclude them by construction and the explicit invalid-string
+  stand-in proves the shared rejection vectors.
+- **String ordering for object-key sorting.** Both implementations sort by
+  Unicode scalar value. The shared astral/BMP boundary canonical-form vector
+  prevents a UTF-16 code-unit sort from passing unnoticed.
 - **Shortest-round-trip float formatting, tie-break edge case.** Both
   ECMA-262's algorithm and Rust's `f64` `Display`/`LowerExp` target the
   shortest decimal string that round-trips back to the same IEEE-754 double,
