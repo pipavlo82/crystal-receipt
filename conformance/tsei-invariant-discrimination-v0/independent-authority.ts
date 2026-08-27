@@ -56,6 +56,7 @@ import {
   REKOR_V1_P0_PROVIDER_POLICY_SHA256,
   verifyRekorV1ProductionSequence,
 } from "./rekor-v1-verifier"
+import { encodeJsonUtf8LfV0 } from "./encode-json-utf8-lf-v0"
 
 export function sha256ExactBytes(bytes: Uint8Array | Buffer): string {
   return createHash("sha256").update(bytes).digest("hex")
@@ -117,9 +118,13 @@ function stableStringify(value: unknown): string {
   return "{" + parts.join(",") + "}"
 }
 
-/** UTF-8 LF JSON bytes for in-memory objects. Digest is of these bytes, not a self-field. */
+/**
+ * Prospective encode-json-utf8-lf.v0 bytes for in-memory objects. Digest is
+ * of these bytes, not a self-field. Historical artifacts remain unversioned
+ * and are neither rewritten nor retroactively relabelled by this migration.
+ */
 export function encodeJsonUtf8Lf(value: unknown): Buffer {
-  return Buffer.from(stableStringify(value) + "\n", "utf8")
+  return encodeJsonUtf8LfV0(value)
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

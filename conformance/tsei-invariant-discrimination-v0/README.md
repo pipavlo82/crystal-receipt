@@ -440,3 +440,26 @@ ingest Rekor observations. `asProductionGroundingEvidence` remains null.
 `evaluateProductionRekorIndependentGrounding` lives in
 `independent-authority.ts`, derives observations internally, and does
 not export the private core.
+
+## Prospective encode-json-utf8-lf.v0 producer
+
+`encodeJsonUtf8Lf` now delegates its production-byte path to the
+owner-neutral `encode-json-utf8-lf.v0` implementation in
+`encode-json-utf8-lf-v0.ts`. The implementation applies domain checks before
+rendering, orders object keys by raw UTF-16 code units, emits compact UTF-8
+with exactly one final LF, and rejects negative zero, non-finite numbers,
+unsafe integral values, non-scalar strings/keys, and unsupported host-language
+shapes fail-closed.
+
+The exact owner-neutral specification and 48-vector corpus are vendored under
+`fixtures/` and pinned by SHA-256 in the implementation. The focused test
+`tests/receiptos/tsei-encode-json-utf8-lf-v0.test.ts` reproduces every success
+byte/digest and every rejection category, then proves byte stability over an
+explicit inventory of historical canonical TSEI artifacts.
+
+This is prospective producer migration evidence only. It does not rewrite,
+rehash, relabel, or retroactively bind any historical unversioned TSEI
+artifact. In particular, private historical Object B bytes are not added to
+the repository. Activation for a named producer boundary requires a later
+immutable registry record whose `effective_commit` names the landed adoption
+commit.
