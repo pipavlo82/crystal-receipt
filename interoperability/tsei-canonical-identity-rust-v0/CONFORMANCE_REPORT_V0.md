@@ -5,7 +5,7 @@
 - Corpus: `conformance/canonical-identity-json-conformance-v0/vectors.json`
 - Corpus bytes: `10975`
 - Corpus SHA-256: `5c5a38837778d63b554cde168394b65c484ec8246a2a0175a13d0723d15f6e6c`
-- Specification SHA-256: `f011988a020f7ac9621594d937b8766f6a640b6c517e9b413808cfe1a719edcc`
+- Specification SHA-256: `03f5b72afb3291e39534a880667fb4f48ff9a60145122beaca2896c2be7b020d`
 - Rust crate: `interoperability/tsei-canonical-identity-rust-v0/`
 
 ## Recomputable commands
