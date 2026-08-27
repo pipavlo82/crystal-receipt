@@ -357,7 +357,7 @@ Minimum generic conformance categories a conforming implementation **SHOULD** be
 
 **Evidence-type discipline, kept explicit:**
 - **conformance evidence** — a fixed vector set is run against an implementation and produces the expected outcomes. Bounds behavior against known cases; does not prove absence of unknown-case bugs.
-- **formal proof** — a property established by direct inspection of control flow or construction, independent of running any test (e.g., cycle non-erasure, observed-pair coverage-completeness).
+- **proof by construction / control-flow argument** — a property justified by explicit control-flow or construction analysis, without relying solely on test execution (e.g., cycle non-erasure, observed-pair coverage-completeness).
 - **independent implementation evidence** — a second, separately-authored implementation shown to agree with a reference. The canonical comparator has one instance of this category: the clean-room Rust implementation in `interoperability/tsei-canonical-identity-rust-v0/`, bounded to agreement on the shared 27-vector / 4-mutant corpus. The path walker currently has no independent second implementation. Tests of either implementation are conformance evidence over their exercised corpus, not full-domain proofs.
 
 ---

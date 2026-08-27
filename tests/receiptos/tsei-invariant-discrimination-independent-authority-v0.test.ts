@@ -75,7 +75,7 @@ import {
 import { INDEPENDENT_GROUNDING_REASON, INDEPENDENT_GROUNDING_STATUS } from "../../conformance/tsei-invariant-discrimination-v0/ladder"
 
 const SPEC_PATH = resolve(import.meta.dir, "..", "..", "docs", "TRANSFORMATION_STABLE_EVIDENCE_INTEROPERABILITY_V0.md")
-const EXPECTED_SPEC_SHA256 = "f011988a020f7ac9621594d937b8766f6a640b6c517e9b413808cfe1a719edcc"
+const EXPECTED_SPEC_SHA256 = "03f5b72afb3291e39534a880667fb4f48ff9a60145122beaca2896c2be7b020d"
 
 const DEF_P = "p is an even integer."
 const DEF_Q = 'q does not contain the marker substring "QUARANTINE".'
