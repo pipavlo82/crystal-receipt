@@ -1,6 +1,8 @@
 # ReceiptOS — Crystal Receipt reference implementation
 
-[![DOI v0.8](https://zenodo.org/badge/DOI/10.5281/zenodo.21895219.svg)](https://doi.org/10.5281/zenodo.21895219) [![DOI v0.6](https://zenodo.org/badge/DOI/10.5281/zenodo.21402444.svg)](https://doi.org/10.5281/zenodo.21402444)
+**Standalone TSEI specification:** [![TSEI Specification v0 DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22119516.svg)](https://doi.org/10.5281/zenodo.22119516)
+
+**ReceiptOS papers:** [![DOI v0.8](https://zenodo.org/badge/DOI/10.5281/zenodo.21895219.svg)](https://doi.org/10.5281/zenodo.21895219) [![DOI v0.6](https://zenodo.org/badge/DOI/10.5281/zenodo.21402444.svg)](https://doi.org/10.5281/zenodo.21402444)
 
 ReceiptOS packages supplied execution evidence into recomputable, portable artifacts. Declared receipt properties can be independently recomputed from that evidence under selected schemas and canonicalization rules. Frozen conformance profiles evaluate whether verifier behavior matches authenticated expectations. Downstream systems decide admission, history, policy, settlement, or other judgment.
 
@@ -11,6 +13,18 @@ This repository is the Crystal Receipt reference implementation of that substrat
 ![ReceiptOS evidence and verifier-conformance architecture](docs/crystal_receipt_mobile_flow.svg)
 
 Receipt processing and verifier conformance are separate layers: ReceiptOS recomputes declared properties from supplied evidence, while frozen conformance profiles test whether verifier behavior matches authenticated expectations. Downstream consumers decide how those findings affect admission, history, policy, or judgment.
+
+## TSEI — standalone interoperability specification
+
+[Transformation-Stable Evidence Interoperability (TSEI) Specification v0](https://doi.org/10.5281/zenodo.22119516) defines a producer-neutral mechanism for determining whether domain-declared protected semantic surfaces survive an artifact transformation. It independently recomputes source and target evaluations, applies fail-closed observed-pair coverage, and prevents a later endpoint restoration from erasing a terminal violation on an intermediate edge.
+
+TSEI is not a ReceiptOS version. ReceiptOS is lineage and the current reference-implementation host; the generic specification has its own DOI and citation boundary. The publication reports one bounded independently grounded instance with a complete 12-case universe. It does not claim cross-Authority replication or `sufficient_for_real_run`.
+
+- [Normative Specification v0](docs/TRANSFORMATION_STABLE_EVIDENCE_INTEROPERABILITY_V0.md)
+- [Canonical-identity conformance vectors](conformance/canonical-identity-json-conformance-v0/vectors.json)
+- [Observed-leaf-path conformance vectors](conformance/observed-leaf-paths-conformance-v0/vectors.json)
+- [Independent Authority Blind Grounding Protocol v2](conformance/tsei-invariant-discrimination-v0/INDEPENDENT_AUTHORITY_BLIND_GROUNDING_PROTOCOL_V2.md)
+- [Public production-grounding receipt](conformance/tsei-invariant-discrimination-v0/public-receipts/tsei-ia-real-v2-20260824-02.production-grounding.json)
 
 ## What is implemented
 
@@ -275,6 +289,30 @@ bun test tests/receiptos
 Committed CI includes [`.github/workflows/receiptos-export.yml`](.github/workflows/receiptos-export.yml). Do not infer broader coverage than that workflow runs.
 
 ## Citation
+
+### TSEI Specification v0
+
+TSEI has a standalone Zenodo record and must not be cited as a ReceiptOS version.
+
+> Tvardovskyi, P. (2026). *Transformation-Stable Evidence Interoperability
+> (TSEI): Specification v0, Extraction Boundary, and One Independently
+> Grounded Instance* (Version v0). Zenodo.
+> https://doi.org/10.5281/zenodo.22119516
+
+```bibtex
+@misc{tvardovskyi2026tsei_v0,
+ author = {Tvardovskyi, Pavlo},
+ title = {{Transformation-Stable Evidence Interoperability (TSEI):
+ Specification v0, Extraction Boundary, and One Independently Grounded Instance}},
+ year = {2026},
+ publisher = {Zenodo},
+ version = {v0},
+ doi = {10.5281/zenodo.22119516},
+ url = {https://doi.org/10.5281/zenodo.22119516}
+}
+```
+
+### ReceiptOS papers
 
 The current published ReceiptOS preprint (v0.8, 2026-08-11) is citable at
 the Zenodo DOI below.
